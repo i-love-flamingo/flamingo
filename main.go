@@ -1,8 +1,11 @@
 package main
 
-import "log"
+import (
+	"log"
+	"net/http"
+)
 
 func main() {
-    log.Println("this is flamingo")
+	// Simple static webserver:
+	log.Fatal(http.ListenAndServe(":8080", http.FileServer(http.Dir("dist/"))))
 }
-

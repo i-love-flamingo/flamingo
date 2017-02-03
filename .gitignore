@@ -1,0 +1,6 @@
+.cache
+.sass-cache
+.temp
+dist
+node_modules
+src/sass/.includes

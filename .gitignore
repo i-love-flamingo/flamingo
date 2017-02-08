@@ -3,4 +3,5 @@
 .temp
 dist
 node_modules
+npm-debug.log
 src/sass/.includes

@@ -1,29 +1,21 @@
 package responder
 
 import (
+	"flamingo/core"
 	"flamingo/core/web"
 	"net/http"
-
-	"github.com/gorilla/mux"
-)
-
-type (
-	RouterAware interface {
-		SetRouter(r *mux.Router)
-	}
 )
 
 type RedirectFor struct {
-	RouterAware
-	router *mux.Router
+	app *core.App
 }
 
-func (r *RedirectFor) SetRouter(router *mux.Router) {
-	r.router = router
+func (r *RedirectFor) SetApp(app *core.App) {
+	r.app = app
 }
 
 func (r *RedirectFor) Response(name string, args ...string) web.Response {
-	url, _ := r.router.Get(name).URL(args...)
+	url := r.app.Url(name, args...)
 
 	return web.RedirectResponse{
 		Status:   http.StatusFound,

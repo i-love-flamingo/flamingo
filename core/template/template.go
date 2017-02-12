@@ -1,4 +1,4 @@
-package web
+package template
 
 /*
 
@@ -12,7 +12,11 @@ Please do not judge this file! Please :)
 
 import (
 	"bytes"
+	"encoding/json"
+	"flamingo/core"
 	"flamingo/core/template/pug-ast"
+	"flamingo/core/web"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -21,10 +25,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"encoding/json"
-
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -88,30 +88,29 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/template
-func Render(c Context, r *mux.Router, tpl string, data interface{}) []byte {
+func Render(c web.Context, app *core.App, tpl string, data interface{}) []byte {
 	buf := new(bytes.Buffer)
 
 	// recompile
-	//if c.debug {
-	loadTemplates()
-	//}
+	if app.Debug {
+		loadTemplates()
+	}
 
 	t, _ := templates[tpl].Clone()
 
-	log.Println(assetrewrites)
-
 	t.Funcs(template.FuncMap{
 		"asset": func(a string) template.URL {
-			url, _ := r.Get("_static").URL()
+			url := app.Url("_static")
 			aa := strings.Split(a, "/")
 			aaa := aa[len(aa)-1]
 			if assetrewrites[aaa] != "" {
-				return template.URL(url.String() + assetrewrites[aaa])
+				return template.URL(url.String() + "/" + assetrewrites[aaa])
 			} else {
 				return template.URL(url.String() + a)
 			}
 		},
-		"__": func(s ...string) string { return strings.Join(s, "::") },
+		//"__": func(s ...string) string { return fmt.Sprintf(s[0], s[1:]...) },
+		"__": fmt.Sprintf,
 		"get": func(what string) interface{} {
 			if what == "user.name" {
 				return "testuser"

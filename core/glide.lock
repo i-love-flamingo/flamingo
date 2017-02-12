@@ -1,12 +1,13 @@
-hash: 09538a60ca233877ebfe8881c65ce40f474809c77f98c6cf9246799d499333bc
-updated: 2017-02-12T17:13:29.60242528+01:00
+hash: 173295fe1d1c83625ab582b6c491cfa043ee38160123e9a287fb0b42879059d4
+updated: 2017-02-12T17:59:18.016042273+01:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
 - name: github.com/robertkrimen/otto
-  version: 6a77b7cbc37d0c39f7d5fa5766826e541df31fd5
+  version: aabe79b06556d741409a343b9bbabf653cef2a1c
+  repo: https://github.com/thebod/otto.git
   subpackages:
   - ast
   - dbg

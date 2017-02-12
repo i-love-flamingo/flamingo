@@ -3,6 +3,7 @@ import:
 - package: github.com/gorilla/mux
   version: ^1.3.0
 - package: github.com/robertkrimen/otto
+  repo: https://github.com/thebod/otto.git
   subpackages:
   - ast
   - parser

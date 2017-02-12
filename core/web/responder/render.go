@@ -18,7 +18,7 @@ func (r *RenderTemplate) SetApp(app *core.App) {
 func (r *RenderTemplate) RenderResponse(context web.Context, tpl string) web.Response {
 	return web.ContentResponse{
 		Status:      http.StatusOK,
-		Body:        template.Render(context, r.app, tpl, nil),
+		Body:        template.Render(r.app, tpl, nil),
 		ContentType: "text/html",
 	}
 }

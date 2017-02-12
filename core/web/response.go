@@ -1,6 +1,9 @@
 package web
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 type (
 	Response interface {
@@ -23,7 +26,7 @@ func (rr RedirectResponse) Apply(rw http.ResponseWriter) {
 // ContentResponse contains a response with body
 type ContentResponse struct {
 	Status      int
-	Body        []byte
+	Body        io.Reader
 	ContentType string
 }
 
@@ -31,5 +34,5 @@ type ContentResponse struct {
 func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 	rw.Header().Set("Content-Type", cr.ContentType)
 	rw.WriteHeader(cr.Status)
-	rw.Write(cr.Body)
+	io.Copy(rw, cr.Body)
 }

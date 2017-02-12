@@ -15,9 +15,9 @@ import (
 	"encoding/json"
 	"flamingo/core"
 	"flamingo/core/template/pug-ast"
-	"flamingo/core/web"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -88,7 +88,7 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/template
-func Render(c web.Context, app *core.App, tpl string, data interface{}) []byte {
+func Render(app *core.App, tpl string, data interface{}) io.Reader {
 	buf := new(bytes.Buffer)
 
 	// recompile
@@ -109,8 +109,7 @@ func Render(c web.Context, app *core.App, tpl string, data interface{}) []byte {
 				return template.URL(url.String() + a)
 			}
 		},
-		//"__": func(s ...string) string { return fmt.Sprintf(s[0], s[1:]...) },
-		"__": fmt.Sprintf,
+		"__": fmt.Sprintf, // todo translate
 		"get": func(what string) interface{} {
 			if what == "user.name" {
 				return "testuser"
@@ -131,10 +130,5 @@ func Render(c web.Context, app *core.App, tpl string, data interface{}) []byte {
 		panic(err)
 	}
 
-	b, err := ioutil.ReadAll(buf)
-	if err != nil {
-		panic(err)
-	}
-
-	return b
+	return buf
 }

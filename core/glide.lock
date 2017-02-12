@@ -1,0 +1,22 @@
+hash: 09538a60ca233877ebfe8881c65ce40f474809c77f98c6cf9246799d499333bc
+updated: 2017-02-12T17:13:29.60242528+01:00
+imports:
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/robertkrimen/otto
+  version: 6a77b7cbc37d0c39f7d5fa5766826e541df31fd5
+  subpackages:
+  - ast
+  - dbg
+  - file
+  - parser
+  - token
+- name: gopkg.in/sourcemap.v1
+  version: f5da1d57891040819d7961bfeed49271d78ca0fa
+  subpackages:
+  - base64vlq
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+testImports: []

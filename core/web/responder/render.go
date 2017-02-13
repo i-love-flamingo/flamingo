@@ -7,15 +7,15 @@ import (
 	"net/http"
 )
 
-type RenderTemplate struct {
+type RenderAware struct {
 	app *core.App
 }
 
-func (r *RenderTemplate) SetApp(app *core.App) {
+func (r *RenderAware) SetApp(app *core.App) {
 	r.app = app
 }
 
-func (r *RenderTemplate) RenderResponse(context web.Context, tpl string) web.Response {
+func (r *RenderAware) Render(context web.Context, tpl string) web.Response {
 	return web.ContentResponse{
 		Status:      http.StatusOK,
 		Body:        template.Render(r.app, tpl, nil),

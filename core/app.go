@@ -28,7 +28,11 @@ type (
 		Post(c web.Context) web.Response
 	}
 
-	AppAware interface {
+	DataController interface {
+		Data(c web.Context) interface{}
+	}
+
+	AppAwareInterface interface {
 		SetApp(*App)
 	}
 
@@ -41,6 +45,7 @@ type (
 	App struct {
 		router    *mux.Router
 		routes    map[string]string
+		handler   map[string]interface{}
 		fixroutes map[string]FixRoute
 		Debug     bool
 		base      *url.URL
@@ -51,17 +56,20 @@ type (
 // NewApp factory for web router
 func NewApp(ctx *context.Context) *App {
 	a := &App{
-		routes:    make(map[string]string),
-		fixroutes: make(map[string]FixRoute),
+	//		fixroutes: make(map[string]FixRoute),
 	}
 
 	a.router = mux.NewRouter()
 	a.routes = ctx.Routes
+	a.handler = ctx.Handler
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 	a.log = log.New(os.Stdout, "["+ctx.Name+"] ", 0)
 
 	for route, name := range ctx.Routes {
 		a.log.Println("Register", name, "at", route)
+		if _, ok := ctx.Handler[name]; !ok {
+			panic("no handler for" + name)
+		}
 		a.router.Handle(route, a.handle(ctx.Handler[name])).Name(name)
 	}
 
@@ -91,7 +99,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *App) handle(c Controller) http.Handler {
-	if c, ok := c.(AppAware); ok {
+	if c, ok := c.(AppAwareInterface); ok {
 		c.SetApp(r)
 	}
 
@@ -125,4 +133,14 @@ func (r *App) handle(c Controller) http.Handler {
 
 		panic("cannot serve " + req.RequestURI)
 	})
+}
+
+func (a *App) Get(ctx web.Context, handler string) interface{} {
+	if c, ok := a.handler[handler]; ok {
+		if c, ok := c.(DataController); ok {
+			return c.Data(ctx)
+		}
+		panic("not a data controller")
+	}
+	panic("not a handler")
 }

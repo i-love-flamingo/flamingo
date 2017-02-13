@@ -6,15 +6,15 @@ import (
 	"net/http"
 )
 
-type RedirectFor struct {
+type RedirectAware struct {
 	app *core.App
 }
 
-func (r *RedirectFor) SetApp(app *core.App) {
+func (r *RedirectAware) SetApp(app *core.App) {
 	r.app = app
 }
 
-func (r *RedirectFor) Response(name string, args ...string) web.Response {
+func (r *RedirectAware) Redirect(name string, args ...string) web.Response {
 	url := r.app.Url(name, args...)
 
 	return web.RedirectResponse{

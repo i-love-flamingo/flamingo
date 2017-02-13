@@ -9,7 +9,11 @@ import (
 type PrefixRouter map[string]http.Handler
 
 func (pr PrefixRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	test := path.Join(req.Host, req.RequestURI)
+	host := req.Host
+	if strings.Index(host, ":") > -1 {
+		host = strings.Split(host, ":")[0]
+	}
+	test := path.Join(host, req.RequestURI)
 	for prefix, router := range pr {
 		if strings.HasPrefix(test, prefix) {
 			req.URL.Path = test[len(prefix):]

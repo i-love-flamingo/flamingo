@@ -2,8 +2,8 @@ package product
 
 import (
 	"flamingo/core/backend"
-	"flamingo/core/web"
-	"flamingo/core/web/responder"
+	"flamingo/core/core/app/web"
+	"flamingo/core/core/app/web/responder"
 )
 
 type ViewController struct {

@@ -24,5 +24,6 @@ func (pr PrefixRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	panic(test + " not routable")
+	w.WriteHeader(404)
+	//panic(test + " not routable")
 }

@@ -9,3 +9,5 @@ import:
   - parser
   - token
 - package: gopkg.in/yaml.v2
+- package: github.com/fatih/color
+  version: ^1.3.0

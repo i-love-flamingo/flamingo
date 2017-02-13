@@ -8,12 +8,12 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"os"
 
-	"time"
-
 	"github.com/gorilla/mux"
+	"github.com/labstack/gommon/color"
 )
 
 type (
@@ -51,7 +51,28 @@ type (
 		base      *url.URL
 		log       *log.Logger
 	}
+
+	ResponseWriter struct {
+		http.ResponseWriter
+		status int
+		size   int
+	}
 )
+
+func (r *ResponseWriter) Header() http.Header {
+	return r.ResponseWriter.Header()
+}
+
+func (r *ResponseWriter) Write(data []byte) (int, error) {
+	l, e := r.ResponseWriter.Write(data)
+	r.size += l
+	return l, e
+}
+
+func (r *ResponseWriter) WriteHeader(h int) {
+	r.status = h
+	r.ResponseWriter.WriteHeader(h)
+}
 
 // NewApp factory for web router
 func NewApp(ctx *context.Context) *App {
@@ -95,6 +116,32 @@ func (r *App) Url(name string, params ...string) *url.URL {
 }
 
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	w = &ResponseWriter{ResponseWriter: w}
+	start := time.Now()
+	defer func() {
+		if err := recover(); err != nil {
+			w.WriteHeader(500)
+		}
+		if a.Debug {
+			ww := w.(*ResponseWriter)
+			var cp func(msg interface{}, styles ...string) string
+			switch {
+			case ww.status >= 200 && ww.status < 300:
+				cp = color.Green
+			case ww.status >= 300 && ww.status < 400:
+				cp = color.Blue
+			case ww.status >= 400 && ww.status < 500:
+				cp = color.Yellow
+			case ww.status >= 500 && ww.status < 600:
+				cp = color.Red
+			default:
+				cp = color.Black
+			}
+
+			a.log.Printf(cp("%03d | % 8s | % 15s | %s"), ww.status, req.Method, time.Since(start), req.RequestURI)
+		}
+	}()
+
 	a.router.ServeHTTP(w, req)
 }
 
@@ -104,14 +151,6 @@ func (r *App) handle(c Controller) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		start := time.Now()
-		defer func() {
-			if err := recover(); err != nil {
-				w.WriteHeader(500)
-			}
-			r.log.Println(req.RequestURI, time.Since(start))
-		}()
-
 		ctx := web.ContextFromRequest(w, req)
 
 		if req.Method == http.MethodGet {
@@ -131,7 +170,9 @@ func (r *App) handle(c Controller) http.Handler {
 			return
 		}
 
-		panic("cannot serve " + req.RequestURI)
+		w.WriteHeader(404)
+		w.Write([]byte("404 page not found (no handler)"))
+		//panic("cannot serve " + req.RequestURI)
 	})
 }
 

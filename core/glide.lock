@@ -1,6 +1,8 @@
-hash: 173295fe1d1c83625ab582b6c491cfa043ee38160123e9a287fb0b42879059d4
-updated: 2017-02-12T17:59:18.016042273+01:00
+hash: 1e5cfb77ad31faa3e75263e41f6c6f2aebe0db2869f69d883774a83e6e5b64d2
+updated: 2017-02-13T15:47:04.86912624+01:00
 imports:
+- name: github.com/fatih/color
+  version: 5ec5d9d3c2cf82e9688b34e9bc27a94d616a7193
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -14,6 +16,8 @@ imports:
   - file
   - parser
   - token
+- name: github.com/urfave/negroni
+  version: 61dbefc515b4dede6eb2de7df1e54d49edce892d
 - name: gopkg.in/sourcemap.v1
   version: f5da1d57891040819d7961bfeed49271d78ca0fa
   subpackages:

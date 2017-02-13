@@ -112,7 +112,7 @@ func (r *App) handle(c Controller) http.Handler {
 			r.log.Println(req.RequestURI, time.Since(start))
 		}()
 
-		ctx := web.ContextFromRequest(req)
+		ctx := web.ContextFromRequest(w, req)
 
 		if req.Method == http.MethodGet {
 			if c, ok := c.(GETController); ok {

@@ -22,6 +22,8 @@ type (
 		Request() *http.Request
 
 		ID() string
+
+		Push(target string, opts *http.PushOptions) error
 	}
 
 	ctx struct {
@@ -29,18 +31,32 @@ type (
 		request *http.Request
 		debug   bool
 		id      string
+		writer  http.ResponseWriter
+		pusher  http.Pusher
 	}
 )
 
-func ContextFromRequest(r *http.Request) *ctx {
+func ContextFromRequest(rw http.ResponseWriter, r *http.Request) *ctx {
 	c := new(ctx)
 	c.vars = mux.Vars(r)
 	c.request = r
 	c.id = strconv.Itoa(rand.Int())
+	c.writer = rw
+	pusher, ok := rw.(http.Pusher)
+	if ok {
+		c.pusher = pusher
+	}
 
 	c.debug = true
 
 	return c
+}
+
+func (c *ctx) Push(target string, opts *http.PushOptions) error {
+	if c.pusher != nil {
+		return c.pusher.Push(target, opts)
+	}
+	return nil
 }
 
 func (c *ctx) ID() string {

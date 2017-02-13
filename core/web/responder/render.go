@@ -18,7 +18,7 @@ func (r *RenderAware) SetApp(app *core.App) {
 func (r *RenderAware) Render(context web.Context, tpl string) web.Response {
 	return web.ContentResponse{
 		Status:      http.StatusOK,
-		Body:        template.Render(r.app, tpl, nil),
+		Body:        template.Render(r.app, context, tpl, nil),
 		ContentType: "text/html",
 	}
 }

@@ -13,9 +13,9 @@ Please do not judge this file! Please :)
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core"
-	"flamingo/core/template/pug-ast"
-	"flamingo/core/web"
+	"flamingo/core/core/app"
+	"flamingo/core/core/app/template/pug-ast"
+	"flamingo/core/core/app/web"
 	"fmt"
 	"html/template"
 	"io"
@@ -89,7 +89,7 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/template
-func Render(app *core.App, ctx web.Context, tpl string, data interface{}) io.Reader {
+func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Reader {
 	buf := new(bytes.Buffer)
 
 	// recompile

@@ -1,16 +1,16 @@
 package responder
 
 import (
-	"flamingo/core"
-	"flamingo/core/web"
+	"flamingo/core/core/app"
+	"goaoe/core/web"
 	"net/http"
 )
 
 type RedirectAware struct {
-	app *core.App
+	app *app.App
 }
 
-func (r *RedirectAware) SetApp(app *core.App) {
+func (r *RedirectAware) SetApp(app *app.App) {
 	r.app = app
 }
 

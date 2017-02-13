@@ -1,16 +1,15 @@
-package core
+package app
 
 import (
-	"flamingo/core/context"
-	"flamingo/core/web"
+	"flamingo/core/core/app/context"
+	"flamingo/core/core/app/web"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"time"
-
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/labstack/gommon/color"
@@ -74,8 +73,8 @@ func (r *ResponseWriter) WriteHeader(h int) {
 	r.ResponseWriter.WriteHeader(h)
 }
 
-// NewApp factory for web router
-func NewApp(ctx *context.Context) *App {
+// New factory for web router
+func New(ctx *context.Context) *App {
 	a := &App{
 	//		fixroutes: make(map[string]FixRoute),
 	}

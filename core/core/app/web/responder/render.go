@@ -1,17 +1,17 @@
 package responder
 
 import (
-	"flamingo/core"
-	"flamingo/core/template"
-	"flamingo/core/web"
+	"flamingo/core/core/app"
+	"flamingo/core/core/app/template"
+	"flamingo/core/core/app/web"
 	"net/http"
 )
 
 type RenderAware struct {
-	app *core.App
+	app *app.App
 }
 
-func (r *RenderAware) SetApp(app *core.App) {
+func (r *RenderAware) SetApp(app *app.App) {
 	r.app = app
 }
 

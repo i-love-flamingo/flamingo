@@ -133,6 +133,10 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 
 		if wrap {
+			lf := len(finalexpr)
+			if finalexpr[0] == '"' && finalexpr[lf-1] == '"' {
+				return finalexpr[1 : lf-1]
+			}
 			finalexpr = `{{` + finalexpr + `}}`
 		}
 

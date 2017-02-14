@@ -3,6 +3,7 @@ package app
 import (
 	"flamingo/core/core/app/context"
 	"flamingo/core/core/app/web"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,8 +12,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/labstack/gommon/color"

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"io"
 	"net/http"
 	"path"
 	"strings"
@@ -9,6 +10,13 @@ import (
 type PrefixRouter map[string]http.Handler
 
 func (pr PrefixRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if strings.HasPrefix(req.RequestURI, "/assets/") {
+		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+			io.Copy(w, r.Body)
+			return
+		}
+	}
+
 	host := req.Host
 	if strings.Index(host, ":") > -1 {
 		host = strings.Split(host, ":")[0]

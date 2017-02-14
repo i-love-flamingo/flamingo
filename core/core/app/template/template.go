@@ -110,7 +110,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 	t.Funcs(template.FuncMap{
 		"asset": func(a string) template.URL {
 			if webpackserver {
-				return template.URL("//localhost:1337/assets/" + a)
+				return template.URL("/assets/" + a)
 			}
 
 			url := app.Url("_static")
@@ -135,7 +135,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 	})
 
 	err := t.ExecuteTemplate(buf, tpl, map[string]interface{}{
-		"isProductionBuild": true,
+		"isProductionBuild": !webpackserver,
 		"classBody":         "default",
 		"title":             "Home",
 		"site": map[string]interface{}{

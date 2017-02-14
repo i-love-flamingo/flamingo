@@ -179,28 +179,28 @@ func (r *App) handle(c Controller) http.Handler {
 
 		var response web.Response
 
-		switch c.(type) {
+		switch c := c.(type) {
 		case GETController:
 			if req.Method == http.MethodGet {
-				response = c.(GETController).Get(ctx)
+				response = c.Get(ctx)
 			}
 
 		case POSTController:
 			if req.Method == http.MethodPost {
-				response = c.(POSTController).Post(ctx)
+				response = c.Post(ctx)
 			}
 
 		case func(web.Context) web.Response:
-			response = c.(func(web.Context) web.Response)(ctx)
+			response = c(ctx)
 
 		case DataController:
 			response = web.JsonResponse{c.(DataController).Data(ctx)}
 
 		case func(web.Context) interface{}:
-			response = web.JsonResponse{c.(func(web.Context) interface{})(ctx)}
+			response = web.JsonResponse{c(ctx)}
 
 		case http.Handler:
-			c.(http.Handler).ServeHTTP(w, req)
+			c.ServeHTTP(w, req)
 			return
 
 		default:

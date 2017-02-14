@@ -23,20 +23,20 @@ type (
 	Controller interface{}
 
 	GETController interface {
-		Get(c web.Context) web.Response
+		Get(web.Context) web.Response
 	}
 
 	POSTController interface {
-		Post(c web.Context) web.Response
+		Post(web.Context) web.Response
 	}
 
-	Handler func(c web.Context) web.Response
+	Handler func(web.Context) web.Response
 
 	DataController interface {
-		Data(c web.Context) interface{}
+		Data(web.Context) interface{}
 	}
 
-	DataHandler func(c web.Context) web.Response
+	DataHandler func(web.Context) interface{}
 
 	AppAwareInterface interface {
 		SetApp(*App)
@@ -101,6 +101,8 @@ func New(ctx *context.Context) *App {
 		}
 		a.router.Handle(route, a.handle(ctx.Handler[name])).Name(name)
 	}
+
+	a.router.Handle("/_flamingo/json/{handler}", a.handle(a.GetHandler)).Name("_flamingo.json")
 
 	return a
 }
@@ -186,14 +188,14 @@ func (r *App) handle(c Controller) http.Handler {
 				response = c.(POSTController).Post(ctx)
 			}
 
-		case Handler:
-			response = c.(Handler)(ctx)
+		case func(web.Context) web.Response:
+			response = c.(func(web.Context) web.Response)(ctx)
 
 		case DataController:
 			response = web.JsonResponse{c.(DataController).Data(ctx)}
 
-		case DataHandler:
-			response = web.JsonResponse{c.(DataHandler)(ctx)}
+		case func(web.Context) interface{}:
+			response = web.JsonResponse{c.(func(web.Context) interface{})(ctx)}
 
 		case http.Handler:
 			c.(http.Handler).ServeHTTP(w, req)
@@ -216,10 +218,14 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 		if c, ok := c.(DataController); ok {
 			return c.Data(ctx)
 		}
-		if c, ok := c.(DataHandler); ok {
+		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(ctx)
 		}
 		panic("not a data controller")
 	}
 	panic("not a handler")
+}
+
+func (a *App) GetHandler(c web.Context) web.Response {
+	return web.JsonResponse{a.Get(c.Param1("handler"), c)}
 }

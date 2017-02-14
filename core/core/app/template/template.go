@@ -126,11 +126,15 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 			return template.URL(result)
 		},
 		"__": fmt.Sprintf, // todo translate
-		"get": func(what string) interface{} {
+		"__get": func(what string) interface{} {
 			if what == "user.name" {
 				return "testuser"
 			}
 			return []map[string]string{{"url": "url1", "name": "item1"}, {"url": "url2", "name": "name2"}}
+		},
+		"get": func(what string) interface{} {
+			log.Println("get", what)
+			return app.Get(what, ctx)
 		},
 	})
 

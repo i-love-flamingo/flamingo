@@ -3,7 +3,6 @@ package node
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"path/filepath"
 	"strings"
 )
@@ -23,19 +22,19 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	tc := p.render(t, "", nil)
 	tpl, err := tpl.Parse(tc)
 
-	log.Println(tc)
-
 	if err != nil {
 		fmt.Println(p.render(t, "", nil))
 		panic(err)
 	}
 
-	for name, block := range blocks {
-		tpl, err = tpl.New(name).Parse(block)
-		if err != nil {
-			panic(err)
+	/*
+		for name, block := range blocks {
+			tpl, err = tpl.New(name).Parse(block)
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
+	*/
 
 	return tpl
 }
@@ -81,20 +80,23 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 		case "NamedBlock":
 			switch t.Mode {
 			case "replace":
-				if _, ok := blocks[t.Name]; !ok {
-					buf += "\n" + pre + fmt.Sprintf("{{ template \"%s\" . }}", t.Name)
-				}
-				blocks[t.Name] = p.render(t, pre+depth, mixinblock)
-			case "append":
-				blocks[t.Name] += p.render(t, pre+depth, mixinblock)
-			case "prepend":
-				blocks[t.Name] = p.render(t, pre+depth, mixinblock) + blocks[t.Name]
+				/*
+					if _, ok := blocks[t.Name]; !ok {
+						buf += "\n" + pre + fmt.Sprintf("{{ template \"%s\" . }}", t.Name)
+					}
+					blocks[t.Name] = p.render(t, pre+depth, mixinblock)
+				*/
+				buf += p.render(t, pre, mixinblock)
+			//case "append":
+			//	blocks[t.Name] += p.render(t, pre+depth, mixinblock)
+			//case "prepend":
+			//	blocks[t.Name] = p.render(t, pre+depth, mixinblock) + blocks[t.Name]
 			default:
 				panic(t.Mode)
 			}
 
 		case "Doctype":
-			buf += ifmt(t, pre, fmt.Sprintf("<!DOCTYPE %s>", t.Val))
+			buf += fmt.Sprintf("<!DOCTYPE %s>", t.Val)
 
 		case "Tag":
 			if t.SelfClosing {

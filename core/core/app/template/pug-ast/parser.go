@@ -41,6 +41,7 @@ type (
 		Filename              string
 		SelfClosing, IsInline bool
 		Obj                   string
+		Key                   string
 
 		// mixin
 		Call bool   // mixin call?

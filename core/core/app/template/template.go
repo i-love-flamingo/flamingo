@@ -13,13 +13,15 @@ Please do not judge this file! Please :)
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core"
-	"flamingo/core/template/pug-ast"
+	"flamingo/core/core/app"
+	"flamingo/core/core/app/template/pug-ast"
+	"flamingo/core/core/app/web"
 	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -31,6 +33,7 @@ var (
 	assetrewrites map[string]string
 	templates     map[string]*template.Template
 	templatesLock sync.Mutex
+	webpackserver bool
 )
 
 func init() {
@@ -55,6 +58,12 @@ func loadTemplates() {
 
 	if err != nil {
 		panic(err)
+	}
+
+	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
+		webpackserver = true
+	} else {
+		webpackserver = false
 	}
 
 	log.Println("Compiled templates in", time.Since(start))
@@ -88,7 +97,7 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/template
-func Render(app *core.App, tpl string, data interface{}) io.Reader {
+func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Reader {
 	buf := new(bytes.Buffer)
 
 	// recompile
@@ -100,14 +109,21 @@ func Render(app *core.App, tpl string, data interface{}) io.Reader {
 
 	t.Funcs(template.FuncMap{
 		"asset": func(a string) template.URL {
+			if webpackserver {
+				return template.URL("/assets/" + a)
+			}
+
 			url := app.Url("_static")
 			aa := strings.Split(a, "/")
 			aaa := aa[len(aa)-1]
+			var result string
 			if assetrewrites[aaa] != "" {
-				return template.URL(url.String() + "/" + assetrewrites[aaa])
+				result = url.String() + "/" + assetrewrites[aaa]
 			} else {
-				return template.URL(url.String() + a)
+				result = url.String() + "/" + a
 			}
+			ctx.Push(result, nil)
+			return template.URL(result)
 		},
 		"__": fmt.Sprintf, // todo translate
 		"get": func(what string) interface{} {
@@ -119,7 +135,7 @@ func Render(app *core.App, tpl string, data interface{}) io.Reader {
 	})
 
 	err := t.ExecuteTemplate(buf, tpl, map[string]interface{}{
-		"isProductionBuild": true,
+		"isProductionBuild": !webpackserver,
 		"classBody":         "default",
 		"title":             "Home",
 		"site": map[string]interface{}{

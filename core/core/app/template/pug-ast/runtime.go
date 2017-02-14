@@ -24,6 +24,7 @@ var FuncMap = template.FuncMap{
 	"__op__mul":   runtime_mul,
 	"__op__quo":   runtime_quo,
 	"__op__rem":   runtime_rem,
+	"__op__mod":   runtime_rem,
 	"__op__minus": runtime_minus,
 	"__op__plus":  runtime_plus,
 	"__op__eql":   runtime_eql,

@@ -133,6 +133,10 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 
 		if wrap {
+			lf := len(finalexpr)
+			if finalexpr[0] == '"' && finalexpr[lf-1] == '"' {
+				return finalexpr[1 : lf-1]
+			}
 			finalexpr = `{{` + finalexpr + `}}`
 		}
 
@@ -161,7 +165,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		finalexpr += `{{end}}`
 	} else if be, ok := expr.(*ast.BinaryExpression); ok {
 		finalexpr = fmt.Sprintf(
-			`%s %s %s`,
+			`(%s %s %s)`,
 			ops[be.Operator],
 			renderExpression(be.Left, false, true),
 			renderExpression(be.Right, false, true))
@@ -222,7 +226,10 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 		finalexpr += `)`
 	} else if _, ok := expr.(*ast.NullLiteral); ok {
-		finalexpr = `nil`
+		finalexpr = ``
+		if wrap {
+			return `{{null}}`
+		}
 	} else if se, ok := expr.(*ast.SequenceExpression); ok {
 		finalexpr = `(__op__array `
 		for _, s := range se.Sequence {
@@ -235,7 +242,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 			finalexpr = `{{` + finalexpr + `}}`
 		}
 	} else if ue, ok := expr.(*ast.UnaryExpression); ok {
-		finalexpr += ops[ue.Operator] + ` ` + renderExpression(ue.Operand, false, true)
+		finalexpr += `(` + ops[ue.Operator] + ` ` + renderExpression(ue.Operand, false, true) + `)`
 		if wrap {
 			finalexpr = `{{` + finalexpr + `}}`
 		}

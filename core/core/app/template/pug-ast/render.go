@@ -19,19 +19,22 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 
 	tpl := template.New(name).Funcs(FuncMap).Option("missingkey=error")
 
-	tpl, err := tpl.Parse(p.render(t, "", nil))
+	tc := p.render(t, "", nil)
+	tpl, err := tpl.Parse(tc)
 
 	if err != nil {
 		fmt.Println(p.render(t, "", nil))
 		panic(err)
 	}
 
-	for name, block := range blocks {
-		tpl, err = tpl.New(name).Parse(block)
-		if err != nil {
-			panic(err)
+	/*
+		for name, block := range blocks {
+			tpl, err = tpl.New(name).Parse(block)
+			if err != nil {
+				panic(err)
+			}
 		}
-	}
+	*/
 
 	return tpl
 }
@@ -41,11 +44,15 @@ func args(attrs []*Attr) string {
 		return ""
 	}
 
-	var a []string
+	a := make(map[string]string)
 	for _, attr := range attrs {
-		a = append(a, fmt.Sprintf(`%s="%s"`, attr.Name, JsExpr(attr.Val, true, false)))
+		a[attr.Name] += ` ` + JsExpr(attr.Val, true, false)
 	}
-	return " " + strings.Join(a, " ")
+	res := ""
+	for k, v := range a {
+		res += ` ` + k + `="` + strings.TrimSpace(v) + `"`
+	}
+	return res
 }
 
 func ifmt(t *Token, pre, buf string) string {
@@ -73,20 +80,23 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 		case "NamedBlock":
 			switch t.Mode {
 			case "replace":
-				if _, ok := blocks[t.Name]; !ok {
-					buf += "\n" + pre + fmt.Sprintf("{{ template \"%s\" . }}", t.Name)
-				}
-				blocks[t.Name] = p.render(t, pre+depth, mixinblock)
-			case "append":
-				blocks[t.Name] += p.render(t, pre+depth, mixinblock)
-			case "prepend":
-				blocks[t.Name] = p.render(t, pre+depth, mixinblock) + blocks[t.Name]
+				/*
+					if _, ok := blocks[t.Name]; !ok {
+						buf += "\n" + pre + fmt.Sprintf("{{ template \"%s\" . }}", t.Name)
+					}
+					blocks[t.Name] = p.render(t, pre+depth, mixinblock)
+				*/
+				buf += p.render(t, pre, mixinblock)
+			//case "append":
+			//	blocks[t.Name] += p.render(t, pre+depth, mixinblock)
+			//case "prepend":
+			//	blocks[t.Name] = p.render(t, pre+depth, mixinblock) + blocks[t.Name]
 			default:
 				panic(t.Mode)
 			}
 
 		case "Doctype":
-			buf += ifmt(t, pre, fmt.Sprintf("<!DOCTYPE %s>", t.Val))
+			buf += fmt.Sprintf("<!DOCTYPE %s>", t.Val)
 
 		case "Tag":
 			if t.SelfClosing {
@@ -167,7 +177,12 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 
 		case "Each":
 			known[t.Val] = true
-			buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, JsExpr(t.Obj, false, false))
+			if t.Key != "" {
+				known[t.Key] = true
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s, $%s := %s}}", t.Key, t.Val, JsExpr(t.Obj, false, false))
+			} else {
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, JsExpr(t.Obj, false, false))
+			}
 			buf += p.render(t.Block, pre, mixinblock)
 			buf += "\n" + pre + "{{end}}"
 

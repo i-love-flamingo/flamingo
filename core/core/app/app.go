@@ -44,6 +44,10 @@ type (
 		SetApp(*App)
 	}
 
+	CopyInterface interface {
+		Copy() interface{}
+	}
+
 	FixRoute struct {
 		Handler string
 		Params  map[string]string
@@ -85,23 +89,49 @@ func (r *ResponseWriter) WriteHeader(h int) {
 }
 
 // New factory for web router
-func New(ctx *context.Context) *App {
+func New(ctx *context.Context, r *Registrator) *App {
 	a := &App{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
 
+	// bootstrap
 	a.router = mux.NewRouter()
-	a.routes = ctx.Routes
-	a.handler = ctx.Handler
+	a.routes = make(map[string]string)
+	a.handler = make(map[string]interface{})
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 	a.log = log.New(os.Stdout, "["+ctx.Name+"] ", 0)
 
-	for route, name := range ctx.Routes {
-		a.log.Println("Register", name, "at", route)
-		if _, ok := ctx.Handler[name]; !ok {
-			panic("no handler for" + name)
+	// set up routes
+	for p, name := range r.routes {
+		a.routes[name] = p
+	}
+
+	for p, name := range ctx.Routes {
+		a.routes[name] = p
+	}
+
+	// set up handlers
+	for name, handler := range r.handlers {
+		a.handler[name] = handler
+	}
+
+	for name, handler := range ctx.Handler {
+		a.handler[name] = handler
+	}
+
+	known := make(map[string]bool)
+
+	for name, handler := range a.handler {
+		if known[name] {
+			continue
 		}
-		a.router.Handle(route, a.handle(ctx.Handler[name])).Name(name)
+		known[name] = true
+		route, ok := a.routes[name]
+		if !ok {
+			continue
+		}
+		a.log.Println("Register", name, "at", route)
+		a.router.Handle(route, a.handle(handler)).Name(name)
 	}
 
 	a.router.Handle("/_flamingo/json/{handler}", a.handle(a.GetHandler)).Name("_flamingo.json")
@@ -168,8 +198,13 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *App) handle(c Controller) http.Handler {
-	if c, ok := c.(AppAwareInterface); ok {
-		c.SetApp(r)
+	if ac, ok := c.(AppAwareInterface); ok {
+		ac.SetApp(r)
+		if cc, ok := ac.(CopyInterface); ok {
+			c = cc.Copy()
+		} else {
+			panic(fmt.Sprintf("%T not copyable, but AppAware!", c))
+		}
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -232,7 +267,7 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 			return res
 		}
 	}
-	panic("not a handler")
+	panic("not a handler: " + handler)
 }
 
 func (a *App) GetHandler(c web.Context) web.Response {

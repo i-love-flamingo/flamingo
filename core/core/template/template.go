@@ -14,7 +14,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flamingo/core/core/app"
-	"flamingo/core/core/app/template/pug-ast"
+	"flamingo/core/core/template/pug-ast"
 	"flamingo/core/core/app/web"
 	"fmt"
 	"html/template"
@@ -35,6 +35,11 @@ var (
 	templatesLock sync.Mutex
 	webpackserver bool
 )
+
+func Register(r *app.Registrator) {
+	r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/dist"))))
+	r.Route("/static/{n:.*}", "_static")
+}
 
 func init() {
 	loadTemplates()

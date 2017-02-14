@@ -12,6 +12,11 @@ type PageController struct {
 	pageservice interfaces.PageService
 }
 
+func (i *PageController) Copy() interface{} {
+	var ic PageController = *i
+	return &ic
+}
+
 func (pc *PageController) Get(c web.Context) web.Response {
 	return pc.Render(c, "pages/"+c.Param1("name"))
 }

@@ -1,6 +1,10 @@
-hash: 84db97a3203ac7fc68f22858a051a76167b532d7ff97cef172a32b15ecdddd68
-updated: 2017-02-14T14:15:13.283202435+01:00
+hash: 2104285ea271e2cc3122d7c0d78d4940d6994a240fca5e1820d56dcae65d9975
+updated: 2017-02-14T17:11:11.096293623+01:00
 imports:
+- name: github.com/facebookgo/inject
+  version: cc1aa653e50f6a9893bcaef89e673e5b24e1e97b
+- name: github.com/facebookgo/structtag
+  version: 217e25fb96916cc60332e399c9aa63f5c422ceed
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux

@@ -2,8 +2,8 @@ package responder
 
 import (
 	"flamingo/core/core/app"
-	"flamingo/core/core/app/template"
 	"flamingo/core/core/app/web"
+	"flamingo/core/core/template"
 	"net/http"
 )
 

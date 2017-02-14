@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"fmt"
+
 	"github.com/gorilla/mux"
 	"github.com/labstack/gommon/color"
 )
@@ -122,6 +124,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		if err := recover(); err != nil {
 			w.WriteHeader(500)
 			if a.Debug {
+				w.Write([]byte(fmt.Sprintln(err)))
 				w.Write(debug.Stack())
 			}
 		}

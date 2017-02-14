@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"path/filepath"
 	"strings"
 )
@@ -19,7 +20,10 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 
 	tpl := template.New(name).Funcs(FuncMap).Option("missingkey=error")
 
-	tpl, err := tpl.Parse(p.render(t, "", nil))
+	tc := p.render(t, "", nil)
+	tpl, err := tpl.Parse(tc)
+
+	log.Println(tc)
 
 	if err != nil {
 		fmt.Println(p.render(t, "", nil))
@@ -167,7 +171,12 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 
 		case "Each":
 			known[t.Val] = true
-			buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, JsExpr(t.Obj, false, false))
+			if t.Key != "" {
+				known[t.Key] = true
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s, $%s := %s}}", t.Key, t.Val, JsExpr(t.Obj, false, false))
+			} else {
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, JsExpr(t.Obj, false, false))
+			}
 			buf += p.render(t.Block, pre, mixinblock)
 			buf += "\n" + pre + "{{end}}"
 

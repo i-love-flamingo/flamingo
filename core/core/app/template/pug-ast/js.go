@@ -165,7 +165,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		finalexpr += `{{end}}`
 	} else if be, ok := expr.(*ast.BinaryExpression); ok {
 		finalexpr = fmt.Sprintf(
-			`%s %s %s`,
+			`(%s %s %s)`,
 			ops[be.Operator],
 			renderExpression(be.Left, false, true),
 			renderExpression(be.Right, false, true))
@@ -239,7 +239,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 			finalexpr = `{{` + finalexpr + `}}`
 		}
 	} else if ue, ok := expr.(*ast.UnaryExpression); ok {
-		finalexpr += ops[ue.Operator] + ` ` + renderExpression(ue.Operand, false, true)
+		finalexpr += `(` + ops[ue.Operator] + ` ` + renderExpression(ue.Operand, false, true) + `)`
 		if wrap {
 			finalexpr = `{{` + finalexpr + `}}`
 		}

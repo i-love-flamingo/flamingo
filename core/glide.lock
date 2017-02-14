@@ -1,10 +1,14 @@
-hash: 173295fe1d1c83625ab582b6c491cfa043ee38160123e9a287fb0b42879059d4
-updated: 2017-02-14T13:24:50.443587648+01:00
+hash: 84db97a3203ac7fc68f22858a051a76167b532d7ff97cef172a32b15ecdddd68
+updated: 2017-02-14T14:15:13.283202435+01:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/gorilla/securecookie
+  version: 667fe4e3466a040b780561fe9b51a83a3753eefc
+- name: github.com/gorilla/sessions
+  version: ca9ada44574153444b00d3fd9c8559e4cc95f896
 - name: github.com/labstack/gommon
   version: f72d3c883f8ea180da8f085dd320804c41332ad1
   subpackages:

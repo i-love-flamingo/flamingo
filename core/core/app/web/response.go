@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 )
@@ -35,4 +36,19 @@ func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 	rw.Header().Set("Content-Type", cr.ContentType)
 	rw.WriteHeader(cr.Status)
 	io.Copy(rw, cr.Body)
+}
+
+type JsonResponse struct {
+	Data interface{}
+}
+
+// Apply Response
+func (js JsonResponse) Apply(rw http.ResponseWriter) {
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(200)
+	p, err := json.Marshal(js.Data)
+	if err != nil {
+		panic(err)
+	}
+	rw.Write(p)
 }

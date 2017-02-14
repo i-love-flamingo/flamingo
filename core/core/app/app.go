@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/labstack/gommon/color"
 )
 
@@ -29,9 +30,13 @@ type (
 		Post(c web.Context) web.Response
 	}
 
+	Handler func(c web.Context) web.Response
+
 	DataController interface {
 		Data(c web.Context) interface{}
 	}
+
+	DataHandler func(c web.Context) web.Response
 
 	AppAwareInterface interface {
 		SetApp(*App)
@@ -51,6 +56,8 @@ type (
 		Debug     bool
 		base      *url.URL
 		log       *log.Logger
+
+		Sessions sessions.Store
 	}
 
 	ResponseWriter struct {
@@ -78,7 +85,7 @@ func (r *ResponseWriter) WriteHeader(h int) {
 // New factory for web router
 func New(ctx *context.Context) *App {
 	a := &App{
-	//		fixroutes: make(map[string]FixRoute),
+		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
 
 	a.router = mux.NewRouter()
@@ -120,9 +127,12 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()
 	defer func() {
+		extra := ""
+
 		if err := recover(); err != nil {
 			w.WriteHeader(500)
 			if a.Debug {
+				extra += fmt.Sprintf(`| Error: %s`, err)
 				w.Write([]byte(fmt.Sprintln(err)))
 				w.Write(debug.Stack())
 			}
@@ -143,7 +153,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 				cp = color.Black
 			}
 
-			a.log.Printf(cp("%03d | % 8s | % 15s | %s"), ww.status, req.Method, time.Since(start), req.RequestURI)
+			if ww.Header().Get("Location") != "" {
+				extra += "-> " + ww.Header().Get("Location")
+			}
+			a.log.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
 		}
 	}()
 
@@ -156,35 +169,55 @@ func (r *App) handle(c Controller) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		ctx := web.ContextFromRequest(w, req)
+		s, _ := r.Sessions.Get(req, "aial")
 
-		if req.Method == http.MethodGet {
-			if c, ok := c.(GETController); ok {
-				c.Get(ctx).Apply(w)
-				return
-			}
-		} else if req.Method == http.MethodPost {
-			if c, ok := c.(POSTController); ok {
-				c.Post(ctx).Apply(w)
-				return
-			}
-		}
+		ctx := web.ContextFromRequest(w, req, s)
 
-		if c, ok := c.(http.Handler); ok {
-			c.ServeHTTP(w, req)
+		var response web.Response
+
+		switch c.(type) {
+		case GETController:
+			if req.Method == http.MethodGet {
+				response = c.(GETController).Get(ctx)
+			}
+
+		case POSTController:
+			if req.Method == http.MethodPost {
+				response = c.(POSTController).Post(ctx)
+			}
+
+		case Handler:
+			response = c.(Handler)(ctx)
+
+		case DataController:
+			response = web.JsonResponse{c.(DataController).Data(ctx)}
+
+		case DataHandler:
+			response = web.JsonResponse{c.(DataHandler)(ctx)}
+
+		case http.Handler:
+			c.(http.Handler).ServeHTTP(w, req)
+			return
+
+		default:
+			w.WriteHeader(404)
+			w.Write([]byte("404 page not found (no handler)"))
 			return
 		}
 
-		w.WriteHeader(404)
-		w.Write([]byte("404 page not found (no handler)"))
-		//panic("cannot serve " + req.RequestURI)
+		r.Sessions.Save(req, w, ctx.Session())
+
+		response.Apply(w)
 	})
 }
 
-func (a *App) Get(ctx web.Context, handler string) interface{} {
+func (a *App) Get(handler string, ctx web.Context) interface{} {
 	if c, ok := a.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
 			return c.Data(ctx)
+		}
+		if c, ok := c.(DataHandler); ok {
+			return c(ctx)
 		}
 		panic("not a data controller")
 	}

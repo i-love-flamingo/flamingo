@@ -9,3 +9,7 @@ import:
   - parser
   - token
 - package: gopkg.in/yaml.v2
+- package: github.com/gorilla/sessions
+  version: ^1.1.0
+- package: github.com/gorilla/securecookie
+  version: ^1.1.0

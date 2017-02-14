@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
 
 type (
@@ -24,19 +25,21 @@ type (
 		ID() string
 
 		Push(target string, opts *http.PushOptions) error
+
+		Session() *sessions.Session
 	}
 
 	ctx struct {
 		vars    map[string]string
 		request *http.Request
-		debug   bool
 		id      string
 		writer  http.ResponseWriter
 		pusher  http.Pusher
+		session *sessions.Session
 	}
 )
 
-func ContextFromRequest(rw http.ResponseWriter, r *http.Request) *ctx {
+func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) *ctx {
 	c := new(ctx)
 	c.vars = mux.Vars(r)
 	c.request = r
@@ -47,9 +50,13 @@ func ContextFromRequest(rw http.ResponseWriter, r *http.Request) *ctx {
 		c.pusher = pusher
 	}
 
-	c.debug = true
+	c.session = session
 
 	return c
+}
+
+func (c *ctx) Session() *sessions.Session {
+	return c.session
 }
 
 func (c *ctx) Push(target string, opts *http.PushOptions) error {

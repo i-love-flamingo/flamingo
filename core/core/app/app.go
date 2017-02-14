@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -120,6 +121,9 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			w.WriteHeader(500)
+			if a.Debug {
+				w.Write(debug.Stack())
+			}
 		}
 		if a.Debug {
 			ww := w.(*ResponseWriter)

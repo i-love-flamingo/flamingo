@@ -45,11 +45,15 @@ func args(attrs []*Attr) string {
 		return ""
 	}
 
-	var a []string
+	a := make(map[string]string)
 	for _, attr := range attrs {
-		a = append(a, fmt.Sprintf(`%s="%s"`, attr.Name, JsExpr(attr.Val, true, false)))
+		a[attr.Name] += ` ` + JsExpr(attr.Val, true, false)
 	}
-	return " " + strings.Join(a, " ")
+	res := ""
+	for k, v := range a {
+		res += ` ` + k + `="` + strings.TrimSpace(v) + `"`
+	}
+	return res
 }
 
 func ifmt(t *Token, pre, buf string) string {

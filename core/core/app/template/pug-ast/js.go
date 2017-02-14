@@ -226,7 +226,10 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 		finalexpr += `)`
 	} else if _, ok := expr.(*ast.NullLiteral); ok {
-		finalexpr = `nil`
+		finalexpr = ``
+		if wrap {
+			return `{{null}}`
+		}
 	} else if se, ok := expr.(*ast.SequenceExpression); ok {
 		finalexpr = `(__op__array `
 		for _, s := range se.Sequence {

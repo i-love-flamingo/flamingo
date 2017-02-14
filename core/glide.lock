@@ -1,5 +1,5 @@
 hash: 1e5cfb77ad31faa3e75263e41f6c6f2aebe0db2869f69d883774a83e6e5b64d2
-updated: 2017-02-13T15:47:04.86912624+01:00
+updated: 2017-02-14T11:51:05.090577458+01:00
 imports:
 - name: github.com/fatih/color
   version: 5ec5d9d3c2cf82e9688b34e9bc27a94d616a7193
@@ -7,6 +7,14 @@ imports:
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/labstack/gommon
+  version: f72d3c883f8ea180da8f085dd320804c41332ad1
+  subpackages:
+  - color
+- name: github.com/mattn/go-colorable
+  version: 5411d3eea5978e6cdc258b30de592b60df6aba96
+- name: github.com/mattn/go-isatty
+  version: 281032e84ae07510239465db46bf442aa44b953a
 - name: github.com/robertkrimen/otto
   version: aabe79b06556d741409a343b9bbabf653cef2a1c
   repo: https://github.com/thebod/otto.git
@@ -16,8 +24,10 @@ imports:
   - file
   - parser
   - token
-- name: github.com/urfave/negroni
-  version: 61dbefc515b4dede6eb2de7df1e54d49edce892d
+- name: golang.org/x/sys
+  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  subpackages:
+  - unix
 - name: gopkg.in/sourcemap.v1
   version: f5da1d57891040819d7961bfeed49271d78ca0fa
   subpackages:

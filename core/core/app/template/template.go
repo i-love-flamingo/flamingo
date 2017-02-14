@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -32,6 +33,7 @@ var (
 	assetrewrites map[string]string
 	templates     map[string]*template.Template
 	templatesLock sync.Mutex
+	webpackserver bool
 )
 
 func init() {
@@ -56,6 +58,12 @@ func loadTemplates() {
 
 	if err != nil {
 		panic(err)
+	}
+
+	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
+		webpackserver = true
+	} else {
+		webpackserver = false
 	}
 
 	log.Println("Compiled templates in", time.Since(start))
@@ -101,6 +109,10 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 
 	t.Funcs(template.FuncMap{
 		"asset": func(a string) template.URL {
+			if webpackserver {
+				return template.URL("//localhost:1337/assets/" + a)
+			}
+
 			url := app.Url("_static")
 			aa := strings.Split(a, "/")
 			aaa := aa[len(aa)-1]
@@ -108,7 +120,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 			if assetrewrites[aaa] != "" {
 				result = url.String() + "/" + assetrewrites[aaa]
 			} else {
-				result = url.String() + a
+				result = url.String() + "/" + a
 			}
 			ctx.Push(result, nil)
 			return template.URL(result)

@@ -118,7 +118,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 				return template.URL("/assets/" + a)
 			}
 
-			url := app.Url("_static")
+			url := app.Url("_static", "n", "")
 			aa := strings.Split(a, "/")
 			aaa := aa[len(aa)-1]
 			var result string

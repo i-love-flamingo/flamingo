@@ -1,9 +1,11 @@
 package app
 
 import (
+	"encoding/json"
 	"flamingo/core/core/app/context"
 	"flamingo/core/core/app/web"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -222,6 +224,13 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 			return c(ctx)
 		}
 		panic("not a data controller")
+	} else if a.Debug { // mock...
+		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
+		if err == nil {
+			var res interface{}
+			json.Unmarshal(data, &res)
+			return res
+		}
 	}
 	panic("not a handler")
 }

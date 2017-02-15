@@ -82,5 +82,8 @@ func (r *Registrator) DI() inject.Graph {
 // Resolve populates the injection graph
 func (r *Registrator) Resolve() {
 	di := r.DI()
-	di.Populate()
+	err := di.Populate()
+	if err != nil {
+		panic(err)
+	}
 }

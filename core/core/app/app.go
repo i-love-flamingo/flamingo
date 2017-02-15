@@ -7,15 +7,12 @@ BUG(bastian.ike) complexity too high
 package app
 
 import (
-	"encoding/json"
 	"flamingo/core/core/app/context"
 	"flamingo/core/core/app/web"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"runtime/debug"
 	"time"
@@ -46,18 +43,6 @@ type (
 	// Handler is just a generic web-controller-callback
 	Handler func(web.Context) web.Response
 
-	// DataController is a controller used to retrieve data, such as user-information, basket
-	// etc.
-	// By default this will be handled by templates, but there is an out-of-the-box support
-	// for JSON requests via /_flamingo/json/{name}, as well as their own route if defined.
-	DataController interface {
-		// Data is called for data requests
-		Data(web.Context) interface{}
-	}
-
-	// DataHandler behaves the same as DataController, but just for direct callbacks
-	DataHandler func(web.Context) interface{}
-
 	// App defines the basic App which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	App struct {
@@ -66,7 +51,7 @@ type (
 		handler map[string]interface{}
 		Debug   bool
 		base    *url.URL
-		log     *log.Logger
+		Logger  *log.Logger `inject:""`
 
 		Sessions sessions.Store
 	}
@@ -107,7 +92,6 @@ func New(ctx *context.Context, r *Registrator) *App {
 	a.routes = make(map[string]string)
 	a.handler = make(map[string]interface{})
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
-	a.log = log.New(os.Stdout, "["+ctx.Name+"] ", 0)
 
 	// set up routes
 	for p, name := range r.routes {
@@ -138,11 +122,9 @@ func New(ctx *context.Context, r *Registrator) *App {
 		if !ok {
 			continue
 		}
-		a.log.Println("Register", name, "at", route)
+		a.Logger.Println("Register", name, "at", route)
 		a.router.Handle(route, a.handle(handler)).Name(name)
 	}
-
-	a.router.Handle("/_flamingo/json/{handler}", a.handle(a.GetHandler)).Name("_flamingo.json")
 
 	return a
 }
@@ -201,7 +183,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if ww.Header().Get("Location") != "" {
 				extra += "-> " + ww.Header().Get("Location")
 			}
-			a.log.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
+			a.Logger.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
 		}
 	}()
 
@@ -250,30 +232,4 @@ func (a *App) handle(c Controller) http.Handler {
 
 		response.Apply(w)
 	})
-}
-
-// Get is the ServeHTTP's equivalent for DataController and DataHandler
-func (a *App) Get(handler string, ctx web.Context) interface{} {
-	if c, ok := a.handler[handler]; ok {
-		if c, ok := c.(DataController); ok {
-			return c.Data(ctx)
-		}
-		if c, ok := c.(func(web.Context) interface{}); ok {
-			return c(ctx)
-		}
-		panic("not a data controller")
-	} else if a.Debug { // mock...
-		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
-		if err == nil {
-			var res interface{}
-			json.Unmarshal(data, &res)
-			return res
-		}
-	}
-	panic("not a handler: " + handler)
-}
-
-// GetHandler is registered at /_flamingo/json/{handler} and return's the call to Get()
-func (a *App) GetHandler(c web.Context) web.Response {
-	return web.JsonResponse{a.Get(c.Param1("handler"), c)}
 }

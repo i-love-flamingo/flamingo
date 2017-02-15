@@ -47,7 +47,7 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 }
 
 // GetHandler is registered at /_flamingo/json/{handler} and return's the call to Get()
-func (gc *GetController) GetHandler(c web.Context) web.Response {
+func (gc *GetController) Get(c web.Context) web.Response {
 	return web.JsonResponse{
 		Data: gc.App.Get(c.Param1("handler"), c),
 	}

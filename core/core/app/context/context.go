@@ -1,5 +1,7 @@
+// Context's are used for multi-site setups
 package context
 
+// Context defines a configuration context for multi-site setups
 type Context struct {
 	Name    string
 	BaseUrl string

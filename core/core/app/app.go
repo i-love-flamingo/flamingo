@@ -1,3 +1,9 @@
+/*
+App defines the main entry point for a website, including cotext-awareness,
+basic routing, handlers, data-handlers, etc...
+
+BUG(bastian.ike) complexity too high
+*/
 package app
 
 import (
@@ -12,7 +18,6 @@ import (
 	"os"
 	"path"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -22,50 +27,51 @@ import (
 
 type (
 	// Controller defines a web controller
+	// it is an interface{} as it can be served by multiple possible controllers,
+	// such as generic GET/POST controller, http.Handler, handler-functions, etc.
 	Controller interface{}
 
+	// GETController is implemented by controllers which have a Get method
 	GETController interface {
+		// Get is called for GET-Requests
 		Get(web.Context) web.Response
 	}
 
+	// POSTController is implemented by controllers which have a Post method
 	POSTController interface {
+		// Post is called for POST-Requests
 		Post(web.Context) web.Response
 	}
 
+	// Handler is just a generic web-controller-callback
 	Handler func(web.Context) web.Response
 
+	// DataController is a controller used to retrieve data, such as user-information, basket
+	// etc.
+	// By default this will be handled by templates, but there is an out-of-the-box support
+	// for JSON requests via /_flamingo/json/{name}, as well as their own route if defined.
 	DataController interface {
+		// Data is called for data requests
 		Data(web.Context) interface{}
 	}
 
+	// DataHandler behaves the same as DataController, but just for direct callbacks
 	DataHandler func(web.Context) interface{}
 
-	AppAwareInterface interface {
-		SetApp(*App)
-	}
-
-	CopyInterface interface {
-		Copy() interface{}
-	}
-
-	FixRoute struct {
-		Handler string
-		Params  map[string]string
-	}
-
-	// App defines the basic multiplexer
+	// App defines the basic App which is used for holding a context-scoped setup
+	// This includes DI resolving etc
 	App struct {
-		router    *mux.Router
-		routes    map[string]string
-		handler   map[string]interface{}
-		fixroutes map[string]FixRoute
-		Debug     bool
-		base      *url.URL
-		log       *log.Logger
+		router  *mux.Router
+		routes  map[string]string
+		handler map[string]interface{}
+		Debug   bool
+		base    *url.URL
+		log     *log.Logger
 
 		Sessions sessions.Store
 	}
 
+	// ResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging
 	ResponseWriter struct {
 		http.ResponseWriter
 		status int
@@ -73,26 +79,28 @@ type (
 	}
 )
 
-func (r *ResponseWriter) Header() http.Header {
-	return r.ResponseWriter.Header()
-}
-
+// Writes calls http.ResponseWriter.Write and records the written bytes
 func (r *ResponseWriter) Write(data []byte) (int, error) {
 	l, e := r.ResponseWriter.Write(data)
 	r.size += l
 	return l, e
 }
 
+// WriteHeader call http.ResponseWriter.WriteHeader and records the status code
 func (r *ResponseWriter) WriteHeader(h int) {
 	r.status = h
 	r.ResponseWriter.WriteHeader(h)
 }
 
-// New factory for web router
+// New factory for App
+// New creates the new app, set's up handlers and routes and resolved the DI
 func New(ctx *context.Context, r *Registrator) *App {
 	a := &App{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
+
+	r.Object(a)
+	r.Resolve()
 
 	// bootstrap
 	a.router = mux.NewRouter()
@@ -139,24 +147,27 @@ func New(ctx *context.Context, r *Registrator) *App {
 	return a
 }
 
-func fixid(handler string, params ...string) string {
-	return handler + "!!" + strings.Join(params, "!!!")
+// Router returns the http.Handler
+func (a *App) Router() *mux.Router {
+	return a.router
 }
 
-// Router generates a http.Handler
-func (r *App) Router() *mux.Router {
-	return r.router
-}
-
-func (r *App) Url(name string, params ...string) *url.URL {
-	u, err := r.router.Get(name).URL(params...)
+// Url helps resolving URL's by it's name
+// Example:
+// 	app.Url("cms.page.view", "name", "Home")
+// results in
+// 	/baseurl/cms/Home
+//
+func (a *App) Url(name string, params ...string) *url.URL {
+	u, err := a.router.Get(name).URL(params...)
 	if err != nil {
 		panic(err)
 	}
-	u.Path = path.Join(r.base.Path, u.Path)
+	u.Path = path.Join(a.base.Path, u.Path)
 	return u
 }
 
+// ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()
@@ -197,18 +208,9 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	a.router.ServeHTTP(w, req)
 }
 
-func (r *App) handle(c Controller) http.Handler {
-	if ac, ok := c.(AppAwareInterface); ok {
-		ac.SetApp(r)
-		if cc, ok := ac.(CopyInterface); ok {
-			c = cc.Copy()
-		} else {
-			panic(fmt.Sprintf("%T not copyable, but AppAware!", c))
-		}
-	}
-
+func (a *App) handle(c Controller) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		s, _ := r.Sessions.Get(req, "aial")
+		s, _ := a.Sessions.Get(req, "aial")
 
 		ctx := web.ContextFromRequest(w, req, s)
 
@@ -244,12 +246,13 @@ func (r *App) handle(c Controller) http.Handler {
 			return
 		}
 
-		r.Sessions.Save(req, w, ctx.Session())
+		a.Sessions.Save(req, w, ctx.Session())
 
 		response.Apply(w)
 	})
 }
 
+// Get is the ServeHTTP's equivalent for DataController and DataHandler
 func (a *App) Get(handler string, ctx web.Context) interface{} {
 	if c, ok := a.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
@@ -270,6 +273,7 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 	panic("not a handler: " + handler)
 }
 
+// GetHandler is registered at /_flamingo/json/{handler} and return's the call to Get()
 func (a *App) GetHandler(c web.Context) web.Response {
 	return web.JsonResponse{a.Get(c.Param1("handler"), c)}
 }

@@ -3,18 +3,12 @@ package cms
 import (
 	"flamingo/core/core/app/web"
 	"flamingo/core/core/app/web/responder"
-	"flamingo/core/core/cms/interfaces"
 )
 
 type PageController struct {
-	responder.RenderAware
+	*responder.RenderAware `inject:""`
 
-	pageservice interfaces.PageService
-}
-
-func (i *PageController) Copy() interface{} {
-	var ic PageController = *i
-	return &ic
+	//pageservice interfaces.PageService
 }
 
 func (pc *PageController) Get(c web.Context) web.Response {

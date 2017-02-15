@@ -8,17 +8,13 @@ import (
 )
 
 type RenderAware struct {
-	app *app.App
-}
-
-func (r *RenderAware) SetApp(app *app.App) {
-	r.app = app
+	App *app.App `inject:""`
 }
 
 func (r *RenderAware) Render(context web.Context, tpl string) web.Response {
 	return web.ContentResponse{
 		Status:      http.StatusOK,
-		Body:        template.Render(r.app, context, tpl, nil),
+		Body:        template.Render(r.App, context, tpl, nil),
 		ContentType: "text/html",
 	}
 }

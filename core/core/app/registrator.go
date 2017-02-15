@@ -77,5 +77,6 @@ func (r *Registrator) DI() inject.Graph {
 
 // Resolve populates the injection graph
 func (r *Registrator) Resolve() {
-	r.DI().Populate()
+	di := r.DI()
+	di.Populate()
 }

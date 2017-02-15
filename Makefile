@@ -14,8 +14,8 @@ dep-akl:
 	cd akl && glide i
 
 doc:
+	(sleep 10 ; open http://localhost:6060/pkg/flamingo/) &
 	godoc -http=:6060 -v
-	open http://localhost:6060/pkg/flamingo/
 
 docker: Dockerfile
 	docker build -t $(DOCKERREPO)/flamingo/akl .

@@ -30,25 +30,29 @@ func NewRegistrator() *Registrator {
 }
 
 // Register calls the provided RegisterFunc callbacks
-func (r *Registrator) Register(rfs ...RegisterFunc) {
+func (r *Registrator) Register(rfs ...RegisterFunc) *Registrator {
 	for _, rf := range rfs {
 		rf(r)
 	}
+	return r
 }
 
 // Route adds a route
-func (r *Registrator) Route(path, name string) {
+func (r *Registrator) Route(path, name string) *Registrator {
 	r.routes[path] = name
+	return r
 }
 
 // Handle adds a handler
-func (r *Registrator) Handle(name string, handler interface{}) {
+func (r *Registrator) Handle(name string, handler interface{}) *Registrator {
 	r.handlers[name] = handler
+	return r
 }
 
 // Object registers any object for DI
-func (r *Registrator) Object(i ...interface{}) {
+func (r *Registrator) Object(i ...interface{}) *Registrator {
 	r.objects = append(r.objects, i...)
+	return r
 }
 
 // sl is a private logger to show DI logs

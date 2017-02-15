@@ -11,10 +11,10 @@ type RenderAware struct {
 	App *app.App `inject:""`
 }
 
-func (r *RenderAware) Render(context web.Context, tpl string) web.Response {
+func (r *RenderAware) Render(context web.Context, tpl string, data interface{}) web.Response {
 	return web.ContentResponse{
 		Status:      http.StatusOK,
-		Body:        template.Render(r.App, context, tpl, nil),
+		Body:        template.Render(r.App, context, tpl, data),
 		ContentType: "text/html",
 	}
 }

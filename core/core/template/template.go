@@ -14,8 +14,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"flamingo/core/core/app"
-	"flamingo/core/core/template/pug-ast"
 	"flamingo/core/core/app/web"
+	"flamingo/core/core/template/pug-ast"
 	"fmt"
 	"html/template"
 	"io"
@@ -136,14 +136,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 		},
 	})
 
-	err := t.ExecuteTemplate(buf, tpl, map[string]interface{}{
-		"isProductionBuild": !webpackserver,
-		"classBody":         "default",
-		"title":             "Home",
-		"site": map[string]interface{}{
-			"title": "Auckland Airport",
-		},
-	})
+	err := t.ExecuteTemplate(buf, tpl, data)
 	if err != nil {
 		panic(err)
 	}

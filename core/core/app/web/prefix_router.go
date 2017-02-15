@@ -2,7 +2,6 @@ package web
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"path"
 	"strings"
@@ -36,7 +35,6 @@ func (pr PrefixRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	test = req.RequestURI
 	for prefix, router := range pr {
-		log.Println(test, prefix)
 		if strings.HasPrefix(test, prefix) {
 			req.URL.Path = test[len(prefix):]
 			if req.URL.Path == "" {

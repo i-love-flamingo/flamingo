@@ -3,6 +3,7 @@ package template
 import (
 	"encoding/json"
 	"flamingo/core/core/app"
+	"flamingo/core/core/app/web"
 	"flamingo/core/core/template/pug-ast"
 	"html/template"
 	"strings"
@@ -14,8 +15,11 @@ type (
 		Func() interface{}
 	}
 
+	ContextAware func(ctx web.Context) interface{}
+
 	TplFuncRegistry struct {
-		SC *app.ServiceContainer `inject:""`
+		SC           *app.ServiceContainer `inject:""`
+		contextaware map[string]ContextAware
 	}
 
 	AssetFunc struct {
@@ -25,9 +29,14 @@ type (
 )
 
 func (tfr *TplFuncRegistry) Populate() {
+	tfr.contextaware = make(map[string]ContextAware)
+
 	for _, tplfunc := range tfr.SC.GetByTag("template.func") {
 		if tplfunc, ok := tplfunc.(TplFunc); ok {
 			node.FuncMap[tplfunc.Name()] = tplfunc.Func()
+			if f, ok := tplfunc.Func().(func(ctx web.Context) interface{}); ok {
+				tfr.contextaware[tplfunc.Name()] = f
+			}
 		}
 	}
 }

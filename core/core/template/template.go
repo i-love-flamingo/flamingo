@@ -16,7 +16,6 @@ import (
 	"flamingo/core/core/app"
 	"flamingo/core/core/app/web"
 	"flamingo/core/core/template/pug-ast"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"fmt"
 
 	"github.com/fatih/structs"
 )
@@ -111,12 +112,12 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 
 	t, _ := templates[tpl].Clone()
 
-	t.Funcs(template.FuncMap{
-		"__": fmt.Sprintf, // todo translate
-		"get": func(what string) interface{} {
-			return app.Get(what, ctx)
-		},
-	})
+	funcs := make(template.FuncMap)
+	funcs["__"] = fmt.Sprintf // todo translate
+	for k, f := range TFR.contextaware {
+		funcs[k] = f(ctx)
+	}
+	t.Funcs(funcs)
 
 	var d interface{}
 	if data != nil {

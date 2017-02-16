@@ -6,4 +6,3 @@ node_modules
 npm-debug.log
 src/sass/.includes
 coverage
-generated

@@ -5,7 +5,7 @@ import (
 	"flamingo/core/core/product/controller"
 )
 
-func Register(r *app.Registrator) {
+func Register(r *app.ServiceContainer) {
 	r.Handle("product.view", new(controller.ViewController))
 	r.Route("/product/{sku}", "product.view")
 }

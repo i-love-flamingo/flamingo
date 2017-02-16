@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fatih/structs"
 )
 
 var (
@@ -36,7 +38,7 @@ var (
 	webpackserver bool
 )
 
-func Register(r *app.Registrator) {
+func Register(r *app.ServiceContainer) {
 	r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/dist"))))
 	r.Route("/static/{n:.*}", "_static")
 }
@@ -134,9 +136,19 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 		"get": func(what string) interface{} {
 			return app.Get(what, ctx)
 		},
+		"debug": func(o interface{}) string {
+			d, _ := json.MarshalIndent(o, "", "    ")
+			return string(d)
+		},
 	})
 
-	err := t.ExecuteTemplate(buf, tpl, data)
+	var d interface{}
+	if data != nil {
+		d = structs.Map(data)
+	} else {
+		d = data
+	}
+	err := t.ExecuteTemplate(buf, tpl, d)
 	if err != nil {
 		panic(err)
 	}

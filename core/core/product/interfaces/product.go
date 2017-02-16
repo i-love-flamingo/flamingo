@@ -1,18 +1,9 @@
 package interfaces
 
-import "html/template"
+import "flamingo/core/core/product/models"
 
 // ProductService interface
 type ProductService interface {
-	Get(string) Product
-	GetBySkuList([]string) []Product
-}
-
-// Product interface
-type Product interface {
-	Sku() string
-	Name() string
-	Description() string
-	Price() float64
-	Url() template.URL
+	Get(string) models.Product
+	GetByIDList([]string) []models.Product
 }

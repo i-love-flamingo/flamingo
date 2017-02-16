@@ -79,12 +79,12 @@ func (r *ResponseWriter) WriteHeader(h int) {
 
 // New factory for App
 // New creates the new app, set's up handlers and routes and resolved the DI
-func New(ctx *context.Context, r *Registrator) *App {
+func New(ctx *context.Context, r *ServiceContainer) *App {
 	a := &App{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
 
-	r.Object(a)
+	r.Register(a)
 	r.Resolve()
 
 	// bootstrap
@@ -103,7 +103,7 @@ func New(ctx *context.Context, r *Registrator) *App {
 	}
 
 	// set up handlers
-	for name, handler := range r.handlers {
+	for name, handler := range r.handler {
 		a.handler[name] = handler
 	}
 

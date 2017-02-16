@@ -2,7 +2,7 @@ package cms
 
 import "flamingo/core/core/app"
 
-func Register(r *app.Registrator) {
+func Register(r *app.ServiceContainer) {
 	// default handlers
 	r.Handle("cms.page.view", new(PageController))
 

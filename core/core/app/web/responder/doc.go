@@ -20,9 +20,3 @@ Example
 	}
 */
 package responder
-
-import "sort"
-
-func init() {
-	sort.Float64s()
-}

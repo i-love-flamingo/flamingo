@@ -1,10 +1,12 @@
-hash: 2104285ea271e2cc3122d7c0d78d4940d6994a240fca5e1820d56dcae65d9975
-updated: 2017-02-14T17:11:11.096293623+01:00
+hash: cc9be529c9d7b4e6abb887b4a8422bde8eaa316af022e6ab68fbfe3f0ee7e04d
+updated: 2017-02-16T16:08:49.672569399+01:00
 imports:
 - name: github.com/facebookgo/inject
   version: cc1aa653e50f6a9893bcaef89e673e5b24e1e97b
 - name: github.com/facebookgo/structtag
   version: 217e25fb96916cc60332e399c9aa63f5c422ceed
+- name: github.com/fatih/structs
+  version: a720dfa8df582c51dee1b36feabb906bde1588bd
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"reflect"
 	"strings"
 )
@@ -66,7 +65,6 @@ var FuncMap = template.FuncMap{
 		for i := 0; i < len(a); i += 2 {
 			m[a[i]] = a[i+1]
 		}
-		log.Println(a, m)
 		return m
 	},
 	"attr": func(attr, prefix interface{}) string {
@@ -85,8 +83,6 @@ var FuncMap = template.FuncMap{
 				m[k] = v
 			}
 		}
-		log.Println(on)
-		log.Println(m)
 		return m
 	},
 }

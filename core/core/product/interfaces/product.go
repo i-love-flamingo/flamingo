@@ -1,5 +1,7 @@
 package interfaces
 
+import "html/template"
+
 // ProductService interface
 type ProductService interface {
 	Get(string) Product
@@ -12,4 +14,5 @@ type Product interface {
 	Name() string
 	Description() string
 	Price() float64
+	Url() template.URL
 }

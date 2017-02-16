@@ -7,6 +7,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// BUG(bastian.ike) Refactor
+
+/// MustLoadYaml panics when LoadYaml fails
 func MustLoadYaml(dir string) map[string]*Context {
 	r, err := LoadYaml(dir)
 	if err != nil {
@@ -15,6 +18,7 @@ func MustLoadYaml(dir string) map[string]*Context {
 	return r
 }
 
+// LoadYaml loads the contexts from a given folder and resolves Parent-relationships
 func LoadYaml(dir string) (map[string]*Context, error) {
 	basecfg, err := ioutil.ReadFile(path.Join(dir, "context.yml"))
 	if err != nil {

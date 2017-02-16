@@ -9,14 +9,8 @@ import (
 )
 
 var FuncMap = template.FuncMap{
-	"asset": func(a string) template.URL { return template.URL("http://CDN/" + a) },
-	"__":    func(s ...string) string { return strings.Join(s, "::") },
-	"get": func(what string) interface{} {
-		if what == "user.name" {
-			return "testuser"
-		}
-		return []map[string]string{{"url": "url1", "name": "item1"}, {"url": "url2", "name": "name2"}}
-	},
+	"__":  func(s ...string) string { return strings.Join(s, "::") },
+	"get": func(s ...string) string { return strings.Join(s, "::") },
 
 	"__op__add":   runtime_add,
 	"__op__sub":   runtime_sub,

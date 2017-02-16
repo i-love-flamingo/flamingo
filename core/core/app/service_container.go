@@ -100,6 +100,8 @@ func (r *ServiceContainer) DI() inject.Graph {
 
 	di.Logger = sl{}
 
+	r.Register(r)
+
 	for _, o := range r.unnamed {
 		di.Provide(o)
 	}

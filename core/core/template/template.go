@@ -38,17 +38,14 @@ var (
 	webpackserver bool
 )
 
-func Register(r *app.ServiceContainer) {
-	r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/dist"))))
-	r.Route("/static/{n:.*}", "_static")
-}
-
 func init() {
-	loadTemplates()
+	//loadTemplates()
 }
 
 func loadTemplates() {
 	start := time.Now()
+
+	TFR.Populate()
 
 	var err error
 
@@ -115,30 +112,9 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 	t, _ := templates[tpl].Clone()
 
 	t.Funcs(template.FuncMap{
-		"asset": func(a string) template.URL {
-			if webpackserver {
-				return template.URL("/assets/" + a)
-			}
-
-			url := app.Url("_static", "n", "")
-			aa := strings.Split(a, "/")
-			aaa := aa[len(aa)-1]
-			var result string
-			if assetrewrites[aaa] != "" {
-				result = url.String() + "/" + assetrewrites[aaa]
-			} else {
-				result = url.String() + "/" + a
-			}
-			ctx.Push(result, nil)
-			return template.URL(result)
-		},
 		"__": fmt.Sprintf, // todo translate
 		"get": func(what string) interface{} {
 			return app.Get(what, ctx)
-		},
-		"debug": func(o interface{}) string {
-			d, _ := json.MarshalIndent(o, "", "    ")
-			return string(d)
 		},
 	})
 

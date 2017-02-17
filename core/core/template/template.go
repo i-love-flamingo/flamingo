@@ -28,8 +28,6 @@ import (
 	"time"
 
 	"fmt"
-
-	"github.com/fatih/structs"
 )
 
 var (
@@ -121,13 +119,17 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 
 	var d interface{}
 	if data != nil {
-		d = structs.Map(data)
+		d = data //structs.Map(data)
 	} else {
 		d = data
 	}
 	err := t.ExecuteTemplate(buf, tpl, d)
 	if err != nil {
-		panic(err)
+		e := err.Error() + "\n"
+		for i, l := range strings.Split(node.TplCode[tpl], "\n") {
+			e += fmt.Sprintf("%03d: %s\n", i+1, l)
+		}
+		panic(e)
 	}
 
 	return buf

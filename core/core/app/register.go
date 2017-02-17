@@ -6,5 +6,4 @@ func Register(r *ServiceContainer) {
 	r.Handle("_flamingo.json", new(GetController))
 
 	r.Register(new(GetFunc), "template.func")
-	r.Register(new(GlobalFunc), "template.func")
 }

@@ -17,11 +17,3 @@ func (g *GetFunc) Func() interface{} {
 		}
 	}
 }
-
-type GlobalFunc struct {
-	GetFunc `inject:"inline"`
-}
-
-func (_ GlobalFunc) Name() string {
-	return "global"
-}

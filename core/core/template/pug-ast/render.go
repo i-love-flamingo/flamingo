@@ -7,20 +7,21 @@ import (
 	"strings"
 )
 
-var blocks map[string]string
 var mixin map[string]*Token
+var TplCode map[string]string
 
 func init() {
 	mixin = make(map[string]*Token)
 }
 
 func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
-	blocks = make(map[string]string)
+	TplCode = make(map[string]string)
 
 	tpl := template.New(name).Funcs(FuncMap).Option("missingkey=error")
 
 	tc := p.render(t, "", nil)
 	tpl, err := tpl.Parse(tc)
+	TplCode[name] = tc
 
 	if err != nil {
 		e := err.Error() + "\n"

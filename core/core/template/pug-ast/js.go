@@ -237,7 +237,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 		finalexpr += `)`
 	} else if be, ok := expr.(*ast.BracketExpression); ok {
-		finalexpr += `index ` + renderExpression(be.Left, false, true) + ` ` + renderExpression(be.Member, false, true)
+		finalexpr += `(index ` + renderExpression(be.Left, false, true) + ` ` + renderExpression(be.Member, false, true) + `)`
 		if wrap {
 			finalexpr = `{{` + finalexpr + `}}`
 		}

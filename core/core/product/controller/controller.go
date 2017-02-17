@@ -15,5 +15,5 @@ type ViewController struct {
 func (p *ViewController) Get(c web.Context) web.Response {
 	product := p.ProductService.Get(c.Param1("sku"))
 
-	return p.Render(c, "pages/home", product)
+	return p.Render(c, "pages/product/view", product)
 }

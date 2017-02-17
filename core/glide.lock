@@ -1,5 +1,5 @@
 hash: 2104285ea271e2cc3122d7c0d78d4940d6994a240fca5e1820d56dcae65d9975
-updated: 2017-02-14T17:11:11.096293623+01:00
+updated: 2017-02-17T14:22:19.873082501+01:00
 imports:
 - name: github.com/facebookgo/inject
   version: cc1aa653e50f6a9893bcaef89e673e5b24e1e97b
@@ -20,7 +20,7 @@ imports:
 - name: github.com/mattn/go-colorable
   version: 5411d3eea5978e6cdc258b30de592b60df6aba96
 - name: github.com/mattn/go-isatty
-  version: 281032e84ae07510239465db46bf442aa44b953a
+  version: dda3de49cbfcec471bd7a70e6cc01fcc3ff90109
 - name: github.com/robertkrimen/otto
   version: aabe79b06556d741409a343b9bbabf653cef2a1c
   repo: https://github.com/thebod/otto.git
@@ -31,7 +31,7 @@ imports:
   - parser
   - token
 - name: golang.org/x/sys
-  version: e24f485414aeafb646f6fca458b0bf869c0880a1
+  version: 075e574b89e4c2d22f2286a7e2b919519c6f3547
   subpackages:
   - unix
 - name: gopkg.in/sourcemap.v1

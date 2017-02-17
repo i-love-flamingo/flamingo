@@ -1,8 +1,10 @@
 package product
 
 import (
+	"encoding/json"
 	"flamingo/core/product/models"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 )
 
@@ -16,6 +18,8 @@ var nameprefix = [...]string{
 	"Green",
 	"Red",
 	"Super Fancy",
+	"Sparkling",
+	"Glittery",
 }
 
 var namesuffix = [...]string{
@@ -31,11 +35,15 @@ var namesuffix = [...]string{
 type ProductService struct{}
 
 func (ps *ProductService) Get(id string) models.Product {
-	return models.Product{
-		ID:          id,
-		Name:        fmt.Sprintf("%s %s", nameprefix[rand.Intn(len(nameprefix))], namesuffix[rand.Intn(len(namesuffix))]),
-		Description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-	}
+	var product models.Product
+
+	p, _ := ioutil.ReadFile("frontend/src/mocks/product.json")
+	json.Unmarshal(p, &product)
+
+	product.Id = id
+	product.Name = fmt.Sprintf("%s %s", nameprefix[rand.Intn(len(nameprefix))], namesuffix[rand.Intn(len(namesuffix))])
+
+	return product
 }
 
 // GetBySkuList gbsl

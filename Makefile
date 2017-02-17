@@ -1,6 +1,6 @@
 DOCKERREPO?=docker-om3.aoe.com
 
-.PHONY: run doc dep dep-core dep-akl docker docker-run
+.PHONY: run doc dep dep-core dep-akl docker docker-run docker-push
 
 run:
 	cd akl && go run akl.go || true
@@ -22,3 +22,6 @@ docker: Dockerfile
 
 docker-run: docker
 	docker run -ti -p 3210:3210 -v $(pwd)/akl/frontend:/go/src/flamingo/akl/frontend $(DOCKERREPO)/flamingo/akl
+
+docker-push: docker
+	docker push $(DOCKERREPO)/flamingo/akl

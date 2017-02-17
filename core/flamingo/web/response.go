@@ -6,11 +6,9 @@ import (
 	"net/http"
 )
 
-type (
-	Response interface {
-		Apply(http.ResponseWriter)
-	}
-)
+type Response interface {
+	Apply(http.ResponseWriter)
+}
 
 // RedirectResponse redirect
 type RedirectResponse struct {
@@ -39,13 +37,20 @@ func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 }
 
 type JsonResponse struct {
-	Data interface{}
+	Data   interface{}
+	Status int
 }
 
 // Apply Response
 func (js JsonResponse) Apply(rw http.ResponseWriter) {
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(200)
+
+	if js.Status == 0 {
+		rw.WriteHeader(200)
+	} else {
+		rw.WriteHeader(js.Status)
+	}
+
 	p, err := json.Marshal(js.Data)
 	if err != nil {
 		panic(err)

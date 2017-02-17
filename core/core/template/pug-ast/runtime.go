@@ -9,8 +9,7 @@ import (
 )
 
 var FuncMap = template.FuncMap{
-	"__":  func(s ...string) string { return strings.Join(s, "::") },
-	"get": func(s ...string) string { return strings.Join(s, "::") },
+	"__": func(s ...string) string { return strings.Join(s, "::") },
 
 	"__op__add":   runtime_add,
 	"__op__sub":   runtime_sub,

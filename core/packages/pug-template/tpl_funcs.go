@@ -2,8 +2,8 @@ package template
 
 import (
 	"encoding/json"
-	"flamingo/core/app"
-	"flamingo/core/app/web"
+	"flamingo/core/flamingo"
+	"flamingo/core/flamingo/web"
 	"flamingo/core/packages/pug-template/pug-ast"
 	"html/template"
 	"strings"
@@ -18,12 +18,12 @@ type (
 	ContextAware func(ctx web.Context) interface{}
 
 	TplFuncRegistry struct {
-		ServiceContainer *app.ServiceContainer `inject:""`
+		ServiceContainer *flamingo.ServiceContainer `inject:""`
 		contextaware     map[string]ContextAware
 	}
 
 	AssetFunc struct {
-		App *app.App `inject:""`
+		Router *flamingo.Router `inject:""`
 	}
 	DebugFunc struct{}
 )
@@ -51,7 +51,7 @@ func (af *AssetFunc) Func() interface{} {
 			return template.URL("/assets/" + a)
 		}
 
-		url := af.App.Url("_static", "n", "")
+		url := af.Router.Url("_static", "n", "")
 		aa := strings.Split(a, "/")
 		aaa := aa[len(aa)-1]
 		var result string

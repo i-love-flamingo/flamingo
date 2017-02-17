@@ -1,13 +1,13 @@
 package template
 
 import (
-	"flamingo/core/app"
+	"flamingo/core/flamingo"
 	"net/http"
 )
 
 var TemplateFunctions = new(TplFuncRegistry)
 
-func Register(serviceContainer *app.ServiceContainer) {
+func Register(serviceContainer *flamingo.ServiceContainer) {
 	serviceContainer.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/dist"))))
 	serviceContainer.Route("/static/{n:.*}", "_static")
 

@@ -1,4 +1,4 @@
-package app
+package flamingo
 
 // Register flamingo json handler
 func Register(r *ServiceContainer) {

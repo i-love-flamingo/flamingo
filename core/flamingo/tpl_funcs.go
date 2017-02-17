@@ -1,12 +1,12 @@
-package app
+package flamingo
 
 import (
-	"flamingo/core/app/web"
+	"flamingo/core/flamingo/web"
 	"html/template"
 )
 
 type GetFunc struct {
-	App *App `inject:""`
+	App *Router `inject:""`
 }
 
 func (_ GetFunc) Name() string {
@@ -22,7 +22,7 @@ func (g *GetFunc) Func() interface{} {
 }
 
 type UrlFunc struct {
-	App *App `inject:""`
+	App *Router `inject:""`
 }
 
 func (_ UrlFunc) Name() string {

@@ -1,10 +1,9 @@
-package app
+package flamingo
 
 import (
 	"encoding/json"
-	"flamingo/core/app/web"
+	"flamingo/core/flamingo/web"
 	"io/ioutil"
-	"log"
 )
 
 type (
@@ -22,13 +21,13 @@ type (
 
 	// GetController registers a route to allow external tools/ajax to retrieve data handler
 	GetController struct {
-		App *App `inject:""`
+		App *Router `inject:""`
 	}
 )
 
 // Get is the ServeHTTP's equivalent for DataController and DataHandler
-func (a *App) Get(handler string, ctx web.Context) interface{} {
-	if c, ok := a.handler[handler]; ok {
+func (router *Router) Get(handler string, ctx web.Context) interface{} {
+	if c, ok := router.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
 			return c.Data(ctx)
 		}
@@ -36,8 +35,7 @@ func (a *App) Get(handler string, ctx web.Context) interface{} {
 			return c(ctx)
 		}
 		panic("not a data controller")
-	} else if a.Debug { // mock...
-		log.Println("mocking", handler)
+	} else if router.Debug { // mock...
 		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
 		if err == nil {
 			var res interface{}

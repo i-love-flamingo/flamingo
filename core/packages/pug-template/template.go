@@ -13,8 +13,8 @@ Please do not judge this file! Please :)
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core/app"
-	"flamingo/core/app/web"
+	"flamingo/core/flamingo"
+	"flamingo/core/flamingo/web"
 	"flamingo/core/packages/pug-template/pug-ast"
 	"fmt"
 	"html/template"
@@ -99,11 +99,11 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/pug-template
-func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Reader {
+func Render(router *flamingo.Router, ctx web.Context, tpl string, data interface{}) io.Reader {
 	buf := new(bytes.Buffer)
 
 	// recompile
-	if app.Debug {
+	if router.Debug {
 		loadTemplates()
 	}
 

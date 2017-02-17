@@ -1,8 +1,8 @@
 package cms
 
 import (
-	"flamingo/core/app/web"
-	"flamingo/core/app/web/responder"
+	"flamingo/core/flamingo/web"
+	"flamingo/core/flamingo/web/responder"
 )
 
 type PageController struct {

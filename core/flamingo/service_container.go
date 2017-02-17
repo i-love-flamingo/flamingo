@@ -1,4 +1,4 @@
-package app
+package flamingo
 
 import (
 	"log"
@@ -38,6 +38,11 @@ func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContai
 		rf(r)
 	}
 	return r
+}
+
+func (r *ServiceContainer) Handle(name string, handler interface{}) {
+	r.handler[name] = handler
+	r.Register(handler)
 }
 
 // Route adds a route
@@ -87,11 +92,6 @@ func (r *ServiceContainer) Remove(is ...interface{}) {
 			}
 		}
 	}
-}
-
-func (r *ServiceContainer) Handle(name string, handler interface{}) {
-	r.handler[name] = handler
-	r.Register(handler)
 }
 
 // DI returns the injection graph, not populated

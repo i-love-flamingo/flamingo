@@ -1,14 +1,8 @@
-/*
-App defines the main entry point for a website, including cotext-awareness,
-basic routing, handlers, data-handlers, etc...
-
-BUG(bastian.ike) complexity too high
-*/
-package app
+package flamingo
 
 import (
-	"flamingo/core/app/context"
-	"flamingo/core/app/web"
+	"flamingo/core/flamingo/context"
+	"flamingo/core/flamingo/web"
 	"fmt"
 	"log"
 	"net/http"
@@ -40,19 +34,15 @@ type (
 		Post(web.Context) web.Response
 	}
 
-	// Handler is just a generic web-controller-callback
-	Handler func(web.Context) web.Response
-
-	// App defines the basic App which is used for holding a context-scoped setup
+	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
-	App struct {
-		router  *mux.Router
-		routes  map[string]string
-		handler map[string]interface{}
-		Debug   bool
-		base    *url.URL
-		Logger  *log.Logger `inject:""`
-
+	Router struct {
+		router   *mux.Router
+		routes   map[string]string
+		handler  map[string]interface{}
+		Debug    bool
+		base     *url.URL
+		Logger   *log.Logger `inject:""`
 		Sessions sessions.Store
 	}
 
@@ -77,15 +67,15 @@ func (r *ResponseWriter) WriteHeader(h int) {
 	r.ResponseWriter.WriteHeader(h)
 }
 
-// New factory for App
-// New creates the new app, set's up handlers and routes and resolved the DI
-func New(ctx *context.Context, r *ServiceContainer) *App {
-	a := &App{
+// New factory for Router
+// New creates the new flamingo, set's up handlers and routes and resolved the DI
+func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {
+	a := &Router{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
 
-	r.Register(a)
-	r.Resolve()
+	serviceContainer.Register(a)
+	serviceContainer.Resolve()
 
 	// bootstrap
 	a.router = mux.NewRouter()
@@ -94,7 +84,7 @@ func New(ctx *context.Context, r *ServiceContainer) *App {
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 
 	// set up routes
-	for p, name := range r.routes {
+	for p, name := range serviceContainer.routes {
 		a.routes[name] = p
 	}
 
@@ -103,7 +93,7 @@ func New(ctx *context.Context, r *ServiceContainer) *App {
 	}
 
 	// set up handlers
-	for name, handler := range r.handler {
+	for name, handler := range serviceContainer.handler {
 		a.handler[name] = handler
 	}
 
@@ -130,30 +120,30 @@ func New(ctx *context.Context, r *ServiceContainer) *App {
 }
 
 // Router returns the http.Handler
-func (a *App) Router() *mux.Router {
-	return a.router
+func (router *Router) Router() *mux.Router {
+	return router.router
 }
 
 // Url helps resolving URL's by it's name
 // Example:
-// 	app.Url("cms.page.view", "name", "Home")
+// 	flamingo.Url("cms.page.view", "name", "Home")
 // results in
 // 	/baseurl/cms/Home
 //
-func (a *App) Url(name string, params ...string) *url.URL {
-	if a.router.Get(name) == nil {
+func (router *Router) Url(name string, params ...string) *url.URL {
+	if router.router.Get(name) == nil {
 		panic("route " + name + " not found")
 	}
-	u, err := a.router.Get(name).URL(params...)
+	u, err := router.router.Get(name).URL(params...)
 	if err != nil {
 		panic(err)
 	}
-	u.Path = path.Join(a.base.Path, u.Path)
+	u.Path = path.Join(router.base.Path, u.Path)
 	return u
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging
-func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()
 	defer func() {
@@ -161,13 +151,13 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		if err := recover(); err != nil {
 			w.WriteHeader(500)
-			if a.Debug {
+			if router.Debug {
 				extra += fmt.Sprintf(`| Error: %s`, err)
 				w.Write([]byte(fmt.Sprintln(err)))
 				w.Write(debug.Stack())
 			}
 		}
-		if a.Debug {
+		if router.Debug {
 			ww := w.(*ResponseWriter)
 			var cp func(msg interface{}, styles ...string) string
 			switch {
@@ -186,16 +176,16 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if ww.Header().Get("Location") != "" {
 				extra += "-> " + ww.Header().Get("Location")
 			}
-			a.Logger.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
+			router.Logger.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
 		}
 	}()
 
-	a.router.ServeHTTP(w, req)
+	router.router.ServeHTTP(w, req)
 }
 
-func (a *App) handle(c Controller) http.Handler {
+func (router *Router) handle(c Controller) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		s, _ := a.Sessions.Get(req, "aial")
+		s, _ := router.Sessions.Get(req, "aial")
 
 		ctx := web.ContextFromRequest(w, req, s)
 
@@ -216,10 +206,10 @@ func (a *App) handle(c Controller) http.Handler {
 			response = c(ctx)
 
 		case DataController:
-			response = web.JsonResponse{c.(DataController).Data(ctx)}
+			response = web.JsonResponse{Data: c.(DataController).Data(ctx)}
 
 		case func(web.Context) interface{}:
-			response = web.JsonResponse{c(ctx)}
+			response = web.JsonResponse{Data: c(ctx)}
 
 		case http.Handler:
 			c.ServeHTTP(w, req)
@@ -231,7 +221,7 @@ func (a *App) handle(c Controller) http.Handler {
 			return
 		}
 
-		a.Sessions.Save(req, w, ctx.Session())
+		router.Sessions.Save(req, w, ctx.Session())
 
 		response.Apply(w)
 	})

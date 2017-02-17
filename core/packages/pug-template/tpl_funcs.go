@@ -46,22 +46,24 @@ func (_ AssetFunc) Name() string {
 }
 
 func (af *AssetFunc) Func() interface{} {
-	return func(a string) template.URL {
-		if webpackserver {
-			return template.URL("/assets/" + a)
-		}
+	return func(ctx web.Context) interface{} {
+		return func(a string) template.URL {
+			if webpackserver {
+				return template.URL("/assets/" + a)
+			}
 
-		url := af.Router.Url("_static", "n", "")
-		aa := strings.Split(a, "/")
-		aaa := aa[len(aa)-1]
-		var result string
-		if assetrewrites[aaa] != "" {
-			result = url.String() + "/" + assetrewrites[aaa]
-		} else {
-			result = url.String() + "/" + a
+			url := af.Router.Url("_static", "n", "")
+			aa := strings.Split(a, "/")
+			aaa := aa[len(aa)-1]
+			var result string
+			if assetrewrites[aaa] != "" {
+				result = url.String() + "/" + assetrewrites[aaa]
+			} else {
+				result = url.String() + "/" + a
+			}
+			ctx.Push(result, nil)
+			return template.URL(result)
 		}
-		//ctx.Push(result, nil)
-		return template.URL(result)
 	}
 }
 

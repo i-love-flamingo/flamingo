@@ -67,6 +67,13 @@ func (r *ResponseWriter) WriteHeader(h int) {
 	r.ResponseWriter.WriteHeader(h)
 }
 
+func (r *ResponseWriter) Push(target string, opts *http.PushOptions) error {
+	if p, ok := r.ResponseWriter.(http.Pusher); ok {
+		return p.Push(target, opts)
+	}
+	return nil
+}
+
 // New factory for Router
 // New creates the new flamingo, set's up handlers and routes and resolved the DI
 func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {

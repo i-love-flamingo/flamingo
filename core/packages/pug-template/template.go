@@ -100,6 +100,10 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 
 // Render via hmtl/pug-template
 func Render(router *flamingo.Router, ctx web.Context, tpl string, data interface{}) io.Reader {
+	if templates == nil {
+		loadTemplates()
+	}
+
 	buf := new(bytes.Buffer)
 
 	// recompile

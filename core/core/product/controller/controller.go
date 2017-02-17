@@ -24,5 +24,5 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	p, _ := ioutil.ReadFile("frontend/src/mocks/product.json")
 	json.Unmarshal(p, &product)
 
-	return vc.Render(c, "pages/product/view", map[string]interface{}{"product": product})
+	return vc.Render(c, "pages/product/view", map[string]interface{}{"Product": product})
 }

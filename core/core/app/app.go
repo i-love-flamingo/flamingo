@@ -141,6 +141,9 @@ func (a *App) Router() *mux.Router {
 // 	/baseurl/cms/Home
 //
 func (a *App) Url(name string, params ...string) *url.URL {
+	if a.router.Get(name) == nil {
+		panic("route " + name + " not found")
+	}
 	u, err := a.router.Get(name).URL(params...)
 	if err != nil {
 		panic(err)

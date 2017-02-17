@@ -46,7 +46,7 @@ func init() {
 func loadTemplates() {
 	start := time.Now()
 
-	TFR.Populate()
+	TemplateFunctions.Populate()
 
 	var err error
 
@@ -114,7 +114,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 
 	funcs := make(template.FuncMap)
 	funcs["__"] = fmt.Sprintf // todo translate
-	for k, f := range TFR.contextaware {
+	for k, f := range TemplateFunctions.contextaware {
 		funcs[k] = f(ctx)
 	}
 	t.Funcs(funcs)

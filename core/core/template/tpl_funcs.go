@@ -18,8 +18,8 @@ type (
 	ContextAware func(ctx web.Context) interface{}
 
 	TplFuncRegistry struct {
-		SC           *app.ServiceContainer `inject:""`
-		contextaware map[string]ContextAware
+		ServiceContainer *app.ServiceContainer `inject:""`
+		contextaware     map[string]ContextAware
 	}
 
 	AssetFunc struct {
@@ -31,7 +31,7 @@ type (
 func (tfr *TplFuncRegistry) Populate() {
 	tfr.contextaware = make(map[string]ContextAware)
 
-	for _, tplfunc := range tfr.SC.GetByTag("template.func") {
+	for _, tplfunc := range tfr.ServiceContainer.GetByTag("template.func") {
 		if tplfunc, ok := tplfunc.(TplFunc); ok {
 			node.FuncMap[tplfunc.Name()] = tplfunc.Func()
 			if f, ok := tplfunc.Func().(func(ctx web.Context) interface{}); ok {

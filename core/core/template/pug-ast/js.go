@@ -141,19 +141,19 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		}
 
 	} else if identifier, ok := expr.(*ast.Identifier); ok {
-		if known[identifier.Name] && identifier.Name != "description" {
+		if known[identifier.Name] {
 			finalexpr += `$`
 		} else if dot {
 			finalexpr += `.`
 		}
 		finalexpr += identifier.Name
 		if wrap {
-			finalexpr = `{{` + finalexpr + `}}`
+			finalexpr = `{{` + finalexpr + ` | raw}}`
 		}
 	} else if de, ok := expr.(*ast.DotExpression); ok {
 		finalexpr += renderExpression(de.Left, false, true) + "." + renderExpression(de.Identifier, false, true)[1:]
 		if wrap {
-			finalexpr = `{{` + finalexpr + `}}`
+			finalexpr = `{{` + finalexpr + ` | raw}}`
 		}
 	} else if conditional, ok := expr.(*ast.ConditionalExpression); ok {
 		finalexpr = `{{if ` + renderExpression(conditional.Test, false, true) + ` }}`

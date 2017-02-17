@@ -117,13 +117,7 @@ func Render(app *app.App, ctx web.Context, tpl string, data interface{}) io.Read
 	}
 	t.Funcs(funcs)
 
-	var d interface{}
-	if data != nil {
-		d = data //structs.Map(data)
-	} else {
-		d = data
-	}
-	err := t.ExecuteTemplate(buf, tpl, d)
+	err := t.ExecuteTemplate(buf, tpl, data)
 	if err != nil {
 		e := err.Error() + "\n"
 		for i, l := range strings.Split(node.TplCode[tpl], "\n") {

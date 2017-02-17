@@ -29,7 +29,7 @@ var FuncMap = template.FuncMap{
 
 	"null": func() interface{} { return nil },
 
-	"raw":     func(s string) template.HTML { return template.HTML(s) },
+	"raw":     func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
 	"tagopen": func(t, p string) template.HTML { return template.HTML(`<` + p + t) },
 	"s": func(l ...interface{}) (res string) {
 		for _, s := range l {

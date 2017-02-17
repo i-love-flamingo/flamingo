@@ -23,6 +23,8 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	tpl, err := tpl.Parse(tc)
 	TplCode[name] = tc
 
+	//log.Println(tc)
+
 	if err != nil {
 		e := err.Error() + "\n"
 		for i, l := range strings.Split(tc, "\n") {

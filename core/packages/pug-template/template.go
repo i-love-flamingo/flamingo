@@ -1,21 +1,10 @@
 package template
 
-/*
-
-WARNING!!!
-
-This is a work in progress!
-
-Please do not judge this file! Please :)
-
-*/
-
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core/flamingo"
 	"flamingo/core/flamingo/web"
-	"flamingo/core/packages/pug-template/pug-ast"
+	"flamingo/core/packages/pug-template/pugast"
 	"fmt"
 	"html/template"
 	"io"
@@ -29,49 +18,51 @@ import (
 	"time"
 )
 
-var (
+type PugTemplateEngine struct {
+	basedir       string
 	assetrewrites map[string]string
 	templates     map[string]*template.Template
 	templatesLock sync.Mutex
 	webpackserver bool
-)
-
-func init() {
-	//loadTemplates()
+	ast           *pugast.PugAst
 }
 
-func loadTemplates() {
-	start := time.Now()
+func NewPugTemplateEngine(basedir string) *PugTemplateEngine {
+	return &PugTemplateEngine{
+		basedir: basedir,
+	}
+}
 
-	TemplateFunctions.Populate()
+func (t *PugTemplateEngine) loadTemplates() {
+	start := time.Now()
 
 	var err error
 
-	templatesLock.Lock()
-	defer templatesLock.Unlock()
+	t.templatesLock.Lock()
+	defer t.templatesLock.Unlock()
 
-	manifest, _ := ioutil.ReadFile("frontend/dist/manifest.json")
-	json.Unmarshal(manifest, &assetrewrites)
+	TemplateFunctions.Populate()
 
-	pugast := node.PugAst{
-		Path: "frontend/dist/templates",
-	}
-	templates, err = compile(&pugast, "frontend/dist/templates", "")
+	manifest, _ := ioutil.ReadFile(path.Join(t.basedir, "manifest.json"))
+	json.Unmarshal(manifest, &t.assetrewrites)
+
+	t.ast = pugast.NewPugAst(path.Join(t.basedir, "templates"))
+	t.templates, err = compileDir(t.ast, path.Join(t.basedir, "templates"), "")
 
 	if err != nil {
 		panic(err)
 	}
 
 	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
-		webpackserver = true
+		t.webpackserver = true
 	} else {
-		webpackserver = false
+		t.webpackserver = false
 	}
 
 	log.Println("Compiled templates in", time.Since(start))
 }
 
-func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Template, error) {
+func compileDir(pugast *pugast.PugAst, root, dirname string) (map[string]*template.Template, error) {
 	result := make(map[string]*template.Template)
 
 	dir, _ := os.Open(path.Join(root, dirname))
@@ -80,7 +71,7 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 
 	for _, filename := range filenames {
 		if filename.IsDir() {
-			tpls, _ := compile(pugast, root, path.Join(dirname, filename.Name()))
+			tpls, _ := compileDir(pugast, root, path.Join(dirname, filename.Name()))
 			for k, v := range tpls {
 				if result[k] == nil {
 					result[k] = v
@@ -99,35 +90,39 @@ func compile(pugast *node.PugAst, root, dirname string) (map[string]*template.Te
 }
 
 // Render via hmtl/pug-template
-func Render(router *flamingo.Router, ctx web.Context, tpl string, data interface{}) io.Reader {
-	if templates == nil {
-		loadTemplates()
-	}
-
-	buf := new(bytes.Buffer)
-
+func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data interface{}) io.Reader {
 	// recompile
-	if router.Debug {
-		loadTemplates()
+	/*
+		if router.Debug {
+			loadTemplates()
+		}
+	*/
+	if t.templates == nil {
+		t.loadTemplates()
 	}
 
-	t, _ := templates[tpl].Clone()
+	result := new(bytes.Buffer)
+
+	templateInstance, err := t.templates[templateName].Clone()
+	if err != nil {
+		panic(err)
+	}
 
 	funcs := make(template.FuncMap)
 	funcs["__"] = fmt.Sprintf // todo translate
 	for k, f := range TemplateFunctions.contextaware {
 		funcs[k] = f(ctx)
 	}
-	t.Funcs(funcs)
+	templateInstance.Funcs(funcs)
 
-	err := t.ExecuteTemplate(buf, tpl, data)
+	err = templateInstance.ExecuteTemplate(result, templateName, data)
 	if err != nil {
 		e := err.Error() + "\n"
-		for i, l := range strings.Split(node.TplCode[tpl], "\n") {
+		for i, l := range strings.Split(t.ast.TplCode[templateName], "\n") {
 			e += fmt.Sprintf("%03d: %s\n", i+1, l)
 		}
 		panic(e)
 	}
 
-	return buf
+	return result
 }

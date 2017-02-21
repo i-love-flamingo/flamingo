@@ -13,11 +13,9 @@ func (_ GetFunc) Name() string {
 	return "get"
 }
 
-func (g *GetFunc) Func() interface{} {
-	return func(ctx web.Context) interface{} {
-		return func(what string) interface{} {
-			return g.App.Get(what, ctx)
-		}
+func (g *GetFunc) Func(ctx web.Context) interface{} {
+	return func(what string) interface{} {
+		return g.App.Get(what, ctx)
 	}
 }
 

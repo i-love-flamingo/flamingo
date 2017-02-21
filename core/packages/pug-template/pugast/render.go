@@ -1,4 +1,4 @@
-package node
+package pugast
 
 import (
 	"fmt"
@@ -7,23 +7,12 @@ import (
 	"strings"
 )
 
-var mixin map[string]*Token
-var TplCode map[string]string
-
-func init() {
-	mixin = make(map[string]*Token)
-}
-
 func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
-	TplCode = make(map[string]string)
-
 	tpl := template.New(name).Funcs(FuncMap).Option("missingkey=error")
 
 	tc := p.render(t, "", nil)
 	tpl, err := tpl.Parse(tc)
-	TplCode[name] = tc
-
-	//log.Println(tc)
+	p.TplCode[name] = tc
 
 	if err != nil {
 		e := err.Error() + "\n"
@@ -32,15 +21,6 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 		}
 		panic(e)
 	}
-
-	/*
-		for name, block := range blocks {
-			tpl, err = tpl.New(name).Parse(block)
-			if err != nil {
-				panic(err)
-			}
-		}
-	*/
 
 	return tpl
 }
@@ -136,7 +116,7 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 
 		case "Mixin":
 			if t.Call {
-				if mixin[t.Name] == nil {
+				if p.mixin[t.Name] == nil {
 					panic("UNKNOWN MIXIN " + t.Name)
 				}
 
@@ -148,7 +128,7 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 				}
 				buf += " }}"
 
-				callargs := strings.Split(mixin[t.Name].Args, ",")
+				callargs := strings.Split(p.mixin[t.Name].Args, ",")
 
 				if len(callargs) == 1 {
 					arg := JsExpr(t.Args, false, false)
@@ -167,10 +147,10 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					}
 				}
 
-				buf += p.render(mixin[t.Name].Block, pre, t.Block)
+				buf += p.render(p.mixin[t.Name].Block, pre, t.Block)
 				buf += "\n" + pre + "<!-- END MIXIN " + t.Name + " -->"
 			} else {
-				mixin[t.Name] = t
+				p.mixin[t.Name] = t
 			}
 
 		case "MixinBlock":

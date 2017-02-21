@@ -1,4 +1,4 @@
-package node
+package pugast
 
 import (
 	"fmt"
@@ -61,6 +61,7 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 	var stmtlist []ast.Statement
 
 	if rawcode {
+		// Expect the input to be raw js code. This makes `{ ... }` being treated as a logical block
 		p, err := ottoparser.ParseFile(nil, "", expr, 0)
 		if err != nil {
 			fmt.Println(expr)
@@ -68,6 +69,8 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 		}
 		stmtlist = p.Body
 	} else {
+		// Expect the input to be a value, this makes `{ ... }` being treated as a map.
+		// Essentially we create a function with one return-statement and inject our return value
 		p, err := ottoparser.ParseFunction("", "return "+expr)
 		if err != nil {
 			fmt.Println(expr)
@@ -78,17 +81,21 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 
 	for _, stmt := range stmtlist {
 		switch expr := stmt.(type) {
+		// an expression is just any javascript expression
 		case *ast.ExpressionStatement:
 			finalexpr += renderExpression(expr.Expression, wrap, true)
 
+		// a variable statement is a list of expressions, usually variable assignments (var foo = 1, bar = 2)
 		case *ast.VariableStatement:
 			for _, v := range expr.List {
 				finalexpr += renderExpression(v, wrap, true)
 			}
 
+		// the return statement is created by ParseFunction
 		case *ast.ReturnStatement:
 			finalexpr += renderExpression(expr.Argument, wrap, true)
 
+		// we cannot deal with other expressions at the moment, and we don't expect them ayway
 		default:
 			fmt.Printf("%#v\n", stmt)
 			panic("unknown expression")
@@ -98,6 +105,8 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 	return finalexpr
 }
 
+// interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blabla`
+// we use a helper function called `s` to merge them later
 func interpolate(input string) string {
 	index := 1
 	start := 0
@@ -120,6 +129,7 @@ func interpolate(input string) string {
 	return input
 }
 
+// renderExpression renders the javascript expression into go template
 func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	if expr == nil {
 		return ""
@@ -144,6 +154,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	case *ast.StringLiteral:
 		if strings.Index(expr.Value, "${") >= 0 {
 			result = `(s "` + interpolate(expr.Value) + `")`
+			result = strings.Replace(result, `""`, ``, -1)
 			if wrap {
 				result = `{{` + result + `}}`
 			}
@@ -196,13 +207,14 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 			result = `{{` + result + ` | raw}}`
 		}
 
-	// ConditionalExpression: if (something) { ... }
+	// ConditionalExpression: if (something) { ... } or foo ? a : b
 	case *ast.ConditionalExpression:
 		result = `{{if ` + renderExpression(expr.Test, false, true) + ` }}`
 		result += renderExpression(expr.Consequent, true, true)
-		if renderExpression(expr.Alternate, true, true) != "" {
+		elsebranch := renderExpression(expr.Alternate, true, true)
+		if elsebranch != "" && elsebranch != "{{null}}" {
 			result += `{{else}}`
-			result += renderExpression(expr.Alternate, true, true)
+			result += elsebranch
 		}
 		result += `{{end}}`
 

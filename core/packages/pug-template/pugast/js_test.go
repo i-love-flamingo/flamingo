@@ -1,4 +1,4 @@
-package node
+package pugast
 
 import "testing"
 

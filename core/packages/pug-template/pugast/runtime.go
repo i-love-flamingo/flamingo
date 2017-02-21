@@ -78,6 +78,20 @@ var FuncMap = template.FuncMap{
 		}
 		return m
 	},
+
+	"__add_andattributes": func(attrs map[interface{}]interface{}, k ...string) template.HTMLAttr {
+		known := make(map[string]bool)
+		for _, k := range k {
+			known[k] = true
+		}
+		res := ""
+		for k, v := range attrs {
+			if !known[k.(string)] {
+				res += ` ` + k.(string) + `="` + v.(string) + `"`
+			}
+		}
+		return template.HTMLAttr(res)
+	},
 }
 
 func runtime_add(x, y interface{}) interface{} {

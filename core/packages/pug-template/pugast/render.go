@@ -27,7 +27,7 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	return tpl
 }
 
-func args(attrs []*Attr) string {
+func args(attrs []*Attr, andattributes bool) string {
 	if len(attrs) == 0 {
 		return ""
 	}
@@ -38,7 +38,11 @@ func args(attrs []*Attr) string {
 	}
 	res := ""
 	for k, v := range a {
-		res += ` ` + k + `="` + strings.TrimSpace(v) + `"`
+		var aa string
+		if andattributes {
+			aa = ` {{index $__andattributes "` + k + `"}}`
+		}
+		res += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
 	}
 	return res
 }
@@ -90,10 +94,22 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 			if t.SelfClosing {
 				buf += ifmt(t, pre, fmt.Sprintf("<%s />", t.Name))
 			} else {
+				andattrs := ""
+				if len(t.AttributeBlocks) > 0 {
+					buf += ifmt(t, pre, `{{$__andattributes := $`+t.AttributeBlocks[0]+`}}`)
+					knownaa := make(map[string]bool)
+					for _, e := range t.Attrs {
+						knownaa[e.Name] = true
+					}
+					for e := range knownaa {
+						andattrs += ` "` + e + `"`
+					}
+					andattrs = ` {{__add_andattributes $__andattributes` + andattrs + `}}`
+				}
 				if t.IsInline || len(t.Block.Nodes) == 0 {
-					buf += ifmt(t, pre, fmt.Sprintf("<%s%s>%s</%s>", t.Name, args(t.Attrs), p.render(t.Block, "", mixinblock), t.Name))
+					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>%s</%s>", t.Name, args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs, p.render(t.Block, "", mixinblock), t.Name))
 				} else {
-					buf += ifmt(t, pre, fmt.Sprintf("<%s%s>", t.Name, args(t.Attrs)))
+					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>", t.Name, args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
 					buf += p.render(t.Block, pre+depth, mixinblock)
 					buf += ifmt(t, pre, fmt.Sprintf("</%s>", t.Name))
 				}
@@ -105,9 +121,9 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 				buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}/>`, name))
 			} else {
 				if t.IsInline || len(t.Block.Nodes) == 0 {
-					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>%s</%s>`, name, args(t.Attrs), p.render(t.Block, "", mixinblock), name))
+					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>%s</%s>`, name, args(t.Attrs, len(t.AttributeBlocks) > 0), p.render(t.Block, "", mixinblock), name))
 				} else {
-					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>`, name, args(t.Attrs)))
+					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>`, name, args(t.Attrs, len(t.AttributeBlocks) > 0)))
 					buf += p.render(t.Block, pre+depth, mixinblock)
 					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s "/"}}>`, name))
 				}

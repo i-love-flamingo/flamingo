@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"path/filepath"
 	"strings"
+
+	"github.com/robertkrimen/otto/ast"
 )
 
 func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
@@ -138,12 +140,23 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					buf += "\n" + pre + fmt.Sprintf("{{ $%s := %s }}", callargs[0], arg)
 					known[callargs[0]] = true
 				} else if len(callargs) > 1 {
-					buf += "\n" + pre + fmt.Sprintf("{{ $__args__ := %s }}", JsExpr(t.Args, false, false))
+					buf += "\n" + pre + fmt.Sprintf("{{ $__args__ := %s }}", JsExpr(`[`+t.Args+`]`, false, false))
+
+					//log.Println(t.Args)
+					//log.Printf("%#v\n", )
+					lenCaptured := 1 //len(FuncToStatements(t.Args)[0].(*ast.ReturnStatement).Argument.(*ast.BracketExpression).)
+					if seq, ok := FuncToStatements(t.Args)[0].(*ast.ReturnStatement).Argument.(*ast.SequenceExpression); ok {
+						lenCaptured = len(seq.Sequence)
+					}
 
 					for ci, ca := range callargs {
 						ca = strings.TrimSpace(ca)
 						known[ca] = true
-						buf += "\n" + pre + fmt.Sprintf("{{ $%s := index $__args__ %d }}", ca, ci)
+						if ci < lenCaptured {
+							buf += "\n" + pre + fmt.Sprintf("{{ $%s := index $__args__ %d }}", ca, ci)
+						} else {
+							buf += "\n" + pre + fmt.Sprintf("{{ $%s := null }}", ca)
+						}
 					}
 				}
 

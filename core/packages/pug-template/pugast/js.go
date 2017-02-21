@@ -55,6 +55,24 @@ func init() {
 	known["attributes"] = true
 }
 
+func StrToStatements(expr string) []ast.Statement {
+	p, err := ottoparser.ParseFile(nil, "", expr, 0)
+	if err != nil {
+		fmt.Println(expr)
+		panic(err)
+	}
+	return p.Body
+}
+
+func FuncToStatements(expr string) []ast.Statement {
+	p, err := ottoparser.ParseFunction("", "return "+expr)
+	if err != nil {
+		fmt.Println(expr)
+		panic(err)
+	}
+	return p.Body.(*ast.BlockStatement).List
+}
+
 // JsExpr transforms a javascript expression to go code
 func JsExpr(expr string, wrap, rawcode bool) string {
 	var finalexpr string
@@ -62,21 +80,11 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 
 	if rawcode {
 		// Expect the input to be raw js code. This makes `{ ... }` being treated as a logical block
-		p, err := ottoparser.ParseFile(nil, "", expr, 0)
-		if err != nil {
-			fmt.Println(expr)
-			panic(err)
-		}
-		stmtlist = p.Body
+		stmtlist = StrToStatements(expr)
 	} else {
 		// Expect the input to be a value, this makes `{ ... }` being treated as a map.
 		// Essentially we create a function with one return-statement and inject our return value
-		p, err := ottoparser.ParseFunction("", "return "+expr)
-		if err != nil {
-			fmt.Println(expr)
-			panic(err)
-		}
-		stmtlist = p.Body.(*ast.BlockStatement).List
+		stmtlist = FuncToStatements(expr)
 	}
 
 	for _, stmt := range stmtlist {

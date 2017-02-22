@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"path"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -51,12 +52,14 @@ type (
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
-		router   *mux.Router
-		routes   map[string]string
-		handler  map[string]interface{}
-		base     *url.URL
-		Logger   *log.Logger `inject:""`
-		Sessions sessions.Store
+		router            *mux.Router
+		routes            map[string]string
+		handler           map[string]interface{}
+		hardroutes        map[string]context.Route
+		hardroutesreverse map[string]context.Route
+		base              *url.URL
+		Logger            *log.Logger `inject:""`
+		Sessions          sessions.Store
 	}
 )
 
@@ -73,6 +76,8 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 	// bootstrap
 	a.router = mux.NewRouter()
 	a.routes = make(map[string]string)
+	a.hardroutes = make(map[string]context.Route)
+	a.hardroutesreverse = make(map[string]context.Route)
 	a.handler = make(map[string]interface{})
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 
@@ -81,17 +86,23 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 		a.routes[name] = p
 	}
 
-	for p, name := range ctx.Routes {
-		a.routes[name] = p
-	}
-
 	// set up handlers
 	for name, handler := range serviceContainer.Handler {
 		a.handler[name] = handler
 	}
 
-	for name, handler := range ctx.Handler {
-		a.handler[name] = handler
+	for _, route := range ctx.Routes {
+		if route.Args == nil {
+			a.routes[route.Controller] = route.Path
+		} else {
+			a.hardroutes[route.Path] = route
+			p := make([]string, len(route.Args)*2)
+			for k, v := range route.Args {
+				p = append(p, k, v)
+			}
+			a.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
+			a.Logger.Println("Register", route.Path, "for", route.Controller, "with", route.Args, "key", route.Controller+strings.Join(p, "!!"))
+		}
 	}
 
 	known := make(map[string]bool)
@@ -119,6 +130,19 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 // 	/baseurl/cms/Home
 //
 func (router *Router) Url(name string, params ...string) *url.URL {
+	var u *url.URL
+	log.Println(name + `!!!!` + strings.Join(params, "!!"))
+	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
+		u, _ = url.Parse(route.Path)
+	} else {
+		u = router.url(name, params...)
+	}
+
+	u.Path = path.Join(router.base.Path, u.Path)
+	return u
+}
+
+func (router *Router) url(name string, params ...string) *url.URL {
 	if router.router.Get(name) == nil {
 		panic("route " + name + " not found")
 	}
@@ -126,7 +150,6 @@ func (router *Router) Url(name string, params ...string) *url.URL {
 	if err != nil {
 		panic(err)
 	}
-	u.Path = path.Join(router.base.Path, u.Path)
 	return u
 }
 
@@ -143,6 +166,16 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		w.(*ResponseWriter).Log(router.Logger, time.Since(start), req, err)
 	}()
+
+	log.Printf("%#v\n", req.URL)
+	if route, ok := router.hardroutes[req.URL.Path]; ok {
+		p := make([]string, len(route.Args)*2)
+		for k, v := range route.Args {
+			p = append(p, k, v)
+		}
+		req.URL = router.url(route.Controller, p...)
+	}
+	log.Printf("%#v\n", req.URL)
 
 	router.router.ServeHTTP(w, req)
 }

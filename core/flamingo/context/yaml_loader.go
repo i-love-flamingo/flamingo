@@ -7,55 +7,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// BUG(bastian.ike) Refactor
-
-/// MustLoadYaml panics when LoadYaml fails
-func MustLoadYaml(dir string) map[string]*Context {
-	r, err := LoadYaml(dir)
-	if err != nil {
-		panic(err)
-	}
-	return r
+func LoadYaml(basedir string, root *Context) error {
+	// load context.yml
+	return loadyaml(basedir, "/", root)
 }
 
-// LoadYaml loads the contexts from a given folder and resolves Parent-relationships
-func LoadYaml(dir string) (map[string]*Context, error) {
-	basecfg, err := ioutil.ReadFile(path.Join(dir, "context.yml"))
-	if err != nil {
-		return nil, err
-	}
+func loadyaml(basedir string, curdir string, root *Context) error {
+	// load context.yml
+	contextfile, _ := ioutil.ReadFile(path.Join(basedir, curdir, "context.yml"))
 
-	contextlist := make(map[string]string)
-	yaml.Unmarshal(basecfg, &contextlist)
+	yaml.Unmarshal(contextfile, root)
 
-	result := make(map[string]*Context)
-
-	for baseurl, name := range contextlist {
-		result[name] = &Context{
-			BaseUrl: baseurl,
-			Name:    name,
-		}
-
-		contextConfig, err := ioutil.ReadFile(path.Join(dir, name, "config.yml"))
+	for _, child := range root.Childs {
+		err := loadyaml(basedir, path.Join(curdir, child.Name), child)
 		if err != nil {
-			return nil, err
-		}
-
-		yaml.Unmarshal(contextConfig, &result[name].Configuration)
-
-		routing, err := ioutil.ReadFile(path.Join(dir, name, "routing.yml"))
-		if err != nil {
-			return nil, err
-		}
-
-		yaml.Unmarshal(routing, &result[name].Routes)
-	}
-
-	for _, context := range result {
-		if context.Configuration["parent"] != "" {
-			context.Parent = result[context.Configuration["parent"]]
+			return err
 		}
 	}
 
-	return result, nil
+	return nil
 }

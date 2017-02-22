@@ -37,6 +37,14 @@ func New() *ServiceContainer {
 	}
 }
 
+func (r *ServiceContainer) Unnamed() []*inject.Object {
+	return r.unnamed
+}
+
+func (r *ServiceContainer) Named() map[string]*inject.Object {
+	return r.named
+}
+
 // Register calls the provided RegisterFunc callbacks
 func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContainer {
 	for _, rf := range rfs {

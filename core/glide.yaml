@@ -15,3 +15,10 @@ import:
   version: ^1.1.0
 - package: github.com/facebookgo/inject
 - package: github.com/facebookgo/structtag
+testImport:
+- package: github.com/onsi/ginkgo
+  version: ^1.2.0
+  subpackages:
+  - ginkgo
+- package: github.com/onsi/gomega
+  version: ^1.0.0

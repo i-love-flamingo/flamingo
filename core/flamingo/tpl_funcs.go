@@ -5,9 +5,15 @@ import (
 	"html/template"
 )
 
-type GetFunc struct {
-	App *Router `inject:""`
-}
+type (
+	GetFunc struct {
+		App *Router `inject:""`
+	}
+
+	UrlFunc struct {
+		App *Router `inject:""`
+	}
+)
 
 func (_ GetFunc) Name() string {
 	return "get"
@@ -17,10 +23,6 @@ func (g *GetFunc) Func(ctx web.Context) interface{} {
 	return func(what string) interface{} {
 		return g.App.Get(what, ctx)
 	}
-}
-
-type UrlFunc struct {
-	App *Router `inject:""`
 }
 
 func (_ UrlFunc) Name() string {

@@ -25,12 +25,18 @@ type PugTemplateEngine struct {
 	templatesLock sync.Mutex
 	webpackserver bool
 	ast           *pugast.PugAst
+	debug         bool
 }
 
-func NewPugTemplateEngine(basedir string) *PugTemplateEngine {
-	return &PugTemplateEngine{
+func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
+	pte := &PugTemplateEngine{
 		basedir: basedir,
+		debug:   debug,
 	}
+
+	pte.loadTemplates()
+
+	return pte
 }
 
 func (t *PugTemplateEngine) loadTemplates() {
@@ -92,12 +98,7 @@ func compileDir(pugast *pugast.PugAst, root, dirname string) (map[string]*templa
 // Render via hmtl/pug-template
 func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data interface{}) io.Reader {
 	// recompile
-	/*
-		if router.Debug {
-			loadTemplates()
-		}
-	*/
-	if t.templates == nil {
+	if t.templates == nil || t.debug {
 		t.loadTemplates()
 	}
 

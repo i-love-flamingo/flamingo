@@ -7,7 +7,7 @@ import (
 
 var TemplateFunctions = new(TplFuncRegistry)
 
-func Register(basedir string) flamingo.RegisterFunc {
+func Register(basedir string, debug bool) flamingo.RegisterFunc {
 	return func(serviceContainer *flamingo.ServiceContainer) {
 		serviceContainer.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))
 		serviceContainer.Route("/static/{n:.*}", "_static")
@@ -15,7 +15,7 @@ func Register(basedir string) flamingo.RegisterFunc {
 		serviceContainer.Handle("_pugtpl_debug", new(DebugController))
 		serviceContainer.Route("/_pugtpl/debug", "_pugtpl_debug")
 
-		serviceContainer.Register(NewPugTemplateEngine(basedir))
+		serviceContainer.Register(NewPugTemplateEngine(basedir, debug))
 		serviceContainer.Register(TemplateFunctions)
 		serviceContainer.Register(new(AssetFunc), "template.func")
 		serviceContainer.Register(new(DebugFunc), "template.func")

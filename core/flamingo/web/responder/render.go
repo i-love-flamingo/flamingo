@@ -1,16 +1,16 @@
 package responder
 
 import (
-	"flamingo/core/flamingo"
+	"flamingo/core/flamingo/router"
 	"flamingo/core/flamingo/web"
 	"flamingo/core/template"
 	"net/http"
 )
 
-// RenderAware allows pug-template rendering
+// RenderAware allows pug_template rendering
 type RenderAware struct {
-	Router *flamingo.Router `inject:""`
-	Engine template.Engine  `inject:""`
+	Router *router.Router  `inject:""`
+	Engine template.Engine `inject:""`
 }
 
 // Render returns a web.ContentResponse with status 200 and ContentType text/html

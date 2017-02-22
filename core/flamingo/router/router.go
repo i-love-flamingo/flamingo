@@ -1,9 +1,12 @@
-package flamingo
+package router
 
 import (
+	"encoding/json"
 	"flamingo/core/flamingo/context"
+	"flamingo/core/flamingo/service_container"
 	"flamingo/core/flamingo/web"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -13,7 +16,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-	"github.com/labstack/gommon/color"
 )
 
 type (
@@ -34,49 +36,33 @@ type (
 		Post(web.Context) web.Response
 	}
 
+	// DataController is a controller used to retrieve data, such as user-information, basket
+	// etc.
+	// By default this will be handled by templates, but there is an out-of-the-box support
+	// for JSON requests via /_flamingo/json/{name}, as well as their own route if defined.
+	DataController interface {
+		// Data is called for data requests
+		Data(web.Context) interface{}
+	}
+
+	// DataHandler behaves the same as DataController, but just for direct callbacks
+	DataHandler func(web.Context) interface{}
+
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
 		router   *mux.Router
 		routes   map[string]string
 		handler  map[string]interface{}
-		Debug    bool
 		base     *url.URL
 		Logger   *log.Logger `inject:""`
 		Sessions sessions.Store
 	}
-
-	// ResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging
-	ResponseWriter struct {
-		http.ResponseWriter
-		status int
-		size   int
-	}
 )
 
-// Writes calls http.ResponseWriter.Write and records the written bytes
-func (r *ResponseWriter) Write(data []byte) (int, error) {
-	l, e := r.ResponseWriter.Write(data)
-	r.size += l
-	return l, e
-}
-
-// WriteHeader call http.ResponseWriter.WriteHeader and records the status code
-func (r *ResponseWriter) WriteHeader(h int) {
-	r.status = h
-	r.ResponseWriter.WriteHeader(h)
-}
-
-func (r *ResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if p, ok := r.ResponseWriter.(http.Pusher); ok {
-		return p.Push(target, opts)
-	}
-	return nil
-}
-
-// New factory for Router
-// New creates the new flamingo, set's up handlers and routes and resolved the DI
-func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {
+// CreateRouter factory for Router
+// CreateRouter creates the new flamingo router, set's up handlers and routes and resolved the DI
+func CreateRouter(ctx *context.Context, serviceContainer *service_container.ServiceContainer) *Router {
 	a := &Router{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
 	}
@@ -91,7 +77,7 @@ func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {
 	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 
 	// set up routes
-	for p, name := range serviceContainer.routes {
+	for p, name := range serviceContainer.Routes {
 		a.routes[name] = p
 	}
 
@@ -100,7 +86,7 @@ func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {
 	}
 
 	// set up handlers
-	for name, handler := range serviceContainer.handler {
+	for name, handler := range serviceContainer.Handler {
 		a.handler[name] = handler
 	}
 
@@ -126,11 +112,6 @@ func New(ctx *context.Context, serviceContainer *ServiceContainer) *Router {
 	return a
 }
 
-// Router returns the http.Handler
-func (router *Router) Router() *mux.Router {
-	return router.router
-}
-
 // Url helps resolving URL's by it's name
 // Example:
 // 	flamingo.Url("cms.page.view", "name", "Home")
@@ -154,37 +135,13 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()
 	defer func() {
-		extra := ""
-
-		if err := recover(); err != nil {
+		var err interface{}
+		if err = recover(); err != nil {
 			w.WriteHeader(500)
-			if router.Debug {
-				extra += fmt.Sprintf(`| Error: %s`, err)
-				w.Write([]byte(fmt.Sprintln(err)))
-				w.Write(debug.Stack())
-			}
+			w.Write([]byte(fmt.Sprintln(err)))
+			w.Write(debug.Stack())
 		}
-		if router.Debug {
-			ww := w.(*ResponseWriter)
-			var cp func(msg interface{}, styles ...string) string
-			switch {
-			case ww.status >= 200 && ww.status < 300:
-				cp = color.Green
-			case ww.status >= 300 && ww.status < 400:
-				cp = color.Blue
-			case ww.status >= 400 && ww.status < 500:
-				cp = color.Yellow
-			case ww.status >= 500 && ww.status < 600:
-				cp = color.Red
-			default:
-				cp = color.Black
-			}
-
-			if ww.Header().Get("Location") != "" {
-				extra += "-> " + ww.Header().Get("Location")
-			}
-			router.Logger.Printf(cp("%03d | %-8s | % 15s | % 6d byte | %s %s"), ww.status, req.Method, time.Since(start), ww.size, req.RequestURI, extra)
-		}
+		w.(*ResponseWriter).Log(router.Logger, time.Since(start), req, err)
 	}()
 
 	router.router.ServeHTTP(w, req)
@@ -232,4 +189,27 @@ func (router *Router) handle(c Controller) http.Handler {
 
 		response.Apply(w)
 	})
+}
+
+// Get is the ServeHTTP's equivalent for DataController and DataHandler
+func (router *Router) Get(handler string, ctx web.Context) interface{} {
+	if c, ok := router.handler[handler]; ok {
+		if c, ok := c.(DataController); ok {
+			return c.Data(ctx)
+		}
+		if c, ok := c.(func(web.Context) interface{}); ok {
+			return c(ctx)
+		}
+		panic("not a data controller")
+	} else { // mock...
+		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
+		if err == nil {
+			var res interface{}
+			json.Unmarshal(data, &res)
+			return res
+		} else {
+			panic(err)
+		}
+	}
+	panic("not a handler: " + handler)
 }

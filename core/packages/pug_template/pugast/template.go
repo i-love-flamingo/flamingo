@@ -1,10 +1,10 @@
-package template
+package pugast
 
 import (
 	"bytes"
 	"encoding/json"
 	"flamingo/core/flamingo/web"
-	"flamingo/core/packages/pug-template/pugast"
+	coretemplate "flamingo/core/template"
 	"fmt"
 	"html/template"
 	"io"
@@ -19,13 +19,14 @@ import (
 )
 
 type PugTemplateEngine struct {
-	basedir       string
-	assetrewrites map[string]string
-	templates     map[string]*template.Template
-	templatesLock sync.Mutex
-	webpackserver bool
-	ast           *pugast.PugAst
-	debug         bool
+	basedir           string
+	Assetrewrites     map[string]string
+	templates         map[string]*template.Template
+	templatesLock     sync.Mutex
+	Webpackserver     bool
+	Ast               *PugAst
+	debug             bool
+	TemplateFunctions *coretemplate.TemplateFunctionRegistry `inject:""`
 }
 
 func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
@@ -34,9 +35,12 @@ func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
 		debug:   debug,
 	}
 
-	pte.loadTemplates()
-
 	return pte
+}
+
+// PostInject is called when the DI finished
+func (t *PugTemplateEngine) PostInject() {
+	t.loadTemplates()
 }
 
 func (t *PugTemplateEngine) loadTemplates() {
@@ -47,37 +51,45 @@ func (t *PugTemplateEngine) loadTemplates() {
 	t.templatesLock.Lock()
 	defer t.templatesLock.Unlock()
 
-	TemplateFunctions.Populate()
-
 	manifest, _ := ioutil.ReadFile(path.Join(t.basedir, "manifest.json"))
-	json.Unmarshal(manifest, &t.assetrewrites)
+	json.Unmarshal(manifest, &t.Assetrewrites)
 
-	t.ast = pugast.NewPugAst(path.Join(t.basedir, "templates"))
-	t.templates, err = compileDir(t.ast, path.Join(t.basedir, "templates"), "")
+	t.Ast = NewPugAst(path.Join(t.basedir, "templates"))
+	t.Ast.FuncMap = t.TemplateFunctions.Populate()
+	t.templates, err = compileDir(t.Ast, path.Join(t.basedir, "templates"), "")
 
 	if err != nil {
 		panic(err)
 	}
 
 	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
-		t.webpackserver = true
+		t.Webpackserver = true
 	} else {
-		t.webpackserver = false
+		t.Webpackserver = false
 	}
 
 	log.Println("Compiled templates in", time.Since(start))
 }
 
-func compileDir(pugast *pugast.PugAst, root, dirname string) (map[string]*template.Template, error) {
+func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Template, error) {
 	result := make(map[string]*template.Template)
 
-	dir, _ := os.Open(path.Join(root, dirname))
+	dir, err := os.Open(path.Join(root, dirname))
+	if err != nil {
+		return nil, err
+	}
 
-	filenames, _ := dir.Readdir(-1)
+	filenames, err := dir.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, filename := range filenames {
 		if filename.IsDir() {
-			tpls, _ := compileDir(pugast, root, path.Join(dirname, filename.Name()))
+			tpls, err := compileDir(pugast, root, path.Join(dirname, filename.Name()))
+			if err != nil {
+				return nil, err
+			}
 			for k, v := range tpls {
 				if result[k] == nil {
 					result[k] = v
@@ -95,7 +107,7 @@ func compileDir(pugast *pugast.PugAst, root, dirname string) (map[string]*templa
 	return result, nil
 }
 
-// Render via hmtl/pug-template
+// Render via hmtl/pug_template
 func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data interface{}) io.Reader {
 	// recompile
 	if t.templates == nil || t.debug {
@@ -111,7 +123,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 
 	funcs := make(template.FuncMap)
 	funcs["__"] = fmt.Sprintf // todo translate
-	for k, f := range TemplateFunctions.contextaware {
+	for k, f := range t.TemplateFunctions.Contextaware {
 		funcs[k] = f(ctx)
 	}
 	templateInstance.Funcs(funcs)
@@ -119,7 +131,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	err = templateInstance.ExecuteTemplate(result, templateName, data)
 	if err != nil {
 		e := err.Error() + "\n"
-		for i, l := range strings.Split(t.ast.TplCode[templateName], "\n") {
+		for i, l := range strings.Split(t.Ast.TplCode[templateName], "\n") {
 			e += fmt.Sprintf("%03d: %s\n", i+1, l)
 		}
 		panic(e)

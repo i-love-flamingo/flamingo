@@ -1,4 +1,4 @@
-package flamingo
+package service_container
 
 import (
 	"log"
@@ -9,26 +9,31 @@ import (
 
 type (
 	// ServiceContainer is a basic flamingo helper
-	// to register default routes, packages, etc.
+	// to register default Routes, packages, etc.
 	ServiceContainer struct {
 		unnamed []*inject.Object
 		named   map[string]*inject.Object
 		tags    map[string][]*inject.Object
-		routes  map[string]string
-		handler map[string]interface{}
+		Routes  map[string]string
+		Handler map[string]interface{}
 	}
 
 	// RegisterFunc defines a callback used by packages to bootstrap themselves
 	RegisterFunc func(r *ServiceContainer)
+
+	// PostInjecter defines the PostInject() function which is called when the DI has finished
+	PostInjecter interface {
+		PostInject()
+	}
 )
 
-// NewServiceContainer creates a new ServiceContainer
-func NewServiceContainer() *ServiceContainer {
+// New creates a new ServiceContainer
+func New() *ServiceContainer {
 	return &ServiceContainer{
-		routes:  make(map[string]string),
+		Routes:  make(map[string]string),
 		named:   make(map[string]*inject.Object),
 		tags:    make(map[string][]*inject.Object),
-		handler: make(map[string]interface{}),
+		Handler: make(map[string]interface{}),
 	}
 }
 
@@ -41,13 +46,13 @@ func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContai
 }
 
 func (r *ServiceContainer) Handle(name string, handler interface{}) {
-	r.handler[name] = handler
+	r.Handler[name] = handler
 	r.Register(handler)
 }
 
 // Route adds a route
 func (r *ServiceContainer) Route(path, name string) *ServiceContainer {
-	r.routes[path] = name
+	r.Routes[path] = name
 	return r
 }
 
@@ -76,14 +81,7 @@ func (r *ServiceContainer) RegisterNamed(name string, o interface{}, tags ...str
 	return r
 }
 
-// sl is a private logger to show DI logs
-type sl struct{}
-
-// Debugf DI logger
-func (_ sl) Debugf(a string, b ...interface{}) {
-	log.Printf(a, b...)
-}
-
+// Remove removes an already registered object of the same type
 func (r *ServiceContainer) Remove(is ...interface{}) {
 	for _, i := range is {
 		for k, o := range r.unnamed {
@@ -92,6 +90,14 @@ func (r *ServiceContainer) Remove(is ...interface{}) {
 			}
 		}
 	}
+}
+
+// sl is a private logger to show DI logs
+type sl struct{}
+
+// Debugf DI logger
+func (_ sl) Debugf(a string, b ...interface{}) {
+	log.Printf(a, b...)
 }
 
 // DI returns the injection graph, not populated
@@ -120,8 +126,15 @@ func (r *ServiceContainer) Resolve() {
 	if err != nil {
 		panic(err)
 	}
+
+	for _, o := range di.Objects() {
+		if o, ok := o.Value.(PostInjecter); ok {
+			o.PostInject()
+		}
+	}
 }
 
+// GetByTag returns all registered objects with the given tag
 func (r *ServiceContainer) GetByTag(tag string) (res []interface{}) {
 	for _, o := range r.tags[tag] {
 		res = append(res, o.Value)

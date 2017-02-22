@@ -60,7 +60,7 @@ type (
 func (p *PugAst) Parse(file string) *Token {
 	token := new(Token)
 
-	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".ast.json")
+	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".Ast.json")
 
 	if err != nil {
 		fmt.Println(file)

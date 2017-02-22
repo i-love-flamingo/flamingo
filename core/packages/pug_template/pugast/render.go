@@ -10,7 +10,11 @@ import (
 )
 
 func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
-	tpl := template.New(name).Funcs(FuncMap).Option("missingkey=error")
+	tpl := template.
+		New(name).
+		Funcs(FuncMap).
+		Funcs(p.FuncMap).
+		Option("missingkey=error")
 
 	tc := p.render(t, "", nil)
 	tpl, err := tpl.Parse(tc)
@@ -27,14 +31,14 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	return tpl
 }
 
-func args(attrs []*Attr, andattributes bool) string {
+func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 	if len(attrs) == 0 {
 		return ""
 	}
 
 	a := make(map[string]string)
 	for _, attr := range attrs {
-		a[attr.Name] += ` ` + JsExpr(attr.Val, true, false)
+		a[attr.Name] += ` ` + p.JsExpr(attr.Val, true, false)
 	}
 	res := ""
 	for k, v := range a {
@@ -72,12 +76,10 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 		case "NamedBlock":
 			switch t.Mode {
 			case "replace":
-				/*
-					if _, ok := blocks[t.Name]; !ok {
-						buf += "\n" + pre + fmt.Sprintf("{{ pug-template \"%s\" . }}", t.Name)
-					}
-					blocks[t.Name] = p.render(t, pre+depth, mixinblock)
-				*/
+				//if _, ok := blocks[t.Name]; !ok {
+				//	buf += "\n" + pre + fmt.Sprintf("{{ pug_template \"%s\" . }}", t.Name)
+				//}
+				//blocks[t.Name] = p.render(t, pre+depth, mixinblock)
 				buf += p.render(t, pre, mixinblock)
 			//case "append":
 			//	blocks[t.Name] += p.render(t, pre+depth, mixinblock)
@@ -107,30 +109,32 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					andattrs = ` {{__add_andattributes $__andattributes` + andattrs + `}}`
 				}
 				if t.IsInline || len(t.Block.Nodes) == 0 {
-					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>%s</%s>", t.Name, args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs, p.render(t.Block, "", mixinblock), t.Name))
+					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>%s</%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs, p.render(t.Block, "", mixinblock), t.Name))
 				} else {
-					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>", t.Name, args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
+					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
 					buf += p.render(t.Block, pre+depth, mixinblock)
 					buf += ifmt(t, pre, fmt.Sprintf("</%s>", t.Name))
 				}
 			}
 
-		case "InterpolatedTag":
-			name := JsExpr(t.Expr, false, false)
-			if t.SelfClosing {
-				buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}/>`, name))
-			} else {
-				if t.IsInline || len(t.Block.Nodes) == 0 {
-					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>%s</%s>`, name, args(t.Attrs, len(t.AttributeBlocks) > 0), p.render(t.Block, "", mixinblock), name))
+		/*
+			case "InterpolatedTag":
+				name := p.JsExpr(t.Expr, false, false)
+				if t.SelfClosing {
+					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}/>`, name))
 				} else {
-					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>`, name, args(t.Attrs, len(t.AttributeBlocks) > 0)))
-					buf += p.render(t.Block, pre+depth, mixinblock)
-					buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s "/"}}>`, name))
+					if t.IsInline || len(t.Block.Nodes) == 0 {
+						buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>%s</%s>`, name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), p.render(t.Block, "", mixinblock), name))
+					} else {
+						buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s ""}}%s>`, name, p.args(t.Attrs, len(t.AttributeBlocks) > 0)))
+						buf += p.render(t.Block, pre+depth, mixinblock)
+						buf += ifmt(t, pre, fmt.Sprintf(`{{tagopen %s "/"}}>`, name))
+					}
 				}
-			}
+		*/
 
 		case "Code":
-			buf += ifmt(t, pre, JsExpr(t.Val, true, true))
+			buf += ifmt(t, pre, p.JsExpr(t.Val, true, true))
 
 		case "Mixin":
 			if t.Call {
@@ -142,32 +146,30 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 
 				buf += "\n" + pre + `{{ $attributes := __op__map `
 				for _, a := range t.Attrs {
-					buf += ` "` + a.Name + `" ` + JsExpr(a.Val, false, false)
+					buf += ` "` + a.Name + `" ` + p.JsExpr(a.Val, false, false)
 				}
 				buf += " }}"
 
 				callargs := strings.Split(p.mixin[t.Name].Args, ",")
 
 				if len(callargs) == 1 {
-					arg := JsExpr(t.Args, false, false)
+					arg := p.JsExpr(t.Args, false, false)
 					if len(arg) == 0 {
 						arg = `null`
 					}
 					buf += "\n" + pre + fmt.Sprintf("{{ $%s := %s }}", callargs[0], arg)
-					known[callargs[0]] = true
+					p.knownVar[callargs[0]] = true
 				} else if len(callargs) > 1 {
-					buf += "\n" + pre + fmt.Sprintf("{{ $__args__ := %s }}", JsExpr(`[`+t.Args+`]`, false, false))
+					buf += "\n" + pre + fmt.Sprintf("{{ $__args__ := %s }}", p.JsExpr(`[`+t.Args+`]`, false, false))
 
-					//log.Println(t.Args)
-					//log.Printf("%#v\n", )
-					lenCaptured := 1 //len(FuncToStatements(t.Args)[0].(*ast.ReturnStatement).Argument.(*ast.BracketExpression).)
+					lenCaptured := 1
 					if seq, ok := FuncToStatements(t.Args)[0].(*ast.ReturnStatement).Argument.(*ast.SequenceExpression); ok {
 						lenCaptured = len(seq.Sequence)
 					}
 
 					for ci, ca := range callargs {
 						ca = strings.TrimSpace(ca)
-						known[ca] = true
+						p.knownVar[ca] = true
 						if ci < lenCaptured {
 							buf += "\n" + pre + fmt.Sprintf("{{ $%s := index $__args__ %d }}", ca, ci)
 						} else {
@@ -188,15 +190,15 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 			}
 
 		case "Comment", "BlockComment":
-			//buf += pre + "<!-- " + t.Val + " -->\n"
+			buf += pre + "<!-- " + t.Val + " -->\n"
 
 		case "Each":
-			known[t.Val] = true
+			p.knownVar[t.Val] = true
 			if t.Key != "" {
-				known[t.Key] = true
-				buf += "\n" + pre + fmt.Sprintf("{{range $%s, $%s := %s}}", t.Key, t.Val, JsExpr(t.Obj, false, false))
+				p.knownVar[t.Key] = true
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s, $%s := %s}}", t.Key, t.Val, p.JsExpr(t.Obj, false, false))
 			} else {
-				buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, JsExpr(t.Obj, false, false))
+				buf += "\n" + pre + fmt.Sprintf("{{range $%s := %s}}", t.Val, p.JsExpr(t.Obj, false, false))
 			}
 			buf += p.render(t.Block, pre, mixinblock)
 			buf += "\n" + pre + "{{end}}"
@@ -205,15 +207,17 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 			buf += ifmt(t, pre, t.Val)
 
 		case "Conditional":
-			buf += "\n" + pre + fmt.Sprintf("{{if %s}}", JsExpr(t.Test, false, false))
+			buf += "\n" + pre + fmt.Sprintf("{{if %s}}", p.JsExpr(t.Test, false, false))
 			buf += p.render(t.Consequent, pre, mixinblock)
 			if t.Alternate != nil {
 				buf += "\n" + pre + "{{else}}"
 				buf += p.render(t.Alternate, pre, mixinblock)
 			}
 			buf += "\n" + pre + "{{end}}"
+
 		case "Block":
 			buf += p.render(t, pre, mixinblock)
+
 		default:
 			panic(t.Type)
 		}

@@ -1,4 +1,4 @@
-package web
+package prefix_router
 
 import (
 	"net/http"
@@ -29,19 +29,11 @@ func (fr *FrontRouter) Default(handler http.Handler) {
 }
 
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	/*
-		if strings.HasPrefix(req.RequestURI, "/assets/") {
-			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
-				io.Copy(w, r.Body)
-				return
-			}
-		}
-	*/
-
 	host := req.Host
 	if strings.Index(host, ":") > -1 {
 		host = strings.Split(host, ":")[0]
 	}
+
 	test := path.Join(host, req.RequestURI)
 	for prefix, router := range fr.router {
 		if strings.HasPrefix(test, prefix) {

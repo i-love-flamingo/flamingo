@@ -1,8 +1,9 @@
-package template
+package pug_template
 
 import (
 	"bytes"
 	"flamingo/core/flamingo/web"
+	"flamingo/core/packages/pug_template/pugast"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 
 type (
 	DebugController struct {
-		Engine *PugTemplateEngine `inject:""`
+		Engine *pugast.PugTemplateEngine `inject:""`
 	}
 )
 
@@ -32,10 +33,10 @@ const DebugTemplate = `<!doctype html>
 
 func (dc *DebugController) Get(ctx web.Context) web.Response {
 	//if dc.Engine.ast == nil {
-	dc.Engine.loadTemplates()
+	//dc.Engine.loadTemplates()
 	//}
 
-	tpl, ok := dc.Engine.ast.TplCode[ctx.Query1("tpl")]
+	tpl, ok := dc.Engine.Ast.TplCode[ctx.Query1("tpl")]
 	if !ok {
 		panic("tpl not found")
 	}

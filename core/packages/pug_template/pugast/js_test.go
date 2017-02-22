@@ -16,8 +16,10 @@ var cases = []Case{
 }
 
 func TestJsExpr(t *testing.T) {
+	p := NewPugAst("/")
+
 	for _, c := range cases {
-		res := JsExpr(c.Test, false, c.Raw)
+		res := p.JsExpr(c.Test, false, c.Raw)
 		if res != c.Expected {
 			t.Errorf("%s: %s != %s", c.Test, res, c.Expected)
 		}

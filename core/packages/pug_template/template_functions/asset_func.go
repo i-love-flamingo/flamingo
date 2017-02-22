@@ -1,19 +1,18 @@
-package template
+package template_functions
 
 import (
-	"encoding/json"
-	"flamingo/core/flamingo"
+	"flamingo/core/flamingo/router"
 	"flamingo/core/flamingo/web"
+	"flamingo/core/packages/pug_template/pugast"
 	"html/template"
 	"strings"
 )
 
 type (
 	AssetFunc struct {
-		Router *flamingo.Router   `inject:""`
-		Engine *PugTemplateEngine `inject:""`
+		Router *router.Router            `inject:""`
+		Engine *pugast.PugTemplateEngine `inject:""`
 	}
-	DebugFunc struct{}
 )
 
 func (_ AssetFunc) Name() string {
@@ -22,8 +21,8 @@ func (_ AssetFunc) Name() string {
 
 func (af *AssetFunc) Func(ctx web.Context) interface{} {
 	return func(asset string) template.URL {
-		// let webpack devserver handle URL's
-		if af.Engine.webpackserver {
+		// let webpack dev server handle URL's
+		if af.Engine.Webpackserver {
 			return template.URL("/assets/" + asset)
 		}
 
@@ -34,24 +33,13 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		assetSplitted := strings.Split(asset, "/")
 		assetName := assetSplitted[len(assetSplitted)-1]
 
-		if af.Engine.assetrewrites[assetName] != "" {
-			result = url.String() + "/" + af.Engine.assetrewrites[assetName]
+		if af.Engine.Assetrewrites[assetName] != "" {
+			result = url.String() + "/" + af.Engine.Assetrewrites[assetName]
 		} else {
 			result = url.String() + "/" + asset
 		}
 
 		ctx.Push(result, nil) // h2 server push
 		return template.URL(result)
-	}
-}
-
-func (_ DebugFunc) Name() string {
-	return "debug"
-}
-
-func (_ DebugFunc) Func() interface{} {
-	return func(o interface{}) string {
-		d, _ := json.MarshalIndent(o, "", "    ")
-		return string(d)
 	}
 }

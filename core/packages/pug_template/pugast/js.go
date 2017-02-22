@@ -10,8 +10,6 @@ import (
 )
 
 var (
-	known map[string]bool
-
 	ops = map[token.Token]string{
 		token.PLUS:      "__op__add",   // +
 		token.MINUS:     "__op__sub",   // -
@@ -50,11 +48,6 @@ var (
 	}
 )
 
-func init() {
-	known = make(map[string]bool)
-	known["attributes"] = true
-}
-
 func StrToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFile(nil, "", expr, 0)
 	if err != nil {
@@ -74,7 +67,7 @@ func FuncToStatements(expr string) []ast.Statement {
 }
 
 // JsExpr transforms a javascript expression to go code
-func JsExpr(expr string, wrap, rawcode bool) string {
+func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
 	var finalexpr string
 	var stmtlist []ast.Statement
 
@@ -91,17 +84,17 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 		switch expr := stmt.(type) {
 		// an expression is just any javascript expression
 		case *ast.ExpressionStatement:
-			finalexpr += renderExpression(expr.Expression, wrap, true)
+			finalexpr += p.renderExpression(expr.Expression, wrap, true)
 
 		// a variable statement is a list of expressions, usually variable assignments (var foo = 1, bar = 2)
 		case *ast.VariableStatement:
 			for _, v := range expr.List {
-				finalexpr += renderExpression(v, wrap, true)
+				finalexpr += p.renderExpression(v, wrap, true)
 			}
 
 		// the return statement is created by ParseFunction
 		case *ast.ReturnStatement:
-			finalexpr += renderExpression(expr.Argument, wrap, true)
+			finalexpr += p.renderExpression(expr.Argument, wrap, true)
 
 		// we cannot deal with other expressions at the moment, and we don't expect them ayway
 		default:
@@ -115,7 +108,7 @@ func JsExpr(expr string, wrap, rawcode bool) string {
 
 // interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blabla`
 // we use a helper function called `s` to merge them later
-func interpolate(input string) string {
+func (p *PugAst) interpolate(input string) string {
 	index := 1
 	start := 0
 
@@ -127,7 +120,7 @@ func interpolate(input string) string {
 			start = index + 1
 
 		case input[index] == '}' && start != 0:
-			substring := JsExpr(input[start:index], false, false)
+			substring := p.JsExpr(input[start:index], false, false)
 			input = input[:start-2] + `" ` + substring + ` "` + input[index+1:]
 			index = start + len(substring)
 			start = 0
@@ -138,7 +131,7 @@ func interpolate(input string) string {
 }
 
 // renderExpression renders the javascript expression into go template
-func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
+func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	if expr == nil {
 		return ""
 	}
@@ -148,7 +141,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	switch expr := expr.(type) {
 	// Identifier: usually a variable name
 	case *ast.Identifier:
-		if known[expr.Name] {
+		if p.knownVar[expr.Name] {
 			result += `$`
 		} else if dot {
 			result += `.`
@@ -161,7 +154,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	// StringLiteral: "test" or 'test' or `test`
 	case *ast.StringLiteral:
 		if strings.Index(expr.Value, "${") >= 0 {
-			result = `(s "` + interpolate(expr.Value) + `")`
+			result = `(s "` + p.interpolate(expr.Value) + `")`
 			result = strings.Replace(result, `""`, ``, -1)
 			if wrap {
 				result = `{{` + result + `}}`
@@ -182,7 +175,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	case *ast.ArrayLiteral:
 		result += `(__op__array`
 		for _, e := range expr.Value {
-			result += ` ` + renderExpression(e, false, true)
+			result += ` ` + p.renderExpression(e, false, true)
 		}
 		result += `)`
 		if wrap {
@@ -197,7 +190,7 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	case *ast.ObjectLiteral:
 		result = `(__op__map `
 		for _, o := range expr.Value {
-			result += ` "` + o.Key + `" ` + renderExpression(o.Value, false, true)
+			result += ` "` + o.Key + `" ` + p.renderExpression(o.Value, false, true)
 		}
 		result += `)`
 
@@ -210,16 +203,16 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 
 	// DotExpression: left.right
 	case *ast.DotExpression:
-		result += renderExpression(expr.Left, false, true) + "." + renderExpression(expr.Identifier, false, true)[1:]
+		result += p.renderExpression(expr.Left, false, true) + "." + p.renderExpression(expr.Identifier, false, true)[1:]
 		if wrap {
 			result = `{{` + result + ` | raw}}`
 		}
 
 	// ConditionalExpression: if (something) { ... } or foo ? a : b
 	case *ast.ConditionalExpression:
-		result = `{{if ` + renderExpression(expr.Test, false, true) + ` }}`
-		result += renderExpression(expr.Consequent, true, true)
-		elsebranch := renderExpression(expr.Alternate, true, true)
+		result = `{{if ` + p.renderExpression(expr.Test, false, true) + ` }}`
+		result += p.renderExpression(expr.Consequent, true, true)
+		elsebranch := p.renderExpression(expr.Alternate, true, true)
 		if elsebranch != "" && elsebranch != "{{null}}" {
 			result += `{{else}}`
 			result += elsebranch
@@ -231,17 +224,17 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 		result = fmt.Sprintf(
 			`(%s %s %s)`,
 			ops[expr.Operator],
-			renderExpression(expr.Left, false, true),
-			renderExpression(expr.Right, false, true))
+			p.renderExpression(expr.Left, false, true),
+			p.renderExpression(expr.Right, false, true))
 		if wrap {
 			result = `{{` + result + `}}`
 		}
 
 	// CallExpression: calls a function (Callee) with arguments, e.g. url("target", "arg1", 1)
 	case *ast.CallExpression:
-		result = `(` + renderExpression(expr.Callee, false, false)
+		result = `(` + p.renderExpression(expr.Callee, false, false)
 		for _, c := range expr.ArgumentList {
-			result += ` ` + renderExpression(c, false, true)
+			result += ` ` + p.renderExpression(c, false, true)
 		}
 		result += `)`
 		if wrap {
@@ -250,13 +243,13 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 
 	// AssignExpression: assigns something to a variable: foo = ...
 	case *ast.AssignExpression:
-		n := renderExpression(expr.Left, false, false)
+		n := p.renderExpression(expr.Left, false, false)
 		n = strings.TrimLeft(n, "$")
 		result = fmt.Sprintf(`$%s :%s %s`,
 			n,
 			ops[expr.Operator],
-			renderExpression(expr.Right, false, true))
-		known[n] = true
+			p.renderExpression(expr.Right, false, true))
+		p.knownVar[n] = true
 		if wrap {
 			result = `{{` + result + `}}`
 		}
@@ -265,8 +258,8 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	case *ast.VariableExpression:
 		n := expr.Name
 		n = strings.TrimLeft(n, "$")
-		result = `$` + n + ` := ` + renderExpression(expr.Initializer, false, true)
-		known[n] = true
+		result = `$` + n + ` := ` + p.renderExpression(expr.Initializer, false, true)
+		p.knownVar[n] = true
 		if wrap {
 			result = `{{` + result + `}}`
 		}
@@ -275,20 +268,20 @@ func renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	case *ast.SequenceExpression:
 		result = `(__op__array `
 		for _, s := range expr.Sequence {
-			result += ` ` + renderExpression(s, false, true)
+			result += ` ` + p.renderExpression(s, false, true)
 		}
 		result += `)`
 
 	// BracketExpression: access of array/object members, such ass something[1] or foo[bar]
 	case *ast.BracketExpression:
-		result += `(index ` + renderExpression(expr.Left, false, true) + ` ` + renderExpression(expr.Member, false, true) + `)`
+		result += `(index ` + p.renderExpression(expr.Left, false, true) + ` ` + p.renderExpression(expr.Member, false, true) + `)`
 		if wrap {
 			result = `{{` + result + `}}`
 		}
 
 	// UnaryExpression: an operation on an operand, such as delete foo[bar]
 	case *ast.UnaryExpression:
-		result += `(` + ops[expr.Operator] + ` ` + renderExpression(expr.Operand, false, true) + `)`
+		result += `(` + ops[expr.Operator] + ` ` + p.renderExpression(expr.Operand, false, true) + `)`
 		if wrap {
 			result = `{{` + result + `}}`
 		}

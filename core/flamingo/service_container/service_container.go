@@ -3,6 +3,7 @@ package service_container
 import (
 	"log"
 	"reflect"
+	"runtime"
 
 	"github.com/facebookgo/inject"
 )
@@ -27,6 +28,10 @@ type (
 	}
 )
 
+func (r RegisterFunc) MarshalText() (text []byte, err error) {
+	return []byte(runtime.FuncForPC(reflect.ValueOf(r).Pointer()).Name()), nil
+}
+
 // New creates a new ServiceContainer
 func New() *ServiceContainer {
 	return &ServiceContainer{
@@ -35,14 +40,6 @@ func New() *ServiceContainer {
 		tags:    make(map[string][]*inject.Object),
 		Handler: make(map[string]interface{}),
 	}
-}
-
-func (r *ServiceContainer) Unnamed() []*inject.Object {
-	return r.unnamed
-}
-
-func (r *ServiceContainer) Named() map[string]*inject.Object {
-	return r.named
 }
 
 // Register calls the provided RegisterFunc callbacks
@@ -66,6 +63,8 @@ func (r *ServiceContainer) Route(path, name string) *ServiceContainer {
 
 // Object registers any object for DI
 func (r *ServiceContainer) Register(o interface{}, tags ...string) *ServiceContainer {
+	r.Remove(o)
+
 	object := &inject.Object{
 		Value: o,
 	}
@@ -93,7 +92,7 @@ func (r *ServiceContainer) RegisterNamed(name string, o interface{}, tags ...str
 func (r *ServiceContainer) Remove(is ...interface{}) {
 	for _, i := range is {
 		for k, o := range r.unnamed {
-			if reflect.TypeOf(o).String() == reflect.TypeOf(i).String() {
+			if reflect.TypeOf(o.Value).String() == reflect.TypeOf(i).String() {
 				r.unnamed = append(r.unnamed[:k], r.unnamed[k+1:]...)
 			}
 		}
@@ -112,7 +111,7 @@ func (_ sl) Debugf(a string, b ...interface{}) {
 func (r *ServiceContainer) DI() inject.Graph {
 	var di inject.Graph
 
-	di.Logger = sl{}
+	//di.Logger = sl{}
 
 	r.Register(r)
 

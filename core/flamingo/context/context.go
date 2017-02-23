@@ -11,6 +11,7 @@ type (
 
 		Parent           *Context `json:"-"`
 		Childs           []*Context
+		RegisterFuncs    []service_container.RegisterFunc
 		ServiceContainer *service_container.ServiceContainer `json:"-"`
 
 		Routes        []Route           `yaml:"routes"`
@@ -25,11 +26,11 @@ type (
 	}
 )
 
-func New(name string, sc *service_container.ServiceContainer, childs ...*Context) *Context {
+func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) *Context {
 	ctx := &Context{
-		Name:             name,
-		ServiceContainer: sc,
-		Childs:           childs,
+		Name:          name,
+		RegisterFuncs: rfs,
+		Childs:        childs,
 	}
 
 	for _, c := range childs {
@@ -48,6 +49,7 @@ func (c *Context) GetFlatContexts() map[string]*Context {
 		res[name].Childs = nil
 		res[name].Contexts = nil
 		res[name].Name = name
+		res[name].ServiceContainer = service_container.New().WalkRegisterFuncs(res[name].RegisterFuncs...)
 	}
 	return res
 }
@@ -87,23 +89,7 @@ func (c Context) MergeFrom(from Context) *Context {
 		}
 	}
 
-	if c.ServiceContainer == nil {
-		c.ServiceContainer = service_container.New()
-	}
-
-	/*
-		keep := *c.ServiceContainer
-
-		*c.ServiceContainer = *from.ServiceContainer
-
-		for
-
-		// remove known services of the same type
-		for _, u := range from.ServiceContainer.Unnamed() {
-			c.ServiceContainer.Remove(u.Value)
-			c.ServiceContainer.Register(u.Value)
-		}
-	*/
+	c.RegisterFuncs = append(from.RegisterFuncs, c.RegisterFuncs...)
 
 	return &c
 }

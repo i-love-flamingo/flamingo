@@ -46,7 +46,9 @@ func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 		if andattributes {
 			aa = ` {{index $__andattributes "` + k + `"}}`
 		}
-		res += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
+		if len(strings.TrimSpace(v)) > 0 {
+			res += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
+		}
 	}
 	return res
 }
@@ -101,7 +103,9 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					buf += ifmt(t, pre, `{{$__andattributes := $`+t.AttributeBlocks[0]+`}}`)
 					knownaa := make(map[string]bool)
 					for _, e := range t.Attrs {
-						knownaa[e.Name] = true
+						if len(e.Val) > 0 {
+							knownaa[e.Name] = true
+						}
 					}
 					for e := range knownaa {
 						andattrs += ` "` + e + `"`

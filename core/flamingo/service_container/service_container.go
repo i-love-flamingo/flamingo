@@ -89,12 +89,10 @@ func (r *ServiceContainer) RegisterNamed(name string, o interface{}, tags ...str
 }
 
 // Remove removes an already registered object of the same type
-func (r *ServiceContainer) Remove(is ...interface{}) {
-	for _, i := range is {
-		for k, o := range r.unnamed {
-			if reflect.TypeOf(o.Value).String() == reflect.TypeOf(i).String() {
-				r.unnamed = append(r.unnamed[:k], r.unnamed[k+1:]...)
-			}
+func (r *ServiceContainer) Remove(i interface{}) {
+	for k, o := range r.unnamed {
+		if reflect.TypeOf(o.Value).String() == reflect.TypeOf(i).String() {
+			r.unnamed = append(r.unnamed[:k], r.unnamed[k+1:]...)
 		}
 	}
 }

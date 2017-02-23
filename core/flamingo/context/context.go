@@ -1,7 +1,9 @@
 // Context's are used for multi-site setups
 package context
 
-import "flamingo/core/flamingo/service_container"
+import (
+	"flamingo/core/flamingo/service_container"
+)
 
 type (
 	// Context defines a configuration context for multi-site setups
@@ -26,6 +28,7 @@ type (
 	}
 )
 
+// New returns Context Pointers with RegisterFuncs.
 func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) *Context {
 	ctx := &Context{
 		Name:          name,
@@ -40,56 +43,59 @@ func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) 
 	return ctx
 }
 
+// GetFlatContexts returns a slice of registered Services for a given Context.
 func (c *Context) GetFlatContexts() map[string]*Context {
-	res := make(map[string]*Context)
+	result := make(map[string]*Context)
 	flat := c.Flat()
 	for baseurl, name := range c.Contexts {
-		res[name] = flat[c.Name+`/`+name]
-		res[name].BaseUrl = baseurl
-		res[name].Childs = nil
-		res[name].Contexts = nil
-		res[name].Name = name
-		res[name].ServiceContainer = service_container.New().WalkRegisterFuncs(res[name].RegisterFuncs...)
+		result[name] = flat[c.Name+`/`+name]
+		result[name].BaseUrl = baseurl
+		result[name].Childs = nil
+		result[name].Contexts = nil
+		result[name].Name = name
+		result[name].ServiceContainer = service_container.New().WalkRegisterFuncs(result[name].RegisterFuncs...)
 	}
-	return res
+	return result
 }
 
+// Flat returns a slice with flat info about a Context.
 func (c *Context) Flat() map[string]*Context {
 	res := make(map[string]*Context)
 	res[c.Name] = c
 
 	for _, child := range c.Childs {
 		for cn, flatchild := range child.Flat() {
-			res[c.Name+`/`+cn] = flatchild.MergeFrom(*c)
+			res[c.Name+`/`+cn] = MergeFrom(*flatchild, *c)
 		}
 	}
 
 	return res
 }
 
-func (c Context) MergeFrom(from Context) *Context {
-	if c.Configuration == nil {
-		c.Configuration = make(map[string]string)
+// MergeFrom merges two Contexts into a new one
+func MergeFrom(baseContext, incomingContext Context) *Context {
+	if baseContext.Configuration == nil {
+		baseContext.Configuration = make(map[string]string)
 	}
 
-	for k, v := range from.Configuration {
-		if _, ok := c.Configuration[k]; !ok {
-			c.Configuration[k] = v
+	for k, v := range incomingContext.Configuration {
+		if _, ok := baseContext.Configuration[k]; !ok {
+			baseContext.Configuration[k] = v
 		}
 	}
 
 	knownhandler := make(map[string]bool)
-	for _, route := range c.Routes {
+	for _, route := range baseContext.Routes {
 		knownhandler[route.Controller] = true
 	}
 
-	for _, route := range from.Routes {
+	for _, route := range incomingContext.Routes {
 		if !knownhandler[route.Controller] {
-			c.Routes = append(c.Routes, route)
+			baseContext.Routes = append(baseContext.Routes, route)
 		}
 	}
 
-	c.RegisterFuncs = append(from.RegisterFuncs, c.RegisterFuncs...)
+	baseContext.RegisterFuncs = append(incomingContext.RegisterFuncs, baseContext.RegisterFuncs...)
 
-	return &c
+	return &baseContext
 }

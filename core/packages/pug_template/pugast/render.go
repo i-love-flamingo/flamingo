@@ -138,7 +138,8 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 		*/
 
 		case "Code":
-			buf += ifmt(t, pre, p.JsExpr(t.Val, true, true))
+			//buf += ifmt(t, pre, p.JsExpr(t.Val, true, true))
+			buf += p.JsExpr(t.Val, true, true)
 
 		case "Mixin":
 			if t.Call {
@@ -208,7 +209,8 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 			buf += "\n" + pre + "{{end}}"
 
 		case "Text":
-			buf += ifmt(t, pre, t.Val)
+			//buf += ifmt(t, pre, t.Val)
+			buf += t.Val
 
 		case "Conditional":
 			buf += "\n" + pre + fmt.Sprintf("{{if %s}}", p.JsExpr(t.Test, false, false))

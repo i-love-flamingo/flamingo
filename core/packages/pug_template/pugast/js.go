@@ -2,6 +2,7 @@ package pugast
 
 import (
 	"fmt"
+	"html/template"
 	"strings"
 
 	"github.com/robertkrimen/otto/ast"
@@ -161,7 +162,7 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 			}
 		} else {
 			if wrap {
-				result = expr.Value
+				result = template.HTMLEscapeString(expr.Value)
 			} else {
 				result = `"` + expr.Value + `"`
 			}

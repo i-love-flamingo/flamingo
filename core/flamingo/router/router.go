@@ -63,8 +63,8 @@ type (
 	}
 )
 
-// CreateRouter factory for Router
-// CreateRouter creates the new flamingo router, set's up handlers and routes and resolved the DI
+// CreateRouter factory for Routers.
+// Creates the new flamingo router, set's up handlers and routes and resolved the DI.
 func CreateRouter(ctx *context.Context, serviceContainer *service_container.ServiceContainer) *Router {
 	a := &Router{
 		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
@@ -123,37 +123,43 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 	return a
 }
 
-// Url helps resolving URL's by it's name
+// Url helps resolving URL's by it's name.
 // Example:
-// 	flamingo.Url("cms.page.view", "name", "Home")
+//     flamingo.Url("cms.page.view", "name", "Home")
 // results in
-// 	/baseurl/cms/Home
-//
+//     /baseurl/cms/Home
 func (router *Router) Url(name string, params ...string) *url.URL {
-	var u *url.URL
+	var resultUrl *url.URL
 	log.Println(name + `!!!!` + strings.Join(params, "!!"))
 	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
-		u, _ = url.Parse(route.Path)
+		resultUrl, _ = url.Parse(route.Path)
 	} else {
-		u = router.url(name, params...)
+		resultUrl = router.url(name, params...)
 	}
 
-	u.Path = path.Join(router.base.Path, u.Path)
-	return u
+	resultUrl.Path = path.Join(router.base.Path, resultUrl.Path)
+
+	return resultUrl
 }
 
+// url builds a URL for a Router.
 func (router *Router) url(name string, params ...string) *url.URL {
 	if router.router.Get(name) == nil {
 		panic("route " + name + " not found")
 	}
-	u, err := router.router.Get(name).URL(params...)
+
+	resultUrl, err := router.router.Get(name).URL(params...)
+
 	if err != nil {
 		panic(err)
 	}
-	return u
+
+	return resultUrl
 }
 
-// ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging
+// ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
+// Bug (w): Param w refers to the ResponseWriter while the redefinition inside the method refers to a wrapper
+// This should be fixed/clarified. Redefinition is kinda ugly
 func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()
@@ -180,6 +186,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	router.router.ServeHTTP(w, req)
 }
 
+// handle sets the controller for a router which handles a Request.
 func (router *Router) handle(c Controller) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		s, _ := router.Sessions.Get(req, "aial")
@@ -224,7 +231,7 @@ func (router *Router) handle(c Controller) http.Handler {
 	})
 }
 
-// Get is the ServeHTTP's equivalent for DataController and DataHandler
+// Get is the ServeHTTP's equivalent for DataController and DataHandler.
 func (router *Router) Get(handler string, ctx web.Context) interface{} {
 	if c, ok := router.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
@@ -233,6 +240,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(ctx)
 		}
+
 		panic("not a data controller")
 	} else { // mock...
 		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")

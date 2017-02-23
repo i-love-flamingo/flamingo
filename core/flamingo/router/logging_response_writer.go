@@ -13,7 +13,7 @@ type (
 		Printf(string, ...interface{})
 	}
 
-	// ResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging
+	// ResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging.
 	ResponseWriter struct {
 		http.ResponseWriter
 		status int
@@ -21,26 +21,20 @@ type (
 	}
 )
 
-// Writes calls http.ResponseWriter.Write and records the written bytes
+// Write calls http.ResponseWriter.Write and records the written bytes.
 func (response *ResponseWriter) Write(data []byte) (int, error) {
 	l, e := response.ResponseWriter.Write(data)
 	response.size += l
 	return l, e
 }
 
-// WriteHeader call http.ResponseWriter.WriteHeader and records the status code
+// WriteHeader calls http.ResponseWriter.WriteHeader and records the status code.
 func (response *ResponseWriter) WriteHeader(h int) {
 	response.status = h
 	response.ResponseWriter.WriteHeader(h)
 }
 
-func (response *ResponseWriter) Push(target string, opts *http.PushOptions) error {
-	if p, ok := response.ResponseWriter.(http.Pusher); ok {
-		return p.Push(target, opts)
-	}
-	return nil
-}
-
+// Log Requests in a very dirty way.
 func (response *ResponseWriter) Log(logger ResponseWriterLogger, duration time.Duration, req *http.Request, err interface{}) {
 	var cp func(msg interface{}, styles ...string) string
 	switch {

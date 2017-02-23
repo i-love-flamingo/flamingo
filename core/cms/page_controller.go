@@ -11,6 +11,7 @@ type PageController struct {
 	//pageservice interfaces.PageService
 }
 
+// Get renders specific page routes.
 func (pc *PageController) Get(c web.Context) web.Response {
 	return pc.Render(c, "pages/"+c.Param1("name"), nil)
 }

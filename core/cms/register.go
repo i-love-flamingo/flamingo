@@ -1,7 +1,10 @@
 package cms
 
-import "flamingo/core/flamingo/service_container"
+import (
+	"flamingo/core/flamingo/service_container"
+)
 
+// Register adds handles for cms page routes.
 func Register(r *service_container.ServiceContainer) {
 	// default handlers
 	r.Handle("cms.page.view", new(PageController))

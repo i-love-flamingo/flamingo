@@ -44,11 +44,11 @@ func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) 
 }
 
 // GetFlatContexts returns a slice of registered Services for a given Context.
-func (c *Context) GetFlatContexts() map[string]*Context {
+func (ctx *Context) GetFlatContexts() map[string]*Context {
 	result := make(map[string]*Context)
-	flat := c.Flat()
-	for baseurl, name := range c.Contexts {
-		result[name] = flat[c.Name+`/`+name]
+	flat := ctx.Flat()
+	for baseurl, name := range ctx.Contexts {
+		result[name] = flat[ctx.Name+`/`+name]
 		result[name].BaseUrl = baseurl
 		result[name].Childs = nil
 		result[name].Contexts = nil
@@ -59,13 +59,13 @@ func (c *Context) GetFlatContexts() map[string]*Context {
 }
 
 // Flat returns a slice with flat info about a Context.
-func (c *Context) Flat() map[string]*Context {
+func (ctx *Context) Flat() map[string]*Context {
 	res := make(map[string]*Context)
-	res[c.Name] = c
+	res[ctx.Name] = ctx
 
-	for _, child := range c.Childs {
+	for _, child := range ctx.Childs {
 		for cn, flatchild := range child.Flat() {
-			res[c.Name+`/`+cn] = MergeFrom(*flatchild, *c)
+			res[ctx.Name+`/`+cn] = MergeFrom(*flatchild, *ctx)
 		}
 	}
 

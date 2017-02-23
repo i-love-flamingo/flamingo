@@ -41,7 +41,7 @@ var FuncMap = template.FuncMap{
 				}
 			case reflect.Float32, reflect.Float64:
 				{
-					res += fmt.Sprintf("%d", vs.Float())
+					res += fmt.Sprintf("%f", vs.Float())
 				}
 			case reflect.String:
 				{

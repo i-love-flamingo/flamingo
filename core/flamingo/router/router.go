@@ -244,5 +244,4 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 			panic(err)
 		}
 	}
-	panic("not a handler: " + handler)
 }

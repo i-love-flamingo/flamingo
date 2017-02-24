@@ -52,7 +52,6 @@ var (
 func StrToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFile(nil, "", expr, 0)
 	if err != nil {
-		fmt.Println(expr)
 		panic(err)
 	}
 	return p.Body
@@ -61,7 +60,6 @@ func StrToStatements(expr string) []ast.Statement {
 func FuncToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFunction("", "return "+expr)
 	if err != nil {
-		fmt.Println(expr)
 		panic(err)
 	}
 	return p.Body.(*ast.BlockStatement).List
@@ -116,6 +114,7 @@ func (p *PugAst) interpolate(input string) string {
 	for index < len(input) {
 		switch {
 		case input[index] == '\\':
+			break
 
 		case input[index] == '{' && input[index-1] == '$':
 			start = index + 1
@@ -149,7 +148,10 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 		}
 		result += expr.Name
 		if wrap {
-			result = `{{` + result + ` | raw}}`
+			if p.rawmode {
+				result += ` | raw`
+			}
+			result = `{{` + result + `}}`
 		}
 
 	// StringLiteral: "test" or 'test' or `test`
@@ -189,11 +191,14 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 
 	// ObjectLiteral: {"key": "value", "key2": something}
 	case *ast.ObjectLiteral:
-		result = `(__op__map `
+		result = `(__op__map`
 		for _, o := range expr.Value {
 			result += ` "` + o.Key + `" ` + p.renderExpression(o.Value, false, true)
 		}
 		result += `)`
+		if wrap {
+			result = `{{` + result + `}}`
+		}
 
 	// NullLiteral: null
 	case *ast.NullLiteral:
@@ -206,12 +211,15 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	case *ast.DotExpression:
 		result += p.renderExpression(expr.Left, false, true) + "." + p.renderExpression(expr.Identifier, false, true)[1:]
 		if wrap {
-			result = `{{` + result + ` | raw}}`
+			if p.rawmode {
+				result += ` | raw`
+			}
+			result = `{{` + result + `}}`
 		}
 
 	// ConditionalExpression: if (something) { ... } or foo ? a : b
 	case *ast.ConditionalExpression:
-		result = `{{if ` + p.renderExpression(expr.Test, false, true) + ` }}`
+		result = `{{if ` + p.renderExpression(expr.Test, false, true) + `}}`
 		result += p.renderExpression(expr.Consequent, true, true)
 		elsebranch := p.renderExpression(expr.Alternate, true, true)
 		if elsebranch != "" && elsebranch != "{{null}}" {
@@ -267,7 +275,7 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 
 	// SequenceExpression, just like ArrayLiteral
 	case *ast.SequenceExpression:
-		result = `(__op__array `
+		result = `(__op__array`
 		for _, s := range expr.Sequence {
 			result += ` ` + p.renderExpression(s, false, true)
 		}

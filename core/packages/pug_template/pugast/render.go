@@ -67,6 +67,8 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 	var buf string
 
 	for _, t := range parent.Nodes {
+		p.rawmode = !t.MustEscape
+
 		switch t.Type {
 		case "Extends", "RawInclude":
 			if t.File.Path[0] == '/' {

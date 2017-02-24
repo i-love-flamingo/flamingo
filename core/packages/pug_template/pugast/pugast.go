@@ -8,6 +8,7 @@ type PugAst struct {
 	mixin    map[string]*Token
 	FuncMap  template.FuncMap
 	knownVar map[string]bool
+	rawmode  bool
 }
 
 func NewPugAst(path string) *PugAst {

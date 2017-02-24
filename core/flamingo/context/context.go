@@ -3,6 +3,7 @@ package context
 
 import (
 	"flamingo/core/flamingo/service_container"
+	"fmt"
 )
 
 type (
@@ -44,7 +45,8 @@ func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) 
 	return ctx
 }
 
-// GetFlatContexts returns a slice of registered Services for a given Context.
+// GetFlatContexts returns a map of context-relative-name->*Context, which has been flatted to inherit all parent's
+// tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of ctx.
 func (ctx *Context) GetFlatContexts() map[string]*Context {
 	result := make(map[string]*Context)
 	flat := ctx.Flat()
@@ -56,10 +58,13 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Name = name
 		result[name].ServiceContainer = service_container.New().WalkRegisterFuncs(result[name].RegisterFuncs...)
 	}
+
+	fmt.Println(result)
+
 	return result
 }
 
-// Flat returns a slice with flat info about a Context.
+// Flat returns a map of name->*Context of contexts, were all values have been inherited (yet overriden) of the parent context tree.
 func (ctx *Context) Flat() map[string]*Context {
 	res := make(map[string]*Context)
 	res[ctx.Name] = ctx

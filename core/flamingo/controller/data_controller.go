@@ -14,7 +14,7 @@ type (
 	}
 )
 
-// Get uses the Handler registered at /_flamingo/json/{Handler} and return's the call to Get()
+// Get Handler registered at /_flamingo/json/{Handler} and return's the call to Get()
 func (gc *DataController) Get(c web.Context) web.Response {
 	return gc.Json(gc.Router.Get(c.Param1("Handler"), c))
 }

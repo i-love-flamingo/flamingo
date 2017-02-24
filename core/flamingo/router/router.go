@@ -158,8 +158,6 @@ func (router *Router) url(name string, params ...string) *url.URL {
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
-// Bug (w): Param w refers to the ResponseWriter while the redefinition inside the method refers to a wrapper
-// This should be fixed/clarified. Redefinition is kinda ugly
 func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
 	start := time.Now()

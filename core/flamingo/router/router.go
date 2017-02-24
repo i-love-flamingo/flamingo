@@ -171,7 +171,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.(*ResponseWriter).Log(router.Logger, time.Since(start), req, err)
 	}()
 
-	log.Printf("%#v\n", req.URL)
 	if route, ok := router.hardroutes[req.URL.Path]; ok {
 		p := make([]string, len(route.Args)*2)
 		for k, v := range route.Args {
@@ -179,7 +178,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		req.URL = router.url(route.Controller, p...)
 	}
-	log.Printf("%#v\n", req.URL)
 
 	router.router.ServeHTTP(w, req)
 }

@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// LoadYaml starts to recursive read the yaml context tree
 func LoadYaml(basedir string, root *Context) error {
 	// load context.yml
 	return loadyaml(basedir, "/", root)

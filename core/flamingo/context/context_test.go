@@ -79,18 +79,22 @@ var _ = g.Describe("Context", func() {
 			flat["main/main1"].ServiceContainer.Resolve()
 			Expect(tester.marker).To(Equal("root"))
 
+			tester = new(TestDependecyChecker)
 			flat["main/main2"].ServiceContainer.Register(tester)
 			flat["main/main2"].ServiceContainer.Resolve()
 			Expect(tester.marker).To(Equal("root"))
 
+			tester = new(TestDependecyChecker)
 			flat["not-main/notmain1"].ServiceContainer.Register(tester)
 			flat["not-main/notmain1"].ServiceContainer.Resolve()
 			Expect(tester.marker).To(Equal("not-main"))
 
+			tester = new(TestDependecyChecker)
 			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Register(tester)
 			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Resolve()
 			Expect(tester.marker).To(Equal("not-main"))
 
+			tester = new(TestDependecyChecker)
 			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Register(tester)
 			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Resolve()
 			Expect(tester.marker).To(Equal("not-main-deep"))

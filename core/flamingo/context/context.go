@@ -21,6 +21,7 @@ type (
 		Contexts      map[string]string `yaml:"contexts"`
 	}
 
+	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
 	Route struct {
 		Path       string
 		Controller string

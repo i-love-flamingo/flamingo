@@ -11,10 +11,12 @@ type (
 	}
 )
 
+// Name alias for use in template
 func (_ GetFunc) Name() string {
 	return "get"
 }
 
+// Func as implementation of get method
 func (g *GetFunc) Func(ctx web.Context) interface{} {
 	return func(what string) interface{} {
 		return g.Router.Get(what, ctx)

@@ -14,20 +14,24 @@ type (
 	}
 )
 
+// NewFrontRouter creates new FrontRouter
 func NewFrontRouter() *FrontRouter {
 	return &FrontRouter{
 		router: make(map[string]http.Handler),
 	}
 }
 
+// Add appends new Handler to Frontrouter
 func (fr *FrontRouter) Add(prefix string, handler http.Handler) {
 	fr.router[prefix] = handler
 }
 
+// Default sets Fallback for undefined Handler
 func (fr *FrontRouter) Default(handler http.Handler) {
 	fr.fallback = handler
 }
 
+// ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	host := req.Host
 	if strings.Index(host, ":") > -1 {

@@ -18,7 +18,7 @@ type (
 		Param1(string) string
 		ParamAll() map[string]string
 		Query(string) []string
-		Query1(string) string
+		QueryFirst(string) string
 		QueryAll() map[string][]string
 		Request() *http.Request
 
@@ -39,6 +39,7 @@ type (
 	}
 )
 
+// ContextFromRequest returns a ctx enriched by Request Data
 func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) *ctx {
 	c := new(ctx)
 	c.vars = mux.Vars(r)
@@ -55,10 +56,12 @@ func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessio
 	return c
 }
 
+// Session returns the ctx Session
 func (c *ctx) Session() *sessions.Session {
 	return c.session
 }
 
+// Push pushes Assets via HTTP2 server push
 func (c *ctx) Push(target string, opts *http.PushOptions) error {
 	if c.pusher != nil {
 		return c.pusher.Push(target, opts)
@@ -66,11 +69,12 @@ func (c *ctx) Push(target string, opts *http.PushOptions) error {
 	return nil
 }
 
+// ID returns the ctx Id (random Int)
 func (c *ctx) ID() string {
 	return c.id
 }
 
-// Form get POST values
+// Form get POST value
 func (c *ctx) Form(n string) []string {
 	return c.FormAll()[n]
 }
@@ -99,14 +103,17 @@ func (c *ctx) ParamAll() map[string]string {
 	return c.vars
 }
 
+// Query looks up Raw Query map for Param
 func (c *ctx) Query(n string) []string {
 	return c.QueryAll()[n]
 }
 
-func (c *ctx) Query1(n string) string {
+// QueryFirst  looks up Raw Query map for  First Param
+func (c *ctx) QueryFirst(n string) string {
 	return c.Query(n)[0]
 }
 
+// QueryAll returns a Map of the Raw Query
 func (c *ctx) QueryAll() map[string][]string {
 	return c.request.URL.Query()
 }

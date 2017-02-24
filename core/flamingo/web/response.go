@@ -43,7 +43,7 @@ func (rr RedirectResponse) Apply(rw http.ResponseWriter) {
 	rw.WriteHeader(rr.Status)
 }
 
-// Apply Response
+// Apply ContentResponse
 func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain"
@@ -57,7 +57,7 @@ func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 	io.Copy(rw, cr.Body)
 }
 
-// Apply Response
+// Apply JsonResponse
 func (js JsonResponse) Apply(rw http.ResponseWriter) {
 	if js.Status == 0 {
 		js.Status = http.StatusOK

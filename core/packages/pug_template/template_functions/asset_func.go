@@ -15,10 +15,12 @@ type (
 	}
 )
 
+// Name alias for use in template
 func (_ AssetFunc) Name() string {
 	return "asset"
 }
 
+// Func as implementation of asset method
 func (af *AssetFunc) Func(ctx web.Context) interface{} {
 	return func(asset string) template.URL {
 		// let webpack dev server handle URL's

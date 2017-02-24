@@ -28,6 +28,7 @@ type (
 	}
 )
 
+// MarshalText serialization of RegisterFunc Names
 func (r RegisterFunc) MarshalText() (text []byte, err error) {
 	return []byte(runtime.FuncForPC(reflect.ValueOf(r).Pointer()).Name()), nil
 }
@@ -50,6 +51,7 @@ func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContai
 	return r
 }
 
+// Handle registers Handler on ServiceContainer
 func (r *ServiceContainer) Handle(name string, handler interface{}) {
 	r.Handler[name] = handler
 	r.Register(handler)

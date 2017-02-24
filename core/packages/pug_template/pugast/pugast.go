@@ -11,6 +11,7 @@ type PugAst struct {
 	rawmode  bool
 }
 
+// NewPugAst creates a new Pug AST struct
 func NewPugAst(path string) *PugAst {
 	pugast := &PugAst{
 		Path:     path,

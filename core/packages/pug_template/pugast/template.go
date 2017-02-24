@@ -29,6 +29,7 @@ type PugTemplateEngine struct {
 	TemplateFunctions *coretemplate.TemplateFunctionRegistry `inject:""`
 }
 
+// NewPugTemplateEngine creates PugTemplateEngine struct
 func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
 	pte := &PugTemplateEngine{
 		basedir: basedir,
@@ -43,6 +44,7 @@ func (t *PugTemplateEngine) PostInject() {
 	t.loadTemplates()
 }
 
+// loadTemplate gathers configuration and templates for the Engine
 func (t *PugTemplateEngine) loadTemplates() {
 	start := time.Now()
 
@@ -71,6 +73,7 @@ func (t *PugTemplateEngine) loadTemplates() {
 	log.Println("Compiled templates in", time.Since(start))
 }
 
+// compileDir returns a map of defined templates in directory dirname
 func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Template, error) {
 	result := make(map[string]*template.Template)
 

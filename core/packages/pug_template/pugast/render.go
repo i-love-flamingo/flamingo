@@ -9,6 +9,7 @@ import (
 	"github.com/robertkrimen/otto/ast"
 )
 
+// TokenToTemplate gets named Template from Token
 func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	tpl := template.
 		New(name).
@@ -31,6 +32,7 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	return tpl
 }
 
+// args returns formatted keys and value string for given attributes from AST
 func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 	if len(attrs) == 0 {
 		return ""
@@ -40,19 +42,22 @@ func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 	for _, attr := range attrs {
 		a[attr.Name] += ` ` + p.JsExpr(attr.Val, true, false)
 	}
-	res := ""
+
+	result := ""
+
 	for k, v := range a {
 		var aa string
 		if andattributes {
 			aa = ` {{index $__andattributes "` + k + `"}}`
 		}
 		if len(strings.TrimSpace(v)) > 0 {
-			res += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
+			result += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
 		}
 	}
-	return res
+	return result
 }
 
+// ifmt returns string for token, prefixed with newline if not inline token
 func ifmt(t *Token, pre, buf string) string {
 	if t.IsInline {
 		return buf
@@ -63,6 +68,7 @@ func ifmt(t *Token, pre, buf string) string {
 
 const depth = "  "
 
+// render returns formatted html
 func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 	var buf string
 

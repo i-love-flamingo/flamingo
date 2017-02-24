@@ -49,6 +49,7 @@ var (
 	}
 )
 
+// StrToStatements reads Javascript Statements and returns an AST representation
 func StrToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFile(nil, "", expr, 0)
 	if err != nil {
@@ -57,6 +58,7 @@ func StrToStatements(expr string) []ast.Statement {
 	return p.Body
 }
 
+// StrToStatements reads Javascript Functions and returns an AST representation
 func FuncToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFunction("", "return "+expr)
 	if err != nil {
@@ -105,7 +107,7 @@ func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
 	return finalexpr
 }
 
-// interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blabla`
+// interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blah`
 // we use a helper function called `s` to merge them later
 func (p *PugAst) interpolate(input string) string {
 	index := 1

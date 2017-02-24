@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// Register Services for pug_template package
 func Register(basedir string, debug bool) service_container.RegisterFunc {
 	return func(serviceContainer *service_container.ServiceContainer) {
 		serviceContainer.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))

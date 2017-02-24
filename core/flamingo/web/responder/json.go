@@ -5,10 +5,10 @@ import (
 	"net/http"
 )
 
-// RenderAware allows pug_template rendering
+// JsonAware allows pug_template rendering
 type JsonAware struct{}
 
-// Render returns a web.ContentResponse with status 200 and ContentType text/html
+// Json returns a web.ContentResponse with status 200
 func (r *JsonAware) Json(data interface{}) web.Response {
 	return web.JsonResponse{
 		Status: http.StatusOK,

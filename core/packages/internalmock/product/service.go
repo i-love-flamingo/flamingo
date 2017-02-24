@@ -34,6 +34,7 @@ var namesuffix = [...]string{
 
 type ProductService struct{}
 
+// Get returns a product struct
 func (ps *ProductService) Get(id string) models.Product {
 	var product models.Product
 
@@ -46,7 +47,7 @@ func (ps *ProductService) Get(id string) models.Product {
 	return product
 }
 
-// GetBySkuList gbsl
+// GetByIDList returns a struct of Product Models identified by given Skus
 func (ps *ProductService) GetByIDList(skus []string) []models.Product {
 	var products = make([]models.Product, len(skus))
 

@@ -25,6 +25,7 @@ type (
 	}
 )
 
+// Populate Template Registry, mapping short method names to Functions
 func (tfr *TemplateFunctionRegistry) Populate() template.FuncMap {
 	tfr.Contextaware = make(map[string]ContextAware)
 	funcmap := make(template.FuncMap)

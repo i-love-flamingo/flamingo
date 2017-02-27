@@ -8,21 +8,21 @@ import (
 )
 
 type (
-	DI_root struct{}
+	DIroot struct{}
 
-	DI_wants_root struct {
-		Root *DI_root `inject:""`
+	DIwantsRoot struct {
+		Root *DIroot `inject:""`
 		mark string
 	}
 
-	DI_test struct {
-		*DI_wants_root   `inject:""`
-		Test             *DI_root `inject:"root"`
+	DItest struct {
+		*DIwantsRoot     `inject:""`
+		Test             *DIroot `inject:"root"`
 		postinjectmarker bool
 	}
 )
 
-func (d *DI_test) PostInject() {
+func (d *DItest) PostInject() {
 	d.postinjectmarker = true
 }
 
@@ -55,27 +55,27 @@ var _ = Describe("ServiceContainerPackage", func() {
 			})
 		})
 
-		var test, test_named = new(DI_test), new(DI_root)
+		var test, testNamed = new(DItest), new(DIroot)
 
 		Describe("Dependency Injection behaviour", func() {
 			Context("When Working with test dependency Tree", func() {
 				BeforeEach(func() {
-					test, test_named = new(DI_test), new(DI_root)
+					test, testNamed = new(DItest), new(DIroot)
 
 					serviceContainer.Register(test, "tag.1")
-					serviceContainer.Register(test_named)
-					serviceContainer.RegisterNamed("root", test_named, "tag.1", "tag.2")
+					serviceContainer.Register(testNamed)
+					serviceContainer.RegisterNamed("root", testNamed, "tag.1", "tag.2")
 				})
 
 				It("Should resove the whole graph", func() {
-					Expect(test.Root).To(Equal(test_named))
-					Expect(test.Test).To(Equal(test_named))
-					Expect(test.DI_wants_root).To(BeAssignableToTypeOf(new(DI_wants_root)))
+					Expect(test.Root).To(Equal(testNamed))
+					Expect(test.Test).To(Equal(testNamed))
+					Expect(test.DIwantsRoot).To(BeAssignableToTypeOf(new(DIwantsRoot)))
 				})
 
 				It("Should have tags", func() {
-					Expect(serviceContainer.GetByTag("tag.1")).To(ConsistOf(test, test_named))
-					Expect(serviceContainer.GetByTag("tag.2")).To(ConsistOf(test_named))
+					Expect(serviceContainer.GetByTag("tag.1")).To(ConsistOf(test, testNamed))
+					Expect(serviceContainer.GetByTag("tag.2")).To(ConsistOf(testNamed))
 					Expect(serviceContainer.GetByTag("tag.3")).To(BeEmpty())
 				})
 
@@ -85,21 +85,21 @@ var _ = Describe("ServiceContainerPackage", func() {
 			})
 
 			Context("When dealing with already existing objects", func() {
-				var di_old, di_new = &DI_wants_root{mark: "old"}, &DI_wants_root{mark: "new"}
+				var diOld, diNew = &DIwantsRoot{mark: "old"}, &DIwantsRoot{mark: "new"}
 
 				BeforeEach(func() {
-					test, test_named = new(DI_test), new(DI_root)
-					di_old, di_new = &DI_wants_root{mark: "old"}, &DI_wants_root{mark: "new"}
+					test, testNamed = new(DItest), new(DIroot)
+					diOld, diNew = &DIwantsRoot{mark: "old"}, &DIwantsRoot{mark: "new"}
 					serviceContainer.Register(test)
-					serviceContainer.RegisterNamed("root", test_named)
-					serviceContainer.Register(di_old)
-					serviceContainer.Register(di_new)
+					serviceContainer.RegisterNamed("root", testNamed)
+					serviceContainer.Register(diOld)
+					serviceContainer.Register(diNew)
 				})
 
-				It("Should have replaced di_old with the newer di_new object", func() {
-					Expect(test.DI_wants_root).ToNot(Equal(di_old))
-					Expect(test.DI_wants_root).To(Equal(di_new))
-					Expect(test.DI_wants_root.mark).To(Equal("new"))
+				It("Should have replaced diOld with the newer diNew object", func() {
+					Expect(test.DIwantsRoot).ToNot(Equal(diOld))
+					Expect(test.DIwantsRoot).To(Equal(diNew))
+					Expect(test.DIwantsRoot.mark).To(Equal("new"))
 				})
 			})
 		})

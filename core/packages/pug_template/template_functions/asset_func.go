@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// AssetFunc returns the proper URL for the asset, either local or via CDN
 	AssetFunc struct {
 		Router *router.Router            `inject:""`
 		Engine *pugast.PugTemplateEngine `inject:""`
@@ -16,7 +17,7 @@ type (
 )
 
 // Name alias for use in template
-func (_ AssetFunc) Name() string {
+func (af AssetFunc) Name() string {
 	return "asset"
 }
 
@@ -29,7 +30,7 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		}
 
 		// get the _static URL
-		url := af.Router.Url("_static", "n", "")
+		url := af.Router.URL("_static", "n", "")
 		var result string
 
 		assetSplitted := strings.Split(asset, "/")

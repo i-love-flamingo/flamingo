@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// ResponseWriterLogger defines the function ResponseWriter uses for debugging/logging
 	ResponseWriterLogger interface {
 		Printf(string, ...interface{})
 	}

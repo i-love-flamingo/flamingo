@@ -48,7 +48,7 @@ type (
 )
 
 // ContextFromRequest returns a ctx enriched by Request Data
-func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) *ctx {
+func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
 	c := new(ctx)
 	c.vars = mux.Vars(r)
 	c.request = r

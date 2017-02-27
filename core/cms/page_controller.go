@@ -5,6 +5,7 @@ import (
 	"flamingo/core/flamingo/web/responder"
 )
 
+// PageController is a demo cms page view controller
 type PageController struct {
 	*responder.RenderAware `inject:""`
 

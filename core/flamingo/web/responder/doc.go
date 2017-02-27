@@ -1,5 +1,5 @@
 /*
-Web Responder are basically helper for generating responses.
+Package responder are basically helper for generating responses.
 
 Instead of generating responses from response-structs, you should inject these responder structs
 and let them take care. They can request *app.App etc as they need it.

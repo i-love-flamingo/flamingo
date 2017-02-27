@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-// JsonAware allows pug_template rendering
-type JsonAware struct{}
+// JSONAware allows pug_template rendering
+type JSONAware struct{}
 
-// Json returns a web.ContentResponse with status 200
-func (r *JsonAware) Json(data interface{}) web.Response {
-	return web.JsonResponse{
+// JSON returns a web.ContentResponse with status 200
+func (r *JSONAware) JSON(data interface{}) web.Response {
+	return web.JSONResponse{
 		Status: http.StatusOK,
 		Data:   data,
 	}

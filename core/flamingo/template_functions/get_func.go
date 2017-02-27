@@ -6,13 +6,14 @@ import (
 )
 
 type (
+	// GetFunc allows templates to access the router's `get` method
 	GetFunc struct {
 		Router *router.Router `inject:""`
 	}
 )
 
 // Name alias for use in template
-func (_ GetFunc) Name() string {
+func (g GetFunc) Name() string {
 	return "get"
 }
 

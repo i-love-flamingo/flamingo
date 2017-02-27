@@ -26,8 +26,8 @@ type (
 		ContentType string
 	}
 
-	// JsonResponse returns Data encoded as Json
-	JsonResponse struct {
+	// JSONResponse returns Data encoded as JSON
+	JSONResponse struct {
 		Data   interface{}
 		Status int
 	}
@@ -57,8 +57,8 @@ func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 	io.Copy(rw, cr.Body)
 }
 
-// Apply JsonResponse
-func (js JsonResponse) Apply(rw http.ResponseWriter) {
+// Apply JSONResponse
+func (js JSONResponse) Apply(rw http.ResponseWriter) {
 	if js.Status == 0 {
 		js.Status = http.StatusOK
 	}

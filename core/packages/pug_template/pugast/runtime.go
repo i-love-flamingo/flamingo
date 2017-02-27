@@ -8,24 +8,25 @@ import (
 	"strings"
 )
 
+// FuncMap is the default runtime funcmap for pugast templates
 var FuncMap = template.FuncMap{
 	"__": func(s ...string) string { return strings.Join(s, "::") },
 
-	"__op__add":   runtime_add,
-	"__op__sub":   runtime_sub,
-	"__op__mul":   runtime_mul,
-	"__op__quo":   runtime_quo,
-	"__op__rem":   runtime_rem,
-	"__op__mod":   runtime_rem,
-	"__op__minus": runtime_minus,
-	"__op__plus":  runtime_plus,
-	"__op__eql":   runtime_eql,
-	"__op__gtr":   runtime_gtr,
-	"__op__lss":   runtime_lss,
-	"neq":         func(x, y interface{}) bool { return !runtime_eql(x, y) },
+	"__op__add":   runtimeAdd,
+	"__op__sub":   runtimeSub,
+	"__op__mul":   runtimeMul,
+	"__op__quo":   runtimeQuo,
+	"__op__rem":   runtimeRem,
+	"__op__mod":   runtimeRem,
+	"__op__minus": runtimeMinus,
+	"__op__plus":  runtimePlus,
+	"__op__eql":   runtimeEql,
+	"__op__gtr":   runtimeGtr,
+	"__op__lss":   runtimeLss,
+	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
 
-	"json":      runtime_json,
-	"unescaped": runtime_unescaped,
+	"json":      runtimeJSON,
+	"unescaped": runtimeUnescaped,
 
 	"null": func() interface{} { return nil },
 
@@ -94,7 +95,7 @@ var FuncMap = template.FuncMap{
 	},
 }
 
-func runtime_add(x, y interface{}) interface{} {
+func runtimeAdd(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -135,7 +136,7 @@ func runtime_add(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_sub(x, y interface{}) interface{} {
+func runtimeSub(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -161,7 +162,7 @@ func runtime_sub(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_mul(x, y interface{}) interface{} {
+func runtimeMul(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -187,7 +188,7 @@ func runtime_mul(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_quo(x, y interface{}) interface{} {
+func runtimeQuo(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -213,7 +214,7 @@ func runtime_quo(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_rem(x, y interface{}) interface{} {
+func runtimeRem(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -228,7 +229,7 @@ func runtime_rem(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_minus(x interface{}) interface{} {
+func runtimeMinus(x interface{}) interface{} {
 	vx := reflect.ValueOf(x)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -240,7 +241,7 @@ func runtime_minus(x interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_plus(x interface{}) interface{} {
+func runtimePlus(x interface{}) interface{} {
 	vx := reflect.ValueOf(x)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -252,7 +253,7 @@ func runtime_plus(x interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtime_eql(x, y interface{}) bool {
+func runtimeEql(x, y interface{}) bool {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -302,7 +303,7 @@ func runtime_eql(x, y interface{}) bool {
 	return false
 }
 
-func runtime_lss(x, y interface{}) bool {
+func runtimeLss(x, y interface{}) bool {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -343,16 +344,16 @@ func runtime_lss(x, y interface{}) bool {
 	return false
 }
 
-func runtime_gtr(x, y interface{}) bool {
-	return !runtime_lss(x, y) && !runtime_eql(x, y)
+func runtimeGtr(x, y interface{}) bool {
+	return !runtimeLss(x, y) && !runtimeEql(x, y)
 }
 
-func runtime_json(x interface{}) (res string, err error) {
+func runtimeJSON(x interface{}) (res string, err error) {
 	bres, err := json.Marshal(x)
 	res = string(bres)
 	return
 }
 
-func runtime_unescaped(x string) interface{} {
+func runtimeUnescaped(x string) interface{} {
 	return template.HTML(x)
 }

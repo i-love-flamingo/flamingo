@@ -104,7 +104,7 @@ func (r *ServiceContainer) Remove(i interface{}) {
 type sl struct{}
 
 // Debugf DI logger
-func (_ sl) Debugf(a string, b ...interface{}) {
+func (s sl) Debugf(a string, b ...interface{}) {
 	log.Printf(a, b...)
 }
 

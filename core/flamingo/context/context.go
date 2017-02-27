@@ -1,4 +1,4 @@
-// Context's are used for multi-site setups
+// Package context provides supporting code for multi-tenant setups
 package context
 
 import (
@@ -10,7 +10,7 @@ type (
 	// Context defines a configuration context for multi-site setups
 	Context struct {
 		Name    string
-		BaseUrl string
+		BaseURL string
 
 		Parent           *Context `json:"-"`
 		Childs           []*Context
@@ -52,7 +52,7 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 	flat := ctx.Flat()
 	for baseurl, name := range ctx.Contexts {
 		result[name] = flat[ctx.Name+`/`+name]
-		result[name].BaseUrl = baseurl
+		result[name].BaseURL = baseurl
 		result[name].Childs = nil
 		result[name].Contexts = nil
 		result[name].Name = name

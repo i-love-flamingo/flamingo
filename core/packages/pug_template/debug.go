@@ -11,12 +11,13 @@ import (
 )
 
 type (
+	// DebugController shows the intermediate go-template compiled from pug AST
 	DebugController struct {
 		Engine *pugast.PugTemplateEngine `inject:""`
 	}
 )
 
-const DebugTemplate = `<!doctype html>
+const debugTemplate = `<!doctype html>
 <html>
 <head>
 	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
@@ -41,7 +42,7 @@ func (dc *DebugController) Get(ctx web.Context) web.Response {
 	if !ok {
 		panic("tpl not found")
 	}
-	t, _ := template.New("tpl").Parse(DebugTemplate)
+	t, _ := template.New("tpl").Parse(debugTemplate)
 	var body = new(bytes.Buffer)
 
 	tpls := ""

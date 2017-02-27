@@ -13,7 +13,7 @@ type RedirectAware struct {
 
 // Redirect returns a web.RedirectResponse with the proper URL
 func (r *RedirectAware) Redirect(name string, args ...string) web.Response {
-	url := r.Router.Url(name, args...)
+	url := r.Router.URL(name, args...)
 
 	return web.RedirectResponse{
 		Status:   http.StatusFound,
@@ -28,7 +28,7 @@ type RedirectPermanentAware struct {
 
 // RedirectPermanent returns a web.RedirectPermanentResponse with the proper URL
 func (r *RedirectPermanentAware) RedirectPermanent(name string, args ...string) web.Response {
-	url := r.Router.Url(name, args...)
+	url := r.Router.URL(name, args...)
 
 	return web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,

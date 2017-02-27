@@ -85,7 +85,7 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 	router.hardroutes = make(map[string]context.Route)
 	router.hardroutesreverse = make(map[string]context.Route)
 	router.handler = make(map[string]interface{})
-	router.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
+	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
 	// set up routes
 	for p, name := range serviceContainer.Routes {
@@ -129,22 +129,22 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 	return router
 }
 
-// Url helps resolving URL's by it's name.
+// URL helps resolving URL's by it's name.
 // Example:
-//     flamingo.Url("cms.page.view", "name", "Home")
+//     flamingo.URL("cms.page.view", "name", "Home")
 // results in
 //     /baseurl/cms/Home
-func (router *Router) Url(name string, params ...string) *url.URL {
-	var resultUrl *url.URL
+func (router *Router) URL(name string, params ...string) *url.URL {
+	var resultURL *url.URL
 	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
-		resultUrl, _ = url.Parse(route.Path)
+		resultURL, _ = url.Parse(route.Path)
 	} else {
-		resultUrl = router.url(name, params...)
+		resultURL = router.url(name, params...)
 	}
 
-	resultUrl.Path = path.Join(router.base.Path, resultUrl.Path)
+	resultURL.Path = path.Join(router.base.Path, resultURL.Path)
 
-	return resultUrl
+	return resultURL
 }
 
 // url builds a URL for a Router.
@@ -153,13 +153,13 @@ func (router *Router) url(name string, params ...string) *url.URL {
 		panic("route " + name + " not found")
 	}
 
-	resultUrl, err := router.router.Get(name).URL(params...)
+	resultURL, err := router.router.Get(name).URL(params...)
 
 	if err != nil {
 		panic(err)
 	}
 
-	return resultUrl
+	return resultURL
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
@@ -215,10 +215,10 @@ func (router *Router) handle(c Controller) http.Handler {
 			response = c(ctx)
 
 		case DataController:
-			response = web.JsonResponse{Data: c.(DataController).Data(ctx)}
+			response = web.JSONResponse{Data: c.(DataController).Data(ctx)}
 
 		case func(web.Context) interface{}:
-			response = web.JsonResponse{Data: c(ctx)}
+			response = web.JSONResponse{Data: c(ctx)}
 
 		case http.Handler:
 			c.ServeHTTP(w, req)
@@ -256,8 +256,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 			var res interface{}
 			json.Unmarshal(data, &res)
 			return res
-		} else {
-			panic(err)
 		}
+		panic(err)
 	}
 }

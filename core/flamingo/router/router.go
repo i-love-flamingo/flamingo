@@ -58,69 +58,75 @@ type (
 		hardroutes        map[string]context.Route
 		hardroutesreverse map[string]context.Route
 		base              *url.URL
-		Logger            *log.Logger `inject:""`
-		Sessions          sessions.Store
+
+		Logger           *log.Logger                         `inject:""` // Logger is a default logger for now
+		Sessions         sessions.Store                      `inject:""` // Sessions storage, which are used to retrieve user-context session
+		ServiceContainer *service_container.ServiceContainer `inject:""` // ServiceContainer holder
 	}
 )
 
+// NewCookieStore because vendor-folder are hard...
+func NewCookieStore(secret []byte) *sessions.CookieStore {
+	return sessions.NewCookieStore(secret)
+}
+
 // CreateRouter factory for Routers.
 // Creates the new flamingo router, set's up handlers and routes and resolved the DI.
+// BUG(bastian.ike) hardroutesreverse style is borked
 func CreateRouter(ctx *context.Context, serviceContainer *service_container.ServiceContainer) *Router {
-	a := &Router{
-		Sessions: sessions.NewCookieStore([]byte("something-very-secret")),
-	}
+	router := new(Router)
 
-	serviceContainer.Register(a)
+	serviceContainer.Register(router)
 	serviceContainer.Resolve()
 
 	// bootstrap
-	a.router = mux.NewRouter()
-	a.routes = make(map[string]string)
-	a.hardroutes = make(map[string]context.Route)
-	a.hardroutesreverse = make(map[string]context.Route)
-	a.handler = make(map[string]interface{})
-	a.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
+	router.router = mux.NewRouter()
+	router.routes = make(map[string]string)
+	router.hardroutes = make(map[string]context.Route)
+	router.hardroutesreverse = make(map[string]context.Route)
+	router.handler = make(map[string]interface{})
+	router.base, _ = url.Parse("scheme://" + ctx.BaseUrl)
 
 	// set up routes
 	for p, name := range serviceContainer.Routes {
-		a.routes[name] = p
+		router.routes[name] = p
 	}
 
 	// set up handlers
 	for name, handler := range serviceContainer.Handler {
-		a.handler[name] = handler
+		router.handler[name] = handler
 	}
 
 	for _, route := range ctx.Routes {
 		if route.Args == nil {
-			a.routes[route.Controller] = route.Path
+			router.routes[route.Controller] = route.Path
 		} else {
-			a.hardroutes[route.Path] = route
+			router.hardroutes[route.Path] = route
 			p := make([]string, len(route.Args)*2)
 			for k, v := range route.Args {
 				p = append(p, k, v)
 			}
-			a.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
-			a.Logger.Println("Register", route.Path, "for", route.Controller, "with", route.Args, "key", route.Controller+strings.Join(p, "!!"))
+			router.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
+			router.Logger.Println("Register", route.Path, "for", route.Controller, "with", route.Args, "key", route.Controller+strings.Join(p, "!!"))
 		}
 	}
 
 	known := make(map[string]bool)
 
-	for name, handler := range a.handler {
+	for name, handler := range router.handler {
 		if known[name] {
 			continue
 		}
 		known[name] = true
-		route, ok := a.routes[name]
+		route, ok := router.routes[name]
 		if !ok {
 			continue
 		}
-		a.Logger.Println("Register", name, "at", route)
-		a.router.Handle(route, a.handle(handler)).Name(name)
+		router.Logger.Println("Register", name, "at", route)
+		router.router.Handle(route, router.handle(handler)).Name(name)
 	}
 
-	return a
+	return router
 }
 
 // Url helps resolving URL's by it's name.
@@ -130,7 +136,6 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 //     /baseurl/cms/Home
 func (router *Router) Url(name string, params ...string) *url.URL {
 	var resultUrl *url.URL
-	log.Println(name + `!!!!` + strings.Join(params, "!!"))
 	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
 		resultUrl, _ = url.Parse(route.Path)
 	} else {
@@ -160,6 +165,7 @@ func (router *Router) url(name string, params ...string) *url.URL {
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &ResponseWriter{ResponseWriter: w}
+
 	start := time.Now()
 	defer func() {
 		var err interface{}
@@ -185,9 +191,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // handle sets the controller for a router which handles a Request.
 func (router *Router) handle(c Controller) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		s, _ := router.Sessions.Get(req, "aial")
+		s, _ := router.Sessions.Get(req, "akl")
 
 		ctx := web.ContextFromRequest(w, req, s)
+		router.ServiceContainer.InjectInto(ctx)
+		//defer ctx.Log()
+		defer ctx.Profile("request", req.RequestURI)()
 
 		var response web.Response
 
@@ -229,6 +238,8 @@ func (router *Router) handle(c Controller) http.Handler {
 
 // Get is the ServeHTTP's equivalent for DataController and DataHandler.
 func (router *Router) Get(handler string, ctx web.Context) interface{} {
+	defer ctx.Profile("get", handler)()
+
 	if c, ok := router.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
 			return c.Data(ctx)
@@ -239,6 +250,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 
 		panic("not a data controller")
 	} else { // mock...
+		defer ctx.Profile("fallback", handler)
 		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
 		if err == nil {
 			var res interface{}

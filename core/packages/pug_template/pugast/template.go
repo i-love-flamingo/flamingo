@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+// PugTemplateEngine is the one and only javascript template engine for go ;)
 type PugTemplateEngine struct {
 	basedir           string
 	Assetrewrites     map[string]string
@@ -110,11 +111,15 @@ func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Temp
 	return result, nil
 }
 
-// Render via hmtl/pug_template
+// Render via html/pug_template
 func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data interface{}) io.Reader {
+	defer ctx.Profile("render", templateName)()
+
 	// recompile
 	if t.templates == nil || t.debug {
+		var finish = ctx.Profile("loadTemplates", templateName)
 		t.loadTemplates()
+		finish()
 	}
 
 	result := new(bytes.Buffer)

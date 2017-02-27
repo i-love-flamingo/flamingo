@@ -2,6 +2,7 @@ package product
 
 import (
 	"encoding/json"
+	"flamingo/core/flamingo/web"
 	"flamingo/core/product/models"
 	"fmt"
 	"io/ioutil"
@@ -32,10 +33,12 @@ var namesuffix = [...]string{
 	"BackPack",
 }
 
+// ProductService is just mocking stuff
 type ProductService struct{}
 
 // Get returns a product struct
-func (ps *ProductService) Get(id string) models.Product {
+func (ps *ProductService) Get(context web.Context, id string) models.Product {
+	defer context.Profile("service", "get product "+id)()
 	var product models.Product
 
 	p, _ := ioutil.ReadFile("frontend/src/mocks/product.json")
@@ -48,11 +51,12 @@ func (ps *ProductService) Get(id string) models.Product {
 }
 
 // GetByIDList returns a struct of Product Models identified by given Skus
-func (ps *ProductService) GetByIDList(skus []string) []models.Product {
+func (ps *ProductService) GetByIDList(context web.Context, skus []string) []models.Product {
+	defer context.Profile("service", "get product list")()
 	var products = make([]models.Product, len(skus))
 
 	for i, sku := range skus {
-		products[i] = ps.Get(sku)
+		products[i] = ps.Get(context, sku)
 	}
 
 	return products

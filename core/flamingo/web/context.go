@@ -5,13 +5,18 @@ import (
 	"net/http"
 	"strconv"
 
+	"context"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
 type (
-	// Context c
+	// Context defines what a controller sees
 	Context interface {
+		context.Context
+		Profiler
+
 		Form(string) []string
 		Form1(string) string
 		FormAll() map[string][]string
@@ -30,6 +35,9 @@ type (
 	}
 
 	ctx struct {
+		context.Context
+		DefaultProfiler
+
 		vars    map[string]string
 		request *http.Request
 		id      string
@@ -52,8 +60,13 @@ func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessio
 	}
 
 	c.session = session
-
+	c.Context = context.WithValue(context.Background(), "ID", c.id)
 	return c
+}
+
+// PostInject to inform
+func (c *ctx) PostInject() {
+	c.DefaultProfiler.Init(c)
 }
 
 // Session returns the ctx Session

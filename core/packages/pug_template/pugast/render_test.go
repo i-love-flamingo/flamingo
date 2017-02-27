@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Pugast Rendering", func() {
+var _ = PDescribe("Pugast Rendering", func() {
 	var p = NewPugAst("/")
 
 	It("Should Render Tags with intendation", func() {
@@ -389,6 +389,6 @@ var _ = Describe("Pugast Rendering", func() {
 })
 
 func TestRender(t *testing.T) {
-	//RegisterFailHandler(Fail)
-	//RunSpecs(t, "Render Test Suite")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Render Test Suite")
 }

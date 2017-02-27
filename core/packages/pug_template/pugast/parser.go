@@ -34,14 +34,15 @@ type (
 		Nodes []*Token
 
 		// specific information
-		AttributeBlocks       []string
-		Attrs                 []*Attr
-		MustEscape            bool
-		File                  *Fileref
-		Filename              string
-		SelfClosing, IsInline bool
-		Obj                   string
-		Key                   string
+		AttributeBlocks []string
+		Attrs           []*Attr
+		MustEscape      bool
+		File            *Fileref
+		Filename        string
+		SelfClosing     bool
+		IsInline        *bool
+		Obj             string
+		Key             string
 
 		// mixin
 		Call bool   // mixin call?
@@ -58,8 +59,6 @@ type (
 
 // Parse parses a filename into a Token-tree
 func (p *PugAst) Parse(file string) *Token {
-	token := new(Token)
-
 	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".ast.json")
 
 	if err != nil {
@@ -67,7 +66,14 @@ func (p *PugAst) Parse(file string) *Token {
 		panic(err)
 	}
 
-	err = json.Unmarshal(bytes, token)
+	return p.ParseJson(bytes, file)
+}
+
+// ParseJson parses a json into a Token-tree
+func (p *PugAst) ParseJson(bytes []byte, file string) *Token {
+	token := new(Token)
+
+	err := json.Unmarshal(bytes, token)
 	if err != nil {
 		fmt.Println(file)
 		panic(err)

@@ -40,6 +40,7 @@ func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 
 	a := make(map[string]string)
 	for _, attr := range attrs {
+		p.rawmode = !attr.MustEscape
 		a[attr.Name] += ` ` + p.JsExpr(attr.Val, true, false)
 	}
 
@@ -59,10 +60,10 @@ func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 
 // ifmt returns string for token, prefixed with newline if not inline token
 func ifmt(t *Token, pre, buf string) string {
-	if t.IsInline {
-		return buf
-	} else {
+	if (t.IsInline != nil) && !*t.IsInline {
 		return "\n" + pre + buf
+	} else {
+		return buf
 	}
 }
 
@@ -120,12 +121,17 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					}
 					andattrs = ` {{__add_andattributes $__andattributes` + andattrs + `}}`
 				}
-				if t.IsInline || len(t.Block.Nodes) == 0 {
+				if (t.IsInline == nil || *t.IsInline) || (t.Block.IsInline == nil || *t.Block.IsInline) || len(t.Block.Nodes) == 0 {
+					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
+					if t.Name != "meta" && t.Name != "link" {
+						buf += fmt.Sprintf("%s</%s>", p.render(t.Block, "", mixinblock), t.Name)
+					}
+				} else if len(t.Block.Nodes) == 1 && (t.Block.Nodes[0].IsInline == nil || *t.Block.Nodes[0].IsInline) {
 					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>%s</%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs, p.render(t.Block, "", mixinblock), t.Name))
 				} else {
-					buf += ifmt(t, pre, fmt.Sprintf("<%s%s%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
+					buf += ifmt(t, pre+depth, fmt.Sprintf("<%s%s%s>", t.Name, p.args(t.Attrs, len(t.AttributeBlocks) > 0), andattrs))
 					buf += p.render(t.Block, pre+depth, mixinblock)
-					buf += ifmt(t, pre, fmt.Sprintf("</%s>", t.Name))
+					buf += ifmt(t, pre+depth, fmt.Sprintf("</%s>", t.Name))
 				}
 			}
 
@@ -146,8 +152,7 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 		*/
 
 		case "Code":
-			//buf += ifmt(t, pre, p.JsExpr(t.Val, true, true))
-			buf += p.JsExpr(t.Val, true, true)
+			buf += ifmt(t, pre, p.JsExpr(t.Val, true, true))
 
 		case "Mixin":
 			if t.Call {
@@ -217,7 +222,6 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 			buf += "\n" + pre + "{{end}}"
 
 		case "Text":
-			//buf += ifmt(t, pre, t.Val)
 			buf += t.Val
 
 		case "Conditional":

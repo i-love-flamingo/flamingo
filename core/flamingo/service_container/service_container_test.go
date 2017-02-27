@@ -103,6 +103,44 @@ var _ = Describe("ServiceContainerPackage", func() {
 				})
 			})
 		})
+
+		Describe("Private Dependencies on runtime", func() {
+			Context("When in need of dynamically request-scoped dependencies", func() {
+				type (
+					Something  struct{}
+					PerRequest struct {
+						Something *Something `inject:""`
+					}
+					PerRequest2 struct {
+						Something *Something `inject:""`
+					}
+					Global struct{}
+				)
+
+				var something = new(Something)
+				var global = new(Global)
+
+				BeforeEach(func() {
+					serviceContainer.Register(something)
+					serviceContainer.Register(global)
+
+					serviceContainer.Register(PerRequest{}, "tag")
+					serviceContainer.Register(PerRequest2{}, "tag")
+				})
+
+				It("Should give me new objects as needed with proper dependencies resolved", func() {
+					var e = serviceContainer.Create(PerRequest{}).(*PerRequest)
+					Expect(e).To(BeAssignableToTypeOf(&PerRequest{}))
+					Expect(e.Something).ToNot(BeNil())
+					Expect(e.Something).To(Equal(something))
+
+					var e2 = serviceContainer.Create(e).(*PerRequest)
+					Expect(e2).To(BeAssignableToTypeOf(&PerRequest{}))
+					Expect(e2.Something).ToNot(BeNil())
+					Expect(e2.Something).To(Equal(something))
+				})
+			})
+		})
 	})
 })
 

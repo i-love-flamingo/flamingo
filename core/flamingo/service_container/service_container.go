@@ -17,6 +17,7 @@ type (
 		tags    map[string][]*inject.Object
 		Routes  map[string]string
 		Handler map[string]interface{}
+		di      *inject.Graph
 	}
 
 	// RegisterFunc defines a callback used by packages to bootstrap themselves
@@ -43,7 +44,7 @@ func New() *ServiceContainer {
 	}
 }
 
-// Register calls the provided RegisterFunc callbacks
+// WalkRegisterFuncs calls the provided RegisterFunc callbacks
 func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContainer {
 	for _, rf := range rfs {
 		rf(r)
@@ -63,7 +64,7 @@ func (r *ServiceContainer) Route(path, name string) *ServiceContainer {
 	return r
 }
 
-// Object registers any object for DI
+// Register registers any object for DI
 func (r *ServiceContainer) Register(o interface{}, tags ...string) *ServiceContainer {
 	r.Remove(o)
 
@@ -77,7 +78,7 @@ func (r *ServiceContainer) Register(o interface{}, tags ...string) *ServiceConta
 	return r
 }
 
-// Object registers any object for DI
+// RegisterNamed registers any object for DI with a given name
 func (r *ServiceContainer) RegisterNamed(name string, o interface{}, tags ...string) *ServiceContainer {
 	object := &inject.Object{
 		Value: o,
@@ -108,22 +109,24 @@ func (_ sl) Debugf(a string, b ...interface{}) {
 }
 
 // DI returns the injection graph, not populated
-func (r *ServiceContainer) DI() inject.Graph {
-	var di inject.Graph
+func (r *ServiceContainer) DI() *inject.Graph {
+	if r.di != nil {
+		return r.di
+	}
 
-	//di.Logger = sl{}
+	r.di = new(inject.Graph)
 
 	r.Register(r)
 
 	for _, o := range r.unnamed {
-		di.Provide(o)
+		r.di.Provide(o)
 	}
 
 	for _, o := range r.named {
-		di.Provide(o)
+		r.di.Provide(o)
 	}
 
-	return di
+	return r.di
 }
 
 // Resolve populates the injection graph
@@ -138,6 +141,33 @@ func (r *ServiceContainer) Resolve() {
 		if o, ok := o.Value.(PostInjecter); ok {
 			o.PostInject()
 		}
+	}
+}
+
+// Create a new object of type object and inject into it
+func (r *ServiceContainer) Create(object interface{}) interface{} {
+	var t = reflect.TypeOf(object)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	var o = reflect.New(t).Interface()
+	r.InjectInto(o)
+	return o
+}
+
+// InjectInto injects resolves the current tree into the new object, but does not pollute the original tree
+// to prevent memory leaks and a growing tree
+func (r *ServiceContainer) InjectInto(object interface{}) {
+	var di inject.Graph
+	//di.Logger = sl{}
+	di.Provide(r.DI().Objects()...)
+	di.Provide(&inject.Object{Value: object})
+	err := di.Populate()
+	if err != nil {
+		panic(err)
+	}
+	if object, ok := object.(PostInjecter); ok {
+		object.PostInject()
 	}
 }
 

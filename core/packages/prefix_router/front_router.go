@@ -8,6 +8,7 @@ import (
 )
 
 type (
+	// FrontRouter is a http.handler which serves multiple sites based on the host/path prefix
 	FrontRouter struct {
 		router   map[string]http.Handler
 		fallback http.Handler

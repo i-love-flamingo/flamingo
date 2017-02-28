@@ -62,9 +62,8 @@ func (p *PugAst) args(attrs []*Attr, andattributes bool) string {
 func ifmt(t *Token, pre, buf string) string {
 	if (t.IsInline != nil) && !*t.IsInline {
 		return "\n" + pre + buf
-	} else {
-		return buf
 	}
+	return buf
 }
 
 const depth = "  "

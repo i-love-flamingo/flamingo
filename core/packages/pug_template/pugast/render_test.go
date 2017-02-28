@@ -11,7 +11,7 @@ var _ = PDescribe("Pugast Rendering", func() {
 	var p = NewPugAst("/")
 
 	It("Should Render Tags with intendation", func() {
-		var testast = p.ParseJson([]byte(`
+		var testast = p.ParseJSON([]byte(`
 {
   "type": "Block",
   "nodes": [

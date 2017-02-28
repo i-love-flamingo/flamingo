@@ -66,11 +66,11 @@ func (p *PugAst) Parse(file string) *Token {
 		panic(err)
 	}
 
-	return p.ParseJson(bytes, file)
+	return p.ParseJSON(bytes, file)
 }
 
-// ParseJson parses a json into a Token-tree
-func (p *PugAst) ParseJson(bytes []byte, file string) *Token {
+// ParseJSON parses a json into a Token-tree
+func (p *PugAst) ParseJSON(bytes []byte, file string) *Token {
 	token := new(Token)
 
 	err := json.Unmarshal(bytes, token)

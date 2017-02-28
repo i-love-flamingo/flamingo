@@ -2,6 +2,7 @@ package pugast
 
 import "html/template"
 
+// PugAst holds information about the pug abstract syntax tree
 type PugAst struct {
 	Path     string
 	TplCode  map[string]string

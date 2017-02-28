@@ -58,7 +58,7 @@ func StrToStatements(expr string) []ast.Statement {
 	return p.Body
 }
 
-// StrToStatements reads Javascript Functions and returns an AST representation
+// FuncToStatements reads Javascript Statements and evaluates them as the return of a function
 func FuncToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFunction("", "return "+expr)
 	if err != nil {

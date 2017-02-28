@@ -7,18 +7,22 @@ import (
 )
 
 type (
+	// TemplateFunction is a function which will be available in templates
 	TemplateFunction interface {
 		Name() string
 		Func() interface{}
 	}
 
+	// TemplateContextFunction is a TemplateFunction with late context binding
 	TemplateContextFunction interface {
 		Name() string
 		Func(web.Context) interface{}
 	}
 
+	// ContextAware is the used for late-bindings
 	ContextAware func(ctx web.Context) interface{}
 
+	// TemplateFunctionRegistry knows about the context-aware template functions
 	TemplateFunctionRegistry struct {
 		ServiceContainer *service_container.ServiceContainer `inject:""`
 		Contextaware     map[string]ContextAware

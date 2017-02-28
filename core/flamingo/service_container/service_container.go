@@ -4,20 +4,17 @@ import (
 	"log"
 	"reflect"
 	"runtime"
-
-	"github.com/facebookgo/inject"
 )
 
 type (
 	// ServiceContainer is a basic flamingo helper
 	// to register default Routes, packages, etc.
 	ServiceContainer struct {
-		unnamed []*inject.Object
-		named   map[string]*inject.Object
-		tags    map[string][]*inject.Object
+		unnamed []*Object
+		named   map[string]*Object
 		Routes  map[string]string
 		Handler map[string]interface{}
-		di      *inject.Graph
+		di      *Graph
 	}
 
 	// RegisterFunc defines a callback used by packages to bootstrap themselves
@@ -25,7 +22,7 @@ type (
 
 	// PostInjecter defines the PostInject() function which is called when the DI has finished
 	PostInjecter interface {
-		PostInject()
+		PostInject(g *Graph)
 	}
 )
 
@@ -38,8 +35,7 @@ func (r RegisterFunc) MarshalText() (text []byte, err error) {
 func New() *ServiceContainer {
 	return &ServiceContainer{
 		Routes:  make(map[string]string),
-		named:   make(map[string]*inject.Object),
-		tags:    make(map[string][]*inject.Object),
+		named:   make(map[string]*Object),
 		Handler: make(map[string]interface{}),
 	}
 }
@@ -55,7 +51,9 @@ func (r *ServiceContainer) WalkRegisterFuncs(rfs ...RegisterFunc) *ServiceContai
 // Handle registers Handler on ServiceContainer
 func (r *ServiceContainer) Handle(name string, handler interface{}) {
 	r.Handler[name] = handler
-	r.Register(handler)
+	if reflect.TypeOf(handler).Kind() != reflect.Func {
+		r.Register(handler)
+	}
 }
 
 // Route adds a route
@@ -68,26 +66,22 @@ func (r *ServiceContainer) Route(path, name string) *ServiceContainer {
 func (r *ServiceContainer) Register(o interface{}, tags ...string) *ServiceContainer {
 	r.Remove(o)
 
-	object := &inject.Object{
+	object := &Object{
 		Value: o,
+		Tags:  tags,
 	}
 	r.unnamed = append(r.unnamed, object)
-	for _, tag := range tags {
-		r.tags[tag] = append(r.tags[tag], object)
-	}
 	return r
 }
 
 // RegisterNamed registers any object for DI with a given name
 func (r *ServiceContainer) RegisterNamed(name string, o interface{}, tags ...string) *ServiceContainer {
-	object := &inject.Object{
+	object := &Object{
 		Value: o,
 		Name:  name,
+		Tags:  tags,
 	}
 	r.named[name] = object
-	for _, tag := range tags {
-		r.tags[tag] = append(r.tags[tag], object)
-	}
 	return r
 }
 
@@ -109,21 +103,28 @@ func (s sl) Debugf(a string, b ...interface{}) {
 }
 
 // DI returns the injection graph, not populated
-func (r *ServiceContainer) DI() *inject.Graph {
+func (r *ServiceContainer) DI() *Graph {
 	if r.di != nil {
 		return r.di
 	}
 
-	r.di = new(inject.Graph)
+	r.di = new(Graph)
+	//r.di.Logger = sl{}
 
 	r.Register(r)
 
 	for _, o := range r.unnamed {
-		r.di.Provide(o)
+		err := r.di.Provide(o)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	for _, o := range r.named {
-		r.di.Provide(o)
+		err := r.di.Provide(o)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return r.di
@@ -138,43 +139,52 @@ func (r *ServiceContainer) Resolve() {
 	}
 
 	for _, o := range di.Objects() {
-		if o, ok := o.Value.(PostInjecter); ok {
-			o.PostInject()
+		if pi, ok := o.Value.(PostInjecter); ok && !o.PostInjected {
+			pi.PostInject(di)
+			o.PostInjected = true
 		}
 	}
-}
-
-// Create a new object of type object and inject into it
-func (r *ServiceContainer) Create(object interface{}) interface{} {
-	var t = reflect.TypeOf(object)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-	var o = reflect.New(t).Interface()
-	r.InjectInto(o)
-	return o
 }
 
 // InjectInto injects resolves the current tree into the new object, but does not pollute the original tree
 // to prevent memory leaks and a growing tree
 func (r *ServiceContainer) InjectInto(object interface{}) {
-	var di inject.Graph
+	var di = new(Graph)
 	//di.Logger = sl{}
-	di.Provide(r.DI().Objects()...)
-	di.Provide(&inject.Object{Value: object})
-	err := di.Populate()
+
+	for _, o := range r.unnamed {
+		err := di.Provide(o)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	for _, o := range r.named {
+		err := di.Provide(o)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	err := di.Provide(&Object{Value: object})
 	if err != nil {
 		panic(err)
 	}
-	if object, ok := object.(PostInjecter); ok {
-		object.PostInject()
+
+	err = di.Populate()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, o := range di.Objects() {
+		if pi, ok := o.Value.(PostInjecter); ok && !o.PostInjected {
+			pi.PostInject(di)
+			o.PostInjected = true
+		}
 	}
 }
 
 // GetByTag returns all registered objects with the given tag
-func (r *ServiceContainer) GetByTag(tag string) (res []interface{}) {
-	for _, o := range r.tags[tag] {
-		res = append(res, o.Value)
-	}
-	return
+func (r *ServiceContainer) GetByTag(tag string) []interface{} {
+	return r.DI().GetByTag(tag)
 }

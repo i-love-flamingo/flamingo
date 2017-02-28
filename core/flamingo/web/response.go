@@ -34,7 +34,7 @@ type (
 )
 
 // Apply Response
-func (rr RedirectResponse) Apply(rw http.ResponseWriter) {
+func (rr *RedirectResponse) Apply(rw http.ResponseWriter) {
 	if rr.Status == 0 {
 		rr.Status = http.StatusTemporaryRedirect
 	}
@@ -44,7 +44,7 @@ func (rr RedirectResponse) Apply(rw http.ResponseWriter) {
 }
 
 // Apply ContentResponse
-func (cr ContentResponse) Apply(rw http.ResponseWriter) {
+func (cr *ContentResponse) Apply(rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain"
 	}
@@ -58,7 +58,7 @@ func (cr ContentResponse) Apply(rw http.ResponseWriter) {
 }
 
 // Apply JSONResponse
-func (js JSONResponse) Apply(rw http.ResponseWriter) {
+func (js *JSONResponse) Apply(rw http.ResponseWriter) {
 	if js.Status == 0 {
 		js.Status = http.StatusOK
 	}

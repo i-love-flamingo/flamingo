@@ -1,8 +1,9 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
-	"flamingo/core/flamingo/context"
+	configcontext "flamingo/core/flamingo/context"
 	"flamingo/core/flamingo/service_container"
 	"flamingo/core/flamingo/web"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -55,8 +55,8 @@ type (
 		router            *mux.Router
 		routes            map[string]string
 		handler           map[string]interface{}
-		hardroutes        map[string]context.Route
-		hardroutesreverse map[string]context.Route
+		hardroutes        map[string]configcontext.Route
+		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
 		Logger           *log.Logger                         `inject:""` // Logger is a default logger for now
@@ -73,7 +73,7 @@ func NewCookieStore(secret []byte) *sessions.CookieStore {
 // CreateRouter factory for Routers.
 // Creates the new flamingo router, set's up handlers and routes and resolved the DI.
 // BUG(bastian.ike) hardroutesreverse style is borked
-func CreateRouter(ctx *context.Context, serviceContainer *service_container.ServiceContainer) *Router {
+func CreateRouter(ctx *configcontext.Context, serviceContainer *service_container.ServiceContainer) *Router {
 	router := new(Router)
 
 	serviceContainer.Register(router)
@@ -82,8 +82,8 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 	// bootstrap
 	router.router = mux.NewRouter()
 	router.routes = make(map[string]string)
-	router.hardroutes = make(map[string]context.Route)
-	router.hardroutesreverse = make(map[string]context.Route)
+	router.hardroutes = make(map[string]configcontext.Route)
+	router.hardroutesreverse = make(map[string]configcontext.Route)
 	router.handler = make(map[string]interface{})
 	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
@@ -107,7 +107,6 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 				p = append(p, k, v)
 			}
 			router.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
-			router.Logger.Println("Register", route.Path, "for", route.Controller, "with", route.Args, "key", route.Controller+strings.Join(p, "!!"))
 		}
 	}
 
@@ -122,7 +121,6 @@ func CreateRouter(ctx *context.Context, serviceContainer *service_container.Serv
 		if !ok {
 			continue
 		}
-		router.Logger.Println("Register", name, "at", route)
 		router.router.Handle(route, router.handle(handler)).Name(name)
 	}
 
@@ -164,9 +162,24 @@ func (router *Router) url(name string, params ...string) *url.URL {
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w = &ResponseWriter{ResponseWriter: w}
+	// shadow the response writer
+	w = &VerboseResponseWriter{ResponseWriter: w}
 
-	start := time.Now()
+	// get the AKL session
+	// TODO DI
+	s, _ := router.Sessions.Get(req, "akl")
+
+	// retrieve a new context
+	var ctx = web.ContextFromRequest(w, req, s)
+	// resolve context DI
+	router.ServiceContainer.InjectInto(ctx)
+
+	// assign context to request
+	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
+
+	// dispatch OnRequest event
+	ctx.EventRouter().Dispatch(REQUEST, &OnRequestEvent{w, req})
+
 	defer func() {
 		var err interface{}
 		if err = recover(); err != nil {
@@ -174,7 +187,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			w.Write([]byte(fmt.Sprintln(err)))
 			w.Write(debug.Stack())
 		}
-		w.(*ResponseWriter).Log(router.Logger, time.Since(start), req, err)
+		// fire finish event
+		ctx.EventRouter().Dispatch(FINISH, &OnFinishEvent{w, req, err})
 	}()
 
 	if route, ok := router.hardroutes[req.URL.Path]; ok {
@@ -191,11 +205,9 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // handle sets the controller for a router which handles a Request.
 func (router *Router) handle(c Controller) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		s, _ := router.Sessions.Get(req, "akl")
+		ctx := req.Context().Value(web.CONTEXT).(web.Context) // get Request context
+		ctx.LoadVars(req)                                     // LoadVars, because MuxVars has not resolved them in ServeHTTP
 
-		ctx := web.ContextFromRequest(w, req, s)
-		router.ServiceContainer.InjectInto(ctx)
-		//defer ctx.Log()
 		defer ctx.Profile("request", req.RequestURI)()
 
 		var response web.Response
@@ -215,10 +227,10 @@ func (router *Router) handle(c Controller) http.Handler {
 			response = c(ctx)
 
 		case DataController:
-			response = web.JSONResponse{Data: c.(DataController).Data(ctx)}
+			response = &web.JSONResponse{Data: c.(DataController).Data(ctx)}
 
 		case func(web.Context) interface{}:
-			response = web.JSONResponse{Data: c(ctx)}
+			response = &web.JSONResponse{Data: c(ctx)}
 
 		case http.Handler:
 			c.ServeHTTP(w, req)
@@ -231,6 +243,9 @@ func (router *Router) handle(c Controller) http.Handler {
 		}
 
 		router.Sessions.Save(req, w, ctx.Session())
+
+		// fire response event
+		ctx.EventRouter().Dispatch(RESPONSE, &OnResponseEvent{c, response})
 
 		response.Apply(w)
 	})

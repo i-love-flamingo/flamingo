@@ -12,15 +12,18 @@ package flamingo
 
 import (
 	"flamingo/core/flamingo/controller"
+	"flamingo/core/flamingo/event"
 	"flamingo/core/flamingo/service_container"
 	"flamingo/core/flamingo/template_functions"
 )
 
 // Register flamingo json Handler
-func Register(r *service_container.ServiceContainer) {
-	r.Route("/_flamingo/json/{Handler}", "_flamingo.json")
-	r.Handle("_flamingo.json", new(controller.DataController))
+func Register(sc *service_container.ServiceContainer) {
+	sc.Route("/_flamingo/json/{Handler}", "_flamingo.json")
+	sc.Handle("_flamingo.json", new(controller.DataController))
 
-	r.Register(new(template_functions.GetFunc), "template.func")
-	r.Register(new(template_functions.URLFunc), "template.func")
+	sc.Register(func() event.Router { return new(event.DefaultRouter) })
+
+	sc.Register(new(template_functions.GetFunc), "template.func")
+	sc.Register(new(template_functions.URLFunc), "template.func")
 }

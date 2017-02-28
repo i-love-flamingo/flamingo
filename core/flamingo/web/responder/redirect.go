@@ -15,7 +15,7 @@ type RedirectAware struct {
 func (r *RedirectAware) Redirect(name string, args ...string) web.Response {
 	url := r.Router.URL(name, args...)
 
-	return web.RedirectResponse{
+	return &web.RedirectResponse{
 		Status:   http.StatusFound,
 		Location: url.String(),
 	}
@@ -30,7 +30,7 @@ type RedirectPermanentAware struct {
 func (r *RedirectPermanentAware) RedirectPermanent(name string, args ...string) web.Response {
 	url := r.Router.URL(name, args...)
 
-	return web.RedirectResponse{
+	return &web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,
 		Location: url.String(),
 	}

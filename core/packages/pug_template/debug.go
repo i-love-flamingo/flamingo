@@ -52,7 +52,7 @@ func (dc *DebugController) Get(ctx web.Context) web.Response {
 
 	t.Execute(body, tpls)
 
-	return web.ContentResponse{
+	return &web.ContentResponse{
 		ContentType: "text/html",
 		Status:      http.StatusOK,
 		Body:        body,

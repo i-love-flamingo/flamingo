@@ -7,16 +7,24 @@ import (
 
 	"context"
 
+	"flamingo/core/flamingo/event"
+	"flamingo/core/flamingo/profiler"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
 type (
+	// ContextKey is used for context.WithValue
+	ContextKey string
+
 	// Context defines what a controller sees
 	Context interface {
 		context.Context
-		Profiler
+		profiler.Profiler
+		EventRouter() event.Router
 
+		LoadVars(r *http.Request)
 		Form(string) []string
 		Form1(string) string
 		FormAll() map[string][]string
@@ -36,7 +44,8 @@ type (
 
 	ctx struct {
 		context.Context
-		DefaultProfiler
+		profiler.Profiler `inject:"private"`
+		Eventrouter       event.Router `inject:"private"`
 
 		vars    map[string]string
 		request *http.Request
@@ -45,6 +54,10 @@ type (
 		pusher  http.Pusher
 		session *sessions.Session
 	}
+)
+
+const (
+	CONTEXT ContextKey = "context"
 )
 
 // ContextFromRequest returns a ctx enriched by Request Data
@@ -60,13 +73,16 @@ func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessio
 	}
 
 	c.session = session
-	c.Context = context.WithValue(context.Background(), "ID", c.id)
+	c.Context = context.WithValue(r.Context(), "ID", c.id)
 	return c
 }
 
-// PostInject to inform
-func (c *ctx) PostInject() {
-	c.DefaultProfiler.Init(c)
+func (c *ctx) LoadVars(r *http.Request) {
+	c.vars = mux.Vars(r)
+}
+
+func (c *ctx) EventRouter() event.Router {
+	return c.Eventrouter
 }
 
 // Session returns the ctx Session

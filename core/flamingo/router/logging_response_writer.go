@@ -14,8 +14,8 @@ type (
 		Printf(string, ...interface{})
 	}
 
-	// ResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging.
-	ResponseWriter struct {
+	// VerboseResponseWriter shadows http.ResponseWriter and tracks written bytes and result status for logging.
+	VerboseResponseWriter struct {
 		http.ResponseWriter
 		status int
 		size   int
@@ -23,20 +23,20 @@ type (
 )
 
 // Write calls http.ResponseWriter.Write and records the written bytes.
-func (response *ResponseWriter) Write(data []byte) (int, error) {
+func (response *VerboseResponseWriter) Write(data []byte) (int, error) {
 	l, e := response.ResponseWriter.Write(data)
 	response.size += l
 	return l, e
 }
 
 // WriteHeader calls http.ResponseWriter.WriteHeader and records the status code.
-func (response *ResponseWriter) WriteHeader(h int) {
+func (response *VerboseResponseWriter) WriteHeader(h int) {
 	response.status = h
 	response.ResponseWriter.WriteHeader(h)
 }
 
 // Log Requests in a very dirty way.
-func (response *ResponseWriter) Log(logger ResponseWriterLogger, duration time.Duration, req *http.Request, err interface{}) {
+func (response *VerboseResponseWriter) Log(logger ResponseWriterLogger, duration time.Duration, req *http.Request, err interface{}) {
 	var cp func(msg interface{}, styles ...string) string
 	switch {
 	case response.status >= 200 && response.status < 300:

@@ -1,19 +1,10 @@
 package profiler
 
-import (
-	"flamingo/core/flamingo/router"
-	"flamingo/core/flamingo/service_container"
-	"log"
-)
+import "flamingo/core/flamingo/service_container"
 
-type Test struct {
-	Router *router.Router `inject:""`
-}
+func Register(sc *service_container.ServiceContainer) {
+	sc.Route("/_profiler/view/{Profile}", "_profiler.view")
+	sc.Handle("_profiler.view", new(ProfileController))
 
-func (t Test) PostInject() {
-	log.Println(t)
-}
-
-func Register(sr *service_container.ServiceContainer) {
-	sr.Register(Test{}, "profiler.collector", "logger")
+	sc.Register(func() *DefaultProfiler { return new(DefaultProfiler) }, "event.subscriber")
 }

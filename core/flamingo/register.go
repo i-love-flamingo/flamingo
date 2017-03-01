@@ -13,6 +13,7 @@ package flamingo
 import (
 	"flamingo/core/flamingo/controller"
 	"flamingo/core/flamingo/event"
+	"flamingo/core/flamingo/profiler"
 	"flamingo/core/flamingo/service_container"
 	"flamingo/core/flamingo/template_functions"
 )
@@ -23,6 +24,7 @@ func Register(sc *service_container.ServiceContainer) {
 	sc.Handle("_flamingo.json", new(controller.DataController))
 
 	sc.Register(func() event.Router { return new(event.DefaultRouter) })
+	sc.Register(func() profiler.Profiler { return new(profiler.NullProfiler) })
 
 	sc.Register(new(template_functions.GetFunc), "template.func")
 	sc.Register(new(template_functions.URLFunc), "template.func")

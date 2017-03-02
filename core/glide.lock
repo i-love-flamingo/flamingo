@@ -1,10 +1,6 @@
-hash: ff4587ad92bcb870c266b5c116404a3d42983a6670b29ef9afa9382bb4613b9e
-updated: 2017-02-22T13:37:51.047566917+01:00
+hash: 1322095bae546cb0bfe8306a70d42b33fecd756ff65d79ad6f69d13ed129de76
+updated: 2017-03-02T16:37:32.092790375+01:00
 imports:
-- name: github.com/facebookgo/inject
-  version: cc1aa653e50f6a9893bcaef89e673e5b24e1e97b
-- name: github.com/facebookgo/structtag
-  version: 217e25fb96916cc60332e399c9aa63f5c422ceed
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -44,6 +40,31 @@ testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
   subpackages:
+  - config
   - ginkgo
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - types
 - name: github.com/onsi/gomega
   version: a78ae492d53aad5a7a232d0d0462c14c400e3ee7
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types

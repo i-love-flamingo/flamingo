@@ -40,7 +40,6 @@ package dependencyinjection
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 )
 
@@ -196,7 +195,6 @@ func (sc *Container) resolve(object *Object) {
 					var assigned bool
 					for cachetype, cached := range cache {
 						if cachetype.AssignableTo(field.Type()) && !cached.autocreated {
-							log.Println(cachetype, field.Type())
 							if assigned {
 								panic(fmt.Sprintf("found more than one assignable in local cache value for %s field %s", current.reflectType, field.Type()))
 							}

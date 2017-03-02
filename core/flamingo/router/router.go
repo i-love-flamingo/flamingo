@@ -188,8 +188,10 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
 
-	// dispatch OnRequest event
-	ctx.EventRouter().Dispatch(REQUEST, &OnRequestEvent{w, req})
+	// dispatch OnRequest event, the request might be changed
+	var event = &OnRequestEvent{w, req}
+	ctx.EventRouter().Dispatch(REQUEST, event)
+	req = event.Request
 
 	defer func() {
 		var err interface{}

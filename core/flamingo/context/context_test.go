@@ -1,9 +1,8 @@
 package context
 
 import (
+	di "flamingo/core/flamingo/dependencyinjection"
 	"testing"
-
-	"flamingo/core/flamingo/service_container"
 
 	g "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,9 +18,9 @@ type (
 	}
 )
 
-func Register(marker string) service_container.RegisterFunc {
-	return func(sc *service_container.ServiceContainer) {
-		sc.Register(&TestDependency{marker: marker})
+func Register(marker string) di.RegisterFunc {
+	return func(c *di.Container) {
+		c.Register(&TestDependency{marker: marker})
 	}
 }
 
@@ -29,7 +28,7 @@ var _ = g.Describe("Context", func() {
 
 	var root = New(
 		"root",
-		[]service_container.RegisterFunc{
+		[]di.RegisterFunc{
 			Register("root"),
 		},
 		New(
@@ -40,7 +39,7 @@ var _ = g.Describe("Context", func() {
 		),
 		New(
 			"not-main",
-			[]service_container.RegisterFunc{
+			[]di.RegisterFunc{
 				Register("not-main"),
 			},
 			New("notmain1", nil),
@@ -48,7 +47,7 @@ var _ = g.Describe("Context", func() {
 				"notmain2",
 				nil,
 				New("notmain2-1", nil),
-				New("notmain2-2", []service_container.RegisterFunc{Register("not-main-deep")}),
+				New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
 			),
 		),
 	)
@@ -75,28 +74,23 @@ var _ = g.Describe("Context", func() {
 		g.It("Should have correct DI", func() {
 			tester := new(TestDependecyChecker)
 
-			flat["main/main1"].ServiceContainer.Register(tester)
-			flat["main/main1"].ServiceContainer.Resolve()
+			flat["main/main1"].ServiceContainer.Resolve(tester)
 			Expect(tester.marker).To(Equal("root"))
 
 			tester = new(TestDependecyChecker)
-			flat["main/main2"].ServiceContainer.Register(tester)
-			flat["main/main2"].ServiceContainer.Resolve()
+			flat["main/main2"].ServiceContainer.Resolve(tester)
 			Expect(tester.marker).To(Equal("root"))
 
 			tester = new(TestDependecyChecker)
-			flat["not-main/notmain1"].ServiceContainer.Register(tester)
-			flat["not-main/notmain1"].ServiceContainer.Resolve()
+			flat["not-main/notmain1"].ServiceContainer.Resolve(tester)
 			Expect(tester.marker).To(Equal("not-main"))
 
 			tester = new(TestDependecyChecker)
-			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Register(tester)
-			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Resolve()
+			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Resolve(tester)
 			Expect(tester.marker).To(Equal("not-main"))
 
 			tester = new(TestDependecyChecker)
-			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Register(tester)
-			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Resolve()
+			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Resolve(tester)
 			Expect(tester.marker).To(Equal("not-main-deep"))
 		})
 	})

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	configcontext "flamingo/core/flamingo/context"
-	"flamingo/core/flamingo/service_container"
+	di "flamingo/core/flamingo/dependencyinjection"
 	"flamingo/core/flamingo/web"
 	"fmt"
 	"io/ioutil"
@@ -17,6 +17,10 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+)
+
+const (
+	RouterRegister = "router.register"
 )
 
 type (
@@ -54,14 +58,15 @@ type (
 	Router struct {
 		router            *mux.Router
 		routes            map[string]string
-		handler           map[string]interface{}
+		handler           map[string]Controller
 		hardroutes        map[string]configcontext.Route
 		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
-		Logger           *log.Logger                         `inject:""` // Logger is a default logger for now
-		Sessions         sessions.Store                      `inject:""` // Sessions storage, which are used to retrieve user-context session
-		ServiceContainer *service_container.ServiceContainer `inject:""` // ServiceContainer holder
+		Logger           *log.Logger        `inject:""` // Logger is a default logger for now
+		Sessions         sessions.Store     `inject:""` // Sessions storage, which are used to retrieve user-context session
+		ServiceContainer *di.Container      `inject:""` // ServiceContainer holder
+		ContextFactory   web.ContextFactory `inject:""` // ContextFactory for new contexts
 	}
 )
 
@@ -73,29 +78,19 @@ func NewCookieStore(secret []byte) *sessions.CookieStore {
 // CreateRouter factory for Routers.
 // Creates the new flamingo router, set's up handlers and routes and resolved the DI.
 // BUG(bastian.ike) hardroutesreverse style is borked
-func CreateRouter(ctx *configcontext.Context, serviceContainer *service_container.ServiceContainer) *Router {
+func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *Router {
 	router := new(Router)
-
-	serviceContainer.Register(router)
-	serviceContainer.Resolve()
 
 	// bootstrap
 	router.router = mux.NewRouter()
 	router.routes = make(map[string]string)
 	router.hardroutes = make(map[string]configcontext.Route)
 	router.hardroutesreverse = make(map[string]configcontext.Route)
-	router.handler = make(map[string]interface{})
+	router.handler = make(map[string]Controller)
 	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
-	// set up routes
-	for p, name := range serviceContainer.Routes {
-		router.routes[name] = p
-	}
-
-	// set up handlers
-	for name, handler := range serviceContainer.Handler {
-		router.handler[name] = handler
-	}
+	serviceContainer.Register(router)
+	serviceContainer.Resolve(router)
 
 	for _, route := range ctx.Routes {
 		if route.Args == nil {
@@ -125,6 +120,24 @@ func CreateRouter(ctx *configcontext.Context, serviceContainer *service_containe
 	}
 
 	return router
+}
+
+// Handle registers the controller for a named route
+func (router *Router) Handle(name string, controller Controller) {
+	router.handler[name] = controller
+	router.ServiceContainer.Resolve(controller)
+}
+
+// Router registers the path for a named route
+func (router *Router) Route(path, name string) {
+	router.routes[name] = path
+}
+
+// CompilerPass to get router register functions
+func (router *Router) CompilerPass(c *di.Container) {
+	for _, registerFunc := range c.GetTagged(RouterRegister) {
+		registerFunc.Value.(func(r *Router))(router)
+	}
 }
 
 // URL helps resolving URL's by it's name.
@@ -170,9 +183,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	s, _ := router.Sessions.Get(req, "akl")
 
 	// retrieve a new context
-	var ctx = web.ContextFromRequest(w, req, s)
-	// resolve context DI
-	router.ServiceContainer.InjectInto(ctx)
+	var ctx = router.ContextFactory(w, req, s)
 
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))

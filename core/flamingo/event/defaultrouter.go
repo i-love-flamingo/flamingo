@@ -1,6 +1,6 @@
 package event
 
-import "flamingo/core/flamingo/service_container"
+import di "flamingo/core/flamingo/dependencyinjection"
 
 type (
 	// DefaultRouter is a default event routing implementation
@@ -24,11 +24,11 @@ func (d *DefaultRouter) Dispatch(key interface{}, dispatcher Event) {
 	}
 }
 
-// PostInject retrieves a list of event subscribers
-func (d *DefaultRouter) PostInject(g *service_container.Graph) {
-	for _, s := range g.GetByTag("event.subscriber") {
-		for _, event := range s.(Subscriber).Events() {
-			d.Subscribe(event, s)
+// CompilerPass retrieves a list of event subscribers
+func (d *DefaultRouter) CompilerPass(c *di.Container) {
+	for _, s := range c.GetTagged("event.subscriber") {
+		for _, event := range s.Value.(Subscriber).Events() {
+			d.Subscribe(event, s.Value)
 		}
 	}
 }

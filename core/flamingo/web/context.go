@@ -42,6 +42,9 @@ type (
 		Session() *sessions.Session
 	}
 
+	// ContextFactory creates a new context
+	ContextFactory func(rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context
+
 	ctx struct {
 		context.Context
 		profiler.Profiler `inject:"private"`

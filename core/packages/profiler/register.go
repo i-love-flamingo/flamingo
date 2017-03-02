@@ -1,13 +1,16 @@
 package profiler
 
 import (
+	di "flamingo/core/flamingo/dependencyinjection"
 	"flamingo/core/flamingo/profiler"
-	"flamingo/core/flamingo/service_container"
+	"flamingo/core/flamingo/router"
 )
 
-func Register(sc *service_container.ServiceContainer) {
-	sc.Route("/_profiler/view/{Profile}", "_profiler.view")
-	sc.Handle("_profiler.view", new(ProfileController))
+func Register(c *di.Container) {
+	c.Register(func(r *router.Router) {
+		r.Route("/_profiler/view/{Profile}", "_profiler.view")
+		r.Handle("_profiler.view", new(ProfileController))
+	}, router.RouterRegister)
 
-	sc.Register(func() profiler.Profiler { return new(DefaultProfiler) }, "event.subscriber")
+	c.RegisterFactory(func() profiler.Profiler { return new(DefaultProfiler) }, "event.subscriber")
 }

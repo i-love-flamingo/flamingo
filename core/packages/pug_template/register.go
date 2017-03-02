@@ -1,7 +1,8 @@
 package pug_template
 
 import (
-	"flamingo/core/flamingo/service_container"
+	di "flamingo/core/flamingo/dependencyinjection"
+	"flamingo/core/flamingo/router"
 	"flamingo/core/packages/pug_template/pugast"
 	"flamingo/core/packages/pug_template/template_functions"
 	"flamingo/core/template"
@@ -9,17 +10,19 @@ import (
 )
 
 // Register Services for pug_template package
-func Register(basedir string, debug bool) service_container.RegisterFunc {
-	return func(serviceContainer *service_container.ServiceContainer) {
-		serviceContainer.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))
-		serviceContainer.Route("/static/{n:.*}", "_static")
+func Register(basedir string, debug bool) di.RegisterFunc {
+	return func(c *di.Container) {
+		c.Register(func(r *router.Router) {
+			r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))
+			r.Route("/static/{n:.*}", "_static")
 
-		serviceContainer.Handle("_pugtpl_debug", new(DebugController))
-		serviceContainer.Route("/_pugtpl/debug", "_pugtpl_debug")
+			r.Handle("_pugtpl_debug", new(DebugController))
+			r.Route("/_pugtpl/debug", "_pugtpl_debug")
+		}, router.RouterRegister)
 
-		serviceContainer.Register(pugast.NewPugTemplateEngine(basedir, debug))
-		serviceContainer.Register(new(template.TemplateFunctionRegistry))
-		serviceContainer.Register(new(template_functions.AssetFunc), "template.func")
-		serviceContainer.Register(new(template_functions.DebugFunc), "template.func")
+		c.Register(pugast.NewPugTemplateEngine(basedir, debug))
+		c.Register(new(template.TemplateFunctionRegistry))
+		c.Register(new(template_functions.AssetFunc), "template.func")
+		c.Register(new(template_functions.DebugFunc), "template.func")
 	}
 }

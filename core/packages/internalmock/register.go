@@ -1,11 +1,11 @@
 package internalmock
 
 import (
-	"flamingo/core/flamingo/service_container"
+	di "flamingo/core/flamingo/dependencyinjection"
 	"flamingo/core/packages/internalmock/product"
 )
 
 // Register Services for internalmock package
-func Register(r *service_container.ServiceContainer) {
-	r.Register(new(product.ProductService))
+func Register(c *di.Container) {
+	c.Register(new(product.ProductService))
 }

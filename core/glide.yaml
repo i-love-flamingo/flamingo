@@ -13,8 +13,6 @@ import:
   version: ^1.1.0
 - package: github.com/gorilla/securecookie
   version: ^1.1.0
-- package: github.com/facebookgo/inject
-- package: github.com/facebookgo/structtag
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

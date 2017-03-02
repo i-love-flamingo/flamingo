@@ -218,7 +218,7 @@ var _ = Describe("DependencyInjection Package", func() {
 			Expect(func() {
 				var container = NewContainer()
 				type test struct {
-					Subscriber `inject:""`
+					Subscriber Subscriber `inject:""`
 				}
 				container.Register(new(SubscriberImpl))
 				container.Register(new(SuperDependencyImpl))
@@ -231,7 +231,7 @@ var _ = Describe("DependencyInjection Package", func() {
 			Expect(func() {
 				var container = NewContainer()
 				type test struct {
-					Subscriber `inject:""`
+					Subscriber Subscriber `inject:""`
 				}
 				container.RegisterNamed("test", new(test))
 				container.Get("test")
@@ -270,6 +270,24 @@ var _ = Describe("DependencyInjection Package", func() {
 				var container = NewContainer()
 				container.RegisterNamed("test", func() (string, string) { return "a", "b" })
 			}).To(Panic())
+		})
+	})
+
+	Context("Simple resolve", func() {
+		It("Should resolve dependencies on request", func() {
+			var ctximpl = new(CtxImpl)
+			var container = NewContainer()
+
+			container.RegisterFactory(func() EventRouter { return new(EventRouterImpl) })
+			container.RegisterFactory(func() SuperDependency { return new(SuperDependencyImpl) })
+
+			Expect(ctximpl.EventRouter).To(BeNil())
+			Expect(ctximpl.SuperDependency).To(BeNil())
+
+			container.Resolve(ctximpl)
+
+			Expect(ctximpl.EventRouter).ToNot(BeNil())
+			Expect(ctximpl.SuperDependency).ToNot(BeNil())
 		})
 	})
 })

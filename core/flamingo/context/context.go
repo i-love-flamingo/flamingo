@@ -2,7 +2,7 @@
 package context
 
 import (
-	"flamingo/core/flamingo/service_container"
+	di "flamingo/core/flamingo/dependencyinjection"
 	"fmt"
 )
 
@@ -14,8 +14,8 @@ type (
 
 		Parent           *Context `json:"-"`
 		Childs           []*Context
-		RegisterFuncs    []service_container.RegisterFunc
-		ServiceContainer *service_container.ServiceContainer `json:"-"`
+		RegisterFuncs    []di.RegisterFunc
+		ServiceContainer *di.Container `json:"-"`
 
 		Routes        []Route           `yaml:"routes"`
 		Configuration map[string]string `yaml:"config"`
@@ -31,7 +31,7 @@ type (
 )
 
 // New returns Context Pointers with RegisterFuncs.
-func New(name string, rfs []service_container.RegisterFunc, childs ...*Context) *Context {
+func New(name string, rfs []di.RegisterFunc, childs ...*Context) *Context {
 	ctx := &Context{
 		Name:          name,
 		RegisterFuncs: rfs,
@@ -56,7 +56,10 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Childs = nil
 		result[name].Contexts = nil
 		result[name].Name = name
-		result[name].ServiceContainer = service_container.New().WalkRegisterFuncs(result[name].RegisterFuncs...)
+		result[name].ServiceContainer = di.NewContainer()
+		for _, f := range result[name].RegisterFuncs {
+			f(result[name].ServiceContainer)
+		}
 	}
 
 	fmt.Println(result)

@@ -3,7 +3,7 @@ package pugast
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core/flamingo/service_container"
+	di "flamingo/core/flamingo/dependencyinjection"
 	"flamingo/core/flamingo/web"
 	coretemplate "flamingo/core/template"
 	"fmt"
@@ -41,8 +41,8 @@ func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
 	return pte
 }
 
-// PostInject is called when the DI finished
-func (t *PugTemplateEngine) PostInject(graph *service_container.Graph) {
+// CompilerPass is called when the DI finished
+func (t *PugTemplateEngine) CompilerPass(c *di.Container) {
 	t.loadTemplates()
 }
 

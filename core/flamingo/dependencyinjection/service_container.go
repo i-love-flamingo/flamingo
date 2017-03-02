@@ -40,6 +40,7 @@ package dependencyinjection
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -50,11 +51,12 @@ type (
 		Value interface{} // Value points to the original value
 		Tags  []string    // Tags hold a list off assigned tags
 
-		complete     bool          // complete will be set to true when the object has been properly resolved
-		autocreated  bool          // autocreated signals objects which have been created, so they are not used for interface injection
-		reflectType  reflect.Type  // reflectType is a cache for reflect.TypeOf(Value)
-		reflectValue reflect.Value // reflectValue is a cache for reflect.ValueOf(Value)
-		wrapFunc     reflect.Value // wrapFunc is generated for functions types, and wrap their argument into a new resolve call
+		complete       bool          // complete will be set to true when the object has been properly resolved
+		autocreated    bool          // autocreated signals objects which have been created, so they are not used for interface injection
+		compilerpassed bool          // compilerpassed makes sure compiler pass happens only once
+		reflectType    reflect.Type  // reflectType is a cache for reflect.TypeOf(Value)
+		reflectValue   reflect.Value // reflectValue is a cache for reflect.ValueOf(Value)
+		wrapFunc       reflect.Value // wrapFunc is generated for functions types, and wrap their argument into a new resolve call
 	}
 
 	// Container is our service-dependency-injection-container which holds a list of
@@ -73,16 +75,23 @@ type (
 	CompilerPasser interface {
 		CompilerPass(c *Container) // CompilerPass gives access to a temporary container (just tags assigned)
 	}
+
+	// RegisterFunc is used for registration callbacks
+	RegisterFunc func(c *Container)
 )
 
 // NewContainer creates a new, empty container
 func NewContainer() *Container {
-	return &Container{
+	var container = &Container{
 		named:   make(map[string]*Object),
 		tags:    make(map[string][]*Object),
 		factory: make(map[reflect.Type]*Object),
 		cache:   make(map[reflect.Type]*Object),
 	}
+
+	container.Register(container)
+
+	return container
 }
 
 // resolve resolves all object dependencies
@@ -90,6 +99,7 @@ func (sc *Container) resolve(object *Object) {
 	var objectlist []*Object
 	var i int
 	var tmptags = make(map[string][]*Object)
+	var cache = make(map[reflect.Type]*Object)
 
 	objectlist = append(objectlist, object)
 
@@ -107,6 +117,8 @@ func (sc *Container) resolve(object *Object) {
 		current.complete = true
 		current.reflectType = reflect.TypeOf(current.Value)
 		current.reflectValue = reflect.ValueOf(current.Value)
+
+		cache[current.reflectType] = current
 
 		// check object type
 		switch current.reflectType.Kind() {
@@ -140,7 +152,6 @@ func (sc *Container) resolve(object *Object) {
 					if factory, ok := sc.factory[field.Type()]; ok {
 						newObject := &Object{
 							Value: factory.reflectValue.Call([]reflect.Value{})[0].Interface(),
-							Tags:  factory.Tags,
 						}
 						for _, tag := range factory.Tags {
 							tmptags[tag] = append(tmptags[tag], newObject)
@@ -180,9 +191,23 @@ func (sc *Container) resolve(object *Object) {
 					panic(fmt.Sprintf("Cannot find function %s for %s", field.Type(), current.reflectType))
 				}
 
-				// Interfaces are assigned if we have an aissgnable, not autocreated object
+				// Interfaces are assigned if we have an aissngable, not autocreated object
 				if field.Type().Kind() == reflect.Interface {
 					var assigned bool
+					for cachetype, cached := range cache {
+						if cachetype.AssignableTo(field.Type()) && !cached.autocreated {
+							log.Println(cachetype, field.Type())
+							if assigned {
+								panic(fmt.Sprintf("found more than one assignable in local cache value for %s field %s", current.reflectType, field.Type()))
+							}
+							assigned = true
+							field.Set(reflect.ValueOf(cached.Value))
+							objectlist = append(objectlist, cached)
+						}
+					}
+					if assigned {
+						continue
+					}
 					for _, cached := range sc.cache {
 						if reflect.TypeOf(cached.Value).AssignableTo(field.Type()) && !cached.autocreated {
 							if assigned {
@@ -190,6 +215,7 @@ func (sc *Container) resolve(object *Object) {
 							}
 							assigned = true
 							field.Set(reflect.ValueOf(cached.Value))
+							objectlist = append(objectlist, cached)
 						}
 					}
 					if !assigned {
@@ -204,8 +230,16 @@ func (sc *Container) resolve(object *Object) {
 				}
 
 				// cache is checked
+				if cache, ok := cache[field.Type().Elem()]; ok {
+					field.Set(reflect.ValueOf(cache.Value))
+					objectlist = append(objectlist, cache)
+					continue
+				}
+
+				// cache is checked
 				if cache, ok := sc.cache[field.Type().Elem()]; ok {
 					field.Set(reflect.ValueOf(cache.Value))
+					objectlist = append(objectlist, cache)
 					continue
 				}
 
@@ -244,7 +278,8 @@ func (sc *Container) resolve(object *Object) {
 		newContainer.tags[tag] = append(newContainer.tags[tag], list...)
 	}
 	for _, current := range objectlist {
-		if cp, ok := current.Value.(CompilerPasser); ok {
+		if cp, ok := current.Value.(CompilerPasser); ok && !current.compilerpassed {
+			current.compilerpassed = true
 			cp.CompilerPass(newContainer)
 		}
 	}
@@ -261,6 +296,9 @@ func (sc *Container) Get(key string) interface{} {
 
 // GetTagged returns list of tagged services
 func (sc *Container) GetTagged(tag string) []*Object {
+	for _, o := range sc.tags[tag] {
+		sc.resolve(o)
+	}
 	return sc.tags[tag]
 }
 
@@ -335,4 +373,9 @@ func (sc *Container) RegisterFactory(factory interface{}, tags ...string) {
 	o := &Object{Value: factory, Tags: tags}
 	sc.resolve(o)
 	sc.factory[reflect.TypeOf(factory).Out(0)] = o
+}
+
+// Resolve resolves dependencies for one single object
+func (sc *Container) Resolve(object interface{}) {
+	sc.resolve(&Object{Value: object})
 }

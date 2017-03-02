@@ -12,20 +12,26 @@ package flamingo
 
 import (
 	"flamingo/core/flamingo/controller"
+	di "flamingo/core/flamingo/dependencyinjection"
 	"flamingo/core/flamingo/event"
 	"flamingo/core/flamingo/profiler"
-	"flamingo/core/flamingo/service_container"
+	"flamingo/core/flamingo/router"
 	"flamingo/core/flamingo/template_functions"
+	"flamingo/core/flamingo/web"
 )
 
 // Register flamingo json Handler
-func Register(sc *service_container.ServiceContainer) {
-	sc.Route("/_flamingo/json/{Handler}", "_flamingo.json")
-	sc.Handle("_flamingo.json", new(controller.DataController))
+func Register(c *di.Container) {
+	c.Register(func(r *router.Router) {
+		r.Route("/_flamingo/json/{Handler}", "_flamingo.json")
+		r.Handle("_flamingo.json", new(controller.DataController))
+	}, router.RouterRegister)
 
-	sc.Register(func() event.Router { return new(event.DefaultRouter) })
-	sc.Register(func() profiler.Profiler { return new(profiler.NullProfiler) })
+	c.Register(web.ContextFactory(web.ContextFromRequest))
 
-	sc.Register(new(template_functions.GetFunc), "template.func")
-	sc.Register(new(template_functions.URLFunc), "template.func")
+	c.RegisterFactory(func() event.Router { return new(event.DefaultRouter) })
+	c.RegisterFactory(func() profiler.Profiler { return new(profiler.NullProfiler) })
+
+	c.Register(new(template_functions.GetFunc), "template.func")
+	c.Register(new(template_functions.URLFunc), "template.func")
 }

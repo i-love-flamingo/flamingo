@@ -61,29 +61,32 @@ type (
 
 const (
 	CONTEXT ContextKey = "context"
+	ID                 = "ID"
 )
 
 // ContextFromRequest returns a ctx enriched by Request Data
 func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
-	c := new(ctx)
-	c.vars = mux.Vars(r)
-	c.request = r
-	c.id = strconv.Itoa(rand.Int())
-	c.writer = rw
-	pusher, ok := rw.(http.Pusher)
-	if ok {
+	c := &ctx{
+		request: r,
+		id:      strconv.Itoa(rand.Int()),
+		writer:  rw,
+		session: session,
+	}
+
+	if pusher, ok := rw.(http.Pusher); ok {
 		c.pusher = pusher
 	}
 
-	c.session = session
-	c.Context = context.WithValue(r.Context(), "ID", c.id)
+	c.Context = context.WithValue(r.Context(), ID, c.id)
 	return c
 }
 
+// LoadVars load request vars from mux.Vars
 func (c *ctx) LoadVars(r *http.Request) {
 	c.vars = mux.Vars(r)
 }
 
+// EventRouter returns the registered event router
 func (c *ctx) EventRouter() event.Router {
 	return c.Eventrouter
 }

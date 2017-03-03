@@ -27,7 +27,7 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 	t, _ := template.New("tpl").Parse(profileTemplate)
 	var body = new(bytes.Buffer)
 
-	t.Execute(body, profilestoreage[ctx.Param1("Profile")].String())
+	t.Execute(body, profilestorage[ctx.Param1("Profile")].String())
 
 	return &web.ContentResponse{
 		ContentType: "text/html",

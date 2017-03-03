@@ -21,7 +21,7 @@ func Register(basedir string, debug bool) di.RegisterFunc {
 		}, router.RouterRegister)
 
 		c.Register(pugast.NewPugTemplateEngine(basedir, debug))
-		c.Register(new(template.TemplateFunctionRegistry))
+		c.Register(new(template.FunctionRegistry))
 		c.Register(new(template_functions.AssetFunc), "template.func")
 		c.Register(new(template_functions.DebugFunc), "template.func")
 	}

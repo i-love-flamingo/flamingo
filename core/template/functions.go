@@ -7,14 +7,14 @@ import (
 )
 
 type (
-	// TemplateFunction is a function which will be available in templates
-	TemplateFunction interface {
+	// Function is a function which will be available in templates
+	Function interface {
 		Name() string
 		Func() interface{}
 	}
 
-	// TemplateContextFunction is a TemplateFunction with late context binding
-	TemplateContextFunction interface {
+	// ContextFunction is a Function with late context binding
+	ContextFunction interface {
 		Name() string
 		Func(web.Context) interface{}
 	}
@@ -22,27 +22,27 @@ type (
 	// ContextAware is the used for late-bindings
 	ContextAware func(ctx web.Context) interface{}
 
-	// TemplateFunctionRegistry knows about the context-aware template functions
-	TemplateFunctionRegistry struct {
+	// FunctionRegistry knows about the context-aware template functions
+	FunctionRegistry struct {
 		ServiceContainer *di.Container `inject:""`
-		Contextaware     map[string]ContextAware
+		ContextAware     map[string]ContextAware
 	}
 )
 
 // Populate Template Registry, mapping short method names to Functions
-func (tfr *TemplateFunctionRegistry) Populate() template.FuncMap {
-	tfr.Contextaware = make(map[string]ContextAware)
-	funcmap := make(template.FuncMap)
+func (tfr *FunctionRegistry) Populate() template.FuncMap {
+	tfr.ContextAware = make(map[string]ContextAware)
+	funcMap := make(template.FuncMap)
 
-	for _, tplfunc := range tfr.ServiceContainer.GetTagged("template.func") {
-		if tplfunc, ok := tplfunc.Value.(TemplateFunction); ok {
-			funcmap[tplfunc.Name()] = tplfunc.Func()
+	for _, tplFunc := range tfr.ServiceContainer.GetTagged("template.func") {
+		if tplFunc, ok := tplFunc.Value.(Function); ok {
+			funcMap[tplFunc.Name()] = tplFunc.Func()
 		}
-		if tplfunc, ok := tplfunc.Value.(TemplateContextFunction); ok {
-			funcmap[tplfunc.Name()] = tplfunc.Func
-			tfr.Contextaware[tplfunc.Name()] = tplfunc.Func
+		if tplFunc, ok := tplFunc.Value.(ContextFunction); ok {
+			funcMap[tplFunc.Name()] = tplFunc.Func
+			tfr.ContextAware[tplFunc.Name()] = tplFunc.Func
 		}
 	}
 
-	return funcmap
+	return funcMap
 }

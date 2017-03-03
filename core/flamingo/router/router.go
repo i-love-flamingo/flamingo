@@ -79,14 +79,14 @@ func NewCookieStore(secret []byte) *sessions.CookieStore {
 // Creates the new flamingo router, set's up handlers and routes and resolved the DI.
 // BUG(bastian.ike) hardroutesreverse style is borked
 func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *Router {
-	router := new(Router)
+	router := &Router{
+		router:            mux.NewRouter(),
+		routes:            make(map[string]string),
+		hardroutes:        make(map[string]configcontext.Route),
+		hardroutesreverse: make(map[string]configcontext.Route),
+		handler:           make(map[string]Controller),
+	}
 
-	// bootstrap
-	router.router = mux.NewRouter()
-	router.routes = make(map[string]string)
-	router.hardroutes = make(map[string]configcontext.Route)
-	router.hardroutesreverse = make(map[string]configcontext.Route)
-	router.handler = make(map[string]Controller)
 	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
 	serviceContainer.Register(router)
@@ -105,18 +105,10 @@ func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *R
 		}
 	}
 
-	known := make(map[string]bool)
-
 	for name, handler := range router.handler {
-		if known[name] {
-			continue
+		if route, ok := router.routes[name]; ok {
+			router.router.Handle(route, router.handle(handler)).Name(name)
 		}
-		known[name] = true
-		route, ok := router.routes[name]
-		if !ok {
-			continue
-		}
-		router.router.Handle(route, router.handle(handler)).Name(name)
 	}
 
 	return router

@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-var profilestoreage map[string]*DefaultProfiler
+var profilestorage map[string]*DefaultProfiler
 
 func init() {
-	profilestoreage = make(map[string]*DefaultProfiler)
+	profilestorage = make(map[string]*DefaultProfiler)
 }
 
 type (
@@ -55,15 +55,15 @@ func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 // String prints the child-logs
 func (p *DefaultProfiler) String() (res string) {
 	for _, c := range p.childs {
-		res += c.log("")
+		res += c.render("")
 	}
 	return
 }
 
-func (p *DefaultProfiler) log(depth string) (res string) {
+func (p *DefaultProfiler) render(depth string) (res string) {
 	res += fmt.Sprintf("%s%s: %s (%s)\n", depth, p.key, p.msg, p.duration)
 	for _, c := range p.childs {
-		res += c.log(depth + "    ")
+		res += c.render(depth + "    ")
 	}
 	return
 }
@@ -82,7 +82,7 @@ func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 			[]byte("<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'><a href='"+p.Router.URL("_profiler.view", "Profile", p.Context.ID()).String()+"'>Profile "+p.Context.ID()+"</a></div>\n</body>"),
 			1,
 		))
-		profilestoreage[p.Context.ID()] = p
+		profilestorage[p.Context.ID()] = p
 	}
 }
 

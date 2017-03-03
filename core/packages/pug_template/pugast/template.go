@@ -28,7 +28,7 @@ type PugTemplateEngine struct {
 	Webpackserver     bool
 	Ast               *PugAst
 	debug             bool
-	TemplateFunctions *coretemplate.TemplateFunctionRegistry `inject:""`
+	TemplateFunctions *coretemplate.FunctionRegistry `inject:""`
 }
 
 // NewPugTemplateEngine creates PugTemplateEngine struct
@@ -132,7 +132,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 
 	funcs := make(template.FuncMap)
 	funcs["__"] = fmt.Sprintf // todo translate
-	for k, f := range t.TemplateFunctions.Contextaware {
+	for k, f := range t.TemplateFunctions.ContextAware {
 		funcs[k] = f(ctx)
 	}
 	templateInstance.Funcs(funcs)

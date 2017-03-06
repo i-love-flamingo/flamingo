@@ -57,6 +57,9 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Contexts = nil
 		result[name].Name = name
 		result[name].ServiceContainer = di.NewContainer()
+		for k, v := range result[name].Configuration {
+			result[name].ServiceContainer.SetParameter(k, v)
+		}
 		for _, f := range result[name].RegisterFuncs {
 			f(result[name].ServiceContainer)
 		}

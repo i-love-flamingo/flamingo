@@ -41,33 +41,21 @@ package dependencyinjection
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 type (
-	// Object represents a object which we work with
-	// essentially it wraps value and tags, and some internal flags
-	Object struct {
-		Value interface{} // Value points to the original value
-		Tags  []string    // Tags hold a list off assigned tags
-
-		complete       bool          // complete will be set to true when the object has been properly resolved
-		autocreated    bool          // autocreated signals objects which have been created, so they are not used for interface injection
-		compilerpassed bool          // compilerpassed makes sure compiler pass happens only once
-		reflectType    reflect.Type  // reflectType is a cache for reflect.TypeOf(Value)
-		reflectValue   reflect.Value // reflectValue is a cache for reflect.ValueOf(Value)
-		wrapFunc       reflect.Value // wrapFunc is generated for functions types, and wrap their argument into a new resolve call
-	}
-
 	// Container is our service-dependency-injection-container which holds a list of
 	// - all named objects
 	// - all tagged objects
 	// - all factories
 	// - all cached objects
 	Container struct {
-		named   map[string]*Object
-		tags    map[string][]*Object
-		factory map[reflect.Type]*Object
-		cache   map[reflect.Type]*Object
+		named      map[string]*Object
+		tags       map[string][]*Object
+		factory    map[reflect.Type]*Object
+		cache      map[reflect.Type]*Object
+		parameters map[string]reflect.Value
 	}
 
 	// CompilerPasser is called whenever an object has been created
@@ -82,15 +70,27 @@ type (
 // NewContainer creates a new, empty container
 func NewContainer() *Container {
 	var container = &Container{
-		named:   make(map[string]*Object),
-		tags:    make(map[string][]*Object),
-		factory: make(map[reflect.Type]*Object),
-		cache:   make(map[reflect.Type]*Object),
+		named:      make(map[string]*Object),
+		tags:       make(map[string][]*Object),
+		factory:    make(map[reflect.Type]*Object),
+		cache:      make(map[reflect.Type]*Object),
+		parameters: make(map[string]reflect.Value),
 	}
 
 	container.Register(container)
 
 	return container
+}
+
+func (sc *Container) call(fnc *Object) []reflect.Value {
+	var params = []reflect.Value{}
+	for _, param := range fnc.parameters {
+		params = append(params, sc.parameters[param])
+	}
+
+	var result = fnc.reflectValue.Call(params)
+
+	return result
 }
 
 // resolve resolves all object dependencies
@@ -142,23 +142,34 @@ func (sc *Container) resolve(object *Object) {
 				continue
 			}
 
+			var paramname string
+			if strings.Index(tagval, ":") > 0 {
+				split := strings.SplitN(tagval, ":", 2)
+				tagval, paramname = split[0], split[1]
+			}
+
 			switch tagval {
+			case "param":
+				field.Set(sc.parameters[paramname])
+
 			case "private":
 				// private injection
+
+				if factory, ok := sc.factory[field.Type()]; ok {
+					newObject := &Object{
+						Value: sc.call(factory)[0].Interface(),
+					}
+					for _, tag := range factory.Tags {
+						tmptags[tag] = append(tmptags[tag], newObject)
+					}
+					field.Set(reflect.ValueOf(newObject.Value))
+					objectlist = append(objectlist, newObject)
+					continue
+				}
+
 				switch field.Type().Kind() {
 				case reflect.Interface:
 					// private interfaces have to be factorized
-					if factory, ok := sc.factory[field.Type()]; ok {
-						newObject := &Object{
-							Value: factory.reflectValue.Call([]reflect.Value{})[0].Interface(),
-						}
-						for _, tag := range factory.Tags {
-							tmptags[tag] = append(tmptags[tag], newObject)
-						}
-						field.Set(reflect.ValueOf(newObject.Value))
-						objectlist = append(objectlist, newObject)
-						continue
-					}
 					panic(fmt.Sprintf("no factory for %s of %s", field.Type(), current.reflectType))
 
 				case reflect.Ptr:
@@ -310,10 +321,8 @@ func (sc *Container) wrapFunc(function reflect.Value) func(args []reflect.Value)
 	}
 }
 
-// Register a service
-func (sc *Container) Register(object interface{}, tags ...string) {
-	var o = &Object{Value: object, Tags: tags}
-	var reflectType = reflect.TypeOf(object)
+func (sc *Container) prepareFunction(o *Object) {
+	var reflectType = reflect.TypeOf(o.Value)
 
 	if reflectType.Kind() == reflect.Func {
 		// for functions we create a wrapper which lazy-calls resolves the functions result
@@ -327,6 +336,14 @@ func (sc *Container) Register(object interface{}, tags ...string) {
 			sc.wrapFunc(o.reflectValue),
 		)
 	}
+}
+
+// Register a service
+func (sc *Container) Register(object interface{}, tags ...string) *Object {
+	var o = &Object{Value: object, Tags: tags}
+	var reflectType = reflect.TypeOf(object)
+
+	sc.prepareFunction(o)
 
 	if reflectType.Kind() == reflect.Ptr {
 		sc.cache[reflect.TypeOf(object).Elem()] = o
@@ -337,14 +354,18 @@ func (sc *Container) Register(object interface{}, tags ...string) {
 	for _, tag := range tags {
 		sc.tags[tag] = append(sc.tags[tag], o)
 	}
+
+	return o
 }
 
 // RegisterNamed register a service with an explicit name
-func (sc *Container) RegisterNamed(name string, object interface{}, tags ...string) {
+func (sc *Container) RegisterNamed(name string, object interface{}, tags ...string) *Object {
 	o := &Object{
 		Value: object,
 		Tags:  tags,
 	}
+
+	sc.prepareFunction(o)
 
 	sc.named[name] = o
 
@@ -352,28 +373,28 @@ func (sc *Container) RegisterNamed(name string, object interface{}, tags ...stri
 		sc.tags[tag] = append(sc.tags[tag], o)
 	}
 
-	if reflect.TypeOf(object).Kind() == reflect.Func {
-		// for functions we create a wrapper which lazy-calls resolves the functions result
-		// currently works for only one-result functions
-		if reflect.TypeOf(object).NumOut() > 1 {
-			panic("can not handle more than 1 result! %s" + o.reflectType.String())
-		}
-		sc.resolve(o)
-		o.wrapFunc = reflect.MakeFunc(
-			o.reflectType,
-			sc.wrapFunc(o.reflectValue),
-		)
-	}
+	return o
 }
 
 // RegisterFactory registers a factory for a given type
-func (sc *Container) RegisterFactory(factory interface{}, tags ...string) {
+func (sc *Container) RegisterFactory(factory interface{}, tags ...string) *Object {
 	o := &Object{Value: factory, Tags: tags}
 	sc.resolve(o)
 	sc.factory[reflect.TypeOf(factory).Out(0)] = o
+	return o
 }
 
 // Resolve resolves dependencies for one single object
 func (sc *Container) Resolve(object interface{}) {
 	sc.resolve(&Object{Value: object})
+}
+
+// SetParameter sets a named parameter
+func (sc *Container) SetParameter(name string, value interface{}) {
+	sc.parameters[name] = reflect.ValueOf(value)
+}
+
+// GetParameter gets a named parameter
+func (sc *Container) GetParameter(name string) interface{} {
+	return sc.parameters[name]
 }

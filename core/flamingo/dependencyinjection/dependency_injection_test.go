@@ -168,6 +168,37 @@ var _ = Describe("DependencyInjection Package", func() {
 		})
 	})
 
+	Describe("Parameter injection", func() {
+		var container = NewContainer()
+
+		type (
+			Something struct {
+				Foo string
+				Bar int
+			}
+
+			App struct {
+				Something *Something `inject:"private"`
+				SomeVar   string     `inject:"param:my.config.param"`
+			}
+		)
+
+		container.RegisterNamed("app", new(App))
+		container.SetParameter("foo", "test foo")
+		container.SetParameter("bar", 500)
+		container.SetParameter("my.config.param", "my config param")
+		container.RegisterFactory(func(bar int, foo string) *Something { return &Something{Foo: foo, Bar: bar} }).AddParameters("bar", "foo")
+
+		It("Should provide and provision the dependency in factories ", func() {
+			Expect(container.Get("app").(*App).Something.Foo).To(Equal("test foo"))
+			Expect(container.Get("app").(*App).Something.Bar).To(Equal(500))
+		})
+
+		It("Should provide and provision the requested parameters", func() {
+			Expect(container.Get("app").(*App).SomeVar).To(Equal("my config param"))
+		})
+	})
+
 	Describe("Error cases", func() {
 		It("Should panic for concrete types", func() {
 			Expect(func() {

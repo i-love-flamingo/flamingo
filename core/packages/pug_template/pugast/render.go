@@ -195,7 +195,7 @@ func (p *PugAst) render(parent *Token, pre string, mixinblock *Token) string {
 					}
 				}
 
-				buf += p.render(p.mixin[t.Name].Block, pre, t.Block)
+				//buf += p.render(p.mixin[t.Name].Block, pre, t.Block)
 				buf += "\n" + pre + "<!-- END MIXIN " + t.Name + " -->"
 			} else {
 				p.mixin[t.Name] = t

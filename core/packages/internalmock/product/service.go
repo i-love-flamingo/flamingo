@@ -37,9 +37,11 @@ var namesuffix = [...]string{
 type ProductService struct{}
 
 // Get returns a product struct
-func (ps *ProductService) Get(context web.Context, id string) models.Product {
+func (ps *ProductService) Get(context web.Context, id string) (models.Product, models.AppError) {
 	defer context.Profile("service", "get product "+id)()
 	var product models.Product
+
+	e := models.AppError{}
 
 	p, _ := ioutil.ReadFile("frontend/src/mocks/product.json")
 	json.Unmarshal(p, &product)
@@ -47,7 +49,7 @@ func (ps *ProductService) Get(context web.Context, id string) models.Product {
 	product.Id = id
 	product.Name = fmt.Sprintf("%s %s", nameprefix[rand.Intn(len(nameprefix))], namesuffix[rand.Intn(len(namesuffix))])
 
-	return product
+	return product, e
 }
 
 // GetByIDList returns a struct of Product Models identified by given Skus
@@ -56,7 +58,7 @@ func (ps *ProductService) GetByIDList(context web.Context, skus []string) []mode
 	var products = make([]models.Product, len(skus))
 
 	for i, sku := range skus {
-		products[i] = ps.Get(context, sku)
+		products[i], _ = ps.Get(context, sku)
 	}
 
 	return products

@@ -32,5 +32,7 @@ func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *we
 		data,
 	)
 
+	response.Status = error.Code
+
 	return response
 }

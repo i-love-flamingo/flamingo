@@ -15,10 +15,8 @@ type RenderAware struct {
 
 // Render returns a web.ContentResponse with status 200 and ContentType text/html
 func (r *RenderAware) Render(context web.Context, tpl string, data interface{}) *web.ContentResponse {
-	httpCode := http.StatusOK
-
 	return &web.ContentResponse{
-		Status:      httpCode,
+		Status:      http.StatusOK,
 		Body:        r.Engine.Render(context, tpl, data),
 		ContentType: "text/html",
 	}

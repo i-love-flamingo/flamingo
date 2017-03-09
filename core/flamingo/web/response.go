@@ -46,7 +46,7 @@ func (rr *RedirectResponse) Apply(rw http.ResponseWriter) {
 // Apply ContentResponse
 func (cr *ContentResponse) Apply(rw http.ResponseWriter) {
 	if cr.ContentType == "" {
-		cr.ContentType = "text/plain"
+		cr.ContentType = "text/plain; charset=utf-8"
 	}
 	if cr.Status == 0 {
 		cr.Status = http.StatusOK

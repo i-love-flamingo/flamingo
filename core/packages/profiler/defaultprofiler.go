@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -23,49 +24,49 @@ type (
 		Context web.Context    `inject:""`
 		Router  *router.Router `inject:""`
 
-		key, msg string
-		current  *DefaultProfiler
-		childs   []*DefaultProfiler
-		start    time.Time
-		duration time.Duration
+		Fnc, Msg         string
+		File             string
+		Startpos, Endpos int
+		current          *DefaultProfiler
+		Childs           []*DefaultProfiler
+		Start            time.Time
+		Duration         time.Duration
+		Depth            int
 	}
 )
 
-// Profile something with a key and a message
+// Profile something with a Fnc and a message
 func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 	if p.current == nil {
 		p.current = p
+		p.Start = time.Now()
 	}
 
 	var subprofiler = new(DefaultProfiler)
-	subprofiler.key = key
-	subprofiler.msg = msg
-	subprofiler.start = time.Now()
-	p.current.childs = append(p.current.childs, subprofiler)
+
+	pc, _, _, _ := runtime.Caller(2)
+	fnc := runtime.FuncForPC(pc)
+	file, line := fnc.FileLine(pc)
+	subprofiler.Fnc = fnc.Name()
+	subprofiler.File = file
+	subprofiler.Startpos = line
+
+	subprofiler.Msg = key + ": " + msg
+	subprofiler.Start = time.Now()
+	subprofiler.Depth = p.current.Depth + 1
+	p.current.Childs = append(p.current.Childs, subprofiler)
 
 	var parent = p.current
 	p.current = subprofiler
 
 	return func() {
-		subprofiler.duration = time.Since(subprofiler.start)
+		subprofiler.Duration = time.Since(subprofiler.Start)
+		pc, _, _, _ := runtime.Caller(1)
+		fnc := runtime.FuncForPC(pc)
+		_, line := fnc.FileLine(pc)
+		subprofiler.Endpos = line
 		p.current = parent
 	}
-}
-
-// String prints the child-logs
-func (p *DefaultProfiler) String() (res string) {
-	for _, c := range p.childs {
-		res += c.render("")
-	}
-	return
-}
-
-func (p *DefaultProfiler) render(depth string) (res string) {
-	res += fmt.Sprintf("%s%s: %s (%s)\n", depth, p.key, p.msg, p.duration)
-	for _, c := range p.childs {
-		res += c.render(depth + "    ")
-	}
-	return
 }
 
 // OnResponse injects the little helper into the response, and saves the profile in memory
@@ -75,11 +76,12 @@ func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 	}
 
 	if response, ok := event.Response.(*web.ContentResponse); ok {
+		p.Duration = time.Since(p.Start)
 		originalbody, _ := ioutil.ReadAll(response.Body)
 		response.Body = bytes.NewBuffer(bytes.Replace(
 			originalbody,
 			[]byte("</body>"),
-			[]byte("<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'><a href='"+p.Router.URL("_profiler.view", "Profile", p.Context.ID()).String()+"'>Profile "+p.Context.ID()+"</a></div>\n</body>"),
+			[]byte("<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'><a href='"+p.Router.URL("_profiler.view", "Profile", p.Context.ID()).String()+"'>"+p.Duration.String()+": "+p.Context.ID()+"</a></div>\n</body>"),
 			1,
 		))
 		profilestorage[p.Context.ID()] = p
@@ -91,4 +93,27 @@ func (p *DefaultProfiler) Events() []interface{} {
 	return []interface{}{
 		router.RESPONSE,
 	}
+}
+
+// Filehint gives the source file's content hint
+func (p *DefaultProfiler) Filehint() string {
+	c, err := ioutil.ReadFile(p.File)
+	if err != nil {
+		return err.Error()
+	}
+	//log.Println(bytes.Split(c, []byte("\n")))
+	//log.Println(p.Startpos, p.Endpos, len(bytes.Split(c, []byte("\n"))))
+	//os.Exit(1)
+	if p.Endpos < p.Startpos {
+		p.Endpos = p.Startpos + 1
+	}
+	if len(bytes.Split(c, []byte("\n"))) < p.Endpos || len(bytes.Split(c, []byte("\n"))) < p.Startpos {
+		return "--"
+	}
+	lines := bytes.Split(c, []byte("\n"))[p.Startpos-1 : p.Endpos]
+	res := ""
+	for i, l := range lines {
+		res += fmt.Sprintf("%03d: %s\n", i+p.Startpos, string(l))
+	}
+	return res
 }

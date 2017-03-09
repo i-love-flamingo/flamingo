@@ -71,6 +71,9 @@ func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 
 // OnResponse injects the little helper into the response, and saves the profile in memory
 func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
+	if reflect.TypeOf(event.Controller).Kind() != reflect.Ptr {
+		return
+	}
 	if reflect.TypeOf(event.Controller).Elem().Name() == reflect.TypeOf(ProfileController{}).Name() {
 		return
 	}

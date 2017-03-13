@@ -1,5 +1,5 @@
-hash: 1322095bae546cb0bfe8306a70d42b33fecd756ff65d79ad6f69d13ed129de76
-updated: 2017-03-02T16:37:32.092790375+01:00
+hash: b0b1167c76ffb23339c4db7b4d70162c5206db1e0492c883bc5ee1384321d697
+updated: 2017-03-13T09:28:05.226036035+01:00
 imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
@@ -36,6 +36,9 @@ imports:
   - base64vlq
 - name: gopkg.in/yaml.v2
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+- name: text/template
+  version: e02a888efc78849bdadfe31855fcd745777431df
+  repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo
   version: 462326b1628e124b23f42e87a8f2750e3c4e2d24

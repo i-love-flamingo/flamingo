@@ -3,6 +3,8 @@ package template_functions
 import (
 	"flamingo/core/flamingo/router"
 	"flamingo/core/flamingo/web"
+	"flamingo/core/packages/pug_template/pugast"
+	"reflect"
 )
 
 type (
@@ -20,6 +22,20 @@ func (g GetFunc) Name() string {
 // Func as implementation of get method
 func (g *GetFunc) Func(ctx web.Context) interface{} {
 	return func(what string) interface{} {
-		return g.Router.Get(what, ctx)
+		return fixtype(g.Router.Get(what, ctx))
 	}
+}
+
+func fixtype(val interface{}) interface{} {
+	if reflect.TypeOf(val).Kind() == reflect.Slice {
+		for i, e := range val.([]interface{}) {
+			val.([]interface{})[i] = fixtype(e)
+		}
+		val = pugast.Array(val.([]interface{}))
+	} else if reflect.TypeOf(val).Kind() == reflect.Map {
+		for k, v := range val.(map[string]interface{}) {
+			val.(map[string]interface{})[k] = fixtype(v)
+		}
+	}
+	return val
 }

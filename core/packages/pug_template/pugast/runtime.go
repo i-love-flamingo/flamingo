@@ -8,14 +8,24 @@ import (
 	"strings"
 )
 
+type (
+	Array []interface{}
+)
+
+func (a Array) Length() int {
+	return reflect.ValueOf(a).Len()
+}
+
 // FuncMap is the default runtime funcmap for pugast templates
 var FuncMap = template.FuncMap{
 	"__": func(s ...string) string { return strings.Join(s, "::") },
 
 	"__op__add":   runtimeAdd,
+	"__op__inc":   runtimeInc,
 	"__op__sub":   runtimeSub,
 	"__op__mul":   runtimeMul,
 	"__op__quo":   runtimeQuo,
+	"__op__slash": runtimeQuo,
 	"__op__rem":   runtimeRem,
 	"__op__mod":   runtimeRem,
 	"__op__minus": runtimeMinus,
@@ -24,6 +34,15 @@ var FuncMap = template.FuncMap{
 	"__op__gtr":   runtimeGtr,
 	"__op__lss":   runtimeLss,
 	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
+
+	"tryindex": func(obj, key interface{}) interface{} {
+		vo := reflect.ValueOf(obj)
+		k := int(reflect.ValueOf(key).Int())
+		if vo.Len() > k {
+			return vo.Index(k).Interface()
+		}
+		return nil
+	},
 
 	"json":      runtimeJSON,
 	"unescaped": runtimeUnescaped,
@@ -53,7 +72,7 @@ var FuncMap = template.FuncMap{
 		return
 	},
 
-	"__op__array": func(a ...interface{}) []interface{} { return a },
+	"__op__array": func(a ...interface{}) Array { return Array(a) },
 	"__op__map": func(a ...interface{}) map[interface{}]interface{} {
 		m := make(map[interface{}]interface{})
 		for i := 0; i < len(a); i += 2 {
@@ -136,6 +155,22 @@ func runtimeAdd(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
+func runtimeInc(x interface{}) int64 {
+	vx := reflect.ValueOf(x)
+	switch vx.Kind() {
+	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+		{
+			return vx.Int() + 1
+		}
+	case reflect.Float32, reflect.Float64:
+		{
+			return int64(vx.Float() + 1)
+		}
+	}
+
+	return 0
+}
+
 func runtimeSub(x, y interface{}) interface{} {
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
@@ -195,7 +230,7 @@ func runtimeQuo(x, y interface{}) interface{} {
 		{
 			switch vy.Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Int() / vy.Int()
+				return float64(vx.Int()) / float64(vy.Int())
 			case reflect.Float32, reflect.Float64:
 				return float64(vx.Int()) / vy.Float()
 			}

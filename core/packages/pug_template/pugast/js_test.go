@@ -13,7 +13,7 @@ var _ = Describe("JS Expression transpiling", func() {
 	Describe("JsExpr modes", func() {
 		Context("With raw, wrap", func() {
 			It("Should treat code as escaped blocks of JavaScript", func() {
-				Expect(p.JsExpr(`var a = 1`, true, true)).To(Equal(`{{$a := 1}}`))
+				Expect(p.JsExpr(`var a = 1`, true, true)).To(Equal(`{{- $a := 1 -}}`))
 			})
 
 			It("Should fail with panic on invalid code", func() {
@@ -152,7 +152,7 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Assign Expressions", func() {
 			It("Should assign expressions to variables", func() {
-				Expect(p.JsExpr(`a = 1`, true, false)).To(Equal(`{{$a := 1}}`))
+				Expect(p.JsExpr(`a = 1`, true, false)).To(Equal(`{{- $a := 1 -}}`))
 			})
 		})
 

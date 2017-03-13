@@ -24,5 +24,6 @@ func Register(basedir string, debug bool) di.RegisterFunc {
 		c.Register(new(template.FunctionRegistry))
 		c.Register(new(template_functions.AssetFunc), "template.func")
 		c.Register(new(template_functions.DebugFunc), "template.func")
+		c.Register(new(template_functions.MathLib), "template.func")
 	}
 }

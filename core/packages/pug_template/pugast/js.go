@@ -31,12 +31,12 @@ var (
 		token.INCREMENT:   "__op__inc", // ++
 		token.DECREMENT:   "__op__dec", // --
 
-		token.EQUAL:        "eq",  // ==
-		token.STRICT_EQUAL: "eq",  // ===
-		token.LESS:         "lt",  // <
-		token.GREATER:      "gt",  // >
-		token.ASSIGN:       "=",   // =
-		token.NOT:          "not", // !
+		token.EQUAL:        "__op__eql", // ==
+		token.STRICT_EQUAL: "__op__eql", // ===
+		token.LESS:         "lt",        // <
+		token.GREATER:      "gt",        // >
+		token.ASSIGN:       "=",         // =
+		token.NOT:          "not",       // !
 
 		token.BITWISE_NOT: "__op__bitnot", // ~
 
@@ -145,8 +145,11 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	case *ast.Identifier:
 		if p.knownVar[expr.Name] {
 			result += `$`
-		} else if dot {
+		} else if dot && expr.Name != "Math" {
 			result += `.`
+		}
+		if expr.Name == "ceil" || expr.Name == "length" {
+			expr.Name = strings.Title(expr.Name)
 		}
 		result += expr.Name
 		if wrap {
@@ -262,7 +265,7 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 			p.renderExpression(expr.Right, false, true))
 		p.knownVar[n] = true
 		if wrap {
-			result = `{{` + result + `}}`
+			result = `{{- ` + result + ` -}}`
 		}
 
 	// VariableExpression: creates a new variable, var foo = 1
@@ -272,7 +275,7 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 		result = `$` + n + ` := ` + p.renderExpression(expr.Initializer, false, true)
 		p.knownVar[n] = true
 		if wrap {
-			result = `{{` + result + `}}`
+			result = `{{- ` + result + ` -}}`
 		}
 
 	// SequenceExpression, just like ArrayLiteral
@@ -292,9 +295,15 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 
 	// UnaryExpression: an operation on an operand, such as delete foo[bar]
 	case *ast.UnaryExpression:
-		result += `(` + ops[expr.Operator] + ` ` + p.renderExpression(expr.Operand, false, true) + `)`
+		if expr.Operator == token.INCREMENT {
+			result += p.renderExpression(expr.Operand, false, true) + ` := ` + ops[expr.Operator] + ` ` + p.renderExpression(expr.Operand, false, true)
+		} else {
+			result += ops[expr.Operator] + ` ` + p.renderExpression(expr.Operand, false, true)
+		}
 		if wrap {
-			result = `{{` + result + `}}`
+			result = `{{- ` + result + ` -}}`
+		} else {
+			result = `(` + result + `)`
 		}
 
 	default:

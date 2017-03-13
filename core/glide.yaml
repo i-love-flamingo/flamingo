@@ -13,6 +13,8 @@ import:
   version: ^1.1.0
 - package: github.com/gorilla/securecookie
   version: ^1.1.0
+- package: text/template
+  repo: https://github.com/thebod/go-text-template
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

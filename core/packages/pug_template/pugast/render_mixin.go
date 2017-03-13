@@ -17,13 +17,10 @@ func (m *Mixin) Render(p *PugAst, depth int) (string, bool) {
 func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 	prefix := strings.Repeat("    ", depth)
 
-	subblock, _ := m.Block.Render(p, depth)
-
 	callargs := strings.Split(m.Args, ",")
 	attrpart := ""
 
 	for ci, ca := range callargs {
-		p.knownVar[ca] = true
 		ca = strings.TrimSpace(ca)
 		p.knownVar[ca] = true
 		attrpart += fmt.Sprintf(
@@ -32,6 +29,8 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 			ci,
 		)
 	}
+
+	subblock, _ := m.Block.Render(p, depth)
 
 	return fmt.Sprintf(`{{define "mixin_%s"}}
 {{- $attributes := (index . 1) -}}

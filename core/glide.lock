@@ -1,6 +1,8 @@
-hash: b0b1167c76ffb23339c4db7b4d70162c5206db1e0492c883bc5ee1384321d697
-updated: 2017-03-13T09:28:05.226036035+01:00
+hash: 30a23a8acfabd4791230b4de8adfc3b158e8f5b25355dd8949e985e9a7ade3a9
+updated: 2017-03-13T17:20:21.535055947+01:00
 imports:
+- name: github.com/ghodss/yaml
+  version: 04f313413ffd65ce25f2541bfd2b2ceec5c0908c
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux

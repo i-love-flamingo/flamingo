@@ -17,9 +17,9 @@ type (
 		RegisterFuncs    []di.RegisterFunc
 		ServiceContainer *di.Container `json:"-"`
 
-		Routes        []Route           `yaml:"routes"`
-		Configuration map[string]string `yaml:"config"`
-		Contexts      map[string]string `yaml:"contexts"`
+		Routes        []Route                `yaml:"routes"`
+		Configuration map[string]interface{} `yaml:"config" json:"config"`
+		Contexts      map[string]string      `yaml:"contexts"`
 	}
 
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
@@ -87,7 +87,7 @@ func (ctx *Context) Flat() map[string]*Context {
 // MergeFrom merges two Contexts into a new one
 func MergeFrom(baseContext, incomingContext Context) *Context {
 	if baseContext.Configuration == nil {
-		baseContext.Configuration = make(map[string]string)
+		baseContext.Configuration = make(map[string]interface{})
 	}
 
 	for k, v := range incomingContext.Configuration {

@@ -10,20 +10,20 @@ import (
 )
 
 // Register Services for pug_template package
-func Register(basedir string, debug bool) di.RegisterFunc {
-	return func(c *di.Container) {
-		c.Register(func(r *router.Router) {
-			r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))
-			r.Route("/static/{n:.*}", "_static")
+func Register(c *di.Container) {
+	basedir, debug := c.GetParameter("pug_template.basedir").(string), c.GetParameter("pug_template.debug").(bool)
 
-			r.Handle("_pugtpl_debug", new(DebugController))
-			r.Route("/_pugtpl/debug", "_pugtpl_debug")
-		}, router.RouterRegister)
+	c.Register(func(r *router.Router) {
+		r.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(basedir))))
+		r.Route("/static/{n:.*}", "_static")
 
-		c.Register(pugast.NewPugTemplateEngine(basedir, debug))
-		c.Register(new(template.FunctionRegistry))
-		c.Register(new(template_functions.AssetFunc), "template.func")
-		c.Register(new(template_functions.DebugFunc), "template.func")
-		c.Register(new(template_functions.MathLib), "template.func")
-	}
+		r.Handle("_pugtpl_debug", new(DebugController))
+		r.Route("/_pugtpl/debug", "_pugtpl_debug")
+	}, router.RouterRegister)
+
+	c.Register(pugast.NewPugTemplateEngine(basedir, debug))
+	c.Register(new(template.FunctionRegistry))
+	c.Register(new(template_functions.AssetFunc), "template.func")
+	c.Register(new(template_functions.DebugFunc), "template.func")
+	c.Register(new(template_functions.MathLib), "template.func")
 }

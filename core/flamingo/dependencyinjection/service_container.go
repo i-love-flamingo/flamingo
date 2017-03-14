@@ -150,7 +150,9 @@ func (sc *Container) resolve(object *Object) {
 
 			switch tagval {
 			case "param":
-				field.Set(sc.parameters[paramname])
+				if val, ok := sc.parameters[paramname]; ok {
+					field.Set(val)
+				}
 
 			case "private":
 				// private injection
@@ -396,5 +398,5 @@ func (sc *Container) SetParameter(name string, value interface{}) {
 
 // GetParameter gets a named parameter
 func (sc *Container) GetParameter(name string) interface{} {
-	return sc.parameters[name]
+	return sc.parameters[name].Interface()
 }

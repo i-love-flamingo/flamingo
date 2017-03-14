@@ -32,12 +32,13 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 
 	subblock, _ := m.Block.Render(p, depth)
 
-	return fmt.Sprintf(`{{define "mixin_%s"}}
+	return fmt.Sprintf(`{{- define "mixin_%s" -}}
 {{- $attributes := (index . 1) -}}
 {{- $__args__ := (index . 0) -}}
 %s
 %s%s
-%s{{end}}
+%s
+{{- end -}}
 `, m.Name, attrpart, prefix, subblock, prefix)
 }
 

@@ -18,6 +18,6 @@ func (r *RenderAware) Render(context web.Context, tpl string, data interface{}) 
 	return &web.ContentResponse{
 		Status:      http.StatusOK,
 		Body:        r.Engine.Render(context, tpl, data),
-		ContentType: "text/html",
+		ContentType: "text/html; charset=utf-8",
 	}
 }

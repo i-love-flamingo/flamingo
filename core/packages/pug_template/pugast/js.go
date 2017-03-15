@@ -143,13 +143,10 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	switch expr := expr.(type) {
 	// Identifier: usually a variable name
 	case *ast.Identifier:
-		if p.knownVar[expr.Name] {
+		if _, known := p.FuncMap[expr.Name]; !known && p.knownVar[expr.Name] {
 			result += `$`
-		} else if dot && expr.Name != "Math" {
+		} else if dot && !known {
 			result += `.`
-		}
-		if expr.Name == "ceil" || expr.Name == "length" {
-			expr.Name = strings.Title(expr.Name)
 		}
 		result += expr.Name
 		if wrap {

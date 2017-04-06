@@ -69,6 +69,13 @@ func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 	}
 }
 
+func (p *DefaultProfiler) ProfileOffline(key, msg string, duration time.Duration) {
+	var subprofiler = new(DefaultProfiler)
+	subprofiler.Msg = key + ": " + msg
+	subprofiler.Duration = duration
+	p.current.Childs = append(p.current.Childs, subprofiler)
+}
+
 // OnResponse injects the little helper into the response, and saves the profile in memory
 func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 	if reflect.TypeOf(event.Controller).Kind() != reflect.Ptr {
@@ -84,7 +91,46 @@ func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 		response.Body = bytes.NewBuffer(bytes.Replace(
 			originalbody,
 			[]byte("</body>"),
-			[]byte("<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'><a href='"+p.Router.URL("_profiler.view", "Profile", p.Context.ID()).String()+"'>"+p.Duration.String()+": "+p.Context.ID()+"</a></div>\n</body>"),
+			[]byte(`
+<script type='text/javascript'>
+var __start = 0;
+
+window.onerror = function(msg, url, line, col, error) {
+	__profileStatic("browser.error", error.stack, (new Date()).getTime() - __start);
+}
+
+function __profileStatic(key, message, duration) {
+	var r = new XMLHttpRequest();
+	r.open("POST", "`+p.Router.URL("_profiler.view", "profile", p.Context.ID()).String()+`");
+	r.setRequestHeader("Content-Type", "application/json");
+	r.send(JSON.stringify({"key": key, "message": message, "duration": duration.toString()}));
+}
+
+document.addEventListener('DOMContentLoaded', function(e){
+	__start = (new Date()).getTime() - e.timeStamp;
+	__profileStatic("browser", "DOMContentLoaded", e.timeStamp);
+});
+
+window.__wol = window.onload;
+window.onload = function(e){
+	if (!!window.__wol) {
+		window.__wol(e);
+	}
+	__profileStatic("browser", "Load", e.timeStamp);
+}
+
+function __profile(key, message) {
+	start = (new Date()).getTime();
+	return function(){
+		__profileStatic(key, message, (new Date()).getTime() - start);
+	}
+}
+
+</script>
+<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'>
+	<a href='`+p.Router.URL("_profiler.view", "profile", p.Context.ID()).String()+`'>`+p.Duration.String()+`: `+p.Context.ID()+`</a>
+</div>
+</body>`),
 			1,
 		))
 		profilestorage[p.Context.ID()] = p

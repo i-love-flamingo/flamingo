@@ -8,7 +8,7 @@ import (
 
 func Register(c *di.Container) {
 	c.Register(func(r *router.Router) {
-		r.Route("/_profiler/view/{Profile}", "_profiler.view")
+		r.Route("/_profiler/view/{profile}", "_profiler.view")
 		r.Handle("_profiler.view", new(ProfileController))
 	}, router.RouterRegister)
 

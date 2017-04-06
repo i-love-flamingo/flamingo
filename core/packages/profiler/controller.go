@@ -5,6 +5,8 @@ import (
 	"flamingo/core/flamingo/web"
 	"html/template"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 type (
@@ -52,11 +54,18 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 	}
 	var body = new(bytes.Buffer)
 
-	t.ExecuteTemplate(body, "tpl", profilestorage[ctx.Param1("Profile")])
+	t.ExecuteTemplate(body, "tpl", profilestorage[ctx.Param1("profile")])
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
 		Status:      http.StatusOK,
 		Body:        body,
 	}
+}
+
+func (dc *ProfileController) Post(ctx web.Context) web.Response {
+	dur, _ := strconv.ParseFloat(ctx.Form1("duration"), 64)
+	profilestorage[ctx.Param1("profile")].ProfileOffline(ctx.Form1("key"), ctx.Form1("message"), time.Duration(dur*1000*1000))
+
+	return &web.JSONResponse{}
 }

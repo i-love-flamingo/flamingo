@@ -217,34 +217,30 @@ func (router *Router) handle(c Controller) http.Handler {
 
 		var response web.Response
 
-		switch c := c.(type) {
-		case GETController:
-			if req.Method == http.MethodGet {
-				response = c.Get(ctx)
+		if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
+			response = cc.Get(ctx)
+		} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
+			response = cc.Post(ctx)
+		} else {
+			switch c := c.(type) {
+			case func(web.Context) web.Response:
+				response = c(ctx)
+
+			case DataController:
+				response = &web.JSONResponse{Data: c.(DataController).Data(ctx)}
+
+			case func(web.Context) interface{}:
+				response = &web.JSONResponse{Data: c(ctx)}
+
+			case http.Handler:
+				c.ServeHTTP(w, req)
+				return
+
+			default:
+				w.WriteHeader(404)
+				w.Write([]byte("404 page not found (no handler)"))
+				return
 			}
-
-		case POSTController:
-			if req.Method == http.MethodPost {
-				response = c.Post(ctx)
-			}
-
-		case func(web.Context) web.Response:
-			response = c(ctx)
-
-		case DataController:
-			response = &web.JSONResponse{Data: c.(DataController).Data(ctx)}
-
-		case func(web.Context) interface{}:
-			response = &web.JSONResponse{Data: c(ctx)}
-
-		case http.Handler:
-			c.ServeHTTP(w, req)
-			return
-
-		default:
-			w.WriteHeader(404)
-			w.Write([]byte("404 page not found (no handler)"))
-			return
 		}
 
 		router.Sessions.Save(req, w, ctx.Session())

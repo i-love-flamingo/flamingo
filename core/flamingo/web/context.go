@@ -10,6 +10,11 @@ import (
 	"flamingo/core/flamingo/event"
 	"flamingo/core/flamingo/profiler"
 
+	"encoding/json"
+	"io/ioutil"
+
+	"net/url"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -78,6 +83,18 @@ func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessio
 	}
 
 	c.Context = context.WithValue(r.Context(), ID, c.id)
+
+	if r.Header.Get("Content-Type") == "application/json" {
+		b, _ := ioutil.ReadAll(r.Body)
+		var data map[string]string
+		json.Unmarshal(b, &data)
+
+		r.PostForm = make(url.Values)
+		for k, v := range data {
+			r.PostForm[k] = []string{v}
+		}
+	}
+
 	return c
 }
 

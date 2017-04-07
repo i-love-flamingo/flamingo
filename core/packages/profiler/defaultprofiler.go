@@ -95,28 +95,11 @@ func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 <script type='text/javascript'>
 var __start = 0;
 
-window.onerror = function(msg, url, line, col, error) {
-	__profileStatic("browser.error", error.stack, Date.now() - __start);
-}
-
 function __profileStatic(key, message, duration) {
 	var r = new XMLHttpRequest();
 	r.open("POST", "`+p.Router.URL("_profiler.view", "profile", p.Context.ID()).String()+`");
 	r.setRequestHeader("Content-Type", "application/json");
 	r.send(JSON.stringify({"key": key, "message": message, "duration": duration.toString()}));
-}
-
-document.addEventListener('DOMContentLoaded', function(e){
-	__start = Date.now() - e.timeStamp;
-	__profileStatic("browser", "DOMContentLoaded", e.timeStamp);
-});
-
-window.__wol = window.onload;
-window.onload = function(e){
-	if (!!window.__wol) {
-		window.__wol(e);
-	}
-	__profileStatic("browser", "Load", e.timeStamp);
 }
 
 function __profile(key, message) {
@@ -125,6 +108,20 @@ function __profile(key, message) {
 		__profileStatic(key, message, Date.now() - start);
 	}
 }
+
+window.addEventListener("error", function (e) {
+    __profileStatic("browser.error", e.error.stack, Date.now() - __start);
+});
+
+window.addEventListener("DOMContentLoaded", function(e){
+	__start = Date.now() - e.timeStamp;
+	__profileStatic("browser", "DOMContentLoaded", e.timeStamp);
+});
+
+window.addEventListener("load", function load(e) {
+    window.removeEventListener("load", load);
+    __profileStatic("browser", "Load", e.timeStamp);
+});
 
 </script>
 <div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'>

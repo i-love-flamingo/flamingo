@@ -96,7 +96,7 @@ func (p *DefaultProfiler) OnResponse(event *router.OnResponseEvent) {
 var __start = 0;
 
 window.onerror = function(msg, url, line, col, error) {
-	__profileStatic("browser.error", error.stack, (new Date()).getTime() - __start);
+	__profileStatic("browser.error", error.stack, Date.now() - __start);
 }
 
 function __profileStatic(key, message, duration) {
@@ -107,7 +107,7 @@ function __profileStatic(key, message, duration) {
 }
 
 document.addEventListener('DOMContentLoaded', function(e){
-	__start = (new Date()).getTime() - e.timeStamp;
+	__start = Date.now() - e.timeStamp;
 	__profileStatic("browser", "DOMContentLoaded", e.timeStamp);
 });
 
@@ -120,9 +120,9 @@ window.onload = function(e){
 }
 
 function __profile(key, message) {
-	start = (new Date()).getTime();
+	start = Date.now();
 	return function(){
-		__profileStatic(key, message, (new Date()).getTime() - start);
+		__profileStatic(key, message, Date.now() - start);
 	}
 }
 

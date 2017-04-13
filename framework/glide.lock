@@ -1,0 +1,78 @@
+hash: 33457b3e6831d4221ce8323b11c217931a18875d6120c683c56a5c73fa905fab
+updated: 2017-03-15T10:49:55.908644604+01:00
+imports:
+- name: github.com/ghodss/yaml
+  version: 04f313413ffd65ce25f2541bfd2b2ceec5c0908c
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/gorilla/securecookie
+  version: 667fe4e3466a040b780561fe9b51a83a3753eefc
+- name: github.com/gorilla/sessions
+  version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/labstack/gommon
+  version: e8995fb26e646187d33cff439b18609cfba23088
+  subpackages:
+  - color
+- name: github.com/mattn/go-colorable
+  version: d898aa9fb31c91f35dd28ca75db377eff023c076
+- name: github.com/mattn/go-isatty
+  version: dda3de49cbfcec471bd7a70e6cc01fcc3ff90109
+- name: github.com/robertkrimen/otto
+  version: aabe79b06556d741409a343b9bbabf653cef2a1c
+  repo: https://github.com/thebod/otto.git
+  subpackages:
+  - ast
+  - dbg
+  - file
+  - parser
+  - token
+- name: golang.org/x/sys
+  version: 075e574b89e4c2d22f2286a7e2b919519c6f3547
+  subpackages:
+  - unix
+- name: gopkg.in/sourcemap.v1
+  version: f5da1d57891040819d7961bfeed49271d78ca0fa
+  subpackages:
+  - base64vlq
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+- name: html/template
+  version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
+  repo: https://github.com/thebod/go-html-template
+- name: text/template
+  version: 483c7b7132cd47e9c37193b897293258f7163c06
+  repo: https://github.com/thebod/go-text-template
+testImports:
+- name: github.com/onsi/ginkgo
+  version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
+  subpackages:
+  - config
+  - ginkgo
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - types
+- name: github.com/onsi/gomega
+  version: a78ae492d53aad5a7a232d0d0462c14c400e3ee7
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types

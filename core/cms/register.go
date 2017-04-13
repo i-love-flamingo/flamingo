@@ -1,8 +1,8 @@
 package cms
 
 import (
-	di "flamingo/core/flamingo/dependencyinjection"
-	"flamingo/core/flamingo/router"
+	di "flamingo/framework/dependencyinjection"
+	"flamingo/framework/router"
 )
 
 // Register adds handles for cms page routes.

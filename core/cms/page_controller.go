@@ -1,8 +1,8 @@
 package cms
 
 import (
-	"flamingo/core/flamingo/web"
-	"flamingo/core/flamingo/web/responder"
+	"flamingo/framework/web"
+	"flamingo/framework/web/responder"
 )
 
 // PageController is a demo cms page view controller

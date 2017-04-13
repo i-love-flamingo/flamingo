@@ -1,8 +1,8 @@
 package template
 
 import (
-	di "flamingo/core/flamingo/dependencyinjection"
-	"flamingo/core/flamingo/web"
+	di "flamingo/framework/dependencyinjection"
+	"flamingo/framework/web"
 	"html/template"
 )
 

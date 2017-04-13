@@ -1,7 +1,7 @@
 package template
 
 import (
-	"flamingo/core/flamingo/web"
+	"flamingo/framework/web"
 	"io"
 )
 

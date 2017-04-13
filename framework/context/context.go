@@ -3,11 +3,11 @@ package context
 
 import (
 	"flamingo/framework/dingo"
-	"fmt"
 )
 
 type (
 	// Context defines a configuration context for multi-site setups
+	// it is initialized by project main package and partly loaded by config files
 	Context struct {
 		Name    string
 		BaseURL string
@@ -17,9 +17,19 @@ type (
 		Modules  []dingo.Module
 		Injector *dingo.Injector `json:"-"`
 
+		// Basti: Why json - ?
+		// Also: what is interface{}? why not string?
+		// Also - Should we better use composite for the stuff that is Unmarschalled from yaml?
 		Routes        []Route                `yaml:"routes"`
 		Configuration map[string]interface{} `yaml:"config" json:"config"`
-		Contexts      map[string]string      `yaml:"contexts"`
+	}
+
+	// RoutingConfig Value struct are representing the informations required by routing
+	RoutingConfig struct {
+		Name     string
+		BaseURL  string
+		Routes   []Route
+		Injector *dingo.Injector
 	}
 
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
@@ -30,12 +40,17 @@ type (
 	}
 )
 
+// This is the RootContext - its expected that this is set from project package
+var RootContext *Context
+
 // New returns Context Pointers with RegisterFuncs.
-func New(name string, modules []dingo.Module, childs ...*Context) *Context {
+
+func New(name string, modules []dingo.Module, baseURl string, childs ...*Context) *Context {
 	ctx := &Context{
 		Name:    name,
 		Modules: modules,
 		Childs:  childs,
+		BaseURL: baseURl,
 	}
 
 	for _, c := range childs {
@@ -47,26 +62,33 @@ func New(name string, modules []dingo.Module, childs ...*Context) *Context {
 
 // GetFlatContexts returns a map of context-relative-name->*Context, which has been flatted to inherit all parent's
 // tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of ctx.
-func (ctx *Context) GetFlatContexts() map[string]*Context {
-	result := make(map[string]*Context)
+func (ctx *Context) GetRoutingConfigs() []*RoutingConfig {
+	var result []*RoutingConfig
 	flat := ctx.Flat()
-	for baseurl, name := range ctx.Contexts {
-		result[name] = flat[ctx.Name+`/`+name]
-		result[name].BaseURL = baseurl
-		result[name].Childs = nil
-		result[name].Contexts = nil
-		result[name].Name = name
-		// ensure that our config is injected before out modules
-		result[name].Injector = dingo.NewInjector()
-		for k, v := range result[name].Configuration {
-			result[name].Injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+
+	for _, context := range flat {
+		if context.BaseURL == "" {
+			continue
 		}
-		result[name].Injector.InitModules(result[name].Modules...)
+		result = append(result, &RoutingConfig{
+			Name:     context.Name,
+			BaseURL:  context.BaseURL,
+			Routes:   context.Routes,
+			Injector: context.GetInitializedInjector(),
+		})
+
 	}
-
-	fmt.Println(result)
-
 	return result
+}
+
+// Returns initialized container - based on the configuration
+func (ctx *Context) GetInitializedInjector() *dingo.Injector {
+	injector := dingo.NewInjector()
+	for k, v := range ctx.Configuration {
+		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+	}
+	injector.InitModules(ctx.Modules...)
+	return injector
 }
 
 // Flat returns a map of name->*Context of contexts, were all values have been inherited (yet overriden) of the parent context tree.

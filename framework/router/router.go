@@ -85,10 +85,10 @@ func NewRouter() *Router {
 	return router
 }
 
-func (router *Router) Init(ctx *configcontext.Context) *Router {
-	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
+func (router *Router) Init(routingConfig *configcontext.RoutingConfig) *Router {
+	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 
-	for _, route := range ctx.Routes {
+	for _, route := range routingConfig.Routes {
 		if route.Args == nil {
 			router.RouterRegistry.routes[route.Controller] = route.Path
 		} else {

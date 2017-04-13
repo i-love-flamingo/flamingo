@@ -30,6 +30,7 @@ import:
   repo: https://github.com/thebod/go-html-template
 - package: text/template
   repo: https://github.com/thebod/go-text-template
+- package: github.com/spf13/cobra
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

@@ -152,8 +152,12 @@ func (router *Router) URL(name string, params ...string) *url.URL {
 
 // url builds a URL for a Router.
 func (router *Router) url(name string, params ...string) *url.URL {
+	// @todo: Refactor error handling. For now we just set the fragment,
+	// so that undefined routes like `cart/checkout` won't break the app.
 	if router.router.Get(name) == nil {
-		panic("route " + name + " not found")
+		return &url.URL{
+			Fragment: name,
+		}
 	}
 
 	resultURL, err := router.router.Get(name).URL(params...)

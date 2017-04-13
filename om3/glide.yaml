@@ -1,0 +1,5 @@
+package: flamingo/om3
+ignore:
+- flamingo/framework/dependencyinjection
+- flamingo/framework/router
+- flamingo/framework/web

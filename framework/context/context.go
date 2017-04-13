@@ -2,7 +2,7 @@
 package context
 
 import (
-	di "flamingo/framework/dependencyinjection"
+	"flamingo/core/dingo"
 	"fmt"
 )
 
@@ -12,10 +12,11 @@ type (
 		Name    string
 		BaseURL string
 
-		Parent           *Context `json:"-"`
-		Childs           []*Context
-		RegisterFuncs    []di.RegisterFunc
-		ServiceContainer *di.Container `json:"-"`
+		Parent  *Context `json:"-"`
+		Childs  []*Context
+		Modules []dingo.Module
+		//ServiceContainer *di.Container `json:"-"`
+		Injector *dingo.Injector `json:"-"`
 
 		Routes        []Route                `yaml:"routes"`
 		Configuration map[string]interface{} `yaml:"config" json:"config"`
@@ -31,11 +32,11 @@ type (
 )
 
 // New returns Context Pointers with RegisterFuncs.
-func New(name string, rfs []di.RegisterFunc, childs ...*Context) *Context {
+func New(name string, modules []dingo.Module, childs ...*Context) *Context {
 	ctx := &Context{
-		Name:          name,
-		RegisterFuncs: rfs,
-		Childs:        childs,
+		Name:    name,
+		Modules: modules,
+		Childs:  childs,
 	}
 
 	for _, c := range childs {
@@ -56,12 +57,10 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Childs = nil
 		result[name].Contexts = nil
 		result[name].Name = name
-		result[name].ServiceContainer = di.NewContainer()
+		result[name].Injector = dingo.NewInjector(result[name].Modules...)
 		for k, v := range result[name].Configuration {
-			result[name].ServiceContainer.SetParameter(k, v)
-		}
-		for _, f := range result[name].RegisterFuncs {
-			f(result[name].ServiceContainer)
+			//result[name].ServiceContainer.SetParameter(k, v)
+			result[name].Injector.Bind(v).AnnotatedWith("config:" + k).To(v)
 		}
 	}
 
@@ -107,7 +106,8 @@ func MergeFrom(baseContext, incomingContext Context) *Context {
 		}
 	}
 
-	baseContext.RegisterFuncs = append(incomingContext.RegisterFuncs, baseContext.RegisterFuncs...)
+	//baseContext.RegisterFuncs = append(incomingContext.RegisterFuncs, baseContext.RegisterFuncs...)
+	baseContext.Modules = append(incomingContext.Modules, baseContext.Modules...)
 
 	return &baseContext
 }

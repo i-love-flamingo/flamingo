@@ -6,7 +6,7 @@ import (
 )
 
 type ErrorAware struct {
-	DebugMode    bool `inject:"param:debug.mode"`
+	DebugMode    *bool `inject:"param:debug.mode"`
 	*RenderAware `inject:""`
 }
 
@@ -21,7 +21,7 @@ func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *we
 	data := ErrorViewData{}
 	data.Error = error
 
-	if !r.DebugMode {
+	if !*r.DebugMode {
 		// Drop Message, should not be shown in public/prod env
 		data.Error.Message = ""
 	}

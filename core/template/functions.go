@@ -1,9 +1,9 @@
 package template
 
 import (
-	di "flamingo/framework/dependencyinjection"
-	"flamingo/framework/web"
+	"flamingo/core/flamingo/web"
 	"html/template"
+	"log"
 )
 
 type (
@@ -24,8 +24,9 @@ type (
 
 	// FunctionRegistry knows about the context-aware template functions
 	FunctionRegistry struct {
-		ServiceContainer *di.Container `inject:""`
-		ContextAware     map[string]ContextAware
+		TemplateFunctions        func() []Function        `inject:""`
+		ContextTemplateFunctions func() []ContextFunction `inject:""`
+		ContextAware             map[string]ContextAware
 	}
 )
 
@@ -34,11 +35,15 @@ func (tfr *FunctionRegistry) Populate() template.FuncMap {
 	tfr.ContextAware = make(map[string]ContextAware)
 	funcMap := make(template.FuncMap)
 
-	for _, tplFunc := range tfr.ServiceContainer.GetTagged("template.func") {
-		if tplFunc, ok := tplFunc.Value.(Function); ok {
+	for _, tplFunc := range tfr.TemplateFunctions() {
+		if tplFunc != nil {
+			log.Println(tplFunc.Name())
 			funcMap[tplFunc.Name()] = tplFunc.Func()
 		}
-		if tplFunc, ok := tplFunc.Value.(ContextFunction); ok {
+	}
+	for _, tplFunc := range tfr.ContextTemplateFunctions() {
+		if tplFunc != nil {
+			log.Println(tplFunc.Name())
 			funcMap[tplFunc.Name()] = tplFunc.Func
 			tfr.ContextAware[tplFunc.Name()] = tplFunc.Func
 		}

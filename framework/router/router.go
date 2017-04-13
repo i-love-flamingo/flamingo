@@ -3,9 +3,10 @@ package router
 import (
 	"context"
 	"encoding/json"
-	configcontext "flamingo/framework/context"
-	di "flamingo/framework/dependencyinjection"
-	"flamingo/framework/web"
+	configcontext "flamingo/core/flamingo/context"
+	di "flamingo/core/flamingo/dependencyinjection"
+	"flamingo/core/flamingo/profiler"
+	"flamingo/core/flamingo/web"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,6 +15,10 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
+
+	"flamingo/core/flamingo/event"
+
+	"flamingo/core/dingo"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -53,6 +58,8 @@ type (
 	// DataHandler behaves the same as DataController, but just for direct callbacks
 	DataHandler func(web.Context) interface{}
 
+	SessionStore sessions.Store
+
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
@@ -63,10 +70,13 @@ type (
 		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
-		Logger           *log.Logger        `inject:""` // Logger is a default logger for now
-		Sessions         sessions.Store     `inject:""` // Sessions storage, which are used to retrieve user-context session
-		ServiceContainer *di.Container      `inject:""` // ServiceContainer holder
-		ContextFactory   web.ContextFactory `inject:""` // ContextFactory for new contexts
+		Logger             *log.Logger              `inject:""` // Logger is a default logger for now
+		Sessions           SessionStore             //`inject:""` // Sessions storage, which are used to retrieve user-context session
+		ServiceContainer   *di.Container            `inject:""` // ServiceContainer holder
+		ContextFactory     web.ContextFactory       `inject:""` // ContextFactory for new contexts
+		ProfilerFactory    func() profiler.Profiler `inject:""`
+		EventRouterFactory func() event.Router      `inject:""`
+		Injector           *dingo.Injector          `inject:""`
 	}
 )
 
@@ -78,7 +88,7 @@ func NewCookieStore(secret []byte) *sessions.CookieStore {
 // CreateRouter factory for Routers.
 // Creates the new flamingo router, set's up handlers and routes and resolved the DI.
 // BUG(bastian.ike) hardroutesreverse style is borked
-func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *Router {
+func CreateRouter(ctx *configcontext.Context) *Router {
 	router := &Router{
 		router:            mux.NewRouter(),
 		routes:            make(map[string]string),
@@ -89,8 +99,36 @@ func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *R
 
 	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
-	serviceContainer.Register(router)
-	serviceContainer.Resolve(router)
+	//	serviceContainer.Register(router)
+	//	serviceContainer.Resolve(router)
+
+	for _, route := range ctx.Routes {
+		if route.Args == nil {
+			router.routes[route.Controller] = route.Path
+		} else {
+			router.hardroutes[route.Path] = route
+			p := make([]string, len(route.Args)*2)
+			for k, v := range route.Args {
+				p = append(p, k, v)
+			}
+			router.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
+		}
+	}
+
+	for name, handler := range router.handler {
+		if route, ok := router.routes[name]; ok {
+			router.router.Handle(route, router.handle(handler)).Name(name)
+		}
+	}
+
+	return router
+}
+
+func (router *Router) Init(ctx *configcontext.Context) *Router {
+	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
+
+	//	serviceContainer.Register(router)
+	//	serviceContainer.Resolve(router)
 
 	for _, route := range ctx.Routes {
 		if route.Args == nil {
@@ -117,19 +155,13 @@ func CreateRouter(ctx *configcontext.Context, serviceContainer *di.Container) *R
 // Handle registers the controller for a named route
 func (router *Router) Handle(name string, controller Controller) {
 	router.handler[name] = controller
-	router.ServiceContainer.Resolve(controller)
+	router.Injector.RequestInjection(controller)
+	//router.ServiceContainer.Resolve(controller)
 }
 
 // Router registers the path for a named route
 func (router *Router) Route(path, name string) {
 	router.routes[name] = path
-}
-
-// CompilerPass to get router register functions
-func (router *Router) CompilerPass(c *di.Container) {
-	for _, registerFunc := range c.GetTagged(RouterRegister) {
-		registerFunc.Value.(func(r *Router))(router)
-	}
 }
 
 // URL helps resolving URL's by it's name.
@@ -152,12 +184,8 @@ func (router *Router) URL(name string, params ...string) *url.URL {
 
 // url builds a URL for a Router.
 func (router *Router) url(name string, params ...string) *url.URL {
-	// @todo: Refactor error handling. For now we just set the fragment,
-	// so that undefined routes like `cart/checkout` won't break the app.
 	if router.router.Get(name) == nil {
-		return &url.URL{
-			Fragment: name,
-		}
+		panic("route " + name + " not found")
 	}
 
 	resultURL, err := router.router.Get(name).URL(params...)
@@ -176,10 +204,11 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	// get the AKL session
 	// TODO DI
+	router.Sessions = NewCookieStore([]byte("something-very-secret"))
 	s, _ := router.Sessions.Get(req, "akl")
 
 	// retrieve a new context
-	var ctx = router.ContextFactory(w, req, s)
+	var ctx = router.ContextFactory(router.ProfilerFactory(), router.EventRouterFactory(), w, req, s)
 
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))

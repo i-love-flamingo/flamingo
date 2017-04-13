@@ -48,7 +48,7 @@ type (
 	}
 
 	// ContextFactory creates a new context
-	ContextFactory func(rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context
+	ContextFactory func(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context
 
 	ctx struct {
 		context.Context
@@ -70,12 +70,14 @@ const (
 )
 
 // ContextFromRequest returns a ctx enriched by Request Data
-func ContextFromRequest(rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
+func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
 	c := &ctx{
-		request: r,
-		id:      strconv.Itoa(rand.Int()),
-		writer:  rw,
-		session: session,
+		request:     r,
+		id:          strconv.Itoa(rand.Int()),
+		writer:      rw,
+		session:     session,
+		Profiler:    profiler,
+		Eventrouter: eventrouter,
 	}
 
 	if pusher, ok := rw.(http.Pusher); ok {

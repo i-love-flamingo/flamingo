@@ -2,11 +2,11 @@ package application
 
 import (
 	"os"
-	"flamingo/core/flamingo/router"
+	"flamingo/framework/router"
 	"net/http"
 	"io"
-	"flamingo/core/packages/prefix_router"
-	"flamingo/core/flamingo/context"
+	"flamingo/core/prefix_router"
+	"flamingo/framework/context"
 	"log"
 )
 

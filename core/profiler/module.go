@@ -2,9 +2,9 @@ package profiler
 
 import (
 	"flamingo/core/dingo"
-	"flamingo/core/flamingo/event"
-	"flamingo/core/flamingo/profiler"
-	"flamingo/core/flamingo/router"
+	"flamingo/framework/event"
+	"flamingo/framework/profiler"
+	"flamingo/framework/router"
 )
 
 type (

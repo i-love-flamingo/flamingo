@@ -2,11 +2,11 @@ package pug_template
 
 import (
 	"flamingo/core/dingo"
-	di "flamingo/core/flamingo/dependencyinjection"
-	"flamingo/core/flamingo/router"
-	"flamingo/core/packages/pug_template/pugast"
-	"flamingo/core/packages/pug_template/template_functions"
+	"flamingo/core/pug_template/pugast"
+	"flamingo/core/pug_template/template_functions"
 	"flamingo/core/template"
+	di "flamingo/framework/dependencyinjection"
+	"flamingo/framework/router"
 	"net/http"
 )
 

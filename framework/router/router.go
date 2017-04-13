@@ -3,10 +3,12 @@ package router
 import (
 	"context"
 	"encoding/json"
-	configcontext "flamingo/core/flamingo/context"
-	di "flamingo/core/flamingo/dependencyinjection"
-	"flamingo/core/flamingo/profiler"
-	"flamingo/core/flamingo/web"
+	"flamingo/core/dingo"
+	configcontext "flamingo/framework/context"
+	di "flamingo/framework/dependencyinjection"
+	"flamingo/framework/event"
+	"flamingo/framework/profiler"
+	"flamingo/framework/web"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,10 +17,6 @@ import (
 	"path"
 	"runtime/debug"
 	"strings"
-
-	"flamingo/core/flamingo/event"
-
-	"flamingo/core/dingo"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -155,7 +153,7 @@ func (router *Router) Init(ctx *configcontext.Context) *Router {
 // Handle registers the controller for a named route
 func (router *Router) Handle(name string, controller Controller) {
 	router.handler[name] = controller
-	router.Injector.RequestInjection(controller)
+	//router.Injector.RequestInjection(controller)
 	//router.ServiceContainer.Resolve(controller)
 }
 

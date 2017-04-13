@@ -8,15 +8,15 @@ Package flamingo provides the most necessary basics, such as
 Additionally it provides a router at /_flamingo/json/{handler} for convenient access to DataControllers
 Additionally it registers two template functions, `get(...)` and `url(...)`
 */
-package flamingo
+package framework
 
 import (
 	"flamingo/core/dingo"
-	"flamingo/core/flamingo/controller"
-	"flamingo/core/flamingo/event"
-	"flamingo/core/flamingo/profiler"
-	"flamingo/core/flamingo/router"
-	"flamingo/core/flamingo/web"
+	"flamingo/framework/controller"
+	"flamingo/framework/event"
+	"flamingo/framework/profiler"
+	"flamingo/framework/router"
+	"flamingo/framework/web"
 )
 
 type (

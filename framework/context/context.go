@@ -66,12 +66,12 @@ func (ctx *Context) GetRoutingConfigs() []*RoutingConfig {
 	var result []*RoutingConfig
 	flat := ctx.Flat()
 
-	for _, context := range flat {
+	for relativeContextKey, context := range flat {
 		if context.BaseURL == "" {
 			continue
 		}
 		result = append(result, &RoutingConfig{
-			Name:     context.Name,
+			Name:     relativeContextKey,
 			BaseURL:  context.BaseURL,
 			Routes:   context.Routes,
 			Injector: context.GetInitializedInjector(),

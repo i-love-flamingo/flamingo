@@ -3,7 +3,6 @@ package template
 import (
 	"flamingo/framework/web"
 	"html/template"
-	"log"
 )
 
 type (
@@ -24,8 +23,8 @@ type (
 
 	// FunctionRegistry knows about the context-aware template functions
 	FunctionRegistry struct {
-		TemplateFunctions        func() []Function        `inject:""`
-		ContextTemplateFunctions func() []ContextFunction `inject:""`
+		TemplateFunctions        []Function        `inject:""`
+		ContextTemplateFunctions []ContextFunction `inject:""`
 		ContextAware             map[string]ContextAware
 	}
 )
@@ -35,15 +34,13 @@ func (tfr *FunctionRegistry) Populate() template.FuncMap {
 	tfr.ContextAware = make(map[string]ContextAware)
 	funcMap := make(template.FuncMap)
 
-	for _, tplFunc := range tfr.TemplateFunctions() {
+	for _, tplFunc := range tfr.TemplateFunctions {
 		if tplFunc != nil {
-			log.Println(tplFunc.Name())
 			funcMap[tplFunc.Name()] = tplFunc.Func()
 		}
 	}
-	for _, tplFunc := range tfr.ContextTemplateFunctions() {
+	for _, tplFunc := range tfr.ContextTemplateFunctions {
 		if tplFunc != nil {
-			log.Println(tplFunc.Name())
 			funcMap[tplFunc.Name()] = tplFunc.Func
 			tfr.ContextAware[tplFunc.Name()] = tplFunc.Func
 		}

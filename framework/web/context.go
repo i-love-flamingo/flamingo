@@ -1,19 +1,15 @@
 package web
 
 import (
-	"math/rand"
-	"net/http"
-	"strconv"
-
 	"context"
-
+	"encoding/json"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
-
-	"encoding/json"
 	"io/ioutil"
-
+	"math/rand"
+	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -27,6 +23,7 @@ type (
 	Context interface {
 		context.Context
 		profiler.Profiler
+		Profiler() profiler.Profiler
 		EventRouter() event.Router
 
 		LoadVars(r *http.Request)
@@ -52,8 +49,8 @@ type (
 
 	ctx struct {
 		context.Context
-		profiler.Profiler `inject:"private"`
-		Eventrouter       event.Router `inject:"private"`
+		profiler    profiler.Profiler
+		Eventrouter event.Router
 
 		vars    map[string]string
 		request *http.Request
@@ -76,7 +73,7 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 		id:          strconv.Itoa(rand.Int()),
 		writer:      rw,
 		session:     session,
-		Profiler:    profiler,
+		profiler:    profiler,
 		Eventrouter: eventrouter,
 	}
 
@@ -108,6 +105,16 @@ func (c *ctx) LoadVars(r *http.Request) {
 // EventRouter returns the registered event router
 func (c *ctx) EventRouter() event.Router {
 	return c.Eventrouter
+}
+
+// Profiler returns the registered event router
+func (c *ctx) Profiler() profiler.Profiler {
+	return c.profiler
+}
+
+// Profile profiles
+func (c *ctx) Profile(a, b string) profiler.ProfileFinishFunc {
+	return c.profiler.Profile(a, b)
 }
 
 // Session returns the ctx Session

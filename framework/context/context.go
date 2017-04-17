@@ -60,7 +60,7 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Injector = dingo.NewInjector(result[name].Modules...)
 		for k, v := range result[name].Configuration {
 			//result[name].ServiceContainer.SetParameter(k, v)
-			result[name].Injector.Bind(v).AnnotatedWith("config:" + k).To(v)
+			result[name].Injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 		}
 	}
 

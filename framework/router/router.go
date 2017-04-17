@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flamingo/core/dingo"
 	configcontext "flamingo/framework/context"
-	di "flamingo/framework/dependencyinjection"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/web"
@@ -20,10 +19,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
-)
-
-const (
-	RouterRegister = "router.register"
 )
 
 type (
@@ -62,19 +57,18 @@ type (
 	// This includes DI resolving etc
 	Router struct {
 		router            *mux.Router
-		routes            map[string]string
-		handler           map[string]Controller
 		hardroutes        map[string]configcontext.Route
 		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
-		Logger             *log.Logger              `inject:""` // Logger is a default logger for now
-		Sessions           SessionStore             //`inject:""` // Sessions storage, which are used to retrieve user-context session
-		ServiceContainer   *di.Container            `inject:""` // ServiceContainer holder
-		ContextFactory     web.ContextFactory       `inject:""` // ContextFactory for new contexts
-		ProfilerFactory    func() profiler.Profiler `inject:""`
-		EventRouterFactory func() event.Router      `inject:""`
-		Injector           *dingo.Injector          `inject:""`
+		Logger              *log.Logger              `inject:""` // Logger is a default logger for now
+		Sessions            SessionStore             `inject:""` // Sessions storage, which are used to retrieve user-context session
+		SessionName         string                   `inject:"config:session.name"`
+		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
+		ProfilerProvider    func() profiler.Profiler `inject:""`
+		EventRouterProvider func() event.Router      `inject:""`
+		Injector            *dingo.Injector          `inject:""`
+		RouterRegistry      *RouterRegistry          `inject:""`
 	}
 )
 
@@ -83,40 +77,11 @@ func NewCookieStore(secret []byte) *sessions.CookieStore {
 	return sessions.NewCookieStore(secret)
 }
 
-// CreateRouter factory for Routers.
-// Creates the new flamingo router, set's up handlers and routes and resolved the DI.
-// BUG(bastian.ike) hardroutesreverse style is borked
-func CreateRouter(ctx *configcontext.Context) *Router {
+func NewRouter() *Router {
 	router := &Router{
 		router:            mux.NewRouter(),
-		routes:            make(map[string]string),
 		hardroutes:        make(map[string]configcontext.Route),
 		hardroutesreverse: make(map[string]configcontext.Route),
-		handler:           make(map[string]Controller),
-	}
-
-	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
-
-	//	serviceContainer.Register(router)
-	//	serviceContainer.Resolve(router)
-
-	for _, route := range ctx.Routes {
-		if route.Args == nil {
-			router.routes[route.Controller] = route.Path
-		} else {
-			router.hardroutes[route.Path] = route
-			p := make([]string, len(route.Args)*2)
-			for k, v := range route.Args {
-				p = append(p, k, v)
-			}
-			router.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
-		}
-	}
-
-	for name, handler := range router.handler {
-		if route, ok := router.routes[name]; ok {
-			router.router.Handle(route, router.handle(handler)).Name(name)
-		}
 	}
 
 	return router
@@ -125,12 +90,9 @@ func CreateRouter(ctx *configcontext.Context) *Router {
 func (router *Router) Init(ctx *configcontext.Context) *Router {
 	router.base, _ = url.Parse("scheme://" + ctx.BaseURL)
 
-	//	serviceContainer.Register(router)
-	//	serviceContainer.Resolve(router)
-
 	for _, route := range ctx.Routes {
 		if route.Args == nil {
-			router.routes[route.Controller] = route.Path
+			router.RouterRegistry.routes[route.Controller] = route.Path
 		} else {
 			router.hardroutes[route.Path] = route
 			p := make([]string, len(route.Args)*2)
@@ -141,25 +103,13 @@ func (router *Router) Init(ctx *configcontext.Context) *Router {
 		}
 	}
 
-	for name, handler := range router.handler {
-		if route, ok := router.routes[name]; ok {
+	for name, handler := range router.RouterRegistry.handler {
+		if route, ok := router.RouterRegistry.routes[name]; ok {
 			router.router.Handle(route, router.handle(handler)).Name(name)
 		}
 	}
 
 	return router
-}
-
-// Handle registers the controller for a named route
-func (router *Router) Handle(name string, controller Controller) {
-	router.handler[name] = controller
-	//router.Injector.RequestInjection(controller)
-	//router.ServiceContainer.Resolve(controller)
-}
-
-// Router registers the path for a named route
-func (router *Router) Route(path, name string) {
-	router.routes[name] = path
 }
 
 // URL helps resolving URL's by it's name.
@@ -200,21 +150,20 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// shadow the response writer
 	w = &VerboseResponseWriter{ResponseWriter: w}
 
-	// get the AKL session
-	// TODO DI
-	router.Sessions = NewCookieStore([]byte("something-very-secret"))
-	s, _ := router.Sessions.Get(req, "akl")
+	// get the session
+	log.Println("Session", router.SessionName)
+	s, _ := router.Sessions.Get(req, router.SessionName)
 
 	// retrieve a new context
-	var ctx = router.ContextFactory(router.ProfilerFactory(), router.EventRouterFactory(), w, req, s)
+	var ctx = router.ContextFactory(router.ProfilerProvider(), router.EventRouterProvider(), w, req, s)
 
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
 
 	// dispatch OnRequest event, the request might be changed
-	var event = &OnRequestEvent{w, req}
-	ctx.EventRouter().Dispatch(REQUEST, event)
-	req = event.Request
+	var e = &OnRequestEvent{w, req}
+	ctx.EventRouter().Dispatch(e)
+	req = e.Request
 
 	defer func() {
 		var err interface{}
@@ -224,7 +173,7 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			w.Write(debug.Stack())
 		}
 		// fire finish event
-		ctx.EventRouter().Dispatch(FINISH, &OnFinishEvent{w, req, err})
+		ctx.EventRouter().Dispatch(&OnFinishEvent{w, req, err})
 	}()
 
 	if route, ok := router.hardroutes[req.URL.Path]; ok {
@@ -249,8 +198,10 @@ func (router *Router) handle(c Controller) http.Handler {
 		var response web.Response
 
 		if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
+			cc = router.Injector.GetInstance(cc).(GETController)
 			response = cc.Get(ctx)
 		} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
+			cc = router.Injector.GetInstance(cc).(POSTController)
 			response = cc.Post(ctx)
 		} else {
 			switch c := c.(type) {
@@ -277,7 +228,7 @@ func (router *Router) handle(c Controller) http.Handler {
 		router.Sessions.Save(req, w, ctx.Session())
 
 		// fire response event
-		ctx.EventRouter().Dispatch(RESPONSE, &OnResponseEvent{c, response})
+		ctx.EventRouter().Dispatch(&OnResponseEvent{c, response, req})
 
 		response.Apply(w)
 	})
@@ -287,7 +238,7 @@ func (router *Router) handle(c Controller) http.Handler {
 func (router *Router) Get(handler string, ctx web.Context) interface{} {
 	defer ctx.Profile("get", handler)()
 
-	if c, ok := router.handler[handler]; ok {
+	if c, ok := router.RouterRegistry.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
 			return c.Data(ctx)
 		}

@@ -17,7 +17,7 @@ type (
 const profileTemplate = `<!doctype html>
 <html lang="en">
 <head>
-	<title>Profile {{.Context.ID}}</title>
+	<title>Profile</title>
 	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 	<style>
 	body {
@@ -174,7 +174,7 @@ const profileTemplate = `<!doctype html>
 <body>
 <div class="profiler">
 	<header class="profiler-header">
-		<h1>Profile {{.Context.ID}}</h1>
+		<h1>Profile</h1>
 		<ul class="profiler-summary">
 			<li class="duration-total" data-duration="{{printf "%d" .Duration }}">Time: {{.Duration}}</li>
 			<li>Start: {{.Start}}</li>

@@ -3,9 +3,8 @@ package pugast
 import (
 	"bytes"
 	"encoding/json"
-	di "flamingo/framework/dependencyinjection"
-	"flamingo/framework/web"
 	coretemplate "flamingo/core/template"
+	"flamingo/framework/web"
 	"fmt"
 	"html/template"
 	"io"
@@ -21,14 +20,15 @@ import (
 
 // PugTemplateEngine is the one and only javascript template engine for go ;)
 type PugTemplateEngine struct {
-	basedir           string
-	Assetrewrites     map[string]string
-	templates         map[string]*template.Template
-	templatesLock     sync.Mutex
-	Webpackserver     bool
-	Ast               *PugAst
-	debug             bool
-	TemplateFunctions *coretemplate.FunctionRegistry `inject:""`
+	basedir                   string
+	Assetrewrites             map[string]string
+	templates                 map[string]*template.Template
+	templatesLock             sync.Mutex
+	Webpackserver             bool
+	Ast                       *PugAst
+	debug                     bool
+	TemplateFunctions         *coretemplate.FunctionRegistry
+	TemplateFunctionsProvider func() *coretemplate.FunctionRegistry `inject:""`
 }
 
 // NewPugTemplateEngine creates PugTemplateEngine struct
@@ -39,11 +39,6 @@ func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
 	}
 
 	return pte
-}
-
-// CompilerPass is called when the DI finished
-func (t *PugTemplateEngine) CompilerPass(c *di.Container) {
-	t.loadTemplates()
 }
 
 // loadTemplate gathers configuration and templates for the Engine
@@ -59,7 +54,10 @@ func (t *PugTemplateEngine) loadTemplates() {
 	json.Unmarshal(manifest, &t.Assetrewrites)
 
 	t.Ast = NewPugAst(path.Join(t.basedir, "templates"))
+
+	t.TemplateFunctions = t.TemplateFunctionsProvider()
 	t.Ast.FuncMap = t.TemplateFunctions.Populate()
+
 	t.templates, err = compileDir(t.Ast, path.Join(t.basedir, "templates"), "")
 
 	if err != nil {

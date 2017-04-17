@@ -76,10 +76,18 @@ func (b *Binding) In(scope Scope) *Binding {
 	return b
 }
 
+func (b *Binding) AsEagerSingleton() *Binding {
+	b.In(Singleton)
+	b.eager = true
+	return b
+}
+
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())
 	for i := 0; i < p.fnc.Type().NumIn(); i++ {
 		in[i] = reflect.ValueOf(injector.GetInstance(p.fnc.Type().In(i)))
 	}
-	return p.fnc.Call(in)[0]
+	res := p.fnc.Call(in)[0]
+	injector.RequestInjection(res)
+	return res
 }

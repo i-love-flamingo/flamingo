@@ -7,21 +7,27 @@ import (
 	"log"
 	"time"
 
+	"flamingo/framework/event"
+
 	"github.com/labstack/gommon/color"
 )
 
-type contextKey string
+type (
+	contextKey string
+
+	// Logger logs requests to stdout
+	Logger struct{}
+)
 
 const contextTime contextKey = "time"
 
-// Logger logs requests to stdout
-type Logger struct{}
+func (r *Logger) Notify(e event.Event) {
+	switch e := e.(type) {
+	case *router.OnRequestEvent:
+		r.OnRequest(e)
 
-// Events returns a list of subscribed events
-func (r *Logger) Events() []interface{} {
-	return []interface{}{
-		router.REQUEST,
-		router.FINISH,
+	case *router.OnFinishEvent:
+		r.OnFinish(e)
 	}
 }
 

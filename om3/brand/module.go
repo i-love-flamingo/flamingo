@@ -7,10 +7,10 @@ import (
 )
 
 type Module struct {
-	Router *router.Router `inject:""`
+	RouterRegistry *router.RouterRegistry `inject:""`
 }
 
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.Router.Handle("brand.view", new(controller.ViewController))
-	module.Router.Route("/brand/{uid}", "brand.view")
+	module.RouterRegistry.Handle("brand.view", new(controller.ViewController))
+	module.RouterRegistry.Route("/brand/{uid}", "brand.view")
 }

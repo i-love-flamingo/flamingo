@@ -10,21 +10,15 @@ import (
 type (
 	// Module registers our profiler
 	Module struct {
-		Router *router.Router `inject:""`
+		RouterRegistry *router.RouterRegistry `inject:""`
 	}
 )
 
 func (m *Module) Configure(injector *dingo.Injector) {
-	m.Router.Route("/_profiler/view/{profile}", "_profiler.view")
-	m.Router.Handle("_profiler.view", new(ProfileController))
+	m.RouterRegistry.Route("/_profiler/view/{profile}", "_profiler.view")
+	m.RouterRegistry.Handle("_profiler.view", new(ProfileController))
 
-	injector.Bind(new(DefaultProfiler)).In(new(dingo.RequestScope))
+	injector.Override((*profiler.Profiler)(nil)).To(DefaultProfiler{})
 
-	// Use a profiler to inject scope-bound DefaultProfiler
-	injector.Bind(new(profiler.Profiler)).ToProvider(ProfilerProvider)
-	injector.BindMulti(new(event.Subscriber)).ToProvider(ProfilerProvider)
-}
-
-func ProfilerProvider(profiler *DefaultProfiler) *DefaultProfiler {
-	return profiler
+	injector.BindMulti((*event.Subscriber)(nil)).To(EventSubscriber{})
 }

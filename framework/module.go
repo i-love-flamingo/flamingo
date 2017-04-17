@@ -12,38 +12,37 @@ package framework
 
 import (
 	"flamingo/core/dingo"
+	"flamingo/core/template"
 	"flamingo/framework/controller"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/router"
+	"flamingo/framework/template_functions"
 	"flamingo/framework/web"
 )
 
 type (
 	Module struct {
-		Router *router.Router `inject:""`
+		RouterRegistry *router.RouterRegistry `inject:""`
 	}
 
 	InitModule struct{}
 )
 
 func (initmodule *InitModule) Configure(injector *dingo.Injector) {
-	injector.Bind((*event.Router)(nil)).ToProvider(func() event.Router { return new(event.DefaultRouter) })
-	injector.Bind((*profiler.Profiler)(nil)).ToProvider(func() profiler.Profiler { return new(profiler.NullProfiler) })
+	injector.Bind((*event.Router)(nil)).To(event.DefaultRouter{})
+	injector.Bind((*profiler.Profiler)(nil)).To(profiler.NullProfiler{})
 
 	injector.Bind((*web.ContextFactory)(nil)).ToInstance(web.ContextFromRequest)
 
-	injector.Bind(new(router.Router)).In(dingo.Singleton).ToProvider(router.CreateRouter)
+	injector.Bind(router.Router{}).In(dingo.Singleton).ToProvider(router.NewRouter)
+	injector.Bind(router.RouterRegistry{}).In(dingo.Singleton).ToProvider(router.NewRouterRegistry)
+
+	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
 }
 
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.Router.Route("/_flamingo/json/{Handler}", "_flamingo.json")
-	module.Router.Handle("_flamingo.json", new(controller.DataController))
-
-	//c.Register(web.ContextFactory(web.ContextFromRequest))
-
-	/*
-		c.Register(new(template_functions.GetFunc), "template.func")
-		c.Register(new(template_functions.URLFunc), "template.func")
-	*/
+	module.RouterRegistry.Route("/_flamingo/json/{Handler}", "_flamingo.json")
+	module.RouterRegistry.Handle("_flamingo.json", new(controller.DataController))
 }

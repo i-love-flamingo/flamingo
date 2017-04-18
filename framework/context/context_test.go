@@ -64,15 +64,17 @@ var _ = g.Describe("Context", func() {
 			"nb22": "not-main/notmain2/notmain2-2",
 		}
 
-		flat := root.GetFlatContexts()
+		/*
+			flat := root.GetFlatContexts()
 
-		g.It("Should render correct Contexts", func() {
-			Expect(flat).To(HaveKey("main/main1"))
-			Expect(flat).To(HaveKey("main/main2"))
-			Expect(flat).To(HaveKey("not-main/notmain1"))
-			Expect(flat).To(HaveKey("not-main/notmain2/notmain2-1"))
-			Expect(flat).To(HaveKey("not-main/notmain2/notmain2-2"))
-		})
+			g.It("Should render correct Contexts", func() {
+				Expect(flat).To(HaveKey("main/main1"))
+				Expect(flat).To(HaveKey("main/main2"))
+				Expect(flat).To(HaveKey("not-main/notmain1"))
+				Expect(flat).To(HaveKey("not-main/notmain2/notmain2-1"))
+				Expect(flat).To(HaveKey("not-main/notmain2/notmain2-2"))
+			})
+		*/
 
 		//g.It("Should have correct DI", func() {
 		//	tester := new(TestDependecyChecker)

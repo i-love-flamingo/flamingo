@@ -59,7 +59,6 @@ const profileTemplate = `<!doctype html>
 	}
 
 	.profiler-entry .fnc {
-		display: block;
 		color: rgab(0, 0, 0, 0.5);
 		margin: 0 0 5px;
 	}
@@ -86,6 +85,14 @@ const profileTemplate = `<!doctype html>
 		width: 100px;
 		border: 1px solid #ccc;
 		margin: 5px 15px;
+		clear: both;
+	}
+
+	.profiler-entry .duration-relative .offset {
+		display: block;
+		height: 12px;
+		width: 0;
+		float: left;
 	}
 
 	.profiler-entry .duration-relative .inner {
@@ -93,11 +100,13 @@ const profileTemplate = `<!doctype html>
 		display: block;
 		height: 12px;
 		width: 0;
+		float: left;
 	}
 
 	.profiler-entry .msg {
 		margin: 0;
 		font-size: 16px;
+		display: inline;
 	}
 
 	.profiler-entry .fnc {
@@ -176,7 +185,7 @@ const profileTemplate = `<!doctype html>
 	<header class="profiler-header">
 		<h1>Profile</h1>
 		<ul class="profiler-summary">
-			<li class="duration-total" data-duration="{{printf "%d" .Duration }}">Time: {{.Duration}}</li>
+			<li class="duration-total" data-duration="{{printf "%d" .Duration }}" data-start="{{printf "%d" .Start.UnixNano }}">Time: {{.Duration}}</li>
 			<li>Start: {{.Start}}</li>
 		</ul>
 	</header>
@@ -196,6 +205,7 @@ const profileTemplate = `<!doctype html>
 	});
 
 	var totalDuration = document.querySelector('.duration-total').dataset.duration;
+	var totalStart = document.querySelector('.duration-total').dataset.start;
 
 	Array.from(document.querySelectorAll('.duration-relative')).forEach(addRelativeDuration);
 	function addRelativeDuration(element) {
@@ -203,6 +213,9 @@ const profileTemplate = `<!doctype html>
 		var relativeDuration = Math.min(Math.round(100 / totalDuration * duration), 100);
 		element.querySelector('.inner').style.width = relativeDuration + '%';
 
+		var start = element.dataset.start;
+		var offsetDuration = Math.min(Math.round(100 / totalDuration * (start - totalStart)), 100);
+		element.querySelector('.offset').style.width = offsetDuration + '%';
 	}
 </script>
 </body>
@@ -210,7 +223,7 @@ const profileTemplate = `<!doctype html>
 
 {{ define "entry" }}
 <li class="profiler-entry">
-	<span class="duration-relative" data-duration="{{printf "%d" .Duration }}"><i class="inner"></i></span>
+	<span class="duration-relative" data-duration="{{printf "%d" .Duration }}" data-start="{{printf "%d" .Start.UnixNano }}"><i class="offset"></i><i class="inner"></i></span>
 	<span class="duration">{{ .Duration }}</span>
 	<h3 class="msg">{{ .Msg }}</h3>
 	<span class="fnc {{if and .Startpos .Endpos}}has-file{{end}}"><i class="icon"></i>{{ .Fnc }}</span>

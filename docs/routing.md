@@ -4,11 +4,11 @@
 @Basti 
 Normaly 
 
- METHOD PATH -> Controller.Action
+ METHOD:PATH -> Controller.Action
  
 Here:
 
- PATH -> Controller
+ PATH -> Controller  / Action Func
  
     - Method indirect
     - No Action

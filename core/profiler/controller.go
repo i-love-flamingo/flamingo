@@ -210,11 +210,11 @@ const profileTemplate = `<!doctype html>
 	Array.from(document.querySelectorAll('.duration-relative')).forEach(addRelativeDuration);
 	function addRelativeDuration(element) {
 		var duration = element.dataset.duration;
-		var relativeDuration = Math.max(1, Math.min(Math.round(100 / totalDuration * duration), 99));
+		var relativeDuration = Math.max(1, Math.min(Math.round(100 / totalDuration * duration), 100));
 		element.querySelector('.inner').style.width = relativeDuration + '%';
 
 		var start = element.dataset.start;
-		var offsetDuration = Math.max(1, Math.min(Math.round(100 / totalDuration * (start - totalStart)), 99));
+		var offsetDuration = Math.max(0, Math.min(Math.round(100 / totalDuration * (start - totalStart)), 99));
 		element.querySelector('.offset').style.width = offsetDuration + '%';
 	}
 </script>

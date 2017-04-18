@@ -1,19 +1,19 @@
 package commands
 
 import (
-	"github.com/spf13/cobra"
 	"flamingo/framework/context"
 	"fmt"
+
+	"github.com/spf13/cobra"
 )
 
-var contextName,baseUrl string
+var contextName, baseUrl string
 
 func init() {
 	RootCommand.AddCommand(DiCmd)
 	DiCmd.Flags().StringVarP(&contextName, "context", "c", "", "Name of the context (relative context path) - set this if you like to see only this context. Otherwise it will show all.")
 	DiCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "", "Baseurl assigned to the context  - set this if you like to see only this context. Otherwise it will show all.")
 }
-
 
 var DiCmd = &cobra.Command{
 	Use:   "di",
@@ -29,9 +29,8 @@ var DiCmd = &cobra.Command{
 			}
 			fmt.Println()
 			fmt.Println("********************************************")
-			fmt.Println("Routed Context  - Baseurl:"+routeConfig.BaseURL+" Contextpath: ["+routeConfig.Name+"]")
-			container := routeConfig.ServiceContainer
-			container.Debug()
+			fmt.Println("Routed Context  - Baseurl:" + routeConfig.BaseURL + " Contextpath: [" + routeConfig.Name + "]")
+			routeConfig.Injector.Debug()
 			fmt.Println()
 		}
 	},

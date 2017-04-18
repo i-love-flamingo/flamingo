@@ -1,12 +1,13 @@
 package commands
 
 import (
-	"github.com/spf13/cobra"
-	"flamingo/framework/context"
 	"flamingo/core/cmd/application"
+	"flamingo/framework/context"
 	"fmt"
-	"strings"
 	"math"
+	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -14,22 +15,20 @@ func init() {
 	RootCommand.AddCommand(RouterCmd)
 }
 
-
 var RoutingConfCmd = &cobra.Command{
 	Use:   "routeconf",
 	Short: "Print the routing configs from the contexts",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("\nContext with Routing Config:\n")
 		for _, routeConfig := range context.RootContext.GetRoutingConfigs() {
-			fmt.Println(routeConfig.BaseURL+" ["+routeConfig.Name+"]")
+			fmt.Println(routeConfig.BaseURL + " [" + routeConfig.Name + "]")
 			for _, route := range routeConfig.Routes {
-				fmt.Printf("  * %s > %s \n",route.Path,route.Controller)
-				fmt.Printf("      Args: %v \n",route.Args)
+				fmt.Printf("  * %s > %s \n", route.Path, route.Controller)
+				fmt.Printf("      Args: %v \n", route.Args)
 			}
 		}
 	},
 }
-
 
 var RouterCmd = &cobra.Command{
 	Use:   "routes",
@@ -41,17 +40,32 @@ var RouterCmd = &cobra.Command{
 		fmt.Println("    Route-Name:            Route-Path                 (Registered Handler)")
 		fmt.Println("--------------------------------------------------------------------------")
 
-		for baseUrl,router := range routers {
-			fmt.Printf("%s:\n",baseUrl)
+		for baseUrl, router := range routers {
+			fmt.Printf("\n**********\nContext: \"%s\":\n", baseUrl)
+			fmt.Println("  Hardroutes:")
+			for _, route := range router.GetHardRoutes() {
+				printRoute("--", route.Path, route.Controller, route.Args)
+			}
 
-			for routeName,route := range router.GetRoutes() {
-				handler,_ := router.GetHandleForNamedRoute(routeName)
-
-				spaceAmount1 := int(math.Max(0, float64(20-len(routeName))))
-				spaceAmount2 := int(math.Max(0, float64(30-len(route))))
-				//Basti - possible to get struct again (real controller?) or should we add a "hint" param to the Handle method during registration?
-				fmt.Printf("    %s:%s%s%s(%T)\n",routeName,strings.Repeat(" ",spaceAmount1),route,strings.Repeat(" ",spaceAmount2),handler)
+			fmt.Println("  Registered Routes:")
+			for routeName, route := range router.RouterRegistry.GetRoutes() {
+				handler, _ := router.RouterRegistry.GetHandleForNamedRoute(routeName)
+				printRoute(routeName, route, handler, nil)
 			}
 		}
+		fmt.Println()
 	},
+}
+
+func printRoute(routeName string, routePath string, handler interface{}, args interface{}) {
+	spaceAmount1 := int(math.Max(0, float64(20-len(routeName))))
+	spaceAmount2 := int(math.Max(0, float64(30-len(routePath))))
+	var handlerOutput string
+	switch handler.(type) {
+	case string:
+		handlerOutput = handler.(string)
+	default:
+		handlerOutput = fmt.Sprintf("%T", handler)
+	}
+	fmt.Printf("    %s:%s%s%s(%s [%s])\n", routeName, strings.Repeat(" ", spaceAmount1), routePath, strings.Repeat(" ", spaceAmount2), handlerOutput, args)
 }

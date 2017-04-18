@@ -1,23 +1,23 @@
 package application
 
 import (
-	"os"
-	"flamingo/framework/router"
-	"net/http"
-	"io"
 	"flamingo/core/prefix_router"
 	"flamingo/framework/context"
+	"flamingo/framework/router"
+	"io"
 	"log"
+	"net/http"
+	"os"
 )
 
-func GetFrontRouterForRootContext() *prefix_router.FrontRouter  {
+func GetFrontRouterForRootContext() *prefix_router.FrontRouter {
 	return GetInitializedFrontRouter(context.RootContext.GetRoutingConfigs())
 }
 
-func GetRouterForRootContext() map[string]*router.Router  {
+func GetRouterForRootContext() map[string]*router.Router {
 	result := make(map[string]*router.Router)
 	for _, routeConfig := range context.RootContext.GetRoutingConfigs() {
-		result[routeConfig.BaseURL] = router.CreateRouter(routeConfig)
+		result[routeConfig.BaseURL] = getRouterInContext(routeConfig)
 	}
 	return result
 }
@@ -28,14 +28,17 @@ func GetInitializedFrontRouter(routingConfigs []*context.RoutingConfig) *prefix_
 	frontRouter.Default(defaultRouter)
 	addDefaultRoutes(defaultRouter)
 	for _, routeConfig := range routingConfigs {
-		// Register logger
-		routeConfig.ServiceContainer.Register(log.New(os.Stdout, "["+routeConfig.Name+"] ", 0))
-		//log.Println(routeConfig.Name, "at", routeConfig.BaseURL)
-		frontRouter.Add(routeConfig.BaseURL, router.CreateRouter(routeConfig))
+		routeConfig.Injector.Bind(new(log.Logger)).ToInstance(log.New(os.Stdout, "["+routeConfig.Name+"] ", 0))
+		log.Println(routeConfig.Name, "at", routeConfig.BaseURL)
+		frontRouter.Add(routeConfig.BaseURL, getRouterInContext(routeConfig))
+
 	}
 	return frontRouter
 }
 
+func getRouterInContext(routeConfig *context.RoutingConfig) *router.Router {
+	return routeConfig.Injector.GetInstance(router.Router{}).(*router.Router).Init(routeConfig)
+}
 
 // TODO - Move this to a package?
 func addDefaultRoutes(defaultRouter *http.ServeMux) {
@@ -57,4 +60,3 @@ func addDefaultRoutes(defaultRouter *http.ServeMux) {
 		rw.WriteHeader(301)
 	})
 }
-

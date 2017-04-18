@@ -300,3 +300,22 @@ func (injector *Injector) RequestInjection(object interface{}) {
 		}
 	}
 }
+
+// Debug Output
+func (injector *Injector) Debug() {
+	for vtype, bindings := range injector.bindings {
+		fmt.Printf("   %s     >    ", vtype)
+		for _, binding := range bindings {
+			fmt.Printf("%s |", binding.to)
+		}
+		fmt.Println()
+	}
+
+	for vtype, bindings := range injector.multibindings {
+		fmt.Printf("   %s     >    ", vtype)
+		for _, binding := range bindings {
+			fmt.Printf("%s |", binding.to)
+		}
+		fmt.Println()
+	}
+}

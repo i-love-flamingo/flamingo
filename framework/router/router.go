@@ -255,3 +255,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 		panic(err)
 	}
 }
+
+func (router *Router) GetHardRoutes() map[string]configcontext.Route {
+	return router.hardroutes
+}

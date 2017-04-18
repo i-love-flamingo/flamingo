@@ -3,7 +3,7 @@ package pug_template
 import (
 	"bytes"
 	"flamingo/framework/web"
-	"flamingo/core/pug_template/pugast"
+	"flamingo/framework/pug_template/pugast"
 	"fmt"
 	"html/template"
 	"net/http"

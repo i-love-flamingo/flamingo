@@ -3,7 +3,7 @@ package pugast
 import (
 	"bytes"
 	"encoding/json"
-	coretemplate "flamingo/core/template"
+	coretemplate "flamingo/framework/template"
 	"flamingo/framework/web"
 	"fmt"
 	"html/template"

@@ -3,7 +3,7 @@ package responder
 import (
 	"flamingo/framework/router"
 	"flamingo/framework/web"
-	"flamingo/core/template"
+	"flamingo/framework/template"
 	"net/http"
 )
 

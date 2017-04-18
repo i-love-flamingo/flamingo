@@ -12,7 +12,7 @@ package framework
 
 import (
 	"flamingo/framework/dingo"
-	"flamingo/core/template"
+	"flamingo/framework/template"
 	"flamingo/framework/controller"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"

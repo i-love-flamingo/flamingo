@@ -1,9 +1,9 @@
 package pug_template
 
 import (
-	"flamingo/core/pug_template/pugast"
-	"flamingo/core/pug_template/template_functions"
-	"flamingo/core/template"
+	"flamingo/framework/pug_template/pugast"
+	"flamingo/framework/pug_template/template_functions"
+	"flamingo/framework/template"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"net/http"

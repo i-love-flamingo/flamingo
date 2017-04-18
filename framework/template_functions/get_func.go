@@ -3,7 +3,7 @@ package template_functions
 import (
 	"flamingo/framework/router"
 	"flamingo/framework/web"
-	"flamingo/core/pug_template/pugast"
+	"flamingo/framework/pug_template/pugast"
 	"reflect"
 )
 

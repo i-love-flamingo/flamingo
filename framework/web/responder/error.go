@@ -11,7 +11,7 @@ type ErrorAware struct {
 }
 
 type ErrorViewData struct {
-	Error models.AppError
+	//Error models.AppError
 }
 
 // RenderError returns a web.ContentResponse with status 500 and ContentType text/html
@@ -19,11 +19,11 @@ func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *we
 	tpl := "pages/error"
 
 	data := ErrorViewData{}
-	data.Error = error
+	//data.Error = error
 
 	if !r.DebugMode {
 		// Drop Message, should not be shown in public/prod env
-		data.Error.Message = ""
+		//data.Error.Message = ""
 	}
 
 	response := r.RenderAware.Render(

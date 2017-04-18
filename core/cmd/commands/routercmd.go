@@ -5,7 +5,6 @@ import (
 	"flamingo/framework/context"
 	"flamingo/core/cmd/application"
 	"fmt"
-	"reflect"
 	"strings"
 	"math"
 )
@@ -51,7 +50,7 @@ var RouterCmd = &cobra.Command{
 				spaceAmount1 := int(math.Max(0, float64(20-len(routeName))))
 				spaceAmount2 := int(math.Max(0, float64(30-len(route))))
 				//Basti - possible to get struct again (real controller?) or should we add a "hint" param to the Handle method during registration?
-				fmt.Printf("    %s:%s%s%s(%s)\n",routeName,strings.Repeat(" ",spaceAmount1),route,strings.Repeat(" ",spaceAmount2),reflect.TypeOf(handler))
+				fmt.Printf("    %s:%s%s%s(%T)\n",routeName,strings.Repeat(" ",spaceAmount1),route,strings.Repeat(" ",spaceAmount2),handler)
 			}
 		}
 	},

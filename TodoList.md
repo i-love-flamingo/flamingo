@@ -23,3 +23,10 @@
 * Searchperience Package:
 	* add search
 	* implement category port
+
+* whishlist package
+
+* Sessions package
+
+
+* Finish Cart Package

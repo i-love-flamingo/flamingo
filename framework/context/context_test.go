@@ -2,7 +2,6 @@ package context
 
 import (
 	"testing"
-	di "flamingo/framework/dependencyinjection"
 
 	g "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,19 +17,22 @@ type (
 	}
 )
 
+/*
 func Register(marker string) di.RegisterFunc {
 	return func(c *di.Container) {
 		c.Register(&TestDependency{marker: marker})
 	}
 }
+*/
 
 var _ = g.Describe("Context", func() {
 
 	var root = New(
 		"root",
-		[]di.RegisterFunc{
-			Register("root"),
-		},
+		//[]di.RegisterFunc{
+		//	Register("root"),
+		//},
+		nil,
 		New(
 			"main",
 			nil,
@@ -39,15 +41,16 @@ var _ = g.Describe("Context", func() {
 		),
 		New(
 			"not-main",
-			[]di.RegisterFunc{
-				Register("not-main"),
-			},
+			//[]di.RegisterFunc{
+			//	Register("not-main"),
+			//},
+			nil,
 			New("notmain1", nil),
 			New(
 				"notmain2",
 				nil,
 				New("notmain2-1", nil),
-				New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
+				//New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
 			),
 		),
 	)
@@ -71,28 +74,28 @@ var _ = g.Describe("Context", func() {
 			Expect(flat).To(HaveKey("not-main/notmain2/notmain2-2"))
 		})
 
-		g.It("Should have correct DI", func() {
-			tester := new(TestDependecyChecker)
-
-			flat["main/main1"].ServiceContainer.Resolve(tester)
-			Expect(tester.marker).To(Equal("root"))
-
-			tester = new(TestDependecyChecker)
-			flat["main/main2"].ServiceContainer.Resolve(tester)
-			Expect(tester.marker).To(Equal("root"))
-
-			tester = new(TestDependecyChecker)
-			flat["not-main/notmain1"].ServiceContainer.Resolve(tester)
-			Expect(tester.marker).To(Equal("not-main"))
-
-			tester = new(TestDependecyChecker)
-			flat["not-main/notmain2/notmain2-1"].ServiceContainer.Resolve(tester)
-			Expect(tester.marker).To(Equal("not-main"))
-
-			tester = new(TestDependecyChecker)
-			flat["not-main/notmain2/notmain2-2"].ServiceContainer.Resolve(tester)
-			Expect(tester.marker).To(Equal("not-main-deep"))
-		})
+		//g.It("Should have correct DI", func() {
+		//	tester := new(TestDependecyChecker)
+		//
+		//	flat["main/main1"].ServiceContainer.Resolve(tester)
+		//	Expect(tester.marker).To(Equal("root"))
+		//
+		//	tester = new(TestDependecyChecker)
+		//	flat["main/main2"].ServiceContainer.Resolve(tester)
+		//	Expect(tester.marker).To(Equal("root"))
+		//
+		//	tester = new(TestDependecyChecker)
+		//	flat["not-main/notmain1"].ServiceContainer.Resolve(tester)
+		//	Expect(tester.marker).To(Equal("not-main"))
+		//
+		//	tester = new(TestDependecyChecker)
+		//	flat["not-main/notmain2/notmain2-1"].ServiceContainer.Resolve(tester)
+		//	Expect(tester.marker).To(Equal("not-main"))
+		//
+		//	tester = new(TestDependecyChecker)
+		//	flat["not-main/notmain2/notmain2-2"].ServiceContainer.Resolve(tester)
+		//	Expect(tester.marker).To(Equal("not-main-deep"))
+		//})
 	})
 })
 

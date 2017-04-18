@@ -2,7 +2,7 @@
 package context
 
 import (
-	"flamingo/core/dingo"
+	"flamingo/framework/dingo"
 	"fmt"
 )
 
@@ -12,10 +12,9 @@ type (
 		Name    string
 		BaseURL string
 
-		Parent  *Context `json:"-"`
-		Childs  []*Context
-		Modules []dingo.Module
-		//ServiceContainer *di.Container `json:"-"`
+		Parent   *Context `json:"-"`
+		Childs   []*Context
+		Modules  []dingo.Module
 		Injector *dingo.Injector `json:"-"`
 
 		Routes        []Route                `yaml:"routes"`
@@ -57,11 +56,12 @@ func (ctx *Context) GetFlatContexts() map[string]*Context {
 		result[name].Childs = nil
 		result[name].Contexts = nil
 		result[name].Name = name
-		result[name].Injector = dingo.NewInjector(result[name].Modules...)
+		// ensure that our config is injected before out modules
+		result[name].Injector = dingo.NewInjector()
 		for k, v := range result[name].Configuration {
-			//result[name].ServiceContainer.SetParameter(k, v)
 			result[name].Injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 		}
+		result[name].Injector.InitModules(result[name].Modules...)
 	}
 
 	fmt.Println(result)
@@ -106,7 +106,6 @@ func MergeFrom(baseContext, incomingContext Context) *Context {
 		}
 	}
 
-	//baseContext.RegisterFuncs = append(incomingContext.RegisterFuncs, baseContext.RegisterFuncs...)
 	baseContext.Modules = append(incomingContext.Modules, baseContext.Modules...)
 
 	return &baseContext

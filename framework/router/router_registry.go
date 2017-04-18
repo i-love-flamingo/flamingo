@@ -1,12 +1,15 @@
 package router
 
 type (
+	// RouterRegistry holds a list of all routes and handlers to be registered
+	// in modules.
 	RouterRegistry struct {
 		routes  map[string]string
 		handler map[string]Controller
 	}
 )
 
+// NewRouterRegistry builds a new RouterRegistry
 func NewRouterRegistry() *RouterRegistry {
 	return &RouterRegistry{
 		routes:  make(map[string]string),

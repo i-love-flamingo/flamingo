@@ -6,6 +6,7 @@ import (
 )
 
 type (
+	// Binding defines a type mapped to a more concrete type
 	Binding struct {
 		typeof reflect.Type
 
@@ -13,23 +14,25 @@ type (
 		instance *Instance
 		provider *Provider
 
-		// todo
 		eager         bool
 		annotatedWith string
 		scope         Scope
 	}
 
+	// Instance holds quick-references to type and value
 	Instance struct {
 		itype  reflect.Type
 		ivalue reflect.Value
 	}
 
+	// Provider holds the provider function
 	Provider struct {
 		fnctype reflect.Type
 		fnc     reflect.Value
 	}
 )
 
+// To binds a concrete type to a binding
 func (b *Binding) To(what interface{}) *Binding {
 	to := reflect.TypeOf(what)
 
@@ -46,6 +49,7 @@ func (b *Binding) To(what interface{}) *Binding {
 	return b
 }
 
+// ToInstance binds an instance to a binding
 func (b *Binding) ToInstance(instance interface{}) *Binding {
 	b.instance = &Instance{
 		itype:  reflect.TypeOf(instance),
@@ -54,6 +58,7 @@ func (b *Binding) ToInstance(instance interface{}) *Binding {
 	return b
 }
 
+// ToProvider binds a provider to an instance. The provider's arguments are automatically injected
 func (b *Binding) ToProvider(p interface{}) *Binding {
 	provider := &Provider{
 		fnc: reflect.ValueOf(p),
@@ -66,26 +71,30 @@ func (b *Binding) ToProvider(p interface{}) *Binding {
 	return b
 }
 
+// AnnotatedWith sets the binding's annotation
 func (b *Binding) AnnotatedWith(annotation string) *Binding {
 	b.annotatedWith = annotation
 	return b
 }
 
+// In set's the bindings scope
 func (b *Binding) In(scope Scope) *Binding {
 	b.scope = scope
 	return b
 }
 
+// AsEagerSingleton set's the binding to singleton and requests eager initialization
 func (b *Binding) AsEagerSingleton() *Binding {
 	b.In(Singleton)
 	b.eager = true
 	return b
 }
 
+// Create creates a new instance by the provider and requests injection, all provider arguments are automatically filled
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())
 	for i := 0; i < p.fnc.Type().NumIn(); i++ {
-		in[i] = reflect.ValueOf(injector.GetInstance(p.fnc.Type().In(i)))
+		in[i] = injector.getInstance(p.fnc.Type().In(i))
 	}
 	res := p.fnc.Call(in)[0]
 	injector.RequestInjection(res)

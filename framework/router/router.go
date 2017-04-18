@@ -3,14 +3,13 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/dingo"
 	configcontext "flamingo/framework/context"
+	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/web"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -61,7 +60,6 @@ type (
 		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
-		Logger              *log.Logger              `inject:""` // Logger is a default logger for now
 		Sessions            SessionStore             `inject:""` // Sessions storage, which are used to retrieve user-context session
 		SessionName         string                   `inject:"config:session.name"`
 		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
@@ -151,7 +149,6 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &VerboseResponseWriter{ResponseWriter: w}
 
 	// get the session
-	log.Println("Session", router.SessionName)
 	s, _ := router.Sessions.Get(req, router.SessionName)
 
 	// retrieve a new context

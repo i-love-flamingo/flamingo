@@ -11,7 +11,7 @@ Additionally it registers two template functions, `get(...)` and `url(...)`
 package framework
 
 import (
-	"flamingo/core/dingo"
+	"flamingo/framework/dingo"
 	"flamingo/core/template"
 	"flamingo/framework/controller"
 	"flamingo/framework/event"

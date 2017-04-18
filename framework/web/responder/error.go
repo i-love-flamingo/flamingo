@@ -14,7 +14,7 @@ type ErrorViewData struct {
 	Error models.AppError
 }
 
-// Render returns a web.ContentResponse with status 200 and ContentType text/html
+// RenderError returns a web.ContentResponse with status 500 and ContentType text/html
 func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *web.ContentResponse {
 	tpl := "pages/error"
 

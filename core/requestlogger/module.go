@@ -1,7 +1,7 @@
 package requestlogger
 
 import (
-	"flamingo/core/dingo"
+	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 )
 

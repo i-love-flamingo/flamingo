@@ -20,25 +20,15 @@ import (
 
 // PugTemplateEngine is the one and only javascript template engine for go ;)
 type PugTemplateEngine struct {
-	basedir                   string
+	Basedir                   string `inject:"config:pug_template.basedir"`
+	Debug                     bool   `inject:"config:debug.mode"`
 	Assetrewrites             map[string]string
 	templates                 map[string]*template.Template
 	templatesLock             sync.Mutex
 	Webpackserver             bool
 	Ast                       *PugAst
-	debug                     bool
 	TemplateFunctions         *coretemplate.FunctionRegistry
 	TemplateFunctionsProvider func() *coretemplate.FunctionRegistry `inject:""`
-}
-
-// NewPugTemplateEngine creates PugTemplateEngine struct
-func NewPugTemplateEngine(basedir string, debug bool) *PugTemplateEngine {
-	pte := &PugTemplateEngine{
-		basedir: basedir,
-		debug:   debug,
-	}
-
-	return pte
 }
 
 // loadTemplate gathers configuration and templates for the Engine
@@ -50,15 +40,15 @@ func (t *PugTemplateEngine) loadTemplates() {
 	t.templatesLock.Lock()
 	defer t.templatesLock.Unlock()
 
-	manifest, _ := ioutil.ReadFile(path.Join(t.basedir, "manifest.json"))
+	manifest, _ := ioutil.ReadFile(path.Join(t.Basedir, "manifest.json"))
 	json.Unmarshal(manifest, &t.Assetrewrites)
 
-	t.Ast = NewPugAst(path.Join(t.basedir, "templates"))
+	t.Ast = NewPugAst(path.Join(t.Basedir, "templates"))
 
 	t.TemplateFunctions = t.TemplateFunctionsProvider()
 	t.Ast.FuncMap = t.TemplateFunctions.Populate()
 
-	t.templates, err = compileDir(t.Ast, path.Join(t.basedir, "templates"), "")
+	t.templates, err = compileDir(t.Ast, path.Join(t.Basedir, "templates"), "")
 
 	if err != nil {
 		panic(err)
@@ -115,7 +105,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	defer ctx.Profile("render", templateName)()
 
 	// recompile
-	if t.templates == nil || t.debug {
+	if t.templates == nil || t.Debug {
 		var finish = ctx.Profile("loadTemplates", templateName)
 		t.loadTemplates()
 		finish()

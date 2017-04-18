@@ -1,7 +1,7 @@
 package brand
 
 import (
-	"flamingo/core/dingo"
+	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"flamingo/om3/brand/controller"
 )

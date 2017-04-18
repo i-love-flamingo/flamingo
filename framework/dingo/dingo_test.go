@@ -1,7 +1,6 @@
 package dingo
 
 import (
-	"log"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +15,8 @@ type (
 	InterfaceSub Interface
 
 	InterfaceImpl1 struct {
-		i int
+		i   int
+		foo string
 	}
 
 	InterfaceImpl2 struct {
@@ -37,15 +37,16 @@ type (
 	}
 
 	TestModule struct{}
+
+	PreTestModule struct{}
 )
 
-func init() {
-	var _ Interface = &InterfaceImpl1{}
-	var _ Interface = &InterfaceImpl2{}
+func InterfaceProvider(str string) Interface {
+	return &InterfaceImpl1{foo: str}
 }
 
-func InterfaceProvider() Interface {
-	return new(InterfaceImpl1)
+func (ptm *PreTestModule) Configure(injector *Injector) {
+	injector.Bind((*string)(nil)).ToInstance("Hello World")
 }
 
 func (tm *TestModule) Configure(injector *Injector) {
@@ -56,7 +57,7 @@ func (tm *TestModule) Configure(injector *Injector) {
 	injector.Bind((*Interface)(nil)).AnnotatedWith("provider").ToProvider(InterfaceProvider)
 	injector.Bind((*Interface)(nil)).AnnotatedWith("instance").ToInstance(new(InterfaceImpl2))
 
-	injector.Bind(TestSingleton{}).In(Singleton)
+	injector.Bind(TestSingleton{}).AsEagerSingleton()
 }
 
 func (if1 *InterfaceImpl1) Test() int {
@@ -70,7 +71,7 @@ func (if2 *InterfaceImpl2) Test() int {
 var _ = Describe("Dingo Test", func() {
 	Context("Simple resolve", func() {
 		It("Should resolve dependencies on request", func() {
-			injector := NewInjector(new(TestModule))
+			injector := NewInjector(new(PreTestModule), new(TestModule))
 
 			var iface Interface
 			iface = injector.GetInstance(new(Interface)).(Interface)
@@ -88,20 +89,17 @@ var _ = Describe("Dingo Test", func() {
 			Expect(dt2.Iface.Test()).To(Equal(1))
 			Expect(dt2.Iface2.Test()).To(Equal(2))
 
-			log.Printf("%#v\n", dt)
-
 			Expect(dt.IfaceProvided.Test()).To(Equal(1))
 			Expect(dt.IfaceInstance.Test()).To(Equal(2))
+
 			Expect(dt.IfaceProvider().Test()).To(Equal(1))
+			Expect(dt.IfaceProvided.(*InterfaceImpl1).foo).To(Equal("Hello World"))
 		})
 
 		It("Should resolve scopes", func() {
 			injector := NewInjector(new(TestModule))
 
-			log.Printf("%p\n", injector.GetInstance(TestSingleton{}))
-			log.Printf("%p\n", injector.GetInstance(TestSingleton{}))
-
-			panic(1)
+			Expect(injector.GetInstance(TestSingleton{})).To(Equal(injector.GetInstance(TestSingleton{})))
 		})
 	})
 })

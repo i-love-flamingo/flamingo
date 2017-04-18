@@ -1,7 +1,7 @@
 package cms
 
 import (
-	"flamingo/core/dingo"
+	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 )
 

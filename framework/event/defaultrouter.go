@@ -13,3 +13,7 @@ func (d *DefaultRouter) Dispatch(event Event) {
 		s.Notify(event)
 	}
 }
+
+func (d *DefaultRouter) AddSubscriber(subscriber Subscriber) {
+	d.Subscriber = append(d.Subscriber, subscriber)
+}

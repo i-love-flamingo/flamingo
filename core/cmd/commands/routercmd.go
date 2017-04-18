@@ -7,6 +7,8 @@ import (
 	"math"
 	"strings"
 
+	"sort"
+
 	"github.com/spf13/cobra"
 )
 
@@ -48,13 +50,24 @@ var RouterCmd = &cobra.Command{
 			}
 
 			fmt.Println("  Registered Routes:")
-			for routeName, route := range router.RouterRegistry.GetRoutes() {
+			routes := router.RouterRegistry.GetRoutes()
+			for _, routeName := range getSortedMapKeys(routes) {
+				route := routes[routeName]
 				handler, _ := router.RouterRegistry.GetHandleForNamedRoute(routeName)
 				printRoute(routeName, route, handler, nil)
 			}
 		}
 		fmt.Println()
 	},
+}
+
+func getSortedMapKeys(theMap map[string]string) []string {
+	var keys []string
+	for k := range theMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func printRoute(routeName string, routePath string, handler interface{}, args interface{}) {

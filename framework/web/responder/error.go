@@ -1,7 +1,6 @@
 package responder
 
 import (
-	"flamingo/core/product/models"
 	"flamingo/framework/web"
 )
 
@@ -15,7 +14,7 @@ type ErrorViewData struct {
 }
 
 // RenderError returns a web.ContentResponse with status 500 and ContentType text/html
-func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *web.ContentResponse {
+func (r *ErrorAware) RenderError(context web.Context, error interface{}) *web.ContentResponse {
 	tpl := "pages/error"
 
 	data := ErrorViewData{}
@@ -37,9 +36,11 @@ func (r *ErrorAware) RenderError(context web.Context, error models.AppError) *we
 		otherwise 200 is kept from the default response as its probably a proprietary
 		error code (which is also ok, just for display)
 	*/
-	if error.Code > 99 && error.Code < 1000 {
-		response.Status = error.Code
-	}
+	/*
+		if error.Code > 99 && error.Code < 1000 {
+			response.Status = error.Code
+		}
+	*/
 
 	return response
 }

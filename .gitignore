@@ -8,3 +8,4 @@ npm-debug.log
 src/sass/.includes
 coverage
 junit.xml
+vendor/

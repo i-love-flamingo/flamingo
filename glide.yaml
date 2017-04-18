@@ -1,0 +1,39 @@
+package: flamingo
+ignore:
+- flamingo/core
+- flamingo/framework
+- flamingo/om3
+import:
+- package: github.com/Jumpscale/go-raml
+  repo: https://github.com/jadhub/go-raml.git
+- package: github.com/ghodss/yaml
+- package: github.com/gorilla/mux
+  version: ^1.3.0
+- package: github.com/gorilla/sessions
+  version: ^1.1.0
+- package: github.com/gorilla/securecookie
+  version: ^1.1.0
+- package: github.com/robertkrimen/otto
+  repo: https://github.com/thebod/otto.git
+  subpackages:
+  - ast
+  - parser
+  - token
+- package: github.com/robertkrimen/otto
+  repo: https://github.com/thebod/otto.git
+  subpackages:
+  - ast
+  - parser
+  - token
+- package: gopkg.in/yaml.v2
+- package: html/template
+  repo: https://github.com/thebod/go-html-template
+- package: text/template
+  repo: https://github.com/thebod/go-text-template
+testImport:
+- package: github.com/onsi/ginkgo
+  version: ^1.2.0
+  subpackages:
+  - ginkgo
+- package: github.com/onsi/gomega
+  version: ^1.0.0

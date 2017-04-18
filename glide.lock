@@ -1,5 +1,5 @@
-hash: 33457b3e6831d4221ce8323b11c217931a18875d6120c683c56a5c73fa905fab
-updated: 2017-03-15T10:49:55.908644604+01:00
+hash: a2899ec11e4c8abdaec89f90ab012d0842bbbb2dae6757370c3a0bde33996fb4
+updated: 2017-04-18T16:39:40.703868274+02:00
 imports:
 - name: github.com/ghodss/yaml
   version: 04f313413ffd65ce25f2541bfd2b2ceec5c0908c
@@ -11,6 +11,9 @@ imports:
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
   version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/Jumpscale/go-raml
+  version: 5f43ad9db14a5d117718490b17a75596fd6ce1b9
+  repo: https://github.com/jadhub/go-raml.git
 - name: github.com/labstack/gommon
   version: e8995fb26e646187d33cff439b18609cfba23088
   subpackages:
@@ -36,6 +39,8 @@ imports:
   version: f5da1d57891040819d7961bfeed49271d78ca0fa
   subpackages:
   - base64vlq
+- name: gopkg.in/validator.v2
+  version: 0a9835d809fb647a62611d30cb792e0b5dd65b11
 - name: gopkg.in/yaml.v2
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 - name: html/template
@@ -46,7 +51,7 @@ imports:
   repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo
-  version: 462326b1628e124b23f42e87a8f2750e3c4e2d24
+  version: 77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298
   subpackages:
   - config
   - ginkgo
@@ -56,19 +61,23 @@ testImports:
   - internal/leafnodes
   - internal/remote
   - internal/spec
+  - internal/spec_iterator
   - internal/specrunner
   - internal/suite
   - internal/testingtproxy
   - internal/writer
   - reporters
   - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
   - types
 - name: github.com/onsi/gomega
-  version: a78ae492d53aad5a7a232d0d0462c14c400e3ee7
+  version: 334b8f472b3af5d541c5642701c1e29e2126f486
   subpackages:
   - format
   - internal/assertion
   - internal/asyncassertion
+  - internal/oraclematcher
   - internal/testingtsupport
   - matchers
   - matchers/support/goraph/bipartitegraph

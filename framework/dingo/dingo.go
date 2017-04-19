@@ -304,25 +304,35 @@ func (injector *Injector) RequestInjection(object interface{}) {
 // Debug Output
 func (injector *Injector) Debug() {
 	for vtype, bindings := range injector.bindings {
-		fmt.Printf("   %s     >    ", vtype)
+		fmt.Printf("\t%30s  >  ", vtype)
 		for _, binding := range bindings {
+			if binding.annotatedWith != "" {
+				fmt.Printf(" (%s)", binding.annotatedWith)
+			}
 			if binding.instance != nil {
-				fmt.Printf("Instance %v |", binding.instance)
-			}
-			if binding.provider != nil {
-				fmt.Printf("Provider %T |", binding.provider)
-			}
-			if binding.to != nil {
-				fmt.Printf("%s |", binding.to)
+				fmt.Printf(" %s |", binding.instance.ivalue.String())
+			} else if binding.provider != nil {
+				fmt.Printf(" %s |", binding.provider.fnc.String())
+			} else if binding.to != nil {
+				fmt.Printf(" %s |", binding.to)
 			}
 		}
 		fmt.Println()
 	}
 
 	for vtype, bindings := range injector.multibindings {
-		fmt.Printf("   %s     >    ", vtype)
+		fmt.Printf("\t%30s  >  ", vtype)
 		for _, binding := range bindings {
-			fmt.Printf("%s |", binding.to)
+			if binding.annotatedWith != "" {
+				fmt.Printf(" (%s)", binding.annotatedWith)
+			}
+			if binding.instance != nil {
+				fmt.Printf(" %s |", binding.instance.ivalue.String())
+			} else if binding.provider != nil {
+				fmt.Printf(" %s |", binding.provider.fnc.String())
+			} else if binding.to != nil {
+				fmt.Printf(" %s |", binding.to)
+			}
 		}
 		fmt.Println()
 	}

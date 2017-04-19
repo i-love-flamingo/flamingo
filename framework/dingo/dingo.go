@@ -306,7 +306,15 @@ func (injector *Injector) Debug() {
 	for vtype, bindings := range injector.bindings {
 		fmt.Printf("   %s     >    ", vtype)
 		for _, binding := range bindings {
-			fmt.Printf("%s |", binding.to)
+			if binding.instance != nil {
+				fmt.Printf("Instance %v |", binding.instance)
+			}
+			if binding.provider != nil {
+				fmt.Printf("Provider %T |", binding.provider)
+			}
+			if binding.to != nil {
+				fmt.Printf("%s |", binding.to)
+			}
 		}
 		fmt.Println()
 	}

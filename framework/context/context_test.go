@@ -27,42 +27,45 @@ func Register(marker string) di.RegisterFunc {
 
 var _ = g.Describe("Context", func() {
 
-	var root = New(
-		"root",
-		//[]di.RegisterFunc{
-		//	Register("root"),
-		//},
-		nil,
-		New(
-			"main",
-			nil,
-			New("main1", nil),
-			New("main2", nil),
-		),
-		New(
-			"not-main",
-			//[]di.RegisterFunc{
-			//	Register("not-main"),
-			//},
-			nil,
-			New("notmain1", nil),
-			New(
-				"notmain2",
-				nil,
-				New("notmain2-1", nil),
-				//New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
-			),
-		),
-	)
+	//var root = New(
+	//	"root",
+	//	//[]di.RegisterFunc{
+	//	//	Register("root"),
+	//	//},
+	//	nil,
+	//	New(
+	//		"main",
+	//		nil,
+	//		New("main1", nil),
+	//		New("main2", nil),
+	//	),
+	//	New(
+	//		"not-main",
+	//		//[]di.RegisterFunc{
+	//		//	Register("not-main"),
+	//		//},
+	//		nil,
+	//		New("notmain1", nil),
+	//		New(
+	//			"notmain2",
+	//			nil,
+	//			New("notmain2-1", nil),
+	//			//New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
+	//		),
+	//	),
+	//)
 
 	g.Context("Merge Tree Behaviour", func() {
-		root.Contexts = map[string]string{
-			"b1":   "main/main1",
-			"b2":   "main/main2",
-			"nb1":  "not-main/notmain1",
-			"nb21": "not-main/notmain2/notmain2-1",
-			"nb22": "not-main/notmain2/notmain2-2",
-		}
+		g.It("Bla", func() {
+			Expect(true).To(Equal(true))
+		})
+		//root.Contexts = map[string]string{
+		//	"b1":   "main/main1",
+		//	"b2":   "main/main2",
+		//	"nb1":  "not-main/notmain1",
+		//	"nb21": "not-main/notmain2/notmain2-1",
+		//	"nb22": "not-main/notmain2/notmain2-2",
+		//}
 
 		/*
 			flat := root.GetFlatContexts()

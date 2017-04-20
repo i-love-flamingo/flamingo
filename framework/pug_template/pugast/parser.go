@@ -10,7 +10,8 @@ import (
 type (
 	// Attr is a simple key-value pair
 	Attr struct {
-		Name, Val  string
+		Name       string
+		Val        interface{}
 		MustEscape bool
 	}
 

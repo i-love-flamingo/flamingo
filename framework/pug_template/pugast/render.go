@@ -53,7 +53,7 @@ func (p *PugAst) build(parent *Token) (res []Node) {
 			}
 			tag.Block = Block{Nodes: p.build(t.Block)}
 			for _, a := range t.Attrs {
-				tag.Attrs = append(tag.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(a.Val), MustEscape: a.MustEscape})
+				tag.Attrs = append(tag.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(fmt.Sprintf("%v", a.Val)), MustEscape: a.MustEscape})
 			}
 
 			res = append(res, tag)
@@ -67,7 +67,7 @@ func (p *PugAst) build(parent *Token) (res []Node) {
 			mixin.Name = JavaScriptIdentifier(t.Name)
 			mixin.Args = t.Args
 			for _, a := range t.Attrs {
-				mixin.Attrs = append(mixin.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(a.Val), MustEscape: a.MustEscape})
+				mixin.Attrs = append(mixin.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(fmt.Sprintf("%v", a.Val)), MustEscape: a.MustEscape})
 			}
 			mixin.Call = t.Call
 

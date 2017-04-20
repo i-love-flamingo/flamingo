@@ -3,7 +3,7 @@ package brand
 import (
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
-	"flamingo/om3/brand/controller"
+	"flamingo/om3/brand/interfaces/controller"
 )
 
 type Module struct {

@@ -6,6 +6,6 @@ type (
 
 	// Profiler is used to measure the time certain things need
 	Profiler interface {
-		Profile(string, string) ProfileFinishFunc
+		Profile(key, msg string) ProfileFinishFunc
 	}
 )

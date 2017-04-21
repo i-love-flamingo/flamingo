@@ -12,6 +12,7 @@ type (
 	Injector struct {
 		bindings      map[reflect.Type][]*Binding
 		multibindings map[reflect.Type][]*Binding
+		interceptor   map[reflect.Type][]reflect.Type
 		//parent        *Injector
 		scopes map[Scope]struct{}
 	}
@@ -27,6 +28,7 @@ func NewInjector(modules ...Module) *Injector {
 	injector := &Injector{
 		bindings:      make(map[reflect.Type][]*Binding),
 		multibindings: make(map[reflect.Type][]*Binding),
+		interceptor:   make(map[reflect.Type][]reflect.Type),
 		scopes:        make(map[Scope]struct{}),
 	}
 
@@ -92,19 +94,38 @@ func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect
 		t = t.Elem()
 	}
 
+	var final reflect.Value
+
 	if len(injector.bindings[t]) > 0 {
 		binding := injector.lookupBinding(t, annotation)
 
 		if binding.scope != nil {
 			if _, ok := injector.scopes[binding.scope]; ok {
-				return binding.scope.resolveType(t, injector.internalResolveType)
+				final = binding.scope.resolveType(t, injector.internalResolveType)
 			} else {
 				panic(fmt.Sprintf("unknown scope %s", binding.scope))
 			}
 		}
 	}
 
-	return injector.internalResolveType(t, annotation)
+	if !final.IsValid() {
+		final = injector.internalResolveType(t, annotation)
+	}
+
+	final = injector.intercept(final, t)
+
+	return final
+}
+
+func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect.Value {
+	for _, interceptor := range injector.interceptor[t] {
+		//log.Println("intercepting", final.String(), "with", interceptor.String())
+		of := final
+		final = reflect.New(interceptor)
+		injector.RequestInjection(final.Interface())
+		final.Elem().Field(0).Set(of)
+	}
+	return final
 }
 
 // internalResolveType resolves a type request with the current injector
@@ -161,7 +182,8 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			n := reflect.MakeSlice(t, 0, len(bindings))
 			for _, binding := range bindings {
 				if binding.annotatedWith == annotation {
-					n = reflect.Append(n, injector.getInstance(binding.to))
+					//n = reflect.Append(n, injector.getInstance(binding.to))
+					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to), t.Elem()))
 				}
 			}
 			return n
@@ -211,6 +233,20 @@ func (injector *Injector) BindMulti(what interface{}) *Binding {
 	imb = append(imb, binding)
 	injector.multibindings[bindtype] = imb
 	return binding
+}
+
+// BindInterceptor intercepts to interface with interceptor
+func (injector *Injector) BindInterceptor(to, interceptor interface{}) {
+	totype := reflect.TypeOf(to)
+	if totype.Kind() == reflect.Ptr {
+		totype = totype.Elem()
+	}
+	if totype.Kind() != reflect.Interface {
+		panic("can only intercept interfaces " + to.String())
+	}
+	m := injector.interceptor[totype]
+	m = append(m, reflect.TypeOf(interceptor))
+	injector.interceptor[totype] = m
 }
 
 // BindScope binds a scope to be aware of

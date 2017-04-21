@@ -13,6 +13,42 @@ This can be for example:
 * the orchestration logic (normaly in the application layer) deciding which instance(s) to inject. You can achive this without any framework support.
 * a dependency registration concept - where you allow also other packages to influence which object should be injected. This normaly requires a dependency injection container in the framework.
 
+## Dingo AOP
+
+```go
+package main
+
+func (m *Module) Configure(injector *dingo.Injector) {
+	// ...
+	injector.BindInterceptor((*template.Engine)(nil), TplInterceptor{})
+	injector.BindInterceptor((*template.Function)(nil), FunctionInterceptor{})
+}
+
+type (
+	TplInterceptor struct {
+		template.Engine
+	}
+
+	FunctionInterceptor struct {
+		template.Function
+	}
+)
+
+func (t *TplInterceptor) Render(context web.Context, name string, data interface{}) io.Reader {
+	log.Println("Before Rendering", name)
+	start := time.Now()
+	r := t.Engine.Render(context, name, data)
+	log.Println("After Rendering", time.Since(start))
+	return r
+}
+
+func (f *FunctionInterceptor) Name() string {
+	r := f.Function.Name()
+	log.Println("Function", r, "used")
+	return r
+}
+```
+
 ## DI Container in Flamingo
 
 Flamingo Framework comes with a DI Container. 

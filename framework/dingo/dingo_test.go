@@ -68,6 +68,48 @@ func (if2 *InterfaceImpl2) Test() int {
 	return 2
 }
 
+// AOP
+type (
+	AopInterface interface {
+		Test() string
+	}
+
+	AopImpl struct{}
+
+	AopDep struct {
+		A AopInterface `inject:""`
+	}
+
+	AopInterceptor1 struct {
+		AopInterface
+	}
+
+	AopInterceptor2 struct {
+		AopInterface
+	}
+
+	AopModule struct{}
+)
+
+func (m *AopModule) Configure(injector *Injector) {
+	injector.Bind((*AopInterface)(nil)).To(AopImpl{})
+
+	injector.BindInterceptor((*AopInterface)(nil), AopInterceptor1{})
+	injector.BindInterceptor((*AopInterface)(nil), AopInterceptor2{})
+}
+
+func (a *AopImpl) Test() string {
+	return "Test"
+}
+
+func (a *AopInterceptor1) Test() string {
+	return a.AopInterface.Test() + " 1"
+}
+
+func (a *AopInterceptor2) Test() string {
+	return a.AopInterface.Test() + " 2"
+}
+
 var _ = Describe("Dingo Test", func() {
 	Context("Simple resolve", func() {
 		It("Should resolve dependencies on request", func() {
@@ -100,6 +142,17 @@ var _ = Describe("Dingo Test", func() {
 			injector := NewInjector(new(TestModule))
 
 			Expect(injector.GetInstance(TestSingleton{})).To(Equal(injector.GetInstance(TestSingleton{})))
+		})
+	})
+
+	Context("AOP", func() {
+		It("Should intercept interfaces", func() {
+			injector := NewInjector(new(AopModule))
+
+			var dep AopDep
+			injector.RequestInjection(&dep)
+
+			Expect(dep.A.Test()).To(Equal("Test 1 2"))
 		})
 	})
 })

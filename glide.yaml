@@ -19,18 +19,14 @@ import:
   - ast
   - parser
   - token
-- package: github.com/robertkrimen/otto
-  repo: https://github.com/thebod/otto.git
-  subpackages:
-  - ast
-  - parser
-  - token
 - package: gopkg.in/yaml.v2
 - package: html/template
   repo: https://github.com/thebod/go-html-template
 - package: text/template
   repo: https://github.com/thebod/go-text-template
 - package: github.com/spf13/cobra
+- package: github.com/pkg/errors
+  version: ^0.8.0
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

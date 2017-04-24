@@ -1,5 +1,5 @@
-hash: a2899ec11e4c8abdaec89f90ab012d0842bbbb2dae6757370c3a0bde33996fb4
-updated: 2017-04-18T16:39:40.703868274+02:00
+hash: 8041266ae80d278d58eee050f16229caeba046ded2ae7857c75654d4caf17b82
+updated: 2017-04-24T15:51:26.925457763+02:00
 imports:
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
@@ -11,6 +11,8 @@ imports:
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
   version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/Jumpscale/go-raml
   version: 5f43ad9db14a5d117718490b17a75596fd6ce1b9
   repo: https://github.com/jadhub/go-raml.git
@@ -22,6 +24,8 @@ imports:
   version: ded68f7a9561c023e790de24279db7ebf473ea80
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/robertkrimen/otto
   version: aabe79b06556d741409a343b9bbabf653cef2a1c
   repo: https://github.com/thebod/otto.git

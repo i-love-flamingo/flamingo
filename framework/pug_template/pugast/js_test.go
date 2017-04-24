@@ -168,6 +168,12 @@ var _ = Describe("JS Expression transpiling", func() {
 			})
 		})
 	})
+
+	Describe("Known Bugs", func() {
+		It("Should render brand.heroImage.url to .brand.heroImage.url", func() {
+			Expect(p.JsExpr("`background-image:url(${brand.heroImage.url})`", false, false)).To(Equal(`(s "background-image:url(" .brand.heroImage.url ")")`))
+		})
+	})
 })
 
 func TestJsExpr(t *testing.T) {

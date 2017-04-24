@@ -211,7 +211,12 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 
 	// DotExpression: left.right
 	case *ast.DotExpression:
-		result += p.renderExpression(expr.Left, false, true) + "." + p.renderExpression(expr.Identifier, false, true)[1:]
+		result += p.renderExpression(expr.Left, false, true) + "."
+		identifier := p.renderExpression(expr.Identifier, false, true)
+		if identifier[0] == '.' || identifier[0] == '$' {
+			identifier = identifier[1:]
+		}
+		result += identifier
 		if wrap {
 			if p.rawmode {
 				result += ` | raw`

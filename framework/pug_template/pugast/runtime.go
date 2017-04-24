@@ -71,6 +71,26 @@ var FuncMap = template.FuncMap{
 		}
 		return
 	},
+	"sc": func(l ...interface{}) (res template.CSS) {
+		for _, s := range l {
+			vs := reflect.ValueOf(s)
+			switch vs.Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+				{
+					res += template.CSS(fmt.Sprintf("%d", vs.Int()))
+				}
+			case reflect.Float32, reflect.Float64:
+				{
+					res += template.CSS(fmt.Sprintf("%f", vs.Float()))
+				}
+			case reflect.String:
+				{
+					res += template.CSS(vs.String())
+				}
+			}
+		}
+		return
+	},
 
 	"__op__array": func(a ...interface{}) Array { return Array(a) },
 	"__op__map": func(a ...interface{}) map[interface{}]interface{} {

@@ -14,7 +14,11 @@ func (t *Tag) args(p *PugAst, attrs []Attribute, andattributes bool) string {
 	a := make(map[string]string)
 	for _, attr := range attrs {
 		p.rawmode = !attr.MustEscape
-		a[attr.Name] += ` ` + p.JsExpr(string(attr.Val), true, false)
+		if attr.Name == "style" {
+			a[attr.Name] += ` ` + strings.Replace(p.JsExpr(string(attr.Val), true, false), `{{(s `, `{{(sc `, -1)
+		} else {
+			a[attr.Name] += ` ` + p.JsExpr(string(attr.Val), true, false)
+		}
 	}
 
 	result := ""
@@ -30,7 +34,7 @@ func (t *Tag) args(p *PugAst, attrs []Attribute, andattributes bool) string {
 		var aa string
 		k, v := attr.Name, a[attr.Name]
 		if andattributes {
-			aa = ` {{index $__andattributes "` + k + `"}}`
+			aa = `{{s " " (index $__andattributes "` + k + `")}}`
 		}
 		if len(strings.TrimSpace(v)) > 0 {
 			result += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`

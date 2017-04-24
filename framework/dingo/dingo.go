@@ -242,7 +242,7 @@ func (injector *Injector) BindInterceptor(to, interceptor interface{}) {
 		totype = totype.Elem()
 	}
 	if totype.Kind() != reflect.Interface {
-		panic("can only intercept interfaces " + to.String())
+		panic("can only intercept interfaces " + fmt.Sprintf("%v", to))
 	}
 	m := injector.interceptor[totype]
 	m = append(m, reflect.TypeOf(interceptor))

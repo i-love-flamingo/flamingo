@@ -160,6 +160,7 @@ const profileTemplate = `<!doctype html>
 		background: #F79223;
 		color: white;
 		padding: 0 20px 0 10px;
+		clear: both;
 	}
 
 	.profiler-entry.is-open > .file-meta {

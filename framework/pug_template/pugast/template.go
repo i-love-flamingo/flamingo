@@ -32,7 +32,7 @@ type PugTemplateEngine struct {
 }
 
 // loadTemplate gathers configuration and templates for the Engine
-func (t *PugTemplateEngine) loadTemplates() {
+func (t *PugTemplateEngine) loadTemplates(filtername string) {
 	start := time.Now()
 
 	var err error
@@ -48,7 +48,7 @@ func (t *PugTemplateEngine) loadTemplates() {
 	t.TemplateFunctions = t.TemplateFunctionsProvider()
 	t.Ast.FuncMap = t.TemplateFunctions.Populate()
 
-	t.templates, err = compileDir(t.Ast, path.Join(t.Basedir, "templates"), "")
+	t.templates, err = compileDir(t.Ast, path.Join(t.Basedir, "templates"), "", filtername)
 
 	if err != nil {
 		panic(err)
@@ -64,7 +64,7 @@ func (t *PugTemplateEngine) loadTemplates() {
 }
 
 // compileDir returns a map of defined templates in directory dirname
-func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Template, error) {
+func compileDir(pugast *PugAst, root, dirname, filtername string) (map[string]*template.Template, error) {
 	result := make(map[string]*template.Template)
 
 	dir, err := os.Open(path.Join(root, dirname))
@@ -79,7 +79,7 @@ func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Temp
 
 	for _, filename := range filenames {
 		if filename.IsDir() {
-			tpls, err := compileDir(pugast, root, path.Join(dirname, filename.Name()))
+			tpls, err := compileDir(pugast, root, path.Join(dirname, filename.Name()), filtername)
 			if err != nil {
 				return nil, err
 			}
@@ -92,6 +92,11 @@ func compileDir(pugast *PugAst, root, dirname string) (map[string]*template.Temp
 			if strings.HasSuffix(filename.Name(), ".ast.json") {
 				name := path.Join(dirname, filename.Name())
 				name = name[:len(name)-len(".ast.json")]
+
+				if filtername != "" && !strings.HasPrefix(name, filtername) {
+					continue
+				}
+
 				result[name] = pugast.TokenToTemplate(name, pugast.Parse(name))
 			}
 		}
@@ -105,9 +110,13 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	defer ctx.Profile("render", templateName)()
 
 	// recompile
-	if t.templates == nil || t.Debug {
-		var finish = ctx.Profile("loadTemplates", templateName)
-		t.loadTemplates()
+	if t.templates == nil {
+		var finish = ctx.Profile("loadTemplates", "-all-")
+		t.loadTemplates("")
+		finish()
+	} else if t.Debug {
+		var finish = ctx.Profile("debugReloadTemplates", templateName)
+		t.loadTemplates(templateName)
 		finish()
 	}
 

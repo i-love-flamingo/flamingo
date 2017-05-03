@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func GetFrontRouterForRootContext() *prefix_router.FrontRouter {
@@ -46,7 +47,7 @@ func addDefaultRoutes(defaultRouter *http.ServeMux) {
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 			io.Copy(rw, r.Body)
 		} else {
-			rw.WriteHeader(404)
+			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 		}
 	})
 

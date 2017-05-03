@@ -9,7 +9,7 @@ type (
 
 	// Node is something renderable
 	Node interface {
-		Render(p *PugAst, depth int) (string, bool)
+		Render(p *PugAst, depth int) (result string, isinline bool)
 	}
 
 	// Blocks

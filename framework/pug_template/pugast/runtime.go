@@ -403,9 +403,9 @@ func runtimeGtr(x, y interface{}) bool {
 	return !runtimeLss(x, y) && !runtimeEql(x, y)
 }
 
-func runtimeJSON(x interface{}) (res string, err error) {
+func runtimeJSON(x interface{}) (res template.JS, err error) {
 	bres, err := json.Marshal(x)
-	res = string(bres)
+	res = template.JS(string(bres))
 	return
 }
 

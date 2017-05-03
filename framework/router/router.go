@@ -131,7 +131,10 @@ func (router *Router) URL(name string, params ...string) *url.URL {
 // url builds a URL for a Router.
 func (router *Router) url(name string, params ...string) *url.URL {
 	if router.router.Get(name) == nil {
-		panic("route " + name + " not found")
+		//panic("route " + name + " not found")
+		return &url.URL{
+			Fragment: name + "::" + strings.Join(params, ":"),
+		}
 	}
 
 	resultURL, err := router.router.Get(name).URL(params...)

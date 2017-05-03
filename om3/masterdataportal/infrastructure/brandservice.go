@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flamingo/framework/web"
 	"flamingo/om3/brand/domain"
+	"fmt"
 )
 
 type (
@@ -21,7 +22,7 @@ func (bs *BrandService) Get(ctx context.Context, ID string) *domain.Brand {
 	}
 
 	resp := bs.Client.Get(ctx, ID)
-
+	fmt.Println(resp.Header)
 	res := &domain.Brand{}
 	json.NewDecoder(resp.Body).Decode(res)
 	return res

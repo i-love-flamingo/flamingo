@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"flamingo/framework/web"
 	"flamingo/om3/brand/domain"
-	"fmt"
+	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -16,14 +18,24 @@ type (
 )
 
 // Get a brand
-func (bs *BrandService) Get(ctx context.Context, ID string) *domain.Brand {
+func (bs *BrandService) Get(ctx context.Context, ID string) (*domain.Brand, error) {
 	if ctx, ok := ctx.(web.Context); ok {
 		defer ctx.Profile("masterdataportal", "get brand "+ID)()
 	}
 
-	resp := bs.Client.Get(ctx, ID)
-	fmt.Println(resp.Header)
+	resp, err := bs.Client.Get(ctx, ID)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, errors.WithStack(domain.BrandNotFound{Name: ID})
+	}
+
 	res := &domain.Brand{}
-	json.NewDecoder(resp.Body).Decode(res)
-	return res
+	err = json.NewDecoder(resp.Body).Decode(res)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return res, nil
 }

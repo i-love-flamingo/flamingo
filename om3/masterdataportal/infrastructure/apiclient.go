@@ -17,7 +17,7 @@ type (
 	BrandsClient ApiClient
 )
 
-func (ac *ApiClient) request(ctx context.Context, p string) *http.Response {
+func (ac *ApiClient) request(ctx context.Context, p string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", ac.BaseURL+p, nil)
 	if err != nil {
 		panic(err)
@@ -26,11 +26,7 @@ func (ac *ApiClient) request(ctx context.Context, p string) *http.Response {
 		defer ctx.Profile("masterdataportal", "GET "+ac.BaseURL+p)()
 		req.Header.Add("X-Request-ID", ctx.ID())
 	}
-	r, err := http.DefaultClient.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	return r
+	return http.DefaultClient.Do(req)
 }
 
 // NewBrandsClient creates a BrandsClient from an ApiClient
@@ -40,6 +36,6 @@ func NewBrandsClient(ac *ApiClient) *BrandsClient {
 }
 
 // Get a Brand
-func (bc *BrandsClient) Get(ctx context.Context, ID string) *http.Response {
+func (bc *BrandsClient) Get(ctx context.Context, ID string) (*http.Response, error) {
 	return bc.common.request(ctx, "/brands/"+ID)
 }

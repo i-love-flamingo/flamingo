@@ -15,7 +15,7 @@ type ErrorViewData struct {
 
 // RenderError returns a web.ContentResponse with status 500 and ContentType text/html
 func (r *ErrorAware) RenderError(context web.Context, error interface{}) *web.ContentResponse {
-	tpl := "pages/error"
+	tpl := "pages/error/503"
 
 	data := ErrorViewData{}
 	//data.Error = error

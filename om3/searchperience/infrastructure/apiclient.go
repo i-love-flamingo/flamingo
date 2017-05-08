@@ -37,5 +37,5 @@ func NewProductClient(ac *SearchperienceClient) *ProductClient {
 
 // Get a Product
 func (bc *ProductClient) Get(ctx context.Context, foreignID string) (*http.Response, error) {
-	return bc.common.request(ctx, "/document?type=product&foreignId="+foreignID)
+	return bc.common.request(ctx, "document?type=product&foreignId="+foreignID)
 }

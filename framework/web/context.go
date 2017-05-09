@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"io/ioutil"
@@ -27,13 +28,13 @@ type (
 		EventRouter() event.Router
 
 		LoadVars(r *http.Request)
-		Form(string) []string
-		Form1(string) string
+		Form(string) ([]string, error)
+		Form1(string) (string, error)
 		FormAll() map[string][]string
-		Param1(string) string
+		Param1(string) (string, error)
 		ParamAll() map[string]string
-		Query(string) []string
-		QueryFirst(string) string
+		Query(string) ([]string, error)
+		Query1(string) (string, error)
 		QueryAll() map[string][]string
 		Request() *http.Request
 
@@ -136,16 +137,23 @@ func (c *ctx) ID() string {
 }
 
 // Form get POST value
-func (c *ctx) Form(n string) []string {
-	return c.FormAll()[n]
+func (c *ctx) Form(n string) ([]string, error) {
+	if r, ok := c.FormAll()[n]; ok {
+		return r, nil
+	}
+	return nil, errors.New("form value not found")
 }
 
 // Form1 get first POST value
-func (c *ctx) Form1(n string) string {
-	if len(c.Form(n)) < 1 {
-		return ""
+func (c *ctx) Form1(n string) (string, error) {
+	r, err := c.Form(n)
+	if err {
+		return "", err
 	}
-	return c.Form(n)[0]
+	if len(r) > 0 {
+		return r[0], nil
+	}
+	return "", errors.New("form value not found")
 }
 
 // FormAll get all POST values
@@ -154,24 +162,37 @@ func (c *ctx) FormAll() map[string][]string {
 	return c.Request().Form
 }
 
-// Param get querystring param
-func (c *ctx) Param1(n string) string {
-	return c.vars[n]
+// Param1 get first querystring param
+func (c *ctx) Param1(n string) (string, error) {
+	if r, ok := c.vars[n]; ok {
+		return r, nil
+	}
+	return nil, errors.New("param value not found")
 }
 
-// Params get all querystring params
+// ParamAll get all querystring params
 func (c *ctx) ParamAll() map[string]string {
 	return c.vars
 }
 
 // Query looks up Raw Query map for Param
-func (c *ctx) Query(n string) []string {
-	return c.QueryAll()[n]
+func (c *ctx) Query(n string) ([]string, error) {
+	if r, ok := c.QueryAll()[n]; ok {
+		return r, nil
+	}
+	return nil, errors.New("query values not found")
 }
 
-// QueryFirst  looks up Raw Query map for  First Param
-func (c *ctx) QueryFirst(n string) string {
-	return c.Query(n)[0]
+// Query1 looks up Raw Query map for First Param
+func (c *ctx) Query1(n string) (string, error) {
+	r, err := c.Query(n)
+	if err {
+		return "", err
+	}
+	if len(r) > 0 {
+		return r[0], nil
+	}
+	return nil, errors.New("query value not found")
 }
 
 // QueryAll returns a Map of the Raw Query

@@ -19,7 +19,11 @@ type (
 				Facets   []interface{} `json:"facets"`
 				Filters  []interface{} `json:"filters"`
 				PageInfo PageInfo      `json:"pageInfo"`
-				Hits     []interface{} `json:"hits"`
+				Hits     []struct {
+					Document   Location `json:"document"`
+					Highlights struct {
+					} `json:"highlights"`
+				} `json:"hits"`
 			} `json:"location"`
 			Brand struct {
 				MetaData MetaData      `json:"metaData"`
@@ -65,6 +69,34 @@ type (
 		ShortTitle       string   `json:"shortTitle"`
 		Teaser           string   `json:"teaser"`
 		Title            string   `json:"title"`
+	}
+
+	Location struct {
+		ForeignID        string `json:"foreignId"`
+		Locale           string `json:"locale"`
+		Channel          string `json:"channel"`
+		Code             string `json:"code"`
+		FormatVersion    int    `json:"formatVersion"`
+		Title            string `json:"title"`
+		ShortTitle       string `json:"shortTitle"`
+		ShortDescription string `json:"shortDescription"`
+		Description      string `json:"description"`
+		Type             string `json:"type"`
+		AirportZone      struct {
+			Title    string `json:"title"`
+			Area     string `json:"area"`
+			Level    string `json:"level"`
+			Terminal string `json:"terminal"`
+			Landside bool   `json:"landside"`
+			Schengen bool   `json:"schengen"`
+		} `json:"airportZone"`
+		Brands   []string `json:"brands"`
+		Media    []Media  `json:"media"`
+		Counter  string   `json:"counter"`
+		Email    string   `json:"email"`
+		Phone    string   `json:"phone"`
+		Pickup   bool     `json:"pickup"`
+		Keywords []string `json:"keywords"`
 	}
 
 	MetaData struct {

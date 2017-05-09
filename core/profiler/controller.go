@@ -258,7 +258,7 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 	}
 	var body = new(bytes.Buffer)
 
-	t.ExecuteTemplate(body, "tpl", profilestorage[ctx.Param1("profile")])
+	t.ExecuteTemplate(body, "tpl", profilestorage[ctx.MustParam1("profile")])
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
@@ -268,8 +268,8 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 }
 
 func (dc *ProfileController) Post(ctx web.Context) web.Response {
-	dur, _ := strconv.ParseFloat(ctx.Form1("duration"), 64)
-	profilestorage[ctx.Param1("profile")].ProfileOffline(ctx.Form1("key"), ctx.Form1("message"), time.Duration(dur*1000*1000))
+	dur, _ := strconv.ParseFloat(ctx.MustForm1("duration"), 64)
+	profilestorage[ctx.MustParam1("profile")].ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
 
 	return &web.JSONResponse{}
 }

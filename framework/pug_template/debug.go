@@ -2,8 +2,8 @@ package pug_template
 
 import (
 	"bytes"
-	"flamingo/framework/web"
 	"flamingo/framework/pug_template/pugast"
+	"flamingo/framework/web"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -38,7 +38,7 @@ func (dc *DebugController) Get(ctx web.Context) web.Response {
 	//dc.Engine.loadTemplates()
 	//}
 
-	tpl, ok := dc.Engine.Ast.TplCode[ctx.QueryFirst("tpl")]
+	tpl, ok := dc.Engine.Ast.TplCode[ctx.MustQuery1("tpl")]
 	if !ok {
 		panic("tpl not found")
 	}

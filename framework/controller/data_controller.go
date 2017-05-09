@@ -16,5 +16,5 @@ type (
 
 // Get Handler registered at /_flamingo/json/{Handler} and return's the call to Get()
 func (gc *DataController) Get(c web.Context) web.Response {
-	return gc.JSON(gc.Router.Get(c.Param1("Handler"), c))
+	return gc.JSON(gc.Router.Get(c.MustParam1("Handler"), c))
 }

@@ -24,7 +24,7 @@ type (
 
 // Get Response for Product matching sku param
 func (vc *ViewController) Get(c web.Context) web.Response {
-	brand, err := vc.BrandService.Get(c, c.Param1("uid"))
+	brand, err := vc.BrandService.Get(c, c.MustParam1("uid"))
 
 	if err != nil {
 		switch errors.Cause(err).(type) {

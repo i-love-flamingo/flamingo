@@ -29,12 +29,17 @@ type (
 
 		LoadVars(r *http.Request)
 		Form(string) ([]string, error)
+		MustForm(string) []string
 		Form1(string) (string, error)
+		MustForm1(string) string
 		FormAll() map[string][]string
 		Param1(string) (string, error)
+		MustParam1(string) string
 		ParamAll() map[string]string
 		Query(string) ([]string, error)
+		MustQuery(string) []string
 		Query1(string) (string, error)
+		MustQuery1(string) string
 		QueryAll() map[string][]string
 		Request() *http.Request
 
@@ -144,16 +149,34 @@ func (c *ctx) Form(n string) ([]string, error) {
 	return nil, errors.New("form value not found")
 }
 
+// MustForm panics if n is not found
+func (c *ctx) MustForm(n string) []string {
+	r, err := c.Form(n)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 // Form1 get first POST value
 func (c *ctx) Form1(n string) (string, error) {
 	r, err := c.Form(n)
-	if err {
+	if err != nil {
 		return "", err
 	}
 	if len(r) > 0 {
 		return r[0], nil
 	}
 	return "", errors.New("form value not found")
+}
+
+// MustForm1 panics if n is not found
+func (c *ctx) MustForm1(n string) string {
+	r, err := c.Form1(n)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // FormAll get all POST values
@@ -167,7 +190,16 @@ func (c *ctx) Param1(n string) (string, error) {
 	if r, ok := c.vars[n]; ok {
 		return r, nil
 	}
-	return nil, errors.New("param value not found")
+	return "", errors.New("param value not found")
+}
+
+// MustParam1 panics if n is not found
+func (c *ctx) MustParam1(n string) string {
+	r, err := c.Param1(n)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // ParamAll get all querystring params
@@ -183,16 +215,34 @@ func (c *ctx) Query(n string) ([]string, error) {
 	return nil, errors.New("query values not found")
 }
 
+// MustQuery panics if n is not found
+func (c *ctx) MustQuery(n string) []string {
+	r, err := c.Query(n)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 // Query1 looks up Raw Query map for First Param
 func (c *ctx) Query1(n string) (string, error) {
 	r, err := c.Query(n)
-	if err {
+	if err != nil {
 		return "", err
 	}
 	if len(r) > 0 {
 		return r[0], nil
 	}
-	return nil, errors.New("query value not found")
+	return "", errors.New("query value not found")
+}
+
+// MustQuery1 panics if n is not found
+func (c *ctx) MustQuery1(n string) string {
+	r, err := c.Query1(n)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
 // QueryAll returns a Map of the Raw Query

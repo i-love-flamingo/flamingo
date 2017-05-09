@@ -14,9 +14,10 @@ type (
 
 	// OnResponseEvent is the event associated to OnResponse
 	OnResponseEvent struct {
-		Controller Controller
-		Response   web.Response
-		Request    *http.Request
+		Controller     Controller
+		Response       web.Response
+		Request        *http.Request
+		ResponseWriter http.ResponseWriter
 	}
 
 	// OnFinishEvent is the event object associated to OnFinish

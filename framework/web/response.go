@@ -10,7 +10,7 @@ type (
 	// Response defines the generic web response
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
-		Apply(http.ResponseWriter)
+		Apply(Context, http.ResponseWriter)
 	}
 
 	// RedirectResponse redirect
@@ -34,7 +34,7 @@ type (
 )
 
 // Apply Response
-func (rr *RedirectResponse) Apply(rw http.ResponseWriter) {
+func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
 	if rr.Status == 0 {
 		rr.Status = http.StatusTemporaryRedirect
 	}
@@ -44,7 +44,7 @@ func (rr *RedirectResponse) Apply(rw http.ResponseWriter) {
 }
 
 // Apply ContentResponse
-func (cr *ContentResponse) Apply(rw http.ResponseWriter) {
+func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain; charset=utf-8"
 	}
@@ -58,7 +58,7 @@ func (cr *ContentResponse) Apply(rw http.ResponseWriter) {
 }
 
 // Apply JSONResponse
-func (js *JSONResponse) Apply(rw http.ResponseWriter) {
+func (js *JSONResponse) Apply(c Context, rw http.ResponseWriter) {
 	if js.Status == 0 {
 		js.Status = http.StatusOK
 	}

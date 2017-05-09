@@ -7,13 +7,12 @@ import (
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/satori/go.uuid"
 )
 
 type (
@@ -74,9 +73,15 @@ const (
 
 // ContextFromRequest returns a ctx enriched by Request Data
 func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
+	id := uuid.NewV4().String()
+
+	if oid, ok := session.Values["context.id"]; ok {
+		id = oid.(string)
+	}
+
 	c := &ctx{
 		request:     r,
-		id:          strconv.Itoa(rand.Int()),
+		id:          id,
 		writer:      rw,
 		session:     session,
 		profiler:    profiler,

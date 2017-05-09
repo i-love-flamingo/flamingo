@@ -1,8 +1,14 @@
-hash: 8041266ae80d278d58eee050f16229caeba046ded2ae7857c75654d4caf17b82
-updated: 2017-04-24T15:51:26.925457763+02:00
+hash: 7d006da39af10f6c377e8ead8364a8749c244a3ae8c14303a5de440e8edad32c
+updated: 2017-05-09T09:58:20.216451446+02:00
 imports:
+- name: github.com/coreos/go-oidc
+  version: 5157aa730c25a7531d4b99483e6a440d4ab735a0
 - name: github.com/ghodss/yaml
   version: 0ca9ea5df5451ffdf184b4428c902747c2c11cd7
+- name: github.com/golang/protobuf
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
+  subpackages:
+  - proto
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -17,7 +23,7 @@ imports:
   version: 5f43ad9db14a5d117718490b17a75596fd6ce1b9
   repo: https://github.com/jadhub/go-raml.git
 - name: github.com/labstack/gommon
-  version: 9298d710c664bcd21c454120f63a00fb7d484458
+  version: 1121fd3e243c202482226a7afe4dcd07ffc4139a
   subpackages:
   - color
 - name: github.com/mattn/go-colorable
@@ -26,6 +32,10 @@ imports:
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/pquerna/cachecontrol
+  version: 9299cc36e57c32f83e47ffb3c25d8a3dec10ea0b
+  subpackages:
+  - cacheobject
 - name: github.com/robertkrimen/otto
   version: aabe79b06556d741409a343b9bbabf653cef2a1c
   repo: https://github.com/thebod/otto.git
@@ -35,18 +45,43 @@ imports:
   - file
   - parser
   - token
+- name: github.com/satori/go.uuid
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/spf13/cobra
-  version: 5deb57bbca49eb370538fc295ba4b2988f9f5e09
+  version: d236d298109208d194bf9c305dda03acbd1cc8d2
 - name: github.com/spf13/pflag
-  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
+  version: e57e3eeb33f795204c1ca35f56c44f83227c6e66
+- name: golang.org/x/net
+  version: feeb485667d1fdabe727840fe00adc22431bc86e
+  subpackages:
+  - context
+- name: golang.org/x/oauth2
+  version: e7a48207996f497ea86f5736d08d99d45c0b6461
+  subpackages:
+  - internal
 - name: golang.org/x/sys
-  version: f3918c30c5c2cb527c0b071a27c35120a6c0719a
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   subpackages:
   - unix
+- name: google.golang.org/appengine
+  version: 170382fa85b10b94728989dfcf6cc818b335c952
+  subpackages:
+  - internal
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/remote_api
+  - internal/urlfetch
+  - urlfetch
 - name: gopkg.in/sourcemap.v1
   version: 6e83acea0053641eff084973fee085f0c193c61a
   subpackages:
   - base64vlq
+- name: gopkg.in/square/go-jose.v2
+  version: af13e1fbc7ac2df7f7eab54e5177104d546d0e9c
+  subpackages:
+  - cipher
+  - json
 - name: gopkg.in/validator.v2
   version: 0a9835d809fb647a62611d30cb792e0b5dd65b11
 - name: gopkg.in/yaml.v2

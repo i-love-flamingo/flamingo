@@ -13,25 +13,36 @@ type RedirectAware struct {
 
 // Redirect returns a web.RedirectResponse with the proper URL
 func (r *RedirectAware) Redirect(name string, args ...string) web.Response {
-	url := r.Router.URL(name, args...)
+	u := r.Router.URL(name, args...)
 
 	return &web.RedirectResponse{
 		Status:   http.StatusFound,
-		Location: url.String(),
+		Location: u.String(),
 	}
 }
 
-// RedirectPermanentAware allows a controller to issue a 301 redirect
-type RedirectPermanentAware struct {
-	Router *router.Router `inject:""`
+// RedirectUrl returns a web.RedirectResponse with the proper URL
+func (r *RedirectAware) RedirectUrl(url string) web.Response {
+	return &web.RedirectResponse{
+		Status:   http.StatusFound,
+		Location: url,
+	}
 }
 
 // RedirectPermanent returns a web.RedirectPermanentResponse with the proper URL
-func (r *RedirectPermanentAware) RedirectPermanent(name string, args ...string) web.Response {
-	url := r.Router.URL(name, args...)
+func (r *RedirectAware) RedirectPermanent(name string, args ...string) web.Response {
+	u := r.Router.URL(name, args...)
 
 	return &web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,
-		Location: url.String(),
+		Location: u.String(),
+	}
+}
+
+// RedirectPermantentUrl returns a web.RedirectResponse with the proper URL
+func (r *RedirectAware) RedirectPermanentUrl(url string) web.Response {
+	return &web.RedirectResponse{
+		Status:   http.StatusMovedPermanently,
+		Location: url,
 	}
 }

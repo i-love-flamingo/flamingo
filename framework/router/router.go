@@ -50,8 +50,6 @@ type (
 	// DataHandler behaves the same as DataController, but just for direct callbacks
 	DataHandler func(web.Context) interface{}
 
-	SessionStore sessions.Store
-
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
@@ -60,7 +58,7 @@ type (
 		hardroutesreverse map[string]configcontext.Route
 		base              *url.URL
 
-		Sessions            SessionStore             `inject:""` // Sessions storage, which are used to retrieve user-context session
+		Sessions            sessions.Store           `inject:""` // Sessions storage, which are used to retrieve user-context session
 		SessionName         string                   `inject:"config:session.name"`
 		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
 		ProfilerProvider    func() profiler.Profiler `inject:""`
@@ -69,11 +67,6 @@ type (
 		RouterRegistry      *RouterRegistry          `inject:""`
 	}
 )
-
-// NewCookieStore because vendor-folder are hard...
-func NewCookieStore(secret []byte) *sessions.CookieStore {
-	return sessions.NewCookieStore(secret)
-}
 
 func NewRouter() *Router {
 	router := &Router{
@@ -198,18 +191,16 @@ func (router *Router) handle(c Controller) http.Handler {
 		var response web.Response
 
 		if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
-			cc = router.Injector.GetInstance(cc).(GETController)
-			response = cc.Get(ctx)
+			response = router.Injector.GetInstance(cc).(GETController).Get(ctx)
 		} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
-			cc = router.Injector.GetInstance(cc).(POSTController)
-			response = cc.Post(ctx)
+			response = router.Injector.GetInstance(cc).(POSTController).Post(ctx)
 		} else {
 			switch c := c.(type) {
 			case func(web.Context) web.Response:
 				response = c(ctx)
 
 			case DataController:
-				response = &web.JSONResponse{Data: c.(DataController).Data(ctx)}
+				response = &web.JSONResponse{Data: router.Injector.GetInstance(c).(DataController).Data(ctx)}
 
 			case func(web.Context) interface{}:
 				response = &web.JSONResponse{Data: c(ctx)}
@@ -225,12 +216,12 @@ func (router *Router) handle(c Controller) http.Handler {
 			}
 		}
 
+		// fire response event
+		ctx.EventRouter().Dispatch(&OnResponseEvent{c, response, req, w})
+
 		router.Sessions.Save(req, w, ctx.Session())
 
-		// fire response event
-		ctx.EventRouter().Dispatch(&OnResponseEvent{c, response, req})
-
-		response.Apply(w)
+		response.Apply(ctx, w)
 	})
 }
 
@@ -240,7 +231,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 
 	if c, ok := router.RouterRegistry.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
-			return c.Data(ctx)
+			return router.Injector.GetInstance(c).(DataController).Data(ctx)
 		}
 		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(ctx)

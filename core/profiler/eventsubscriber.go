@@ -33,6 +33,14 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 	context := event.Request.Context().Value(web.CONTEXT).(web.Context)
 	p := context.Profiler().(*DefaultProfiler)
 
+	event.ResponseWriter.Header().Set("X-Request-ID", context.ID())
+
+	if _, ok := event.Response.(*web.RedirectResponse); ok {
+		context.Session().Values["context.id"] = context.ID()
+	} else {
+		delete(context.Session().Values, "context.id")
+	}
+
 	if response, ok := event.Response.(*web.ContentResponse); ok {
 		p.Duration = time.Since(p.Start)
 		originalbody, _ := ioutil.ReadAll(response.Body)
@@ -78,6 +86,10 @@ window.addEventListener("load", function load(e) {
 </body>`),
 			1,
 		))
-		profilestorage[context.ID()] = p
 	}
+
+	if existing, ok := profilestorage[context.ID()]; ok {
+		p.Childs = append(existing.Childs, p.Childs...)
+	}
+	profilestorage[context.ID()] = p
 }

@@ -5,6 +5,8 @@ import (
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
 
+	"net/url"
+
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
@@ -19,6 +21,7 @@ type (
 	// LogoutController handles the logout
 	LogoutController struct {
 		*responder.RedirectAware `inject:""`
+		AuthManager              *application.AuthManager `inject:""`
 	}
 
 	// CallbackController handles the oauth2.0 callback
@@ -43,7 +46,17 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	delete(c.Session().Values, application.KEY_RAWIDTOKEN)
 	delete(c.Session().Values, application.KEY_TOKEN)
 
-	return l.Redirect("home")
+	var claims struct {
+		EndSessionEndpoint string `json:"end_session_endpoint"`
+	}
+
+	l.AuthManager.OpenIDProvider().Claims(&claims)
+	endurl, _ := url.Parse(claims.EndSessionEndpoint)
+	query := url.Values{}
+	query.Set("redirect_uri", l.AuthManager.MyHost)
+	endurl.RawQuery = query.Encode()
+
+	return l.RedirectUrl(endurl.String())
 }
 
 // Get handler for callbacks

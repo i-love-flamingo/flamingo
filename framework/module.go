@@ -1,5 +1,5 @@
 /*
-Package flamingo provides the most necessary basics, such as
+Package framework provides the most necessary basics, such as
  - service_locator
  - router
  - web (including context and response)
@@ -11,24 +11,27 @@ Additionally it registers two template functions, `get(...)` and `url(...)`
 package framework
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/framework/template"
 	"flamingo/framework/controller"
+	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/router"
+	"flamingo/framework/template"
 	"flamingo/framework/template_functions"
 	"flamingo/framework/web"
 )
 
 type (
+	// InitModule: initial module for basic setup
+	InitModule struct{}
+
+	// Module for framework functionality
 	Module struct {
 		RouterRegistry *router.RouterRegistry `inject:""`
 	}
-
-	InitModule struct{}
 )
 
+// Configure the InitModule
 func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind((*event.Router)(nil)).To(event.DefaultRouter{})
 	injector.Bind((*profiler.Profiler)(nil)).To(profiler.NullProfiler{})
@@ -42,7 +45,9 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
 }
 
+// Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Route("/_flamingo/json/{Handler}", "_flamingo.json")
 	module.RouterRegistry.Handle("_flamingo.json", new(controller.DataController))
+	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
 }

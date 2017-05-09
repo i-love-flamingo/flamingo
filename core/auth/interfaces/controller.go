@@ -56,6 +56,8 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	query.Set("redirect_uri", l.AuthManager.MyHost)
 	endurl.RawQuery = query.Encode()
 
+	c.Session().AddFlash("successful logged out", "warning")
+
 	return l.RedirectUrl(endurl.String())
 }
 
@@ -80,6 +82,8 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	if err != nil {
 		return cc.Error(c, errors.WithStack(err))
 	}
+
+	c.Session().AddFlash("successful logged in", "info")
 
 	return cc.Redirect("home")
 }

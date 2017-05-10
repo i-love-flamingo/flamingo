@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -134,7 +135,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	}
 	templateInstance.Funcs(funcs)
 
-	err = templateInstance.ExecuteTemplate(result, templateName, data)
+	err = templateInstance.ExecuteTemplate(result, templateName, fixtype(data))
 	if err != nil {
 		e := err.Error() + "\n"
 		for i, l := range strings.Split(t.Ast.TplCode[templateName], "\n") {
@@ -144,4 +145,18 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	}
 
 	return result
+}
+
+func fixtype(val interface{}) interface{} {
+	if reflect.TypeOf(val).Kind() == reflect.Slice {
+		for i, e := range val.([]interface{}) {
+			val.([]interface{})[i] = fixtype(e)
+		}
+		val = Array(val.([]interface{}))
+	} else if reflect.TypeOf(val).Kind() == reflect.Map {
+		for k, v := range val.(map[string]interface{}) {
+			val.(map[string]interface{})[k] = fixtype(v)
+		}
+	}
+	return val
 }

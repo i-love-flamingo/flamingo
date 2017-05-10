@@ -32,9 +32,13 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 
 	// render page
 	return vc.Render(c, "pages/search/view", ViewData{SearchResult: map[string]interface{}{
-		"product":  searchResult.Results.Product,
-		"brand":    searchResult.Results.Brand,
-		"location": searchResult.Results.Location,
-		"retailer": searchResult.Results.Retailer,
+		"type": "product", //@todo: add subroutes for other types
+		"query": c.Request().URL.RawQuery,
+		"results": map[string]interface{}{
+			"product":  searchResult.Results.Product,
+			"brand":    searchResult.Results.Brand,
+			"location": searchResult.Results.Location,
+			"retailer": searchResult.Results.Retailer,
+		},
 	}})
 }

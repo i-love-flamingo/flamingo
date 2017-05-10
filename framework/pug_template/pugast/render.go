@@ -113,6 +113,9 @@ func (p *PugAst) build(parent *Token) (res []Node) {
 		case "NamedBlock", "Block":
 			res = append(res, &Block{Nodes: p.build(t)})
 
+		case "Comment":
+			continue
+
 		default:
 			log.Printf("%#v\n", t)
 			panic(t)

@@ -5,6 +5,7 @@ import (
 	"flamingo/framework/router"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"flamingo/framework/event"
@@ -66,7 +67,7 @@ func (r *Logger) OnFinish(event *router.OnFinishEvent) {
 	}
 
 	if event.Error != nil {
-		extra += fmt.Sprintf(` | Error: %s`, event.Error)
+		extra += strings.Split(fmt.Sprintf(` | Error: %s`, event.Error), "\n")[0]
 	}
 
 	log.Printf(

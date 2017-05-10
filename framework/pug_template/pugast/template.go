@@ -135,7 +135,7 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	}
 	templateInstance.Funcs(funcs)
 
-	err = templateInstance.ExecuteTemplate(result, templateName, fixtype(data))
+	err = templateInstance.ExecuteTemplate(result, templateName, Fixtype(data))
 	if err != nil {
 		e := err.Error() + "\n"
 		for i, l := range strings.Split(t.Ast.TplCode[templateName], "\n") {
@@ -147,16 +147,40 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 	return result
 }
 
-func fixtype(val interface{}) interface{} {
-	if reflect.TypeOf(val).Kind() == reflect.Slice {
-		for i, e := range val.([]interface{}) {
-			val.([]interface{})[i] = fixtype(e)
+func Fixtype(val interface{}) interface{} {
+	tval := reflect.TypeOf(val)
+	if tval == nil {
+		return val
+	}
+	switch tval.Kind() {
+	case reflect.Slice:
+		rval := reflect.ValueOf(val)
+		newval := make([]interface{}, rval.Len())
+		for i := 0; i < rval.Len(); i++ {
+			newval[i] = Fixtype(rval.Index(i).Interface())
 		}
-		val = Array(val.([]interface{}))
-	} else if reflect.TypeOf(val).Kind() == reflect.Map {
-		for k, v := range val.(map[string]interface{}) {
-			val.(map[string]interface{})[k] = fixtype(v)
+		val = Array(newval)
+
+	case reflect.Map:
+		rval := reflect.ValueOf(val)
+		newval := make(map[string]interface{})
+		for _, k := range rval.MapKeys() {
+			newval[k.String()] = Fixtype(rval.MapIndex(k).Interface())
 		}
+		val = newval
+	case reflect.Struct:
+		newval := make(map[string]interface{})
+		rval := reflect.ValueOf(val)
+		for i := 0; i < tval.NumField(); i++ {
+			if rval.Field(i).CanInterface() {
+				n := Fixtype(rval.Field(i).Interface())
+				newval[tval.Field(i).Name] = n
+			}
+		}
+		val = newval
+
+	default:
+		log.Printf("%T %+v\n", val, val)
 	}
 	return val
 }

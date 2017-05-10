@@ -178,9 +178,6 @@ func Fixtype(val interface{}) interface{} {
 			}
 		}
 		val = newval
-
-	default:
-		log.Printf("%T %+v\n", val, val)
 	}
 	return val
 }

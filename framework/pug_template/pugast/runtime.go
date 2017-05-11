@@ -157,7 +157,7 @@ func runtimeAdd(x, y interface{}) interface{} {
 		{
 			switch vy.Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Int() + vy.Int()
+				return int(vx.Int() + vy.Int())
 			case reflect.Float32, reflect.Float64:
 				return float64(vx.Int()) + vy.Float()
 			case reflect.String:
@@ -191,16 +191,16 @@ func runtimeAdd(x, y interface{}) interface{} {
 	return "<nil>"
 }
 
-func runtimeInc(x interface{}) int64 {
+func runtimeInc(x interface{}) int {
 	vx := reflect.ValueOf(x)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
 		{
-			return vx.Int() + 1
+			return int(vx.Int() + 1)
 		}
 	case reflect.Float32, reflect.Float64:
 		{
-			return int64(vx.Float() + 1)
+			return int(vx.Float() + 1)
 		}
 	}
 
@@ -214,7 +214,7 @@ func runtimeSub(x, y interface{}) interface{} {
 		{
 			switch vy.Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Int() - vy.Int()
+				return int(vx.Int() - vy.Int())
 			case reflect.Float32, reflect.Float64:
 				return float64(vx.Int()) - vy.Float()
 			}
@@ -240,7 +240,7 @@ func runtimeMul(x, y interface{}) interface{} {
 		{
 			switch vy.Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Int() * vy.Int()
+				return int(vx.Int() * vy.Int())
 			case reflect.Float32, reflect.Float64:
 				return float64(vx.Int()) * vy.Float()
 			}
@@ -292,7 +292,7 @@ func runtimeRem(x, y interface{}) interface{} {
 		{
 			switch vy.Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Int() % vy.Int()
+				return int(vx.Int() % vy.Int())
 			}
 		}
 	}
@@ -316,7 +316,7 @@ func runtimePlus(x interface{}) interface{} {
 	vx := reflect.ValueOf(x)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-		return +vx.Int()
+		return int(+vx.Int())
 	case reflect.Float32, reflect.Float64:
 		return +vx.Float()
 	}

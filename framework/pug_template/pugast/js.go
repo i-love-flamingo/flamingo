@@ -148,6 +148,9 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 		} else if dot && !known {
 			result += `.`
 		}
+		if expr.Name == "range" {
+			expr.Name = "_Range"
+		}
 		result += expr.Name
 		if wrap {
 			if p.rawmode {

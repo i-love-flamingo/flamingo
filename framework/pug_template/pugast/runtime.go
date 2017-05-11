@@ -49,6 +49,22 @@ var FuncMap = template.FuncMap{
 
 	"null": func() interface{} { return nil },
 
+	"_Range": func(args ...int) (res Array) {
+		var m, o int
+		if len(args) == 1 {
+			m = args[0]
+			o = 0
+		} else {
+			m = args[1]
+			o = args[0]
+		}
+
+		for i := o; i < m; i++ {
+			res = append(res, i)
+		}
+		return
+	},
+
 	"raw":     func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
 	"tagopen": func(t, p string) template.HTML { return template.HTML(`<` + p + t) },
 	"s": func(l ...interface{}) (res string) {

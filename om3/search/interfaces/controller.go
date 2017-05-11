@@ -17,6 +17,7 @@ type (
 	// ViewData is used for search rendering
 	ViewData struct {
 		SearchResult map[string]interface{}
+		SearchHost   string
 	}
 )
 
@@ -36,14 +37,17 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	// render page
-	return vc.Render(c, "pages/search/view", ViewData{SearchResult: map[string]interface{}{
-		"type":  c.MustParam1("type"), // @todo: check for valid type
-		"query": query,
-		"results": map[string]interface{}{
-			"product":  searchResult.Results.Product,
-			"brand":    searchResult.Results.Brand,
-			"location": searchResult.Results.Location,
-			"retailer": searchResult.Results.Retailer,
+	return vc.Render(c, "pages/search/view", ViewData{
+		SearchResult: map[string]interface{}{
+			"type":  c.MustParam1("type"), // @todo: check for valid type
+			"query": query,
+			"results": map[string]interface{}{
+				"product":  searchResult.Results.Product,
+				"brand":    searchResult.Results.Brand,
+				"location": searchResult.Results.Location,
+				"retailer": searchResult.Results.Retailer,
+			},
 		},
-	}})
+		SearchHost: c.Request().Host,
+	})
 }

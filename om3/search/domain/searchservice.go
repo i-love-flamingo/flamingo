@@ -2,9 +2,10 @@ package domain
 
 import (
 	"flamingo/framework/web"
+	"net/url"
 )
 
-// ProductService interface
+// SearchService interface
 type SearchService interface {
-	Search(ctx web.Context, query string) (*SearchResult, error)
+	Search(ctx web.Context, query url.Values) (*SearchResult, error)
 }

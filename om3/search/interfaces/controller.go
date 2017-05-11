@@ -22,8 +22,7 @@ type (
 
 // Get Response for search
 func (vc *ViewController) Get(c web.Context) web.Response {
-	query := c.MustQuery1("q")
-	searchResult, err := vc.SearchService.Search(c, query)
+	searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())
 
 	// catch error
 	if err != nil {
@@ -32,8 +31,8 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 
 	// render page
 	return vc.Render(c, "pages/search/view", ViewData{SearchResult: map[string]interface{}{
-		"type": "product", //@todo: add subroutes for other types
-		"query": query,
+		"type":  "product", //@todo: add subroutes for other types
+		"query": c.MustQuery1("q"),
 		"results": map[string]interface{}{
 			"product":  searchResult.Results.Product,
 			"brand":    searchResult.Results.Brand,

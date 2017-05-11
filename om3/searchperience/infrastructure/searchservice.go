@@ -5,6 +5,7 @@ import (
 	"flamingo/framework/web"
 	"flamingo/om3/search/domain"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -17,9 +18,9 @@ type (
 )
 
 // Get a search result
-func (ss *SearchService) Search(ctx web.Context, query string) (*domain.SearchResult, error) {
+func (ss *SearchService) Search(ctx web.Context, query url.Values) (*domain.SearchResult, error) {
 	if ctx, ok := ctx.(web.Context); ok {
-		defer ctx.Profile("searchperience", "get search "+query)()
+		defer ctx.Profile("searchperience", "get search "+query.Encode())()
 	}
 
 	resp, err := ss.Client.Search(ctx, query)

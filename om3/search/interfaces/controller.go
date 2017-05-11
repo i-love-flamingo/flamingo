@@ -22,6 +22,12 @@ type (
 
 // Get Response for search
 func (vc *ViewController) Get(c web.Context) web.Response {
+	query, err := c.Query1("q")
+
+	if err != nil {
+		return vc.Error(c, err)
+	}
+
 	searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())
 
 	// catch error
@@ -32,7 +38,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	// render page
 	return vc.Render(c, "pages/search/view", ViewData{SearchResult: map[string]interface{}{
 		"type":  c.MustParam1("type"), // @todo: check for valid type
-		"query": c.MustQuery1("q"),
+		"query": query,
 		"results": map[string]interface{}{
 			"product":  searchResult.Results.Product,
 			"brand":    searchResult.Results.Brand,

@@ -34,26 +34,26 @@ func (m Math) Ceil(x interface{}) int64 {
 }
 
 // Min gets the minimum value
-func (m Math) Min(x ...interface{}) (res int) {
+func (m Math) Min(x ...interface{}) (res int64) {
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
-			v = int(reflect.ValueOf(v).Int())
+			v = reflect.ValueOf(v).Int()
 		}
-		if v.(int) < res {
-			res = v.(int)
+		if v.(int64) < res {
+			res = v.(int64)
 		}
 	}
 	return
 }
 
 // Max gets the maximum value
-func (m Math) Max(x ...interface{}) (res int) {
+func (m Math) Max(x ...interface{}) (res int64) {
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
-			v = int(reflect.ValueOf(v).Int())
+			v = reflect.ValueOf(v).Int()
 		}
-		if v.(int) > res {
-			res = v.(int)
+		if v.(int64) > res {
+			res = v.(int64)
 		}
 	}
 	return

@@ -31,7 +31,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 
 	// render page
 	return vc.Render(c, "pages/search/view", ViewData{SearchResult: map[string]interface{}{
-		"type":  "product", //@todo: add subroutes for other types
+		"type":  c.MustParam1("type"), // @todo: check for valid type
 		"query": c.MustQuery1("q"),
 		"results": map[string]interface{}{
 			"product":  searchResult.Results.Product,

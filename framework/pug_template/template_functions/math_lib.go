@@ -35,6 +35,7 @@ func (m Math) Ceil(x interface{}) int {
 
 // Min gets the minimum value
 func (m Math) Min(x ...interface{}) (res int) {
+	res = int(math.MaxInt64)
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
 			v = int(reflect.ValueOf(v).Int())
@@ -50,6 +51,7 @@ func (m Math) Min(x ...interface{}) (res int) {
 
 // Max gets the maximum value
 func (m Math) Max(x ...interface{}) (res int) {
+	res = int(math.MinInt64)
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
 			v = int(reflect.ValueOf(v).Int())

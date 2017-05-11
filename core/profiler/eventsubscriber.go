@@ -45,9 +45,10 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 		p.Duration = time.Since(p.Start)
 		originalbody, _ := ioutil.ReadAll(response.Body)
 		response.Body = bytes.NewBuffer(bytes.Replace(
-			originalbody,
-			[]byte("</body>"),
-			[]byte(`
+			bytes.Replace(
+				originalbody,
+				[]byte("</head>"),
+				[]byte(`
 <script type='text/javascript'>
 var __start = 0, __open = XMLHttpRequest.prototype.open;
 
@@ -86,12 +87,17 @@ window.addEventListener("load", function load(e) {
 });
 
 </script>
-<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'>
+</head>`),
+				1,
+			),
+			[]byte("</body>"),
+			[]byte(`<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'>
 	<a href='`+p.Router.URL("_profiler.view", "profile", context.ID()).String()+`'>`+p.Duration.String()+`: `+context.ID()+`</a>
 </div>
 </body>`),
 			1,
-		))
+		),
+		)
 	}
 
 	if existing, ok := profilestorage[context.ID()]; ok {

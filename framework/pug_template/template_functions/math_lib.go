@@ -26,34 +26,38 @@ func (ml MathLib) Func() interface{} {
 }
 
 // Ceil rounds a value up to the next biggest integer
-func (m Math) Ceil(x interface{}) int64 {
+func (m Math) Ceil(x interface{}) int {
 	if reflect.TypeOf(x).Kind() == reflect.Int64 {
 		x = float64(reflect.ValueOf(x).Int())
 	}
-	return int64(math.Ceil(x.(float64)))
+	return int(math.Ceil(x.(float64)))
 }
 
 // Min gets the minimum value
-func (m Math) Min(x ...interface{}) (res int64) {
+func (m Math) Min(x ...interface{}) (res int) {
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
-			v = reflect.ValueOf(v).Int()
+			v = int(reflect.ValueOf(v).Int())
+		} else if reflect.TypeOf(v).Kind() == reflect.Int64 {
+			v = int(reflect.ValueOf(v).Int())
 		}
-		if v.(int64) < res {
-			res = v.(int64)
+		if v.(int) < res {
+			res = v.(int)
 		}
 	}
 	return
 }
 
 // Max gets the maximum value
-func (m Math) Max(x ...interface{}) (res int64) {
+func (m Math) Max(x ...interface{}) (res int) {
 	for _, v := range x {
 		if reflect.TypeOf(v).Kind() == reflect.Int {
-			v = reflect.ValueOf(v).Int()
+			v = int(reflect.ValueOf(v).Int())
+		} else if reflect.TypeOf(v).Kind() == reflect.Int64 {
+			v = int(reflect.ValueOf(v).Int())
 		}
-		if v.(int64) > res {
-			res = v.(int64)
+		if v.(int) > res {
+			res = v.(int)
 		}
 	}
 	return

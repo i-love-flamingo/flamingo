@@ -49,8 +49,8 @@ var FuncMap = template.FuncMap{
 
 	"null": func() interface{} { return nil },
 
-	"_Range": func(args ...int64) (res Array) {
-		var m, o int64
+	"_Range": func(args ...int) (res Array) {
+		var m, o int
 		if len(args) == 1 {
 			m = args[0]
 			o = 0

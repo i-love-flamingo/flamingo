@@ -29,6 +29,7 @@ type (
 		Start            time.Time
 		Duration         time.Duration
 		Depth            int
+		Link             string
 	}
 )
 
@@ -70,6 +71,14 @@ func (p *DefaultProfiler) ProfileOffline(key, msg string, duration time.Duration
 	var subprofiler = new(DefaultProfiler)
 	subprofiler.Msg = key + ": " + msg
 	subprofiler.Duration = duration
+	p.current.Childs = append(p.current.Childs, subprofiler)
+}
+
+func (p *DefaultProfiler) ProfileExternal(key, id string, duration time.Duration) {
+	var subprofiler = new(DefaultProfiler)
+	subprofiler.Msg = key
+	subprofiler.Duration = duration
+	subprofiler.Link = id
 	p.current.Childs = append(p.current.Childs, subprofiler)
 }
 

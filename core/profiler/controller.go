@@ -227,6 +227,7 @@ const profileTemplate = `<!doctype html>
 	<span class="duration-relative" data-duration="{{printf "%d" .Duration }}" data-start="{{printf "%d" .Start.UnixNano }}"><i class="offset"></i><i class="inner"></i></span>
 	<span class="duration">{{ .Duration }}</span>
 	<h3 class="msg">{{ .Msg }}</h3>
+	{{- if .Link }}<span class="fnc"><a href="{{ .Link }}">{{ .Link }}</a></span>{{- end}}
 	<span class="fnc {{if and .Startpos .Endpos}}has-file{{end}}"><i class="icon"></i>{{ .Fnc }}</span>
 
 	{{if and .Startpos .Endpos}}

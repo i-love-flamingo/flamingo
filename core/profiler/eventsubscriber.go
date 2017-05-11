@@ -49,7 +49,13 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 			[]byte("</body>"),
 			[]byte(`
 <script type='text/javascript'>
-var __start = 0;
+var __start = 0, __open = XMLHttpRequest.prototype.open;
+
+XMLHttpRequest.prototype.open = function(a, b) {
+	r = __open.call(this, a, b);
+	this.setRequestHeader("X-Request-Id", "`+context.ID()+`");
+	return r;
+}
 
 function __profileStatic(key, message, duration) {
 	var r = new XMLHttpRequest();
@@ -90,6 +96,9 @@ window.addEventListener("load", function load(e) {
 
 	if existing, ok := profilestorage[context.ID()]; ok {
 		p.Childs = append(existing.Childs, p.Childs...)
+	}
+	if existing, ok := profilestorage[context.Request().Header.Get("X-Request-Id")]; ok {
+		existing.ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
 	}
 	profilestorage[context.ID()] = p
 }

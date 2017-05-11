@@ -110,6 +110,14 @@ func (router *Router) Init(routingConfig *configcontext.RoutingConfig) *Router {
 //     /baseurl/cms/Home
 func (router *Router) URL(name string, params ...string) *url.URL {
 	var resultURL *url.URL
+
+	query := url.Values{}
+	parts := strings.SplitN(name, "?", 2)
+	name = parts[0]
+	if len(parts) == 2 {
+		query, _ = url.ParseQuery(parts[1])
+	}
+
 	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
 		resultURL, _ = url.Parse(route.Path)
 	} else {
@@ -117,6 +125,7 @@ func (router *Router) URL(name string, params ...string) *url.URL {
 	}
 
 	resultURL.Path = path.Join(router.base.Path, resultURL.Path)
+	resultURL.RawQuery = query.Encode()
 
 	return resultURL
 }

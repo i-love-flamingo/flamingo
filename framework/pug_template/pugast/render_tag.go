@@ -32,12 +32,16 @@ func (t *Tag) args(p *PugAst, attrs []Attribute, andattributes bool) string {
 		}
 
 		var aa string
-		k, v := attr.Name, a[attr.Name]
+		k, v := attr.Name, strings.TrimSpace(a[attr.Name])
 		if andattributes {
 			aa = `{{s " " (index $__andattributes "` + k + `")}}`
 		}
-		if len(strings.TrimSpace(v)) > 0 {
-			result += ` ` + k + `="` + strings.TrimSpace(v) + aa + `"`
+		if p.Doctype == "html" && v == "true" {
+			result += ` ` + k
+		} else if p.Doctype == "html" && v == "false" {
+			// empty
+		} else if len(v) > 0 {
+			result += ` ` + k + `="` + v + aa + `"`
 		}
 	}
 

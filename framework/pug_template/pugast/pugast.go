@@ -10,6 +10,7 @@ type PugAst struct {
 	FuncMap  template.FuncMap
 	knownVar map[string]bool
 	rawmode  bool
+	Doctype  string
 }
 
 // NewPugAst creates a new Pug AST struct

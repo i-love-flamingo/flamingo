@@ -7,27 +7,22 @@ https://github.com/Masterminds/glide is used for dependencies.
 brew install glide
 ```
 
-## Install dependencies of Core:
-cd core
+## Fetch dependencies
+```
 glide install
-
-
-## Install Dep of Project
-cd akl
-glide install
+```
 
 ## Run
 
 Compile frontend:
-
 ```
 cd akl/frontend
 ./build.sh
 ```
 
 
-``
-go run akl.go
+```
+go run akl.go server
 ```
 
 Then open: http://localhost:3210/

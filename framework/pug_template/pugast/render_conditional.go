@@ -6,7 +6,7 @@ func (c *Conditional) Render(p *PugAst, depth int) (string, bool) {
 	b, _ := c.Consequent.Render(p, depth)
 	buf += b
 
-	if len(c.Alternate.Nodes) > 0 {
+	if c.Alternate != nil {
 		buf += `{{else}}`
 		b, _ := c.Alternate.Render(p, depth)
 		buf += b

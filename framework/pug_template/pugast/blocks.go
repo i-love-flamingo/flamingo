@@ -129,8 +129,8 @@ type (
 	// Conditional is equivalent to `if`
 	Conditional struct {
 		Test       JavaScriptExpression
-		Consequent Block
-		Alternate  Block
+		Consequent Node
+		Alternate  Node
 	}
 
 	// Each iterates over something

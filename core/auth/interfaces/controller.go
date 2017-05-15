@@ -36,6 +36,7 @@ type (
 func (l *LoginController) Get(c web.Context) web.Response {
 	state := uuid.NewV4().String()
 	c.Session().Values["auth.state"] = state
+	c.Session().Values["auth.redirect"] = c.Request().Referer()
 
 	return l.RedirectUrl(l.AuthManager.OAuth2Config().AuthCodeURL(state))
 }
@@ -85,5 +86,9 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 
 	c.Session().AddFlash("successful logged in", "info")
 
+	if redirect, ok := c.Session().Values["auth.redirect"]; ok {
+		delete(c.Session().Values, "auth.redirect")
+		return cc.RedirectUrl(redirect.(string))
+	}
 	return cc.Redirect("home")
 }

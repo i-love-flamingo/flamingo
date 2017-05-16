@@ -1,6 +1,7 @@
 .DS_Store
 .cache
 .idea
+.gradle
 .sass-cache
 .temp
 dist
@@ -10,5 +11,4 @@ src/sass/.includes
 coverage
 junit.xml
 /vendor
-/akl/integration-test/tests/.gradle/
-/akl/integration-test/tests/.idea/
+/akl/integration-test/build

@@ -32,7 +32,7 @@ func (ee EmptyError) Error() string {
 	return ""
 }
 
-// ErrorNotFound returns a web.ContentResponse with status 503 and ContentType text/html
+// ErrorNotFound returns a web.ContentResponse with status 404 and ContentType text/html
 func (r *ErrorAware) ErrorNotFound(context web.Context, error error) *web.ContentResponse {
 	var response *web.ContentResponse
 

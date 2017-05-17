@@ -166,7 +166,7 @@ an instance of an object with these annotations, because Go does not allow to pa
 arguments.
 
 ```go
-func MyTypeProvider(se SomethingElse) Something {
+func MyTypeProvider(se SomethingElse) *MyType {
     return &MyType{
         Special: se.DoSomething(),
     }
@@ -192,7 +192,7 @@ myInstance.Connect(somewhere)
 injector.Bind((*Something)(nil)).ToInstance(myInstance)
 ```
 
-You can also bind an instance it a struct obviously, not only to interfaces.
+You can also bind an instance it to a struct obviously, not only to interfaces.
 
 `ToInstance` takes precedence over both `To` and `ToProvider`.
 
@@ -240,6 +240,8 @@ It is also possible to bind a concrete type without `To`:
 ```go
 injector.Bind(MyType{}).AsEagerSingleton()
 ```
+
+Binding this type as an eager singleton inject the singleton instance whenever `MyType` is requested. `MyType` is a concrete type (struct) here, so we can use this mechanism to create an instance explicitly before the application is run.
 
 ## Override
 
@@ -361,23 +363,48 @@ type RenderAware struct {
 ## When to use the depencency injection container in flamingo
 
 
-- its ok to not use the dependency injection container.  In fact overusing the container adds unneccessary complexity.
+- It is ok to not use the dependency injection container. In fact overusing the container adds unneccessary complexity.
 When writing a package you should think of beeing able to also use it without the container
  So it is ok to:
-	 - Explicitly initialize your object yourself and decide in the application layer what to inject
-	 (if you use dependency injection)
+	 - Explicitly initialize your object yourself and decide in the application layer what to inject (if you use dependency injection)
 	 - Explicitly use your own factory directly 
-- Every object that has a state that is depending on the "context" and the "bootstraping" should be injected,
-because every context has its own initialized container the di container takes care of giving you
+- Every object that has a state that is depending on the running configuration-context, e.g. in a project where multiple configuration-contexts exist, should be injected,
+because every configuration-context has its own initialized container the di container takes care of giving you
 the correct initialized instance.
-	 - For example the Router ( *responder.RenderAware `inject:""` )
+	 - For example the Router ( ```*responder.RenderAware `inject:""` ``` )
 	 - Also for settings/parameters/configurations  
 - Also the DI Container is used get the "right" interface implementation - in order to implement a flexible
 "Ports and Adapters" concept (see below)
- 
+
 ## Ports and Adapters with the Container
 
 Basti: Wouln't it be cool 
+
+# Binding basic types
+
+Dingo allows binding values to `int`, `string` etc., such as with any other type.
+
+This can be used to inject configuration values.
+
+Flamingo makes an annotated binding of every configuration value in the form of:
+
+```go
+var Configuration map[string]interface{}
+
+for k, v := range Configuration {
+	injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+}
+```
+
+In this case Dingo learns the actual type of `v` (such as string, bool, int) and provides the annotated injection.
+
+Later this can be used via
+
+```go
+struct {
+	ConfigParam string `inject:"config:myconfigParam"`
+}
+```
 
 # Dingo Interception
 

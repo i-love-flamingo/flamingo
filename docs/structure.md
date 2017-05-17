@@ -7,19 +7,26 @@ flamingo (Project Root)
 │   Dockerfile
 │   Makefile
 │   Jenkinsfile
+│   glide.yaml
+│   glide.lock
 │
 └───PROJECTNAME
-│   │   glide.*
 │   │   PROJECTNAME.go (Main executable)
 │   │
 │   └───config (Main project config)
-│   └───src (Project specific packages go here)
-│       
+│   └───src (Project specific packages go here)       
 │   
 └───core (Core packages are loaded here)
-│   │   glide.*
+│   └───auth
 │   └───cms
+│   └───product
+│
 └───framework (Framework packages go here)
+│   └───router
+│   └───web
+│
+└───om3 (OM3 related packages go here)
+│
 └───... (Optional additional packages can be grouped)
 
 ```
@@ -33,53 +40,13 @@ The Main executable should do:
 * build the context tree for your project
 * start the root command (delegate work to core/cmd package)
 
-### Context
-A Context allows to run several different flamingo powered sites in one installation.
+### Configuration Context
+
+A configuration context allows to run several different flamingo powered sites in one installation.
 Typical usecases are localisations and/or specific subsites.
 
 A Context represents:
-* a list of packages registerfuncs
+* a list of modules for each context
 * configurations (that are loaded from the coresponsing "config" folder)
 * a baseurl: This is the first part of the URL - and its telling flamingo which context should be loaded.
 * Contexts can be nested in a tree like structure - this allows you to inherit the properties of contexts from parents to childs
-
-Example init func in project exectutable:
-
-```go
-func init() {
-	context.RootContext = context.New(
-		"root",
-		[]di.RegisterFunc{
-			corecms.Register,
-			pug_template.Register,
-			framework.Register,
-			base.Register,
-			brand.Register,
-			coreproduct.Register,
-			internalmock.Register,
-			//aklmock.Register,
-			profiler.Register,
-			requestlogger.Register,
-			RegisterAKL,
-		},
-		"",
-		context.New(
-			"mainstore", nil,
-			"",
-			context.New("de", nil, "/de",),
-			context.New("en", nil, "/en",),
-		),
-		context.New(
-			"lounges", nil,
-			"",
-			context.New(
-				"lh", nil,
-				"",
-				context.New("de", nil,"loungehost/lounge/de",),
-				context.New("en", nil,"loungehost/lounge/en",),
-			),
-		),
-	)
-	context.LoadYaml("config", context.RootContext)
-}
-```

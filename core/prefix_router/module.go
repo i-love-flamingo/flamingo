@@ -15,12 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Module for core/prefix_router
 type Module struct {
 	RootCmd    *cobra.Command   `inject:"flamingo"`
 	Root       *context.Context `inject:""`
 	defaultmux *http.ServeMux
 }
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.defaultmux = http.NewServeMux()
 
@@ -33,6 +35,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*http.ServeMux)(nil)).ToInstance(m.defaultmux)
 }
 
+// Serve HTTP Requests
 func Serve(root *context.Context, defaultRouter *http.ServeMux) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		frontRouter := NewFrontRouter()

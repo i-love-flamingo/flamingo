@@ -9,11 +9,13 @@ import (
 	"net/http"
 )
 
+// Module for framework/pug_template
 type Module struct {
 	RouterRegistry *router.RouterRegistry `inject:""`
 	Basedir        string                 `inject:"config:pug_template.basedir"`
 }
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
 	m.RouterRegistry.Route("/static/{n:.*}", "_static")

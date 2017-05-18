@@ -7,27 +7,33 @@ import (
 )
 
 type (
+	// ErrorAware responder can return errors
 	ErrorAware struct {
 		DebugMode    bool `inject:"config:debug.mode"`
 		*RenderAware `inject:""`
 	}
 
+	// ErrorViewData for template rendering
 	ErrorViewData struct {
 		Code  int
 		Error error
 	}
 
+	// DebugError holds additional information
 	DebugError struct {
 		Err error
 	}
 
+	// EmptyError in case we want to hide our error
 	EmptyError struct{}
 )
 
+// Error implements error interface
 func (de DebugError) Error() string {
 	return fmt.Sprintf("%+v", de.Err)
 }
 
+// Error implements error interface
 func (ee EmptyError) Error() string {
 	return ""
 }

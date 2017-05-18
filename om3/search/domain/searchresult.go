@@ -5,6 +5,7 @@ import (
 )
 
 type (
+	// SearchResult defines our search model
 	SearchResult struct {
 		Results struct {
 			Retailer struct {
@@ -50,6 +51,7 @@ type (
 		} `json:"results"`
 	}
 
+	// Media is a generic media type
 	Media struct {
 		MimeType  string `json:"mimeType"`
 		Reference string `json:"reference"`
@@ -58,6 +60,7 @@ type (
 		Usage     string `json:"usage"`
 	}
 
+	// Brand is a product brand
 	Brand struct {
 		Channel          string   `json:"channel"`
 		ForeignID        string   `json:"foreignId"`
@@ -71,6 +74,7 @@ type (
 		Title            string   `json:"title"`
 	}
 
+	// Location is a place
 	Location struct {
 		ForeignID        string `json:"foreignId"`
 		Locale           string `json:"locale"`
@@ -99,6 +103,7 @@ type (
 		Keywords []string `json:"keywords"`
 	}
 
+	// MetaData is search related meta information
 	MetaData struct {
 		TotalHits    int    `json:"totalHits"`
 		Took         int    `json:"took"`
@@ -114,6 +119,7 @@ type (
 		} `json:"sortMapping"`
 	}
 
+	// PageInfo gives information about multiple page results
 	PageInfo struct {
 		CurrentPage      int `json:"currentPage"`
 		TotalPages       int `json:"totalPages"`

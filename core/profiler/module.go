@@ -14,6 +14,7 @@ type (
 	}
 )
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Route("/_profiler/view/{profile}", "_profiler.view")
 	m.RouterRegistry.Handle("_profiler.view", new(ProfileController))

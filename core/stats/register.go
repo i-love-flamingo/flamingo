@@ -20,6 +20,7 @@ type (
 	}
 )
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("stats.index", func(c web.Context) interface{} {
 		return map[string]int{

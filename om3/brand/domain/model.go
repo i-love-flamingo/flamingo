@@ -1,6 +1,7 @@
 package domain
 
 type (
+	// Brand defines a product brand
 	Brand struct {
 		ID               string             `json:"id"`
 		SegmentRelevance map[string]float64 `json:"segmentRelevance"`
@@ -21,6 +22,7 @@ type (
 		Url              string             `json:"url"`
 	}
 
+	// BrandImage can be displayed
 	BrandImage struct {
 		ID    int    `json:"id"`
 		Hash  string `json:"hash"`

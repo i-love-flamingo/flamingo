@@ -10,10 +10,12 @@ import (
 	"time"
 )
 
+// EventSubscriber for the profiler
 type EventSubscriber struct {
 	Router *router.Router `inject:""`
 }
 
+// Notify on events
 func (e *EventSubscriber) Notify(ev event.Event) {
 	switch ev := ev.(type) {
 	case *router.OnResponseEvent:

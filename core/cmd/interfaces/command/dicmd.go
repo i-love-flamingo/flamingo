@@ -11,6 +11,7 @@ var (
 	contextName, baseUrl string
 	Root                 *context.Context
 
+	// DiCmd shows dependency injection information
 	DiCmd = &cobra.Command{
 		Use:   "di",
 		Short: "Dependency Injection Debug output (for all or selected contexts)",

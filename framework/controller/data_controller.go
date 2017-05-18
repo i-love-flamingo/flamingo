@@ -9,12 +9,14 @@ import (
 type (
 	// DataController registers a route to allow external tools/ajax to retrieve data Handler
 	DataController struct {
-		Router               *router.Router `inject:""`
 		*responder.JSONAware `inject:""`
+		Router               *router.Router `inject:""`
 	}
 
+	// SessionFlashController takes care of supported flash messages
 	SessionFlashController struct{}
 
+	// FlashMessage contains a type and a printable message
 	FlashMessage struct {
 		Type    string
 		Message interface{}

@@ -68,6 +68,7 @@ type (
 	}
 )
 
+// NewRouter creates a new Router instance
 func NewRouter() *Router {
 	router := &Router{
 		router:            mux.NewRouter(),
@@ -78,6 +79,7 @@ func NewRouter() *Router {
 	return router
 }
 
+// Init the router
 func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 
@@ -268,6 +270,7 @@ func (router *Router) Get(handler string, ctx web.Context) interface{} {
 	}
 }
 
+// GetHardRoutes for config-based routing overrides
 func (router *Router) GetHardRoutes() map[string]configcontext.Route {
 	return router.hardroutes
 }

@@ -22,6 +22,7 @@ type (
 
 const contextTime contextKey = "time"
 
+// Notify is called on events
 func (r *Logger) Notify(e event.Event) {
 	switch e := e.(type) {
 	case *router.OnRequestEvent:

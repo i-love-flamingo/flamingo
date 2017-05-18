@@ -8,12 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Name for the default command
 var Name = "flamingo"
 
+// Module for core/cmd
 type Module struct {
 	Root *context.Context `inject:""`
 }
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	var rootCmd = &cobra.Command{
 		Use:   Name,

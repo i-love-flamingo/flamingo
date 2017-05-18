@@ -67,6 +67,7 @@ func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 	}
 }
 
+// ProfileOffline is called for profiling events not directly in flamingo, such as the browser
 func (p *DefaultProfiler) ProfileOffline(key, msg string, duration time.Duration) {
 	var subprofiler = new(DefaultProfiler)
 	subprofiler.Msg = key + ": " + msg
@@ -74,6 +75,7 @@ func (p *DefaultProfiler) ProfileOffline(key, msg string, duration time.Duration
 	p.current.Childs = append(p.current.Childs, subprofiler)
 }
 
+// ProfileExternal connects another profile to the current, e.g. for Ajax requests
 func (p *DefaultProfiler) ProfileExternal(key, id string, duration time.Duration) {
 	var subprofiler = new(DefaultProfiler)
 	subprofiler.Msg = key

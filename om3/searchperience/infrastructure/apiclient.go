@@ -16,7 +16,9 @@ type (
 
 	// ProductClient is a specific SearchperienceClient
 	ProductClient SearchperienceClient
-	SearchClient  SearchperienceClient
+
+	// SearchClient is a specific SearchperienceClient
+	SearchClient SearchperienceClient
 )
 
 func (ac *SearchperienceClient) request(ctx context.Context, path string, query url.Values) (*http.Response, error) {
@@ -50,13 +52,13 @@ func (bc *ProductClient) Get(ctx context.Context, foreignID string) (*http.Respo
 	return bc.common.request(ctx, "document", query)
 }
 
-// SearchClient provider
+// NewSearchClient provider
 func NewSearchClient(ac *SearchperienceClient) *SearchClient {
 	ac.common = ac
 	return (*SearchClient)(ac)
 }
 
-// Get a search result
+// Search gets a search result
 func (bc *SearchClient) Search(ctx context.Context, query url.Values) (*http.Response, error) {
 	return bc.common.request(ctx, "search", query)
 }

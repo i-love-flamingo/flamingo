@@ -7,17 +7,17 @@ import (
 )
 
 type (
-	// ApiClient requests masterdataportal api
-	ApiClient struct {
+	// APIClient requests masterdataportal api
+	APIClient struct {
 		BaseURL string `inject:"config:masterdataportal.baseurl"`
-		common  *ApiClient
+		common  *APIClient
 	}
 
-	// BrandsClient is a specific ApiClient
-	BrandsClient ApiClient
+	// BrandsClient is a specific APIClient
+	BrandsClient APIClient
 )
 
-func (ac *ApiClient) request(ctx context.Context, p string) (*http.Response, error) {
+func (ac *APIClient) request(ctx context.Context, p string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", ac.BaseURL+p, nil)
 	if err != nil {
 		panic(err)
@@ -29,8 +29,8 @@ func (ac *ApiClient) request(ctx context.Context, p string) (*http.Response, err
 	return http.DefaultClient.Do(req)
 }
 
-// NewBrandsClient creates a BrandsClient from an ApiClient
-func NewBrandsClient(ac *ApiClient) *BrandsClient {
+// NewBrandsClient creates a BrandsClient from an APIClient
+func NewBrandsClient(ac *APIClient) *BrandsClient {
 	ac.common = ac
 	return (*BrandsClient)(ac)
 }

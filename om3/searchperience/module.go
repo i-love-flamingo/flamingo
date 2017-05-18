@@ -2,8 +2,8 @@ package searchperience
 
 import (
 	"flamingo/core/product/domain"
-	searchdomain "flamingo/om3/search/domain"
 	"flamingo/framework/dingo"
+	searchdomain "flamingo/om3/search/domain"
 	"flamingo/om3/searchperience/infrastructure"
 )
 
@@ -14,6 +14,7 @@ type (
 	// ProductClientModule for product client stuff
 	ProductClientModule struct{}
 
+	// SearchClientModule for searching
 	SearchClientModule struct{}
 )
 
@@ -23,6 +24,7 @@ func (module *ProductClientModule) Configure(injector *dingo.Injector) {
 	injector.Bind((*domain.ProductService)(nil)).To(infrastructure.ProductService{})
 }
 
+// Configure DI
 func (module *SearchClientModule) Configure(injector *dingo.Injector) {
 	injector.Bind(infrastructure.SearchClient{}).ToProvider(infrastructure.NewSearchClient)
 	injector.Bind((*searchdomain.SearchService)(nil)).To(infrastructure.SearchService{})

@@ -268,6 +268,7 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 	}
 }
 
+// Post saves offline profiling events
 func (dc *ProfileController) Post(ctx web.Context) web.Response {
 	dur, _ := strconv.ParseFloat(ctx.MustForm1("duration"), 64)
 	profilestorage[ctx.MustParam1("profile")].ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))

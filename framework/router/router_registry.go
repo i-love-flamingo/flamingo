@@ -29,12 +29,12 @@ func (router *RouterRegistry) Route(path, name string) {
 	router.routes[name] = path
 }
 
-// Returns the list of Routes Registered
+// GetRoutes returns the list of Routes Registered
 func (router *RouterRegistry) GetRoutes() map[string]string {
 	return router.routes
 }
 
-// Returns the list of Routes Registered
+// GetHandleForNamedRoute returns the handle for a named route
 func (router *RouterRegistry) GetHandleForNamedRoute(name string) (Controller, error) {
 	if val, ok := router.handler[name]; ok {
 		return val, nil

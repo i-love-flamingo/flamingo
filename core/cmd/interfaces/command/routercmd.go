@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	// RoutingConfCmd to show routing configuration information
 	RoutingConfCmd = &cobra.Command{
 		Use:   "routeconf",
 		Short: "Print the routing configs from the contexts",

@@ -1,13 +1,13 @@
 package search
 
 import (
-	"flamingo/om3/search/interfaces"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
+	"flamingo/om3/search/interfaces"
 )
 
 type (
-	// Module registers our profiler
+	// Module registers our search package
 	Module struct {
 		RouterRegistry *router.RouterRegistry `inject:""`
 	}

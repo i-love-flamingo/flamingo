@@ -1,5 +1,7 @@
 /*
 
+package core
+
 Flamingo core is the basic framework for Frontend's made with GO
 
 Basic usage:

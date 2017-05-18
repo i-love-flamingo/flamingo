@@ -96,7 +96,7 @@ func (b *Binding) AsEagerSingleton() *Binding {
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())
 	for i := 0; i < p.fnc.Type().NumIn(); i++ {
-		in[i] = injector.getInstance(p.fnc.Type().In(i), p.binding.annotatedWith)
+		in[i] = injector.getInstance(p.fnc.Type().In(i), "")
 	}
 	res := p.fnc.Call(in)[0]
 	injector.RequestInjection(res)

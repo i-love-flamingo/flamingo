@@ -21,8 +21,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("_pugtpl_debug", new(DebugController))
 	m.RouterRegistry.Route("/_pugtpl/debug", "_pugtpl_debug")
 
-	injector.Bind((*pugast.PugTemplateEngine)(nil)).AsEagerSingleton()
-	injector.Bind((*template.Engine)(nil)).AsEagerSingleton().To(pugast.PugTemplateEngine{})
+	// We bind the Template Engine to the ChildSingleton level (in case there is different config handling
+	// We use the provider to make sure both are always the same injected type
+	injector.Bind(pugast.PugTemplateEngine{}).In(dingo.ChildSingleton)
+	injector.Bind((*template.Engine)(nil)).
+		In(dingo.ChildSingleton).
+		ToProvider(func(t *pugast.PugTemplateEngine, i *dingo.Injector) template.Engine { return (template.Engine)(t) })
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.AssetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.MathLib{})

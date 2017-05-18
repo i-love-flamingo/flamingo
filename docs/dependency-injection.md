@@ -200,7 +200,7 @@ You can also bind an instance it to a struct obviously, not only to interfaces.
 
 `In` allows us to bind in a scope, making the created instances scoped in a certain way.
 
-Currently Dingo only allows to bind to `dingo.Singleton`, no other scopes exist.
+Currently Dingo only allows to bind to `dingo.Singleton` and `dingo.ChildSingleton`.
 
 ```go
 injector.Bind((*Something)(nil)).In(dingo.Singleton).To(MyType{})
@@ -222,6 +222,16 @@ well as future injection requests.
 
 By default it is advised to not use Singletons whenever possible, and rather use
 immutable objects you inject whenever you need them.
+
+### dingo.ChildSingleton
+
+The ChildSingleton is just another Singleton (actually of the same type), but dingo will create a new one
+for every derived child injector.
+
+This allows frameworks like Flamingo to distinguish at a root level between singleton scopes, e.g. for
+multi-page setups where we need a wide scope for routers.
+
+Since ChildSingleton is very similar to Singleton you should only use it with care.
 
 ## AsEagerSingleton
 

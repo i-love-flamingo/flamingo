@@ -1,20 +1,17 @@
-package commands
+package command
 
 import (
-	"github.com/spf13/cobra"
+	"flamingo/framework"
 	"fmt"
+
+	"github.com/spf13/cobra"
 )
-
-
-func init() {
-	RootCommand.AddCommand(VersionCmd)
-}
 
 var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of Flamingo",
 	Long:  `All software has versions. This is Flamingo's`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Flamingo Console v0.1 -- HEAD")
+		fmt.Printf("Flamingo Console v%s -- HEAD\n", framework.VERSION)
 	},
 }

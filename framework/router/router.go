@@ -78,12 +78,21 @@ func NewRouter() *Router {
 	return router
 }
 
-func (router *Router) Init(routingConfig *configcontext.RoutingConfig) *Router {
+func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
+
+	// Make sure to not taint the global router registry
+	routes := NewRouterRegistry()
+	for k, v := range router.RouterRegistry.routes {
+		routes.routes[k] = v
+	}
+	for k, v := range router.RouterRegistry.handler {
+		routes.handler[k] = v
+	}
 
 	for _, route := range routingConfig.Routes {
 		if route.Args == nil {
-			router.RouterRegistry.routes[route.Controller] = route.Path
+			routes.routes[route.Controller] = route.Path
 		} else {
 			router.hardroutes[route.Path] = route
 			p := make([]string, len(route.Args)*2)
@@ -94,8 +103,8 @@ func (router *Router) Init(routingConfig *configcontext.RoutingConfig) *Router {
 		}
 	}
 
-	for name, handler := range router.RouterRegistry.handler {
-		if route, ok := router.RouterRegistry.routes[name]; ok {
+	for name, handler := range routes.handler {
+		if route, ok := routes.routes[name]; ok {
 			router.router.Handle(route, router.handle(handler)).Name(name)
 		}
 	}

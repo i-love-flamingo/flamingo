@@ -21,7 +21,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	gob.Register(&oauth2.Token{})
 	gob.Register(&oidc.IDToken{})
 
-	injector.Bind(application.AuthManager{}).AsEagerSingleton()
+	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 
 	m.RouterRegistry.Route("/auth/login", "auth.login")
 	m.RouterRegistry.Route("/auth/callback", "auth.callback")

@@ -1,9 +1,8 @@
 package dingo
 
-// TODO: Implement child/parent
-
 import (
 	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -13,8 +12,8 @@ type (
 		bindings      map[reflect.Type][]*Binding
 		multibindings map[reflect.Type][]*Binding
 		interceptor   map[reflect.Type][]reflect.Type
-		//parent        *Injector
-		scopes map[Scope]struct{}
+		parent        *Injector
+		scopes        map[reflect.Type]Scope
 	}
 
 	// Module is provided by packages to generate the DI tree
@@ -29,16 +28,28 @@ func NewInjector(modules ...Module) *Injector {
 		bindings:      make(map[reflect.Type][]*Binding),
 		multibindings: make(map[reflect.Type][]*Binding),
 		interceptor:   make(map[reflect.Type][]reflect.Type),
-		scopes:        make(map[Scope]struct{}),
+		scopes:        make(map[reflect.Type]Scope),
 	}
 
 	injector.Bind(Injector{}).ToInstance(injector)
 
 	injector.BindScope(Singleton)
+	injector.BindScope(ChildSingleton)
 
 	injector.InitModules(modules...)
 
 	return injector
+}
+
+// Child derives a child injector with a new ChildSingletonScope
+func (injector *Injector) Child() *Injector {
+	var newInjector = NewInjector()
+	newInjector.parent = injector
+	newInjector.Override(Injector{}, "").ToInstance(newInjector)
+	newInjector.BindScope(new(ChildSingletonScope))
+	newInjector.multibindings = injector.multibindings
+
+	return newInjector
 }
 
 // InitModules initializes the injector with the given modules
@@ -62,7 +73,7 @@ func (injector *Injector) InitModules(modules ...Module) {
 	for _, bindings := range injector.bindings {
 		for _, binding := range bindings {
 			if binding.eager {
-				injector.getInstance(binding.typeof)
+				injector.getInstance(binding.typeof, binding.annotatedWith)
 			}
 		}
 	}
@@ -70,11 +81,16 @@ func (injector *Injector) InitModules(modules ...Module) {
 
 // GetInstance creates a new instance of what was requested
 func (injector *Injector) GetInstance(of interface{}) interface{} {
-	return injector.getInstance(of).Interface()
+	return injector.getInstance(of, "").Interface()
+}
+
+// GetAnnotatedInstance creates a new instance of what was requested with the given annotation
+func (injector *Injector) GetAnnotatedInstance(of interface{}, annotatedWith string) interface{} {
+	return injector.getInstance(of, annotatedWith).Interface()
 }
 
 // getInstance creates the new instance of of, returns a reflect.value
-func (injector *Injector) getInstance(of interface{}) reflect.Value {
+func (injector *Injector) getInstance(of interface{}, annotatedWith string) reflect.Value {
 	oftype := reflect.TypeOf(of)
 
 	if oft, ok := of.(reflect.Type); ok {
@@ -85,7 +101,22 @@ func (injector *Injector) getInstance(of interface{}) reflect.Value {
 		}
 	}
 
-	return injector.resolveType(oftype, "")
+	return injector.resolveType(oftype, annotatedWith)
+}
+
+func (injector *Injector) findBinding(t reflect.Type, annotation string) *Binding {
+	if len(injector.bindings[t]) > 0 {
+		binding := injector.lookupBinding(t, annotation)
+		if binding != nil {
+			return binding
+		}
+	}
+
+	if injector.parent != nil {
+		return injector.parent.findBinding(t, annotation)
+	}
+
+	return nil
 }
 
 // resolveType resolves a requested type, with annotation
@@ -96,14 +127,15 @@ func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect
 
 	var final reflect.Value
 
-	if len(injector.bindings[t]) > 0 {
-		binding := injector.lookupBinding(t, annotation)
-
+	if binding := injector.findBinding(t, annotation); binding != nil {
 		if binding.scope != nil {
-			if _, ok := injector.scopes[binding.scope]; ok {
-				final = binding.scope.resolveType(t, injector.internalResolveType)
+			if scope, ok := injector.scopes[reflect.TypeOf(binding.scope)]; ok {
+				final = scope.ResolveType(t, annotation, injector.internalResolveType)
+				if !final.IsValid() {
+					panic(fmt.Sprintf("%T did no resolve %s", scope, t))
+				}
 			} else {
-				panic(fmt.Sprintf("unknown scope %s", binding.scope))
+				panic(fmt.Sprintf("unknown scope %T for %s", binding.scope, t))
 			}
 		}
 	}
@@ -119,7 +151,6 @@ func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect
 
 func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect.Value {
 	for _, interceptor := range injector.interceptor[t] {
-		//log.Println("intercepting", final.String(), "with", interceptor.String())
 		of := final
 		final = reflect.New(interceptor)
 		injector.RequestInjection(final.Interface())
@@ -130,9 +161,7 @@ func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect
 
 // internalResolveType resolves a type request with the current injector
 func (injector *Injector) internalResolveType(t reflect.Type, annotation string) reflect.Value {
-	if len(injector.bindings[t]) > 0 {
-		binding := injector.lookupBinding(t, annotation)
-
+	if binding := injector.findBinding(t, annotation); binding != nil {
 		if binding.instance != nil {
 			return binding.instance.ivalue
 		}
@@ -166,10 +195,10 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			}
 
 			if res.Kind() == reflect.Slice {
-				return []reflect.Value{injector.internalResolveType(t.Out(0), "")}
+				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation)}
 			} else {
 				// set to actual value
-				res.Set(injector.getInstance(t.Out(0)))
+				res.Set(injector.getInstance(t.Out(0), annotation))
 				// return
 				return []reflect.Value{res}
 			}
@@ -183,16 +212,12 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			for _, binding := range bindings {
 				if binding.annotatedWith == annotation {
 					//n = reflect.Append(n, injector.getInstance(binding.to))
-					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to), t.Elem()))
+					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), t.Elem()))
 				}
 			}
 			return n
 		}
 	}
-
-	//if injector.parent != nil {
-	//	return injector.parent.resolveType(t, annotation)
-	//}
 
 	if t.Kind() == reflect.Interface {
 		panic("Can not instantiate interface " + t.String())
@@ -211,14 +236,7 @@ func (injector *Injector) lookupBinding(t reflect.Type, annotation string) *Bind
 		}
 	}
 
-	//for _, binding := range injector.bindings[t] {
-	//	if binding.annotatedWith == "" {
-	//		return binding
-	//	}
-	//}
-
-	panic("Can not find binding with annotation '" + annotation + "' for " + fmt.Sprintf("%T", t))
-	//return injector.bindings[t][0]
+	return nil
 }
 
 // BindMulti binds multiple concrete types to the same abstract type / interface
@@ -251,7 +269,7 @@ func (injector *Injector) BindInterceptor(to, interceptor interface{}) {
 
 // BindScope binds a scope to be aware of
 func (injector *Injector) BindScope(s Scope) {
-	injector.scopes[s] = struct{}{}
+	injector.scopes[reflect.TypeOf(s)] = s
 }
 
 // Bind creates a new binding for an abstract type / interface
@@ -295,13 +313,21 @@ func (injector *Injector) RequestInjection(object interface{}) {
 	}
 	var injectlist = []reflect.Value{object.(reflect.Value)}
 	var i int
+	var current reflect.Value
+
+	defer func() {
+		if e := recover(); e != nil {
+			log.Printf("%s\n%s\n", current.Type(), current.String())
+			panic(e)
+		}
+	}()
 
 	for {
 		if i >= len(injectlist) {
 			break
 		}
 
-		current := injectlist[i]
+		current = injectlist[i]
 		ctype := current.Type()
 
 		i++
@@ -339,6 +365,13 @@ func (injector *Injector) RequestInjection(object interface{}) {
 
 // Debug Output
 func (injector *Injector) Debug() {
+	fmt.Print("My scopes: ")
+	for _, scope := range injector.scopes {
+		fmt.Printf("%T@%p ", scope, scope)
+	}
+	fmt.Println()
+	fmt.Println()
+
 	for vtype, bindings := range injector.bindings {
 		fmt.Printf("\t%30s  >  ", vtype)
 		for _, binding := range bindings {
@@ -371,5 +404,10 @@ func (injector *Injector) Debug() {
 			}
 		}
 		fmt.Println()
+	}
+
+	if injector.parent != nil {
+		fmt.Printf("\n-----[ parent @ %p ]-----\n", injector.parent)
+		injector.parent.Debug()
 	}
 }

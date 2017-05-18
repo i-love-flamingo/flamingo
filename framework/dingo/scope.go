@@ -8,25 +8,34 @@ import (
 type (
 	// Scope defines a scope's behaviour
 	Scope interface {
-		resolveType(t reflect.Type, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value
+		ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value
 	}
 
 	// SingletonScope is our Scope to handle Singletons
 	SingletonScope struct {
 		sync.Mutex
 		instanceLock map[reflect.Type]*sync.Mutex
-		instances    map[reflect.Type]reflect.Value
+		instances    map[reflect.Type]map[string]reflect.Value
 	}
+
+	ChildSingletonScope SingletonScope
 )
 
-// Singleton is the default SingletonScope for dingo
-var Singleton = new(SingletonScope)
+var (
+	// Singleton is the default SingletonScope for dingo
+	Singleton = new(SingletonScope)
 
-// resolve a request in this scope
-func (s *SingletonScope) resolveType(t reflect.Type, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value {
+	// ChildSingleton is a per-child singleton
+	ChildSingleton = new(ChildSingletonScope)
+)
+
+// ResolveType resolves a request in this scope
+func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value {
 	// we got one :)
 	if found, ok := s.instances[t]; ok {
-		return found
+		if found, ok := found[annotation]; ok {
+			return found
+		}
 	}
 
 	// without an existing instance we need to create one
@@ -36,8 +45,10 @@ func (s *SingletonScope) resolveType(t reflect.Type, unscoped func(t reflect.Typ
 
 	// someone already built our instance while we were waiting for the lock
 	if found, ok := s.instances[t]; ok {
-		s.Unlock()
-		return found
+		if found, ok := found[annotation]; ok {
+			s.Unlock()
+			return found
+		}
 	}
 
 	// If instanceLock is empty, create it now
@@ -56,11 +67,17 @@ func (s *SingletonScope) resolveType(t reflect.Type, unscoped func(t reflect.Typ
 
 	// someone already built our instance while we were waiting/setup the locks
 	if found, ok := s.instances[t]; ok {
-		return found
+		if found, ok := found[annotation]; ok {
+			return found
+		}
 	}
 
 	if s.instances == nil {
-		s.instances = make(map[reflect.Type]reflect.Value)
+		s.instances = make(map[reflect.Type]map[string]reflect.Value)
+	}
+
+	if s.instances[t] == nil {
+		s.instances[t] = make(map[string]reflect.Value)
 	}
 
 	// release our main lock so we won't lock ourselves when trying to create a singleton
@@ -68,8 +85,13 @@ func (s *SingletonScope) resolveType(t reflect.Type, unscoped func(t reflect.Typ
 	s.Unlock()
 
 	// save our new generated singleton
-	s.instances[t] = unscoped(t, "")
+	s.instances[t][annotation] = unscoped(t, annotation)
 
 	// return the new singleton
-	return s.instances[t]
+	return s.instances[t][annotation]
+}
+
+// ResolveType delegates to SingletonScope.ResolveType
+func (c *ChildSingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value {
+	return (*SingletonScope)(c).ResolveType(t, annotation, unscoped)
 }

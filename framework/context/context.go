@@ -1,9 +1,7 @@
 // Package context provides supporting code for multi-tenant setups
 package context
 
-import (
-	"flamingo/framework/dingo"
-)
+import "flamingo/framework/dingo"
 
 type (
 	// Context defines a configuration context for multi-site setups
@@ -17,19 +15,8 @@ type (
 		Modules  []dingo.Module
 		Injector *dingo.Injector `json:"-"`
 
-		// Basti: Why json - ?
-		// Also: what is interface{}? why not string?
-		// Also - Should we better use composite for the stuff that is Unmarschalled from yaml?
 		Routes        []Route                `yaml:"routes"`
 		Configuration map[string]interface{} `yaml:"config" json:"config"`
-	}
-
-	// RoutingConfig Value struct are representing the informations required by routing
-	RoutingConfig struct {
-		Name     string
-		BaseURL  string
-		Routes   []Route
-		Injector *dingo.Injector
 	}
 
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
@@ -40,11 +27,7 @@ type (
 	}
 )
 
-// This is the RootContext - its expected that this is set from project package
-var RootContext *Context
-
-// New returns Context Pointers with RegisterFuncs.
-
+// New creates a new Context with childs
 func New(name string, modules []dingo.Module, baseURl string, childs ...*Context) *Context {
 	ctx := &Context{
 		Name:    name,
@@ -62,32 +45,42 @@ func New(name string, modules []dingo.Module, baseURl string, childs ...*Context
 
 // GetFlatContexts returns a map of context-relative-name->*Context, which has been flatted to inherit all parent's
 // tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of ctx.
-func (ctx *Context) GetRoutingConfigs() []*RoutingConfig {
-	var result []*RoutingConfig
+func (ctx *Context) GetFlatContexts() []*Context {
+	var result []*Context
 	flat := ctx.Flat()
 
 	for relativeContextKey, context := range flat {
 		if context.BaseURL == "" {
 			continue
 		}
-		result = append(result, &RoutingConfig{
+		result = append(result, &Context{
 			Name:     relativeContextKey,
 			BaseURL:  context.BaseURL,
 			Routes:   context.Routes,
-			Injector: context.GetInitializedInjector(),
+			Injector: context.Injector,
 		})
 
 	}
 	return result
 }
 
-// Returns initialized container - based on the configuration
+// GetInitializedInjector returns initialized container based on the configuration
+// we derive our injector from our parent
 func (ctx *Context) GetInitializedInjector() *dingo.Injector {
-	injector := dingo.NewInjector()
+	var injector *dingo.Injector
+	if ctx.Parent != nil {
+		injector = ctx.Parent.Injector.Child()
+	} else {
+		injector = dingo.NewInjector()
+	}
+	injector.Bind(Context{}).ToInstance(ctx)
+
 	for k, v := range ctx.Configuration {
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
+
 	injector.InitModules(ctx.Modules...)
+
 	return injector
 }
 
@@ -95,6 +88,8 @@ func (ctx *Context) GetInitializedInjector() *dingo.Injector {
 func (ctx *Context) Flat() map[string]*Context {
 	res := make(map[string]*Context)
 	res[ctx.Name] = ctx
+
+	ctx.Injector = ctx.GetInitializedInjector()
 
 	for _, child := range ctx.Childs {
 		for cn, flatchild := range child.Flat() {
@@ -106,15 +101,10 @@ func (ctx *Context) Flat() map[string]*Context {
 }
 
 // MergeFrom merges two Contexts into a new one
+// We do not merge config, as we use the DI to handle it
 func MergeFrom(baseContext, incomingContext Context) *Context {
 	if baseContext.Configuration == nil {
 		baseContext.Configuration = make(map[string]interface{})
-	}
-
-	for k, v := range incomingContext.Configuration {
-		if _, ok := baseContext.Configuration[k]; !ok {
-			baseContext.Configuration[k] = v
-		}
 	}
 
 	knownhandler := make(map[string]bool)
@@ -127,8 +117,6 @@ func MergeFrom(baseContext, incomingContext Context) *Context {
 			baseContext.Routes = append(baseContext.Routes, route)
 		}
 	}
-
-	baseContext.Modules = append(incomingContext.Modules, baseContext.Modules...)
 
 	return &baseContext
 }

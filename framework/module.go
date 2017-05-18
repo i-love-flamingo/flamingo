@@ -21,6 +21,10 @@ import (
 	"flamingo/framework/web"
 )
 
+const (
+	VERSION = "1.0"
+)
+
 type (
 	// InitModule: initial module for basic setup
 	InitModule struct{}
@@ -38,7 +42,7 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 	injector.Bind((*web.ContextFactory)(nil)).ToInstance(web.ContextFromRequest)
 
-	injector.Bind(router.Router{}).In(dingo.Singleton).ToProvider(router.NewRouter)
+	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.RouterRegistry{}).In(dingo.Singleton).ToProvider(router.NewRouterRegistry)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})

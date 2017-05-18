@@ -29,6 +29,7 @@ type (
 	Provider struct {
 		fnctype reflect.Type
 		fnc     reflect.Value
+		binding *Binding
 	}
 )
 
@@ -61,7 +62,8 @@ func (b *Binding) ToInstance(instance interface{}) *Binding {
 // ToProvider binds a provider to an instance. The provider's arguments are automatically injected
 func (b *Binding) ToProvider(p interface{}) *Binding {
 	provider := &Provider{
-		fnc: reflect.ValueOf(p),
+		fnc:     reflect.ValueOf(p),
+		binding: b,
 	}
 	provider.fnctype = provider.fnc.Type().Out(0)
 	if provider.fnctype != b.typeof && provider.fnctype != reflect.PtrTo(b.typeof) {
@@ -94,7 +96,7 @@ func (b *Binding) AsEagerSingleton() *Binding {
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())
 	for i := 0; i < p.fnc.Type().NumIn(); i++ {
-		in[i] = injector.getInstance(p.fnc.Type().In(i))
+		in[i] = injector.getInstance(p.fnc.Type().In(i), p.binding.annotatedWith)
 	}
 	res := p.fnc.Call(in)[0]
 	injector.RequestInjection(res)

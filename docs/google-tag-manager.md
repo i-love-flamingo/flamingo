@@ -64,6 +64,18 @@
     });
   }
 
+  function trackResultInteraction (pID, interaction) {
+    var position = getProductIds().indexOf(pID) + 1;
+
+    ____tq.push({
+      track: interaction,
+      query: getQuery(),
+      item: pID,
+      position: position,
+      pagination: getCurrentPage()
+    });
+  }
+
   // Add tracking for results
   trackSearchResults();
   sp.subscribe(channels.SP_RequestDone, trackSearchResults);
@@ -76,23 +88,30 @@
     var $p = $link.closest('[data-product-id]');
     var pID = $p.data('product-id');
 
-    var position = getProductIds().indexOf(pID) + 1;
-    ____tq.push({
-      track: 'clickOnResult',
-      query: getQuery(),
-      item: pID,
-      position: position,
-      pagination: getCurrentPage()
-    });
+    trackResultInteraction(pID, 'clickOnResult');
 
     // we need to wait for the tracker to finish the request
     setTimeout(function () {
       window.location.href = href;
     }, 100);
 
-  })
+  });
+
+  var hoveredId = null;
+  var timeoutSendInteraction = null;
+  $('.search-results').on('mouseenter', '.product-tile', function (ev) {
+    hoveredId = $(ev.target).data('product-id');
+
+    timeoutSendInteraction = setTimeout(function () {
+      if (hoveredId) trackResultInteraction(hoveredId, 'hoverOnResult')
+    }, 2000);
+  });
+
+  $('.search-results').on('mouseleave', '.product-tile', function (ev) {
+    clearTimeout(timeoutSendInteraction);
+    hoveredId = null;
+  });
 
 })();
-
 </script>
 ```

@@ -33,6 +33,10 @@ import:
   version: ^1.1.0
 - package: github.com/boj/redistore
   version: ^1.2.0
+- package: github.com/garyburd/redigo
+  version: ^1.1.0
+  subpackages:
+  - redis
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

@@ -1,7 +1,6 @@
 package template_functions
 
 import (
-	"flamingo/framework/pug_template/pugast"
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 )
@@ -21,6 +20,6 @@ func (g GetFunc) Name() string {
 // Func as implementation of get method
 func (g *GetFunc) Func(ctx web.Context) interface{} {
 	return func(what string) interface{} {
-		return pugast.Fixtype(g.Router.Get(what, ctx))
+		return g.Router.Get(what, ctx)
 	}
 }

@@ -1,19 +1,28 @@
 package pug_template
 
 import (
+	"flamingo/core/pug_template/pugast"
+	"flamingo/core/pug_template/template_functions"
 	"flamingo/framework/dingo"
-	"flamingo/framework/pug_template/pugast"
-	"flamingo/framework/pug_template/template_functions"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
+	template_functions2 "flamingo/framework/template_functions"
+	"flamingo/framework/web"
 	"net/http"
 )
 
-// Module for framework/pug_template
-type Module struct {
-	RouterRegistry *router.RouterRegistry `inject:""`
-	Basedir        string                 `inject:"config:pug_template.basedir"`
-}
+type (
+	// Module for framework/pug_template
+	Module struct {
+		RouterRegistry *router.RouterRegistry `inject:""`
+		Basedir        string                 `inject:"config:pug_template.basedir"`
+	}
+
+	// TemplateFunctionInterceptor to use fixtype
+	TemplateFunctionInterceptor struct {
+		template.ContextFunction
+	}
+)
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -33,4 +42,19 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.AssetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.MathLib{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.DebugFunc{})
+
+	injector.BindInterceptor((*template.ContextFunction)(nil), TemplateFunctionInterceptor{})
+}
+
+// Func interceptor
+// we want to intercept the GetFunc() to make sure we convert the result via pugast.Fixtype
+// This allows to cut the dependency from framework to pug_template module
+func (t *TemplateFunctionInterceptor) Func(ctx web.Context) interface{} {
+	if getfunc, ok := t.ContextFunction.(*template_functions2.GetFunc); ok {
+		oGetFunc := getfunc.Func(ctx).(func(what string) interface{})
+		return func(what string) interface{} {
+			return pugast.Fixtype(oGetFunc(what))
+		}
+	}
+	return t.ContextFunction.Func(ctx)
 }

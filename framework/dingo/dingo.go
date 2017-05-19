@@ -156,6 +156,9 @@ func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect
 		injector.RequestInjection(final.Interface())
 		final.Elem().Field(0).Set(of)
 	}
+	if injector.parent != nil {
+		return injector.parent.intercept(final, t)
+	}
 	return final
 }
 

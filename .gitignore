@@ -11,4 +11,4 @@ src/sass/.includes
 coverage
 junit.xml
 /vendor
-/akl/integration-test/build
+/akl/integration-test/shared

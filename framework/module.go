@@ -47,6 +47,7 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.ConfigFunc{})
 }
 
 // Configure the Module

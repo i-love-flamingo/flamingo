@@ -120,3 +120,16 @@ func MergeFrom(baseContext, incomingContext Context) *Context {
 
 	return &baseContext
 }
+
+// Config get a config value recursive
+func (ctx *Context) Config(key string) interface{} {
+	if config, ok := ctx.Configuration[key]; ok {
+		return config
+	}
+
+	if ctx.Parent != nil {
+		return ctx.Parent.Config(key)
+	}
+
+	return nil
+}

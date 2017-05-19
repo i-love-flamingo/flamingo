@@ -27,6 +27,8 @@ type (
 		EventRouter() event.Router
 
 		LoadVars(r *http.Request)
+		WithVars(vars map[string]string) Context
+
 		Form(string) ([]string, error)
 		MustForm(string) []string
 		Form1(string) (string, error)
@@ -106,6 +108,27 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 	}
 
 	return c
+}
+
+func (c *ctx) WithVars(vars map[string]string) Context {
+	newctx := c.cpy()
+
+	newctx.vars = vars
+
+	return newctx
+}
+
+func (c *ctx) cpy() *ctx {
+	var newctx = new(ctx)
+
+	newctx.session = c.session
+	newctx.request = c.request
+	newctx.profiler = c.profiler
+	newctx.Eventrouter = c.Eventrouter
+	newctx.id = c.id
+	newctx.Context = c.Context
+
+	return newctx
 }
 
 // LoadVars load request vars from mux.Vars

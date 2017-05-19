@@ -51,9 +51,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // This allows to cut the dependency from framework to pug_template module
 func (t *TemplateFunctionInterceptor) Func(ctx web.Context) interface{} {
 	if getfunc, ok := t.ContextFunction.(*template_functions2.GetFunc); ok {
-		oGetFunc := getfunc.Func(ctx).(func(what string) interface{})
-		return func(what string) interface{} {
-			return pugast.Fixtype(oGetFunc(what))
+		oGetFunc := getfunc.Func(ctx).(func(string, ...map[interface{}]interface{}) interface{})
+		return func(what string, params ...map[interface{}]interface{}) interface{} {
+			return pugast.Fixtype(oGetFunc(what, params...))
 		}
 	}
 	return t.ContextFunction.Func(ctx)

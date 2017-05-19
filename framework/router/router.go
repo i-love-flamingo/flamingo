@@ -13,7 +13,9 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 	"runtime/debug"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -246,15 +248,35 @@ func (router *Router) handle(c Controller) http.Handler {
 }
 
 // Get is the ServeHTTP's equivalent for DataController and DataHandler.
-func (router *Router) Get(handler string, ctx web.Context) interface{} {
+func (router *Router) Get(handler string, ctx web.Context, params ...map[interface{}]interface{}) interface{} {
 	defer ctx.Profile("get", handler)()
+
+	vars := make(map[string]string)
+	if len(params) == 1 {
+		for k, v := range params[0] {
+			if k, ok := k.(string); ok {
+				switch v := v.(type) {
+				case string:
+					vars[k] = v
+				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+					vars[k] = strconv.Itoa(int(reflect.ValueOf(v).Int()))
+				case float32:
+					vars[k] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+				case float64:
+					vars[k] = strconv.FormatFloat(v, 'f', -1, 64)
+				}
+			}
+		}
+	}
+
+	getCtx := ctx.WithVars(vars)
 
 	if c, ok := router.RouterRegistry.handler[handler]; ok {
 		if c, ok := c.(DataController); ok {
-			return router.Injector.GetInstance(c).(DataController).Data(ctx)
+			return router.Injector.GetInstance(c).(DataController).Data(getCtx)
 		}
 		if c, ok := c.(func(web.Context) interface{}); ok {
-			return c(ctx)
+			return c(getCtx)
 		}
 
 		panic("not a data controller")

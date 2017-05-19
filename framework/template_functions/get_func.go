@@ -19,7 +19,7 @@ func (g GetFunc) Name() string {
 
 // Func as implementation of get method
 func (g *GetFunc) Func(ctx web.Context) interface{} {
-	return func(what string) interface{} {
-		return g.Router.Get(what, ctx)
+	return func(what string, params ...map[interface{}]interface{}) interface{} {
+		return g.Router.Get(what, ctx, params...)
 	}
 }

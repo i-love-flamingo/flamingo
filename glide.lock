@@ -1,6 +1,8 @@
-hash: 7d006da39af10f6c377e8ead8364a8749c244a3ae8c14303a5de440e8edad32c
-updated: 2017-05-09T09:58:20.216451446+02:00
+hash: 1a7f3a8830d58276e042eb0700999a93e193324d81551251e35e5a328edc1090
+updated: 2017-05-19T11:44:21.319692459+02:00
 imports:
+- name: github.com/boj/redistore
+  version: fc113767cd6b051980f260d6dbe84b2740c46ab0
 - name: github.com/coreos/go-oidc
   version: 5157aa730c25a7531d4b99483e6a440d4ab735a0
 - name: github.com/ghodss/yaml
@@ -82,15 +84,13 @@ imports:
   subpackages:
   - cipher
   - json
-- name: gopkg.in/validator.v2
-  version: 0a9835d809fb647a62611d30cb792e0b5dd65b11
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 - name: html/template
   version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
   repo: https://github.com/thebod/go-html-template
 - name: text/template
-  version: 9c4ad7f94bd606288b8d47041b430f4c4ab6924f
+  version: 7a52eabb7b83aa66b186f2e5a0ee15653c55a95b
   repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo

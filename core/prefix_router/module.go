@@ -12,6 +12,8 @@ import (
 
 	"flamingo/framework/router"
 
+	"strconv"
+
 	"github.com/spf13/cobra"
 )
 
@@ -26,17 +28,22 @@ type Module struct {
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.defaultmux = http.NewServeMux()
 
-	m.RootCmd.AddCommand(&cobra.Command{
+	var port int
+	var servecmd = &cobra.Command{
 		Use:     "serve",
 		Aliases: []string{"server"},
-		Run:     Serve(m.Root, m.defaultmux),
-	})
+		Run:     Serve(m.Root, m.defaultmux, &port),
+	}
+
+	servecmd.Flags().IntVarP(&port, "port", "p", 3210, "port on which flamingo runs")
+
+	m.RootCmd.AddCommand(servecmd)
 
 	injector.Bind((*http.ServeMux)(nil)).ToInstance(m.defaultmux)
 }
 
 // Serve HTTP Requests
-func Serve(root *context.Context, defaultRouter *http.ServeMux) func(cmd *cobra.Command, args []string) {
+func Serve(root *context.Context, defaultRouter *http.ServeMux, port *int) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		frontRouter := NewFrontRouter()
 		frontRouter.Default(defaultRouter)
@@ -47,8 +54,8 @@ func Serve(root *context.Context, defaultRouter *http.ServeMux) func(cmd *cobra.
 			frontRouter.Add(ctx.BaseURL, ctx.Injector.GetInstance(router.Router{}).(*router.Router).Init(ctx))
 		}
 
-		fmt.Println("Starting HTTP Server at :3210 .....")
-		e := http.ListenAndServe(":3210", frontRouter)
+		fmt.Println("Starting HTTP Server at :" + strconv.Itoa(*port) + " .....")
+		e := http.ListenAndServe(":"+strconv.Itoa(*port), frontRouter)
 		if e != nil {
 			fmt.Printf("Unexpected Error: %s", e)
 		}

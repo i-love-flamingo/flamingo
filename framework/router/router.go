@@ -167,7 +167,10 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w = &VerboseResponseWriter{ResponseWriter: w}
 
 	// get the session
-	s, _ := router.Sessions.Get(req, router.SessionName)
+	s, err := router.Sessions.Get(req, router.SessionName)
+	if err != nil {
+		s, _ = router.Sessions.New(req, router.SessionName)
+	}
 
 	// retrieve a new context
 	var ctx = router.ContextFactory(router.ProfilerProvider(), router.EventRouterProvider(), w, req, s)

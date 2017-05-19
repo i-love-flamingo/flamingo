@@ -144,6 +144,10 @@ func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect
 		final = injector.internalResolveType(t, annotation)
 	}
 
+	if !final.IsValid() {
+		panic("can not resolve " + t.String())
+	}
+
 	final = injector.intercept(final, t)
 
 	return final

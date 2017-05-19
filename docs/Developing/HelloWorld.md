@@ -80,23 +80,20 @@ Abstracting these allows us to rewrite URLs for different locales and easily rep
 
 To create our IndexController we first need the controller. A controller can implement multiple interfaces:
 
-`router.GETController`, called for `GET` requests:
+- `router.GETController`, called for `GET` requests:
 ```go
 GETController interface {
   Get(web.Context) web.Response
 }
 ```
-
-`router.POSTController`, called for `POST` requests:
+- `router.POSTController`, called for `POST` requests:
 ```go
 POSTController interface {
   Post(web.Context) web.Response
 }
 ```
-
-`func(web.Context) web.Response`, called for any request
-
-`http.Handler`, called for any request
+- `func(web.Context) web.Response`, called for any request
+- `http.Handler`, called for any request
 
 We start by creating our controller in the file `akl/src/helloworld/interfaces/controller/index.go`
 
@@ -183,7 +180,7 @@ type IndexController struct{
 }
 ```
 
-The `IndexController` is not `RenderAware`, which means it got a new method `Render(context web.Context, tpl string, data interface{}) *web.ContentResponse`
+The `IndexController` is now `RenderAware`, which means it got a new method `Render(context web.Context, tpl string, data interface{}) *web.ContentResponse`
 
 The `tpl` variable is the name of the template, in our case `pages/helloworld`. `data` is optional Template data.
 

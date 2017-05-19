@@ -7,21 +7,13 @@ You can simply use the standard go testing tool.
 
 To run tests of a certain package simply run the `go test` tool.
 For example:
+
 ```
 go test -v flamingo/core/cart/domain/
-
 ```
 
-However we recommend to use BDD.
+## Ginkgo
 
-## BDD Testing with ginko
+Most of Flamingo's package use [Gingko](https://github.com/onsi/ginkgo) for BDD based testing.
 
-
-go2xunit -fail -input /go/src/flamingo/core/tests.out -output core_tests.xml  ?
-
-
-
-go2xunit ?
-
-glide?
-ginko?
+Take a look at the Dingo test suite to get an idea about the tests.

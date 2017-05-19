@@ -1,6 +1,6 @@
 
 * Product Package:
-	* Use ports and Adapters Layout
+	* ~~Use ports and Adapters Layout~~
 	* Define Price Struct that can be reused in Cart for example - including Tax concept (see Magento)
 	* Support of configurables in the model
 
@@ -15,18 +15,15 @@
 	* Implement Cart Port
 	* Implement cms Port
 
-
 * Category/Catalog package
 	* define Port and controllers etc
 
-
 * Searchperience Package:
-	* add search
+	* ~~add search~~
 	* implement category port
 
 * whishlist package
 
-* Sessions package
-
+* _Sessions package_
 
 * Finish Cart Package

@@ -1,3 +1,10 @@
+# Flamingo Development
+
+---
+
+### New? Start with [HelloWorld](HelloWorld.md)
+
+---
 
 You can use DEV context by setting the environment variable "CONTEXT"
 

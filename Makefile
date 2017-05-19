@@ -1,19 +1,17 @@
 DOCKERREPO?=docker-om3.aoe.com
 
-.PHONY: run doc dep dep-core dep-akl docker docker-run docker-push
+.PHONY: run doc dep godoc docker docker-run docker-push
 
 run:
-	cd akl && go run akl.go || true
+	cd akl && go run akl.go serve
 
-dep: dep-core dep-akl
-
-dep-core:
-	cd core && glide i
-
-dep-akl:
-	cd akl && glide i
+dep:
+	glide i
 
 doc:
+	docker run --rm -v $(pwd):/work -p 8000:8000 python bash -c 'pip install mkdocs; cd /work; mkdocs serve --dev-addr=0.0.0.0:8000'
+
+godoc:
 	(sleep 10 ; open http://localhost:6060/pkg/flamingo/) &
 	godoc -http=:6060 -v
 

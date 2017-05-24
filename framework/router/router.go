@@ -40,6 +40,24 @@ type (
 		Post(web.Context) web.Response
 	}
 
+	// PUTController is implemented by controllers which have a Put method
+	PUTController interface {
+		// Put is called for PUT-Requests
+		Put(web.Context) web.Response
+	}
+
+	// DELETEController is implemented by controllers which have a Delete method
+	DELETEController interface {
+		// Delete is called for DELETE-Requests
+		Delete(web.Context) web.Response
+	}
+
+	// HEADController is implemented by controllers which have a Head method
+	HEADController interface {
+		// Head is called for HEAD-Requests
+		Head(web.Context) web.Response
+	}
+
 	// DataController is a controller used to retrieve data, such as user-information, basket
 	// etc.
 	// By default this will be handled by templates, but there is an out-of-the-box support
@@ -207,7 +225,16 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // handle sets the controller for a router which handles a Request.
 func (router *Router) handle(c Controller) http.Handler {
+	switch c.(type) {
+	case http.Handler:
+	case func(web.Context) web.Response:
+	case func(web.Context) interface{}:
+	default:
+		c = router.Injector.GetInstance(reflect.TypeOf(c))
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("X-Clacks-Overhead", "GNU Terry Pratchett")
 		ctx := req.Context().Value(web.CONTEXT).(web.Context) // get Request context
 		ctx.LoadVars(req)                                     // LoadVars, because MuxVars has not resolved them in ServeHTTP
 
@@ -216,16 +243,22 @@ func (router *Router) handle(c Controller) http.Handler {
 		var response web.Response
 
 		if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
-			response = router.Injector.GetInstance(cc).(GETController).Get(ctx)
+			response = cc.Get(ctx)
 		} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
-			response = router.Injector.GetInstance(cc).(POSTController).Post(ctx)
+			response = cc.Post(ctx)
+		} else if cc, ok := c.(PUTController); ok && req.Method == http.MethodPut {
+			response = cc.Put(ctx)
+		} else if cc, ok := c.(DELETEController); ok && req.Method == http.MethodDelete {
+			response = cc.Delete(ctx)
+		} else if cc, ok := c.(HEADController); ok && req.Method == http.MethodHead {
+			response = cc.Head(ctx)
 		} else {
 			switch c := c.(type) {
+			case DataController:
+				response = &web.JSONResponse{Data: c.Data(ctx)}
+
 			case func(web.Context) web.Response:
 				response = c(ctx)
-
-			case DataController:
-				response = &web.JSONResponse{Data: router.Injector.GetInstance(c).(DataController).Data(ctx)}
 
 			case func(web.Context) interface{}:
 				response = &web.JSONResponse{Data: c(ctx)}

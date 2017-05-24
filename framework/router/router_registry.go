@@ -1,6 +1,9 @@
 package router
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type (
 	// RouterRegistry holds a list of all routes and handlers to be registered
@@ -27,6 +30,13 @@ func (router *RouterRegistry) Handle(name string, controller Controller) {
 // Router registers the path for a named route
 func (router *RouterRegistry) Route(path, name string) {
 	router.routes[name] = path
+}
+
+// Mount a direct controller to a path
+func (router *RouterRegistry) Mount(path string, controller Controller) {
+	handle := strings.Replace(path, "/", ".", -1)
+	router.Route(path, handle)
+	router.Handle(handle, controller)
 }
 
 // GetRoutes returns the list of Routes Registered

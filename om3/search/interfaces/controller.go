@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"flamingo/framework/router"
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
 	"flamingo/om3/search/domain"
@@ -39,7 +40,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	searchType := getSearchType(c.MustParam1("type"))
 
 	if searchType != c.MustParam1("type") {
-		return vc.Redirect("search.view?q="+query, "type", searchType)
+		return vc.Redirect("search.view?q="+query, router.P{"type": searchType})
 	}
 
 	vd := ViewData{

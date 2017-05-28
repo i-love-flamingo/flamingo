@@ -9,12 +9,13 @@ import (
 type (
 	// Module registers our search package
 	Module struct {
-		RouterRegistry *router.RouterRegistry `inject:""`
+		RouterRegistry *router.Registry `inject:""`
 	}
 )
 
 // Configure the search URL
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("search.view", new(interfaces.ViewController))
-	m.RouterRegistry.Route("/search/{type}", "search.view")
+	m.RouterRegistry.Route("/search", `search.view(type="product")`)
+	m.RouterRegistry.Route("/search/:type", `search.view(type)`)
 }

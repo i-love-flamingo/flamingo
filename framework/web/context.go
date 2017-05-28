@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/satori/go.uuid"
 )
@@ -26,7 +25,7 @@ type (
 		Profiler() profiler.Profiler
 		EventRouter() event.Router
 
-		LoadVars(r *http.Request)
+		LoadParams(p map[string]string)
 		WithVars(vars map[string]string) Context
 
 		Form(string) ([]string, error)
@@ -131,9 +130,9 @@ func (c *ctx) cpy() *ctx {
 	return newctx
 }
 
-// LoadVars load request vars from mux.Vars
-func (c *ctx) LoadVars(r *http.Request) {
-	c.vars = mux.Vars(r)
+// LoadParams load request params
+func (c *ctx) LoadParams(p map[string]string) {
+	c.vars = p
 }
 
 // EventRouter returns the registered event router
@@ -218,7 +217,7 @@ func (c *ctx) Param1(n string) (string, error) {
 	if r, ok := c.vars[n]; ok {
 		return r, nil
 	}
-	return "", errors.New("param value not found")
+	return "", errors.New("param " + n + " not found")
 }
 
 // MustParam1 panics if n is not found

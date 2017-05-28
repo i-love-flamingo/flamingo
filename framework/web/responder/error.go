@@ -69,13 +69,13 @@ func (r *ErrorAware) Error(context web.Context, error error) *web.ContentRespons
 		response = r.RenderAware.Render(
 			context,
 			"pages/error/503",
-			ErrorViewData{Error: EmptyError{}, Code: 503},
+			ErrorViewData{Error: EmptyError{}, Code: 500},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
 			"pages/error/503",
-			ErrorViewData{Error: DebugError{error}, Code: 503},
+			ErrorViewData{Error: DebugError{error}, Code: 500},
 		)
 	}
 

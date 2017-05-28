@@ -18,65 +18,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
 type (
-	// Controller defines a web controller
-	// it is an interface{} as it can be served by multiple possible controllers,
-	// such as generic GET/POST controller, http.Handler, handler-functions, etc.
-	Controller interface{}
-
-	// GETController is implemented by controllers which have a Get method
-	GETController interface {
-		// Get is called for GET-Requests
-		Get(web.Context) web.Response
-	}
-
-	// POSTController is implemented by controllers which have a Post method
-	POSTController interface {
-		// Post is called for POST-Requests
-		Post(web.Context) web.Response
-	}
-
-	// PUTController is implemented by controllers which have a Put method
-	PUTController interface {
-		// Put is called for PUT-Requests
-		Put(web.Context) web.Response
-	}
-
-	// DELETEController is implemented by controllers which have a Delete method
-	DELETEController interface {
-		// Delete is called for DELETE-Requests
-		Delete(web.Context) web.Response
-	}
-
-	// HEADController is implemented by controllers which have a Head method
-	HEADController interface {
-		// Head is called for HEAD-Requests
-		Head(web.Context) web.Response
-	}
-
-	// DataController is a controller used to retrieve data, such as user-information, basket
-	// etc.
-	// By default this will be handled by templates, but there is an out-of-the-box support
-	// for JSON requests via /_flamingo/json/{name}, as well as their own route if defined.
-	DataController interface {
-		// Data is called for data requests
-		Data(web.Context) interface{}
-	}
-
-	// DataHandler behaves the same as DataController, but just for direct callbacks
-	DataHandler func(web.Context) interface{}
-
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
-		router            *mux.Router
-		hardroutes        map[string]configcontext.Route
-		hardroutesreverse map[string]configcontext.Route
-		base              *url.URL
+		base *url.URL
 
 		Sessions            sessions.Store           `inject:""` // Sessions storage, which are used to retrieve user-context session
 		SessionName         string                   `inject:"config:session.name"`
@@ -84,19 +33,16 @@ type (
 		ProfilerProvider    func() profiler.Profiler `inject:""`
 		EventRouterProvider func() event.Router      `inject:""`
 		Injector            *dingo.Injector          `inject:""`
-		RouterRegistry      *RouterRegistry          `inject:""`
+		RouterRegistry      *Registry                `inject:""`
 	}
+
+	// P are a shorthand for paramter
+	P map[string]string
 )
 
 // NewRouter creates a new Router instance
 func NewRouter() *Router {
-	router := &Router{
-		router:            mux.NewRouter(),
-		hardroutes:        make(map[string]configcontext.Route),
-		hardroutesreverse: make(map[string]configcontext.Route),
-	}
-
-	return router
+	return new(Router)
 }
 
 // Init the router
@@ -104,139 +50,106 @@ func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 
 	// Make sure to not taint the global router registry
-	routes := NewRouterRegistry()
-	for k, v := range router.RouterRegistry.routes {
-		routes.routes[k] = v
-	}
-	for k, v := range router.RouterRegistry.handler {
-		routes.handler[k] = v
-	}
+	var routes = NewRegistry()
 
+	// build routes
 	for _, route := range routingConfig.Routes {
-		if route.Args == nil {
-			routes.routes[route.Controller] = route.Path
-		} else {
-			router.hardroutes[route.Path] = route
-			p := make([]string, len(route.Args)*2)
-			for k, v := range route.Args {
-				p = append(p, k, v)
-			}
-			router.hardroutesreverse[route.Controller+strings.Join(p, "!!")] = route
-		}
+		routes.Route(route.Path, route.Controller)
 	}
 
-	for name, handler := range routes.handler {
-		if route, ok := routes.routes[name]; ok {
-			router.router.Handle(route, router.handle(handler)).Name(name)
-		}
+	var routerroutes = make([]*handler, len(router.RouterRegistry.routes))
+	for k, v := range router.RouterRegistry.routes {
+		routerroutes[k] = v
 	}
+	routes.routes = append(routes.routes, routerroutes...)
+
+	// inject router instances
+	for name, c := range router.RouterRegistry.handler {
+		switch c.(type) {
+		case http.Handler:
+		case func(web.Context) web.Response:
+		case func(web.Context) interface{}:
+		default:
+			c = router.Injector.GetInstance(reflect.TypeOf(c))
+		}
+		routes.handler[name] = c
+	}
+
+	router.RouterRegistry = routes
 
 	return router
 }
 
 // URL helps resolving URL's by it's name.
-// Example:
-//     flamingo.URL("cms.page.view", "name", "Home")
-// results in
-//     /baseurl/cms/Home
-func (router *Router) URL(name string, params ...string) *url.URL {
-	var resultURL *url.URL
+func (router *Router) URL(name string, params map[string]string) *url.URL {
+	var resultURL = new(url.URL)
 
-	query := url.Values{}
 	parts := strings.SplitN(name, "?", 2)
 	name = parts[0]
+
 	if len(parts) == 2 {
-		query, _ = url.ParseQuery(parts[1])
+		var query, _ = url.ParseQuery(parts[1])
+		resultURL.RawQuery = query.Encode()
 	}
 
-	if route, ok := router.hardroutesreverse[name+`!!!!`+strings.Join(params, "!!")]; ok {
-		resultURL, _ = url.Parse(route.Path)
-	} else {
-		resultURL = router.url(name, params...)
-	}
-
-	resultURL.Path = path.Join(router.base.Path, resultURL.Path)
-	resultURL.RawQuery = query.Encode()
-
-	return resultURL
-}
-
-// url builds a URL for a Router.
-func (router *Router) url(name string, params ...string) *url.URL {
-	if router.router.Get(name) == nil {
-		//panic("route " + name + " not found")
-		return &url.URL{
-			Fragment: name + "::" + strings.Join(params, ":"),
-		}
-	}
-
-	resultURL, err := router.router.Get(name).URL(params...)
-
+	p, err := router.RouterRegistry.Reverse(name, params)
 	if err != nil {
 		panic(err)
 	}
+
+	resultURL.Path = path.Join(router.base.Path, p)
 
 	return resultURL
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
-func (router *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+// TODO simplify and merge with `handle`
+func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// shadow the response writer
-	w = &VerboseResponseWriter{ResponseWriter: w}
+	rw = &VerboseResponseWriter{ResponseWriter: rw}
 
-	// get the session
+	// initialize the session
 	s, err := router.Sessions.Get(req, router.SessionName)
 	if err != nil {
 		s, _ = router.Sessions.New(req, router.SessionName)
 	}
 
 	// retrieve a new context
-	var ctx = router.ContextFactory(router.ProfilerProvider(), router.EventRouterProvider(), w, req, s)
+	var ctx = router.ContextFactory(router.ProfilerProvider(), router.EventRouterProvider(), rw, req, s)
 
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
 
 	// dispatch OnRequest event, the request might be changed
-	var e = &OnRequestEvent{w, req}
+	var e = &OnRequestEvent{rw, req}
 	ctx.EventRouter().Dispatch(e)
 	req = e.Request
 
+	// catch errors
 	defer func() {
 		var err interface{}
 		if err = recover(); err != nil {
-			w.WriteHeader(500)
-			w.Write([]byte(fmt.Sprintln(err)))
-			w.Write(debug.Stack())
+			rw.WriteHeader(500)
+			rw.Write([]byte(fmt.Sprintln(err)))
+			rw.Write(debug.Stack())
 		}
 		// fire finish event
-		ctx.EventRouter().Dispatch(&OnFinishEvent{w, req, err})
+		ctx.EventRouter().Dispatch(&OnFinishEvent{rw, req, err})
 	}()
 
-	if route, ok := router.hardroutes[req.URL.Path]; ok {
-		p := make([]string, len(route.Args)*2)
-		for k, v := range route.Args {
-			p = append(p, k, v)
-		}
-		req.URL = router.url(route.Controller, p...)
+	var controller, params = router.RouterRegistry.MatchRequest(req)
+	ctx.LoadParams(params)
+	if controller == nil {
+		http.NotFoundHandler().ServeHTTP(rw, req)
+	} else {
+		router.handle(controller).ServeHTTP(rw, req)
 	}
-
-	router.router.ServeHTTP(w, req)
 }
 
 // handle sets the controller for a router which handles a Request.
 func (router *Router) handle(c Controller) http.Handler {
-	switch c.(type) {
-	case http.Handler:
-	case func(web.Context) web.Response:
-	case func(web.Context) interface{}:
-	default:
-		c = router.Injector.GetInstance(reflect.TypeOf(c))
-	}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("X-Clacks-Overhead", "GNU Terry Pratchett")
 		ctx := req.Context().Value(web.CONTEXT).(web.Context) // get Request context
-		ctx.LoadVars(req)                                     // LoadVars, because MuxVars has not resolved them in ServeHTTP
 
 		defer ctx.Profile("request", req.RequestURI)()
 
@@ -265,12 +178,10 @@ func (router *Router) handle(c Controller) http.Handler {
 
 			case http.Handler:
 				c.ServeHTTP(w, req)
-				return
 
 			default:
 				w.WriteHeader(404)
 				w.Write([]byte("404 page not found (no handler)"))
-				return
 			}
 		}
 
@@ -279,11 +190,14 @@ func (router *Router) handle(c Controller) http.Handler {
 
 		router.Sessions.Save(req, w, ctx.Session())
 
-		response.Apply(ctx, w)
+		if response != nil {
+			response.Apply(ctx, w)
+		}
 	})
 }
 
 // Get is the ServeHTTP's equivalent for DataController and DataHandler.
+// TODO refactor
 func (router *Router) Get(handler string, ctx web.Context, params ...map[interface{}]interface{}) interface{} {
 	defer ctx.Profile("get", handler)()
 
@@ -326,9 +240,4 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		}
 		panic(err)
 	}
-}
-
-// GetHardRoutes for config-based routing overrides
-func (router *Router) GetHardRoutes() map[string]configcontext.Route {
-	return router.hardroutes
 }

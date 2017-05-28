@@ -90,5 +90,5 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 		delete(c.Session().Values, "auth.redirect")
 		return cc.RedirectUrl(redirect.(string))
 	}
-	return cc.Redirect("home")
+	return cc.Redirect("home", nil)
 }

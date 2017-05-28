@@ -10,13 +10,13 @@ import (
 type (
 	// Module registers our profiler
 	Module struct {
-		RouterRegistry *router.RouterRegistry `inject:""`
+		RouterRegistry *router.Registry `inject:""`
 	}
 )
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	m.RouterRegistry.Route("/_profiler/view/{profile}", "_profiler.view")
+	m.RouterRegistry.Route("/_profiler/view/:profile", "_profiler.view")
 	m.RouterRegistry.Handle("_profiler.view", new(ProfileController))
 
 	injector.Override((*profiler.Profiler)(nil), "").To(DefaultProfiler{})

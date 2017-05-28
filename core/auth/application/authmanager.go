@@ -53,7 +53,7 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		return authmanager.oauth2Config
 	}
 
-	callbackUrl := authmanager.Router.URL("auth.callback")
+	callbackUrl := authmanager.Router.URL("auth.callback", nil)
 	myhost, _ := url.Parse(authmanager.MyHost)
 	callbackUrl.Host = myhost.Host
 	callbackUrl.Scheme = myhost.Scheme

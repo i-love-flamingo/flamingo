@@ -20,13 +20,12 @@ func (u URLFunc) Name() string {
 // Func as implementation of url method
 func (u *URLFunc) Func() interface{} {
 	return func(where string, params ...map[interface{}]interface{}) template.URL {
+		var p = make(map[string]string)
 		if len(params) > 0 {
-			p := make([]string, len(params[0])*2)
 			for k, v := range params[0] {
-				p = append(p, k.(string), v.(string))
+				p[k.(string)] = v.(string)
 			}
-			return template.URL(u.Router.URL(where, p...).String())
 		}
-		return template.URL(u.Router.URL(where).String())
+		return template.URL(u.Router.URL(where, p).String())
 	}
 }

@@ -1,26 +1,124 @@
 # Routing
 
------
-@Basti 
-Normaly 
+## Routing concept
 
- METHOD:PATH -> Controller.Action
- 
-Here:
+The URL structure in flamingo consists of a baseurl + the rest of the url.
+The baseurl is matched against the configured contexts and determines the context that should be loaded.
 
- PATH -> Controller  / Action Func
- 
-    - Method indirect
-    - No Action
+For the part of the url behind the baseurl (=path) a standard routing concept is applied, where at the end the URL is matched to a controller.
+
+* a route is assigned to a handle. (A handle is a string that represents a unique name). A handle can be something like "cms.page.view"
+* for a handle a Controller can be registered. The indirection through handles allows us to regsiter different controllers for certain handlers in different contexts.
+
+Routes can be configured the following ways:
+* Via `router.Registry` in `module.go`
+* As part of the project configuration. This again allows us to have different routing paths configured for different contexts.
+
+## Route
+
+A route defines a mapping from a path to an handler identifier.
+
+The handler identifier is used to easily support reverse routing and rewriting mechanisms.
+
+## Handler
+
+A handler is defined by mapping a path to a `http.Handler` or a controller.
+
+### Controller types
+
+- `http.Handler`: will call `ServeHTTP` for requests matching the route
+- `GETController`: will call `Get(web.Context) web.Response` for `GET` Requests
+- `POSTController`: will call `Post(web.Context) web.Response` for `POST` Requests
+- `HEADController`: will call `Head(web.Context) web.Response` for `HEAD` Requests
+- `DELETEController`: will call `Delete(web.Context) web.Response` for `DELETE` Requests
+- `PUTController`: will call `Put(web.Context) web.Response` for `PUT` Requests
+- `func(web.Context) web.Response`: called for any Request
+- `DataController`: will call `Data(web.Context) interface{}` for Data requests
+- `func(web.Context) interface{}`: for Data requests
+
+## Data Controller
+
+Views can request arbitrary data via the `get` template function.
+
+Flamingo exposes these data controllers via their logical name at `/_flamingo/json?name=...`.
+This is a default feature for Ajax-based cache holepunching etc.
+
+Data Controller usually don't have a route, but can be mapped to a dedicated route, that makes Flamingo return data as JSON content type.
+
+# Examples
+
+As always an Example illustrates the routing concept best, so here we have it:
+
+```go
+func (m *Module) Configure(injector *dingo.Injector) {
+    // Register the controller
+    m.RouterRegistry.Handle("search.view", new(interfaces.ViewController))
     
+    // Map `/search` to ViewController with `type` set to `product`
+    m.RouterRegistry.Route("/search", `search.view(type="product")`)
     
-Also support redirects (No need for custom package)?
+    // Map `/search/:type` to ViewController with `type` retrieved from the path
+    m.RouterRegistry.Route("/search/:type", `search.view(type)`)
+}
+```
 
-/ -> RedirectController(cms.page.view(home))
+# Route Format
 
+The route format is based on the format the [Play Framework](https://www.playframework.com/documentation/2.5.x/ScalaRouting) is using.
 
-Also assigning multiple routes to one handler is not working (should we support it?)
+Essentially there are 4 types of parts, of which the route is constructed
 
-( Maybe ) Also allow some generated documentation (e.g. for cart API payload etc)
-I Read: hub.io/golang/urlrouter/vestigo/2015/09/22/vesigo.html
-------
+## Static
+
+A piece which is just static, such as `/foo/bar/asd`.
+
+## Parameter
+
+A part with a named parameter, `/foo/:param/` which spans the request up to the next `/`.
+
+## Regex
+
+A (optionally named) regex parameter such as `/foo/$id<[0-9]+>` which captures everything the regex captures.
+
+## Wildcard
+
+A wildcard which captures everything, such as `/foo/bar/*xyz`. Note that slashes are not escaped here!
+
+## Router Target
+
+The target of a route is a controller name and optional attributes.
+
+## Parameters
+
+Parameters are comma-separated identifierts.
+
+If no parameters are specified, and not brackets are used, every route parameters becomes a parameters.
+
+- `controller.view` Get's all available parameters
+- `controller.view(param1, param2)` param1 and param2 will be set
+- `controller.view(param1 ?= "foo", param2 = "bar")` param1 is optional, if not specified it is set to "foo". param2 is always set to "bar".
+
+If specified parameters don't have a value or optional value and are not part of the path, then they are taken from GET parameters.
+
+# Registering routes and controllers
+
+Routes and controllers are registered at the `router.Registry`.
+
+## Map a name to a controller
+```go
+registry.Handle("controller.name", new(controllers.ControllerName))
+```
+
+## Map a route to a controller
+
+```go
+registry.Route("/path/to/something", "controller.name")
+```
+
+## Quick-Map (with autogenerated name)
+
+```go
+registry.Mount("/path/to/something", new(controllers.ControllerName))
+```
+
+The name will be `path.to.something` (outer slashes are stripped, then slashes will be converted to dots).

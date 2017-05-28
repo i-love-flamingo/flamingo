@@ -8,11 +8,10 @@ import (
 
 // Module for om3/brand package
 type Module struct {
-	RouterRegistry *router.RouterRegistry `inject:""`
+	RouterRegistry *router.Registry `inject:""`
 }
 
 // Configure DI
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.RouterRegistry.Handle("brand.view", new(controller.ViewController))
-	module.RouterRegistry.Route("/brand/{uid}", "brand.view")
+	module.RouterRegistry.Mount("/brand/:uid", new(controller.ViewController))
 }

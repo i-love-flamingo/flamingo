@@ -20,7 +20,6 @@ var (
 				fmt.Println(routeConfig.BaseURL + " [" + routeConfig.Name + "]")
 				for _, route := range routeConfig.Routes {
 					fmt.Printf("  * %s > %s \n", route.Path, route.Controller)
-					fmt.Printf("      Args: %v \n", route.Args)
 				}
 			}
 		},

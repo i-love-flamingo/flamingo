@@ -23,7 +23,6 @@ type (
 	Route struct {
 		Path       string
 		Controller string
-		Args       map[string]string
 	}
 )
 

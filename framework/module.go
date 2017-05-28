@@ -31,7 +31,7 @@ type (
 
 	// Module for framework functionality
 	Module struct {
-		RouterRegistry *router.RouterRegistry `inject:""`
+		RouterRegistry *router.Registry `inject:""`
 	}
 )
 
@@ -43,7 +43,7 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind((*web.ContextFactory)(nil)).ToInstance(web.ContextFromRequest)
 
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
-	injector.Bind(router.RouterRegistry{}).In(dingo.Singleton).ToProvider(router.NewRouterRegistry)
+	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
@@ -52,7 +52,6 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 // Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.RouterRegistry.Route("/_flamingo/json/{Handler}", "_flamingo.json")
-	module.RouterRegistry.Handle("_flamingo.json", new(controller.DataController))
+	module.RouterRegistry.Mount("/_flamingo/json/:handler", new(controller.DataController))
 	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
 }

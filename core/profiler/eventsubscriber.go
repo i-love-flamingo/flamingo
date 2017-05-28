@@ -62,7 +62,7 @@ XMLHttpRequest.prototype.open = function(a, b) {
 
 function __profileStatic(key, message, duration) {
 	var r = new XMLHttpRequest();
-	r.open("POST", "`+e.Router.URL("_profiler.view", "profile", context.ID()).String()+`");
+	r.open("POST", "`+e.Router.URL("_profiler.view", router.P{"profile": context.ID()}).String()+`");
 	r.setRequestHeader("Content-Type", "application/json");
 	r.send(JSON.stringify({"key": key, "message": message, "duration": duration.toString()}));
 }
@@ -94,7 +94,7 @@ window.addEventListener("load", function load(e) {
 			),
 			[]byte("</body>"),
 			[]byte(`<div style='position:absolute;right:0;top:0;background-color:#ccc;border:solid 1px #888;'>
-	<a href='`+p.Router.URL("_profiler.view", "profile", context.ID()).String()+`'>`+p.Duration.String()+`: `+context.ID()+`</a>
+	<a href='`+p.Router.URL("_profiler.view", router.P{"profile": context.ID()}).String()+`'>`+p.Duration.String()+`: `+context.ID()+`</a>
 </div>
 </body>`),
 			1,

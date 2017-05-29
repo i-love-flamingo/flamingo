@@ -109,15 +109,16 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 	return c
 }
 
+// WithVars loads parameters
 func (c *ctx) WithVars(vars map[string]string) Context {
-	newctx := c.cpy()
+	newctx := c.clone()
 
 	newctx.vars = vars
 
 	return newctx
 }
 
-func (c *ctx) cpy() *ctx {
+func (c *ctx) clone() *ctx {
 	var newctx = new(ctx)
 
 	newctx.session = c.session

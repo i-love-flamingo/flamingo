@@ -131,7 +131,7 @@ import (
 )
 
 type Module struct {
-	RouterRegistry *router.RouterRegistry `inject:""`
+	RouterRegistry *router.Registry `inject:""`
 }
 
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -191,6 +191,29 @@ func (controller *IndexController) Get(ctx web.Context) web.Response {
 	return controller.Render(ctx, "pages/helloworld", struct{Name string}{Name: "World"})
 }
 ```
+
+## Path parameters
+
+Now we want the "World" to be taken from the URL.
+
+First, we change our route definition like this:
+
+```go
+m.RouterRegistry.Route("/hello/:world", "helloworld.index(world)")
+```
+
+Now `world` is a parameter available to our controller. If we omit the list of parameters in the brackets we get all path parameters.
+If we have parameters in the list which are not part of the route Flamingo will use GET values to fill them up.
+
+Now it's time to change our controller to get the request parameter via the request context:
+
+```go
+func (controller *IndexController) Get(ctx web.Context) web.Response {
+	return controller.Render(ctx, "pages/helloworld", struct{Name string}{Name: ctx.MustParam1("world")})
+}
+```
+
+Now open [http://localhost:3210/de/hello/world](http://localhost:3210/de/hello/world) and compare to [http://localhost:3210/de/hello/you](http://localhost:3210/de/hello/you)
 
 When we open our page now, we have a fancy rendered template :)
 

@@ -55,6 +55,9 @@ func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 	// build routes
 	for _, route := range routingConfig.Routes {
 		routes.Route(route.Path, route.Controller)
+		if route.Name != "" {
+			routes.Alias(route.Name, route.Controller)
+		}
 	}
 
 	var routerroutes = make([]*handler, len(router.RouterRegistry.routes))
@@ -69,8 +72,24 @@ func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 		case http.Handler:
 		case func(web.Context) web.Response:
 		case func(web.Context) interface{}:
-		default:
+		case GETController, POSTController, HEADController, PUTController, DELETEController:
 			c = router.Injector.GetInstance(reflect.TypeOf(c))
+		default:
+			var rv = reflect.ValueOf(c)
+			// Check if we have a Receiver Function of the type
+			// func(c Controller, ctx web.Context) web.Response
+			// If so, we instantiate c Controller and convert it to
+			// c.func(ctx web.Context) web.Response
+			if rv.Type().Kind() == reflect.Func &&
+				rv.Type().NumIn() == 2 &&
+				rv.Type().NumOut() == 1 &&
+				rv.Type().In(1).AssignableTo(reflect.TypeOf((*web.Context)(nil)).Elem()) &&
+				rv.Type().Out(0).AssignableTo(reflect.TypeOf((*web.Response)(nil)).Elem()) {
+				var ci = reflect.ValueOf(router.Injector.GetInstance(rv.Type().In(0).Elem()))
+				c = func(ctx web.Context) web.Response {
+					return rv.Call([]reflect.Value{ci, reflect.ValueOf(ctx)})[0].Interface().(web.Response)
+				}
+			}
 		}
 		routes.handler[name] = c
 	}

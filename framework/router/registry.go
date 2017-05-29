@@ -22,6 +22,7 @@ type (
 	Registry struct {
 		handler map[string]Controller
 		routes  []*handler
+		alias   map[string]*handler
 	}
 
 	handler struct {
@@ -40,6 +41,7 @@ type (
 func NewRegistry() *Registry {
 	return &Registry{
 		handler: make(map[string]Controller),
+		alias:   make(map[string]*handler),
 	}
 }
 
@@ -53,6 +55,11 @@ func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
 	registry.routes = append(registry.routes, h)
+}
+
+// Alias for an existing router definition
+func (registry *Registry) Alias(name, to string) {
+	registry.alias[name] = parseHandler(to)
 }
 
 // Mount auto-generates a controller name from the path
@@ -148,6 +155,13 @@ func parseParams(list string) map[string]*param {
 
 // Reverse builds the path from a named route with params
 func (registry *Registry) Reverse(name string, params map[string]string) (string, error) {
+	if alias, ok := registry.alias[name]; ok {
+		name = alias.handler
+		for name, param := range alias.params {
+			params[name] = param.value
+		}
+	}
+
 	var keys = make([]string, len(params))
 	var i = 0
 	for k := range params {

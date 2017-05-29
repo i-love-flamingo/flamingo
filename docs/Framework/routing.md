@@ -122,3 +122,46 @@ registry.Mount("/path/to/something", new(controllers.ControllerName))
 ```
 
 The name will be `path.to.something` (outer slashes are stripped, then slashes will be converted to dots).
+
+# Default Controller
+
+Currently Flamingo registers the following controller:
+
+- `flamingo.redirect(to, ...)` Redirects to `to`. All other parameters (but `to`) are passed on as URL parameters 
+- `flamingo.redirectUrl(url)` Redirects to `url` 
+- `flamingo.redirectPermanent(to, ...)` Redirects permanently to `to`. All other parameters (but `to`) are passed on as URL parameters 
+- `flamingo.redirectPermanentUrl(url)` Redirects permanently to `url` 
+
+# Context routes
+
+Beside registering routes in the code it is also possible to register them in your context.yml.
+
+The root node `routes` consists of an array of objects with:
+
+- `controller`: must name a controller to execute
+- `path`: optional path where this is accessable
+- `name`: optional name where this will be available for reverse routing
+
+Context routes always take precedence over normal routes!
+
+## Example
+
+```yml
+routes:
+  - path: /
+    controller: flamingo.redirect(to="cms.page.view", name="home")
+    name: home
+  - path: /home
+    controller: cms.page.view(name="home")
+  - path: /special
+    controller: cms.page.view(name?="special")
+```
+
+This will result in the following accessable routes:
+
+- `/`: Redirects to `/home` (because there is a route for `cms.page.view` with `name` set to `home`. Otherwise this would go to `/cms/home`)
+- `/home`: Shows `cms.page.view(name="home")`
+- `/special`: Shows `cms.page.view(name="special")`
+- `/special?name=foo`: Shows `cms.page.view(name="foo")` (optional argument retrieved from GET)
+
+The `/` route is now also available as a controller named `home`, which is just an alias for calling the `flamingo.redirect` controller with the parameters `to="cms.page.view"` and `name="home"`.

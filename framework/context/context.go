@@ -23,6 +23,7 @@ type (
 	Route struct {
 		Path       string
 		Controller string
+		Name       string
 	}
 )
 

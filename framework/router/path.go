@@ -2,7 +2,6 @@ package router
 
 import (
 	"errors"
-	"log"
 	"net/url"
 	"regexp"
 	"sort"
@@ -240,7 +239,7 @@ func (p *Path) Match(path string) *Match {
 
 		matched, key, value, length := part.match(path)
 
-		log.Printf("%#v == %v (%d) %s", part, matched, length, value)
+		//log.Printf("%#v == %v (%d) %s", part, matched, length, value)
 
 		if !matched {
 			return nil

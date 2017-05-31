@@ -11,9 +11,10 @@ import (
 type (
 	// Path is a matchable routing path
 	Path struct {
-		path   string // `/path/to/:something/$id<[0-9]+>/*foo
-		parts  []part // {'path/to', ':something', '$id<[0-9]+>', '*foo'}
-		params []string
+		path          string // `/path/to/:something/$id<[0-9]+>/*foo
+		parts         []part // {'path/to', ':something', '$id<[0-9]+>', '*foo'}
+		params        []string
+		trailingSlash bool
 	}
 
 	// Match is the result of matching a path
@@ -176,7 +177,8 @@ func (p *partWildcard) render(values map[string]string) (string, error) {
 // NewPath returns a new path
 func NewPath(path string) *Path {
 	var newPath = &Path{
-		path: path,
+		path:          path,
+		trailingSlash: strings.HasSuffix(path, "/"),
 	}
 
 	var current part
@@ -281,6 +283,8 @@ func (p *Path) Render(values map[string]string) (string, error) {
 
 	if len(path) == 0 {
 		path = "/"
+	} else if p.trailingSlash && !strings.HasSuffix(path, "/") {
+		path += "/"
 	}
 
 	return path, nil

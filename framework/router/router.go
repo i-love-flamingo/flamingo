@@ -3,22 +3,26 @@ package router
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	configcontext "flamingo/framework/context"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/web"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"path"
 	"reflect"
-	"runtime/debug"
 	"strconv"
 	"strings"
 
 	"github.com/gorilla/sessions"
+)
+
+const (
+	FLAMINGO_ERROR             = "flamingo.error"
+	FLAMINGO_NOTFOUND          = "flamingo.notfound"
+	ERROR             ErrorKey = iota
 )
 
 type (
@@ -32,12 +36,18 @@ type (
 		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
 		ProfilerProvider    func() profiler.Profiler `inject:""`
 		EventRouterProvider func() event.Router      `inject:""`
-		Injector            *dingo.Injector          `inject:""`
-		RouterRegistry      *Registry                `inject:""`
+		eventrouter         event.Router
+		Injector            *dingo.Injector `inject:""`
+		RouterRegistry      *Registry       `inject:""`
+		NotFoundHandler     string          `inject:"config:flamingo.router.notfound"`
+		ErrorHandler        string          `inject:"config:flamingo.router.error"`
 	}
 
 	// P are a shorthand for paramter
 	P map[string]string
+
+	// ErrorKey for context errors
+	ErrorKey uint
 )
 
 // NewRouter creates a new Router instance
@@ -47,6 +57,14 @@ func NewRouter() *Router {
 
 // Init the router
 func (router *Router) Init(routingConfig *configcontext.Context) *Router {
+	if router.NotFoundHandler == "" {
+		router.NotFoundHandler = FLAMINGO_NOTFOUND
+	}
+
+	if router.ErrorHandler == "" {
+		router.ErrorHandler = FLAMINGO_ERROR
+	}
+
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 
 	// Make sure to not taint the global router registry
@@ -96,6 +114,8 @@ func (router *Router) Init(routingConfig *configcontext.Context) *Router {
 
 	router.RouterRegistry = routes
 
+	router.eventrouter = router.EventRouterProvider()
+
 	return router
 }
 
@@ -116,7 +136,7 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 		panic(err)
 	}
 
-	resultURL.Path = path.Join(router.base.Path, p)
+	resultURL.Path = router.base.Path + p
 
 	return resultURL
 }
@@ -134,35 +154,37 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// retrieve a new context
-	var ctx = router.ContextFactory(router.ProfilerProvider(), router.EventRouterProvider(), rw, req, s)
+	var ctx = router.ContextFactory(router.ProfilerProvider(), router.eventrouter, rw, req, s)
 
 	// assign context to request
 	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
 
 	// dispatch OnRequest event, the request might be changed
-	var e = &OnRequestEvent{rw, req}
-	ctx.EventRouter().Dispatch(e)
+	var e = &OnRequestEvent{rw, req, ctx}
+	router.eventrouter.Dispatch(e)
 	req = e.Request
 
 	// catch errors
 	defer func() {
-		var err interface{}
-		if err = recover(); err != nil {
-			rw.WriteHeader(500)
-			rw.Write([]byte(fmt.Sprintln(err)))
-			rw.Write(debug.Stack())
+		if err := recover(); err != nil {
+			if _, ok := err.(error); ok {
+				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, err)).Apply(ctx, rw)
+			} else if err, ok := err.(string); ok {
+				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
+			} else {
+				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
+			}
 		}
 		// fire finish event
-		ctx.EventRouter().Dispatch(&OnFinishEvent{rw, req, err})
+		router.eventrouter.Dispatch(&OnFinishEvent{rw, req, err, ctx})
 	}()
 
 	var controller, params = router.RouterRegistry.MatchRequest(req)
 	ctx.LoadParams(params)
 	if controller == nil {
-		http.NotFoundHandler().ServeHTTP(rw, req)
-	} else {
-		router.handle(controller).ServeHTTP(rw, req)
+		controller = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
+	router.handle(controller).ServeHTTP(rw, req)
 }
 
 // handle sets the controller for a router which handles a Request.
@@ -199,13 +221,12 @@ func (router *Router) handle(c Controller) http.Handler {
 				c.ServeHTTP(w, req)
 
 			default:
-				w.WriteHeader(404)
-				w.Write([]byte("404 page not found (no handler)"))
+				response = router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx)
 			}
 		}
 
 		// fire response event
-		ctx.EventRouter().Dispatch(&OnResponseEvent{c, response, req, w})
+		router.eventrouter.Dispatch(&OnResponseEvent{c, response, req, w, ctx})
 
 		router.Sessions.Save(req, w, ctx.Session())
 

@@ -99,6 +99,6 @@ func (p *Provider) Create(injector *Injector) reflect.Value {
 		in[i] = injector.getInstance(p.fnc.Type().In(i), "")
 	}
 	res := p.fnc.Call(in)[0]
-	injector.RequestInjection(res)
+	injector.requestInjection(res)
 	return res
 }

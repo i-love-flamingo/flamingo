@@ -7,7 +7,6 @@ type (
 	// Router routes events
 	Router interface {
 		Dispatch(event Event)
-		AddSubscriber(subscriber Subscriber)
 	}
 
 	// Subscriber is notified of an event

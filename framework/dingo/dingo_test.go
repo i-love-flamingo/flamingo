@@ -126,7 +126,7 @@ var _ = Describe("Dingo Test", func() {
 			Expect(dt.Iface2.Test()).To(Equal(2))
 
 			var dt2 DepTest
-			injector.RequestInjection(&dt2)
+			injector.requestInjection(&dt2)
 
 			Expect(dt2.Iface.Test()).To(Equal(1))
 			Expect(dt2.Iface2.Test()).To(Equal(2))
@@ -150,7 +150,7 @@ var _ = Describe("Dingo Test", func() {
 			injector := NewInjector(new(AopModule))
 
 			var dep AopDep
-			injector.RequestInjection(&dep)
+			injector.requestInjection(&dep)
 
 			Expect(dep.A.Test()).To(Equal("Test 1 2"))
 		})

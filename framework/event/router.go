@@ -13,8 +13,3 @@ func (d *DefaultRouter) Dispatch(event Event) {
 		s.Notify(event)
 	}
 }
-
-// AddSubscriber to add a new event subscriber
-func (d *DefaultRouter) AddSubscriber(subscriber Subscriber) {
-	d.Subscriber = append(d.Subscriber, subscriber)
-}

@@ -59,4 +59,7 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Handle("flamingo.redirectUrl", (*controller.Redirect).RedirectUrl)
 	module.RouterRegistry.Handle("flamingo.redirectPermanent", (*controller.Redirect).RedirectPermanent)
 	module.RouterRegistry.Handle("flamingo.redirectPermanentUrl", (*controller.Redirect).RedirectPermanentUrl)
+
+	module.RouterRegistry.Handle(router.FLAMINGO_ERROR, (*controller.Error).Error)
+	module.RouterRegistry.Handle(router.FLAMINGO_NOTFOUND, (*controller.Error).NotFound)
 }

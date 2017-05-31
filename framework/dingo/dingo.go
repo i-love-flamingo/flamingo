@@ -6,6 +6,11 @@ import (
 	"reflect"
 )
 
+const (
+	INIT = iota
+	DEFAULT
+)
+
 type (
 	// Injector defines bindings and multibindings
 	Injector struct {
@@ -14,6 +19,8 @@ type (
 		interceptor   map[reflect.Type][]reflect.Type
 		parent        *Injector
 		scopes        map[reflect.Type]Scope
+		stage         uint
+		delayed       []interface{}
 	}
 
 	// Module is provided by packages to generate the DI tree
@@ -29,6 +36,7 @@ func NewInjector(modules ...Module) *Injector {
 		multibindings: make(map[reflect.Type][]*Binding),
 		interceptor:   make(map[reflect.Type][]reflect.Type),
 		scopes:        make(map[reflect.Type]Scope),
+		stage:         DEFAULT,
 	}
 
 	injector.Bind(Injector{}).ToInstance(injector)
@@ -54,8 +62,10 @@ func (injector *Injector) Child() *Injector {
 
 // InitModules initializes the injector with the given modules
 func (injector *Injector) InitModules(modules ...Module) {
+	injector.stage = INIT
+
 	for _, module := range modules {
-		injector.RequestInjection(module)
+		injector.requestInjection(module)
 		module.Configure(injector)
 	}
 
@@ -68,6 +78,14 @@ func (injector *Injector) InitModules(modules ...Module) {
 			known[binding.annotatedWith] = struct{}{}
 		}
 	}
+
+	injector.stage = DEFAULT
+
+	for _, object := range injector.delayed {
+		injector.requestInjection(object)
+	}
+
+	injector.delayed = nil
 
 	// build eager singletons
 	for _, bindings := range injector.bindings {
@@ -157,7 +175,7 @@ func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect
 	for _, interceptor := range injector.interceptor[t] {
 		of := final
 		final = reflect.New(interceptor)
-		injector.RequestInjection(final.Interface())
+		injector.requestInjection(final.Interface())
 		final.Elem().Field(0).Set(of)
 	}
 	if injector.parent != nil {
@@ -178,7 +196,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			if result.Kind() == reflect.Slice {
 				result = injector.internalResolveType(result.Type(), "")
 			} else {
-				injector.RequestInjection(result.Interface())
+				injector.requestInjection(result.Interface())
 			}
 			return result
 		}
@@ -231,7 +249,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 	}
 
 	n := reflect.New(t)
-	injector.RequestInjection(n.Interface())
+	injector.requestInjection(n.Interface())
 	return n
 }
 
@@ -315,6 +333,14 @@ func (injector *Injector) Override(what interface{}, annotatedWith string) *Bind
 
 // RequestInjection requests the object to have all fields annotated with `inject` to be filled
 func (injector *Injector) RequestInjection(object interface{}) {
+	if injector.stage == INIT {
+		injector.delayed = append(injector.delayed, object)
+	} else {
+		injector.requestInjection(object)
+	}
+}
+
+func (injector *Injector) requestInjection(object interface{}) {
 	if _, ok := object.(reflect.Value); !ok {
 		object = reflect.ValueOf(object)
 	}

@@ -24,6 +24,7 @@ type (
 		profiler.Profiler
 		Profiler() profiler.Profiler
 		EventRouter() event.Router
+		WithValue(key, value interface{}) Context
 
 		LoadParams(p map[string]string)
 		WithVars(vars map[string]string) Context
@@ -129,6 +130,12 @@ func (c *ctx) clone() *ctx {
 	newctx.Context = c.Context
 
 	return newctx
+}
+
+// WithValue enriches the context value with a key-value pair
+func (c *ctx) WithValue(key, value interface{}) Context {
+	c.Context = context.WithValue(c.Context, key, value)
+	return c
 }
 
 // LoadParams load request params

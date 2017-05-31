@@ -1,7 +1,11 @@
 // Package context provides supporting code for multi-tenant setups
 package context
 
-import "flamingo/framework/dingo"
+import (
+	"flamingo/framework/dingo"
+	"os"
+	"strings"
+)
 
 type (
 	// Context defines a configuration context for multi-site setups
@@ -76,6 +80,9 @@ func (ctx *Context) GetInitializedInjector() *dingo.Injector {
 	injector.Bind(Context{}).ToInstance(ctx)
 
 	for k, v := range ctx.Configuration {
+		if val, ok := v.(string); ok && strings.HasPrefix(val, "%%ENV:") && strings.HasSuffix(val, "%%") {
+			v = os.Getenv(val[6 : len(val)-2])
+		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
 

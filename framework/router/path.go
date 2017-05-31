@@ -51,8 +51,8 @@ func (p *partFixed) read(path string) (string, string) {
 	pos := strings.IndexAny(path, ":*$")
 
 	if pos < 0 {
-		p.part = path
-		p.length = len(path)
+		p.length = len(path) - 1
+		p.part = path[:p.length]
 		return "", ""
 	}
 
@@ -253,13 +253,7 @@ func (p *Path) Match(path string) *Match {
 		path = path[length:]
 	}
 
-	//log.Printf("%s", path)
-
-	if len(path) > 1 {
-		return nil
-	}
-
-	if len(path) == 1 && path != "/" {
+	if len(path) > 0 && path != "/" {
 		return nil
 	}
 

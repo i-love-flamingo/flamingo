@@ -51,7 +51,10 @@ func (p *partFixed) read(path string) (string, string) {
 	pos := strings.IndexAny(path, ":*$")
 
 	if pos < 0 {
-		p.length = len(path) - 1
+		p.length = len(path)
+		if strings.HasSuffix(path, "/") {
+			p.length -= 1
+		}
 		p.part = path[:p.length]
 		return "", ""
 	}

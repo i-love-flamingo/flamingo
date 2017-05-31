@@ -109,7 +109,8 @@ func (p *partParam) match(path string) (matched bool, key, value string, length 
 		return false, "", "", 0
 	}
 
-	return true, p.name, parts[0][:len(parts[0])-len(p.suffix)], len(parts[0])
+	val, _ := url.QueryUnescape(parts[0][:len(parts[0])-len(p.suffix)])
+	return true, p.name, val, len(parts[0])
 }
 
 func (p *partParam) render(values map[string]string) (string, error) {

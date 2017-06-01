@@ -10,17 +10,17 @@ Run `glide i` to fetch dependencies.
 
 Your entrypoint is `akl/akl.go`, this is where the application is started.
 
-Please make sure to set your on-save setting to `go imports` in Gogland!
+Please make sure to set your on-save setting to `go imports` in Gogland! (Preferences > Languages & Frameworks > Go > On Save)
 
 ## Module overview
 
 A module in Flamingo is usually in one of five possible locations:
 
-- akl <- This is the place where project modules live
-- framework <- This is the Flamingo framework core
-- core <- This is the Flamingo core, possible open source one day, and contains general Flamingo modules
-- om3 <- This is the place where OM3 specific modules go which are generic enough for multiple projects, but not intended for core
-- _thirdparty_ <- essentially everything from somewhere else such as github :)
+- **akl**: This is the place where project modules live
+- **framework**: This is the Flamingo framework core
+- **core**: This is the Flamingo core, possibly open-sourced one day, and contains general Flamingo modules
+- **om3**: This is the place where OM3 specific modules go which are generic enough for multiple projects, but not intended for core
+- **_thirdparty_**: essentially everything from somewhere else such as github :)
 
 A module always consists of a `Module` struct, usually in a file called `module.go`.
 

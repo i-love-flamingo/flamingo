@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	configcontext "flamingo/framework/context"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
@@ -17,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/sessions"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -167,8 +167,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// catch errors
 	defer func() {
 		if err := recover(); err != nil {
-			if _, ok := err.(error); ok {
-				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, err)).Apply(ctx, rw)
+			if e, ok := err.(error); ok {
+				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
 			} else if err, ok := err.(string); ok {
 				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
 			} else {

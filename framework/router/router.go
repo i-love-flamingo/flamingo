@@ -9,6 +9,7 @@ import (
 	"flamingo/framework/profiler"
 	"flamingo/framework/web"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -168,6 +169,11 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			if e, ok := err.(error); ok {
+				type st interface {
+					StackTrace() errors.StackTrace
+				}
+				log.Printf("%#v", errors.WithStack(e))
+				log.Printf("%+v", errors.WithStack(e).(st).StackTrace())
 				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
 			} else if err, ok := err.(string); ok {
 				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)

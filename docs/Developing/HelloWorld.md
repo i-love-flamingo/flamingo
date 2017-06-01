@@ -174,7 +174,7 @@ These make the controller _aware_ of a certain response behaviour, such as "bein
 We make our controller `RenderAware` by injecting the corresponding helper into our `IndexController`:
 
 ```go
-import ""flamingo/framework/web/responder""
+import "flamingo/framework/web/responder"
 // ...
 type IndexController struct{
     *responder.RenderAware `inject:""`

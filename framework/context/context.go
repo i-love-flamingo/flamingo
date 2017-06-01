@@ -4,7 +4,7 @@ package context
 import (
 	"flamingo/framework/dingo"
 	"os"
-	"strings"
+	"regexp"
 )
 
 type (
@@ -79,9 +79,10 @@ func (ctx *Context) GetInitializedInjector() *dingo.Injector {
 	}
 	injector.Bind(Context{}).ToInstance(ctx)
 
+	var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
 	for k, v := range ctx.Configuration {
-		if val, ok := v.(string); ok && strings.HasPrefix(val, "%%ENV:") && strings.HasSuffix(val, "%%") {
-			v = os.Getenv(val[6 : len(val)-2])
+		if val, ok := v.(string); ok {
+			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}

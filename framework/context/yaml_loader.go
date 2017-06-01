@@ -11,7 +11,21 @@ import (
 // LoadYaml starts to recursive read the yaml context tree
 func LoadYaml(basedir string, root *Context) error {
 	// load context.yml
-	return loadyaml(basedir, "/", root)
+	err := loadyaml(basedir, "/", root)
+	if err != nil {
+		return err
+	}
+
+	// load additional single context file
+	if os.Getenv("CONTEXTFILE") != "" {
+		contextfile, err := ioutil.ReadFile(os.Getenv("CONTEXTFILE"))
+		if err != nil {
+			return err
+		}
+		yaml.Unmarshal(contextfile, root)
+	}
+
+	return nil
 }
 
 func loadyaml(basedir string, curdir string, root *Context) error {
@@ -25,6 +39,10 @@ func loadyaml(basedir string, curdir string, root *Context) error {
 	contextfile, err = ioutil.ReadFile(path.Join(basedir, curdir, "context_"+os.Getenv("CONTEXT")+".yml"))
 	if err == nil {
 		yaml.Unmarshal(contextfile, root)
+	}
+
+	if envconfig := os.Getenv("CONFIG"); envconfig != "" {
+		yaml.Unmarshal([]byte(envconfig), root)
 	}
 
 	for _, child := range root.Childs {

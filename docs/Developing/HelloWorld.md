@@ -54,7 +54,7 @@ type Module struct {}
 func (m *Module) Configure(injector *dingo.Injector){}
 ```
 
-Now we register the modules usage by adding it in `akl/akl.go`
+Now we register the module by adding it in `akl/akl.go`
 
 ```go
 //original list ...
@@ -118,7 +118,7 @@ func (controller *IndexController) Get(ctx web.Context) web.Response {
 
 Our controller returns a `ContentResponse` with the `Body` set to `Hello World!`.
 
-Now we need to tell Flamingo where to find the controller. We update our `Module`,
+Now we need to tell Flamingo where to find the controller. We update our `module.go`,
 add the `RouterRegistry` as a dependency and create a _Route_ and a _Handler_:
 
 ```go
@@ -159,7 +159,8 @@ block content
   h1 Hello #{name}
 ```
 
-Run the frontend pipeline and compile everything, `yarn run build`.
+Run the frontend pipeline and compile everything, `cd akl/frontend && yarn run build`.
+(Or - if you don't have yarn installed: `cd akl/frontend && ./build.sh`
 
 Now it's time to render the template. Flamingo has a couple of Responders-helpers, such as:
 

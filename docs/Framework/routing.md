@@ -47,7 +47,8 @@ Data Controller usually don't have a route, but can be mapped to a dedicated rou
 
 # Examples
 
-As always an Example illustrates the routing concept best, so here we have it:
+As always an example illustrates the routing concept best, so here we have it:
+(`module.go`)
 
 ```go
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -74,15 +75,15 @@ A piece which is just static, such as `/foo/bar/asd`.
 
 ## Parameter
 
-A part with a named parameter, `/foo/:param/` which spans the request up to the next `/`.
+A part with a named parameter, `/foo/:param/` which spans the request up to the next `/` or `.` (e.g. `.html`).
 
 ## Regex
 
-A (optionally named) regex parameter such as `/foo/$id<[0-9]+>` which captures everything the regex captures.
+A (optionally named) regex parameter such as `/foo/$param<[0-9]+>` which captures everything the regex captures, where `param` in this example is the name of the parameter.
 
 ## Wildcard
 
-A wildcard which captures everything, such as `/foo/bar/*xyz`. Note that slashes are not escaped here!
+A wildcard which captures everything, such as `/foo/bar/*param`. Note that slashes are not escaped here!
 
 ## Router Target
 
@@ -90,9 +91,9 @@ The target of a route is a controller name and optional attributes.
 
 ## Parameters
 
-Parameters are comma-separated identifierts.
+Parameters are comma-separated identifiers.
 
-If no parameters are specified, and not brackets are used, every route parameters becomes a parameters.
+If no parameters are specified and not brackets are used every route parameter is available as a parameter.
 
 - `controller.view` Get's all available parameters
 - `controller.view(param1, param2)` param1 and param2 will be set

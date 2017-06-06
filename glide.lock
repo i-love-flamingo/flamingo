@@ -1,5 +1,5 @@
 hash: 9f410e8744d102813b5affe2fbccd195179b3d8a0e2942e2dc99214c324e386b
-updated: 2017-05-19T12:54:56.369348459+02:00
+updated: 2017-06-06T15:32:27.047398584+02:00
 imports:
 - name: github.com/boj/redistore
   version: fc113767cd6b051980f260d6dbe84b2740c46ab0
@@ -19,7 +19,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/gorilla/securecookie
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
@@ -95,7 +95,7 @@ imports:
   version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
   repo: https://github.com/thebod/go-html-template
 - name: text/template
-  version: 9c4ad7f94bd606288b8d47041b430f4c4ab6924f
+  version: 7a52eabb7b83aa66b186f2e5a0ee15653c55a95b
   repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo

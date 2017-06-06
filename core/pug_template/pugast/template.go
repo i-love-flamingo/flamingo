@@ -168,16 +168,22 @@ func Fixtype(val interface{}) interface{} {
 			newval[k.String()] = Fixtype(rval.MapIndex(k).Interface())
 		}
 		val = newval
-	case reflect.Struct:
-		newval := make(map[string]interface{})
-		rval := reflect.ValueOf(val)
-		for i := 0; i < tval.NumField(); i++ {
-			if rval.Field(i).CanInterface() {
-				n := Fixtype(rval.Field(i).Interface())
-				newval[tval.Field(i).Name] = n
-			}
-		}
-		val = newval
+
+		//case reflect.Struct:
+		//	newval := make(map[string]interface{})
+		//	rval := reflect.ValueOf(val)
+		//	for i := 0; i < tval.NumField(); i++ {
+		//		if rval.Field(i).CanInterface() {
+		//			n := Fixtype(rval.Field(i).Interface())
+		//			newval[tval.Field(i).Name] = n
+		//		}
+		//	}
+		//
+		//	for i := 0; i < tval.NumMethod(); i++ {
+		//		newval[tval.Method(i).Name] = tval.Method(i).Func.Interface()
+		//	}
+		//
+		//	val = newval
 	}
 	return val
 }

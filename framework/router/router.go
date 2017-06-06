@@ -44,7 +44,7 @@ type (
 		ErrorHandler        string          `inject:"config:flamingo.router.error"`
 	}
 
-	// P are a shorthand for paramter
+	// P is a shorthand for parameter
 	P map[string]string
 
 	// ErrorKey for context errors

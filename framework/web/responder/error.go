@@ -4,6 +4,8 @@ import (
 	"flamingo/framework/web"
 	"fmt"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -26,6 +28,10 @@ type (
 
 	// EmptyError in case we want to hide our error
 	EmptyError struct{}
+
+	st interface {
+		StackTrace() errors.StackTrace
+	}
 )
 
 // Error implements error interface
@@ -62,7 +68,7 @@ func (r *ErrorAware) ErrorNotFound(context web.Context, error error) *web.Conten
 }
 
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
-func (r *ErrorAware) Error(context web.Context, error error) *web.ContentResponse {
+func (r *ErrorAware) Error(context web.Context, err error) *web.ContentResponse {
 	var response *web.ContentResponse
 
 	if !r.DebugMode {
@@ -75,11 +81,11 @@ func (r *ErrorAware) Error(context web.Context, error error) *web.ContentRespons
 		response = r.RenderAware.Render(
 			context,
 			"pages/error/503",
-			ErrorViewData{Error: DebugError{error}, Code: 500},
+			ErrorViewData{Error: DebugError{err}, Code: 500},
 		)
 	}
 
-	response.Status = http.StatusServiceUnavailable
+	response.Status = http.StatusInternalServerError
 
 	return response
 }

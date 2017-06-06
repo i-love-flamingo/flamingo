@@ -103,7 +103,7 @@ func (authmanager *AuthManager) IdToken(c web.Context) (*oidc.IDToken, error) {
 	}
 
 	// Parse and verify ID Token payload.
-	idToken, err := authmanager.Verifier().Verify(context.Background(), rawIDToken)
+	idToken, err := authmanager.Verifier().Verify(c, rawIDToken)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

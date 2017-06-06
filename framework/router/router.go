@@ -58,13 +58,7 @@ func NewRouter() *Router {
 
 // Init the router
 func (router *Router) Init(routingConfig *configcontext.Context) *Router {
-	if router.NotFoundHandler == "" {
-		router.NotFoundHandler = FLAMINGO_NOTFOUND
-	}
-
-	if router.ErrorHandler == "" {
-		router.ErrorHandler = FLAMINGO_ERROR
-	}
+	log.Println(router.ErrorHandler, router.NotFoundHandler)
 
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 

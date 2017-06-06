@@ -63,3 +63,11 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Handle(router.FLAMINGO_ERROR, (*controller.Error).Error)
 	module.RouterRegistry.Handle(router.FLAMINGO_NOTFOUND, (*controller.Error).NotFound)
 }
+
+// DefaultConfig for this module
+func (module *Module) DefaultConfig() map[string]interface{} {
+	return map[string]interface{}{
+		"flamingo.router.notfound": router.FLAMINGO_NOTFOUND,
+		"flamingo.router.error":    router.FLAMINGO_ERROR,
+	}
+}

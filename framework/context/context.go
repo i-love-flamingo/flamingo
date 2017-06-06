@@ -23,6 +23,11 @@ type (
 		Configuration map[string]interface{} `yaml:"config" json:"config"`
 	}
 
+	// DefaultConfigModule is used to get a module's default configuration
+	DefaultConfigModule interface {
+		DefaultConfig() map[string]interface{}
+	}
+
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
 	Route struct {
 		Path       string
@@ -78,6 +83,16 @@ func (ctx *Context) GetInitializedInjector() *dingo.Injector {
 		injector = dingo.NewInjector()
 	}
 	injector.Bind(Context{}).ToInstance(ctx)
+
+	for _, module := range ctx.Modules {
+		if cfgmodule, ok := module.(DefaultConfigModule); ok {
+			for k, v := range cfgmodule.DefaultConfig() {
+				if _, ok := ctx.Configuration[k]; !ok {
+					ctx.Configuration[k] = v
+				}
+			}
+		}
+	}
 
 	var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
 	for k, v := range ctx.Configuration {

@@ -70,12 +70,12 @@ func (injector *Injector) InitModules(modules ...Module) {
 	}
 
 	for typ, bindings := range injector.bindings {
-		known := make(map[string]struct{})
+		known := make(map[string]*Binding)
 		for _, binding := range bindings {
-			if _, ok := known[binding.annotatedWith]; ok {
-				panic(fmt.Sprintf("already known binding for %s with annotation %s", typ, binding.annotatedWith))
+			if known, ok := known[binding.annotatedWith]; ok && !known.equal(binding) {
+				panic(fmt.Sprintf("already known binding for %s with annotation '%s'", typ, binding.annotatedWith))
 			}
-			known[binding.annotatedWith] = struct{}{}
+			known[binding.annotatedWith] = binding
 		}
 	}
 

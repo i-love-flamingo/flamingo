@@ -92,6 +92,10 @@ func (b *Binding) AsEagerSingleton() *Binding {
 	return b
 }
 
+func (b *Binding) equal(to *Binding) bool {
+	return reflect.DeepEqual(b, to)
+}
+
 // Create creates a new instance by the provider and requests injection, all provider arguments are automatically filled
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())

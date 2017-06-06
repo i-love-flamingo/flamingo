@@ -2,7 +2,6 @@ package infrastructure
 
 import (
 	"context"
-	"flamingo/framework/web"
 	"net/http"
 )
 
@@ -22,10 +21,7 @@ func (ac *APIClient) request(ctx context.Context, p string) (*http.Response, err
 	if err != nil {
 		panic(err)
 	}
-	if ctx, ok := ctx.(web.Context); ok {
-		defer ctx.Profile("masterdataportal", "GET "+ac.BaseURL+p)()
-		req.Header.Add("X-Request-ID", ctx.ID())
-	}
+	req = req.WithContext(ctx)
 	return http.DefaultClient.Do(req)
 }
 

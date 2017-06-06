@@ -21,10 +21,6 @@ type (
 
 // Get a Product
 func (ps *ProductService) Get(ctx web.Context, ID string) (*domain.Product, error) {
-	if ctx, ok := ctx.(web.Context); ok {
-		defer ctx.Profile("searchperience", "get product "+ID+" in "+ps.Channel+" with locale "+ps.Locale)()
-	}
-
 	ID = fmt.Sprintf("%s_%s_%s", ID, ps.Locale, ps.Channel)
 	resp, err := ps.Client.Get(ctx, ID)
 	if err != nil {

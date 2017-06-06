@@ -19,10 +19,6 @@ type (
 
 // Search a result
 func (ss *SearchService) Search(ctx web.Context, query url.Values) (*domain.SearchResult, error) {
-	if ctx, ok := ctx.(web.Context); ok {
-		defer ctx.Profile("searchperience", "get search "+query.Encode())()
-	}
-
 	resp, err := ss.Client.Search(ctx, query)
 	if err != nil {
 		return nil, errors.WithStack(err)

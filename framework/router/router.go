@@ -271,7 +271,7 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 
 		panic("not a data controller")
 	} else { // mock...
-		defer ctx.Profile("fallback", handler)
+		defer ctx.Profile("fallback", handler)()
 		data, err := ioutil.ReadFile("frontend/src/mocks/" + handler + ".json")
 		if err == nil {
 			var res interface{}

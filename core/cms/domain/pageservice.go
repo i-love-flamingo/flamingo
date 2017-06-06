@@ -1,5 +1,8 @@
 package domain
 
+import "context"
+
+// PageService for cms page retrieval
 type PageService interface {
-	Get(string) (*Page, error)
+	Get(context.Context, string) (*Page, error)
 }

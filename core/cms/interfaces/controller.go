@@ -22,7 +22,7 @@ type (
 
 // Get Response for Product matching sku param
 func (vc *ViewController) Get(c web.Context) web.Response {
-	var page, err = vc.PageService.Get(c.MustParam1("name"))
+	var page, err = vc.PageService.Get(c, c.MustParam1("name"))
 	if err != nil {
 		return vc.Error(c, err)
 	}

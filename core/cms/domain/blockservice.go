@@ -1,6 +1,8 @@
 package domain
 
-// PageService defines the page-getter service
+import "context"
+
+// BlockService defines the cms block service
 type BlockService interface {
-	Get(string) (*Block, error)
+	Get(context.Context, string) (*Block, error)
 }

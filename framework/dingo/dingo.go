@@ -17,6 +17,7 @@ type (
 		bindings      map[reflect.Type][]*Binding
 		multibindings map[reflect.Type][]*Binding
 		interceptor   map[reflect.Type][]reflect.Type
+		overrides     []*override
 		parent        *Injector
 		scopes        map[reflect.Type]Scope
 		stage         uint
@@ -26,6 +27,12 @@ type (
 	// Module is provided by packages to generate the DI tree
 	Module interface {
 		Configure(injector *Injector)
+	}
+
+	override struct {
+		typ           reflect.Type
+		annotatedWith string
+		binding       *Binding
 	}
 )
 
@@ -53,7 +60,7 @@ func NewInjector(modules ...Module) *Injector {
 func (injector *Injector) Child() *Injector {
 	var newInjector = NewInjector()
 	newInjector.parent = injector
-	newInjector.Override(Injector{}, "").ToInstance(newInjector)
+	newInjector.Bind(Injector{}).ToInstance(newInjector)
 	newInjector.BindScope(new(ChildSingletonScope))
 	newInjector.multibindings = injector.multibindings
 
@@ -67,6 +74,22 @@ func (injector *Injector) InitModules(modules ...Module) {
 	for _, module := range modules {
 		injector.requestInjection(module)
 		module.Configure(injector)
+	}
+
+	for _, override := range injector.overrides {
+		bindtype := override.typ
+		if bindtype.Kind() == reflect.Ptr {
+			bindtype = bindtype.Elem()
+		}
+		if bindings, ok := injector.bindings[bindtype]; ok && len(bindings) > 0 {
+			for i, binding := range bindings {
+				if binding.annotatedWith == override.annotatedWith {
+					injector.bindings[bindtype][i] = override.binding
+				}
+			}
+			continue
+		}
+		panic("cannot override unknown binding " + override.typ.String() + " (annotated with " + override.annotatedWith + ")")
 	}
 
 	for typ, bindings := range injector.bindings {
@@ -318,17 +341,12 @@ func (injector *Injector) Override(what interface{}, annotatedWith string) *Bind
 	if bindtype.Kind() == reflect.Ptr {
 		bindtype = bindtype.Elem()
 	}
-	if bindings, ok := injector.bindings[bindtype]; ok && len(bindings) > 0 {
-		for i, binding := range bindings {
-			if binding.annotatedWith == annotatedWith {
-				binding := new(Binding)
-				injector.bindings[bindtype][i] = binding
-				binding.typeof = bindtype
-				return binding
-			}
-		}
-	}
-	panic("cannot override unknown binding (annotated with " + annotatedWith + ")")
+	var binding = new(Binding)
+	binding.typeof = bindtype
+
+	injector.overrides = append(injector.overrides, &override{typ: bindtype, annotatedWith: annotatedWith, binding: binding})
+
+	return binding
 }
 
 // RequestInjection requests the object to have all fields annotated with `inject` to be filled

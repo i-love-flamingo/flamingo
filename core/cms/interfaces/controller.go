@@ -14,6 +14,7 @@ type (
 		PageService            domain.PageService `inject:""`
 	}
 
+	// ViewData for rendering
 	ViewData struct {
 		CmsPage *domain.Page
 	}

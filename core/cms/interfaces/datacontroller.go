@@ -1,14 +1,19 @@
 package interfaces
 
 import (
+	"flamingo/core/cms/domain"
 	"flamingo/framework/web"
 )
 
 type (
-	DataController struct{}
+	// DataController for `get("cms.block", ...)` requests
+	DataController struct {
+		BlockService domain.BlockService `inject:""`
+	}
 )
 
-// Get Response for Product matching sku param
+// Data controller for blocks
 func (vc *DataController) Data(c web.Context) interface{} {
-	return "Hello World Block."
+	block, _ := vc.BlockService.Get(c.MustParam1("block"))
+	return block
 }

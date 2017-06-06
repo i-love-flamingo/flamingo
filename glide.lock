@@ -95,7 +95,7 @@ imports:
   version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
   repo: https://github.com/thebod/go-html-template
 - name: text/template
-  version: 7a52eabb7b83aa66b186f2e5a0ee15653c55a95b
+  version: d45378a74532ab02a092f700782967d7aaaf4406
   repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo

@@ -51,3 +51,11 @@ func (c *Controller) Get(ctx web.Context) web.Response {
      */
 }
 ```
+
+## Configuration
+
+Flamingo expects a `session.Store` dingo binding, this is currently handled via the `session.backend` config parameter.
+
+Possible values are currently `file` for temporary file storage and `redis` for a redis backend.
+
+The redis backend uses the config param `session.backend.redis.host` to find the redis, e.g. `redis.host:6379`.

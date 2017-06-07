@@ -219,7 +219,7 @@ func (registry *Registry) Match(path string) (controller Controller, params map[
 }
 
 // MatchRequest matches a http Request (with GET and path parameters)
-func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string) {
+func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string, *handler) {
 	var path = req.URL.Path
 
 matchloop:
@@ -244,8 +244,8 @@ matchloop:
 			} else {
 				params = match.Values
 			}
-			return controller, params
+			return controller, params, handler
 		}
 	}
-	return nil, nil
+	return nil, nil, nil
 }

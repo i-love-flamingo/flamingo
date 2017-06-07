@@ -191,6 +191,14 @@ const profileTemplate = `<!doctype html>
 		</ul>
 	</header>
 	<div class="profiler-content">
+		<h3>Collected Data</h3>
+		<ul class="profiler-entries">
+		{{ range $data := .Data }}
+			<li class="profiler-entry">{{ $data }}</li>
+		{{ end }}
+		</ul>
+
+		<h3>Profile</h3>
 		<ul class="profiler-entries">
 		{{ range $entry := .Childs }}
 			{{ template "entry" $entry }}

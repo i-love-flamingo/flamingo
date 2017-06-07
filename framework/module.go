@@ -15,6 +15,7 @@ import (
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
+	"flamingo/framework/profiler/collector"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
 	"flamingo/framework/template_functions"
@@ -62,6 +63,8 @@ func (module *Module) Configure(injector *dingo.Injector) {
 
 	module.RouterRegistry.Handle(router.FLAMINGO_ERROR, (*controller.Error).Error)
 	module.RouterRegistry.Handle(router.FLAMINGO_NOTFOUND, (*controller.Error).NotFound)
+
+	injector.BindMulti((*collector.DataCollector)(nil)).To(router.DataCollector{})
 }
 
 // DefaultConfig for this module

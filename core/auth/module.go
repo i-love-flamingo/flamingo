@@ -5,6 +5,7 @@ import (
 	"flamingo/core/auth/application"
 	"flamingo/core/auth/interfaces"
 	"flamingo/framework/dingo"
+	"flamingo/framework/profiler/collector"
 	"flamingo/framework/router"
 
 	oidc "github.com/coreos/go-oidc"
@@ -28,4 +29,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Mount("/auth/logout", new(interfaces.LogoutController))
 
 	m.RouterRegistry.Handle("user", new(interfaces.UserController))
+
+	injector.BindMulti((*collector.DataCollector)(nil)).To(application.DataCollector{})
 }

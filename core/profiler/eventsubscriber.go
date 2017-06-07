@@ -43,6 +43,8 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 		delete(context.Session().Values, "context.id")
 	}
 
+	p.Collect(context)
+
 	if response, ok := event.Response.(*web.ContentResponse); ok {
 		p.Duration = time.Since(p.Start)
 		originalbody, _ := ioutil.ReadAll(response.Body)

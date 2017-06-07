@@ -179,11 +179,12 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		router.eventrouter.Dispatch(&OnFinishEvent{rw, req, err, ctx})
 	}()
 
-	var controller, params = router.RouterRegistry.MatchRequest(req)
+	var controller, params, handler = router.RouterRegistry.MatchRequest(req)
 	ctx.LoadParams(params)
 	if controller == nil {
 		controller = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
+	ctx.WithValue("handler", handler)
 	router.handle(controller).ServeHTTP(rw, req)
 }
 

@@ -3,7 +3,9 @@ package profiler
 import (
 	"bytes"
 	"flamingo/framework/profiler"
+	"flamingo/framework/profiler/collector"
 	"flamingo/framework/router"
+	"flamingo/framework/web"
 	"fmt"
 	"io/ioutil"
 	"runtime"
@@ -19,7 +21,8 @@ func init() {
 type (
 	// DefaultProfiler simply records whatever we pass into it
 	DefaultProfiler struct {
-		Router *router.Router `inject:""`
+		Router    *router.Router            `inject:""`
+		Collector []collector.DataCollector `inject:""`
 
 		Fnc, Msg         string
 		File             string
@@ -30,6 +33,7 @@ type (
 		Duration         time.Duration
 		Depth            int
 		Link             string
+		Data             []string
 	}
 )
 
@@ -64,6 +68,13 @@ func (p *DefaultProfiler) Profile(key, msg string) profiler.ProfileFinishFunc {
 		_, line := fnc.FileLine(pc)
 		subprofiler.Endpos = line
 		p.current = parent
+	}
+}
+
+// Collect data
+func (p *DefaultProfiler) Collect(ctx web.Context) {
+	for _, c := range p.Collector {
+		p.Data = append(p.Data, c.Collect(ctx))
 	}
 }
 

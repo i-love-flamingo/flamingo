@@ -14,7 +14,7 @@ func (dc *DataCollector) Collect(ctx web.Context) string {
 	handler := ctx.Value("handler").(*handler)
 	var params []string
 	for n, p := range handler.params {
-		ps := n + " "
+		ps := n
 		if p.optional {
 			ps += "?"
 		}

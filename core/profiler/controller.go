@@ -133,7 +133,7 @@ const profileTemplate = `<!doctype html>
 	.profiler-entry .fnc.has-file .icon:after {
 		content: "\002B";
 		position: absolute;
-		top: -5px;
+		top: -2px;
 		left: 2px;
 		font-size: 13px;
 	}

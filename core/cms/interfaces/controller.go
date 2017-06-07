@@ -26,5 +26,8 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	if err != nil {
 		return vc.Error(c, err)
 	}
+	if page == nil {
+		return vc.ErrorNotFound(c, nil)
+	}
 	return vc.Render(c, "pages/cms/view", ViewData{CmsPage: page})
 }

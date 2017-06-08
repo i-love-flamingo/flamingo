@@ -37,6 +37,8 @@ import:
   version: ^1.1.0
   subpackages:
   - redis
+- package: github.com/pact-foundation/pact-go
+  version: ^0.0.8
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

@@ -16,7 +16,7 @@ func init() {
 type (
 	// Module registers our profiler
 	Module struct {
-		RouterRegistry *router.RouterRegistry `inject:""`
+		RouterRegistry *router.Registry `inject:""`
 	}
 )
 

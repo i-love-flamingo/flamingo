@@ -1,14 +1,14 @@
 package testutil
 
 import (
-	"os"
-	"strconv"
-
-	"fmt"
-	"path/filepath"
-	"strings"
-
+	"encoding/json"
 	"flamingo/framework"
+	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
@@ -64,4 +64,28 @@ func PactTeardown(pact dsl.Pact) {
 	}
 
 	pact.Teardown()
+}
+
+// PactEncodeLike helper to encode a struct as a pact like type
+func PactEncodeLike(model interface{}) string {
+	var data map[string]interface{}
+
+	var tmp, _ = json.Marshal(model)
+	json.Unmarshal(tmp, &data)
+
+	var result = make(map[string]json.RawMessage)
+
+	for k, v := range data {
+		if reflect.TypeOf(v) != nil && reflect.TypeOf(v).Kind() == reflect.Map {
+			v = []byte(PactEncodeLike(v))
+		} else {
+			v, _ = json.Marshal(v)
+		}
+
+		result[k] = json.RawMessage(dsl.Like(string(v.([]byte))))
+	}
+
+	tmp, _ = json.MarshalIndent(result, "", "\t")
+
+	return string(tmp)
 }

@@ -10,4 +10,5 @@ RUN useradd -u 112 jenkins \
     && go get -u github.com/Masterminds/glide \
     && go get -u github.com/axw/gocov/... \
     && go get -u github.com/AlekSi/gocov-xml \
-    && chown -R 112 /go/
+    && chown -R 112 /go/ \
+    && chown -R 112 /pact/

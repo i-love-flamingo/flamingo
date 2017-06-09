@@ -24,9 +24,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 
-	m.RouterRegistry.Mount("/auth/login", new(interfaces.LoginController))
-	m.RouterRegistry.Mount("/auth/callback", new(interfaces.CallbackController))
-	m.RouterRegistry.Mount("/auth/logout", new(interfaces.LogoutController))
+	m.RouterRegistry.Route("/auth/login", "auth.login")
+	m.RouterRegistry.Handle("auth.login", new(interfaces.LoginController))
+	m.RouterRegistry.Route("/auth/callback", "auth.callback")
+	m.RouterRegistry.Handle("auth.callback", new(interfaces.CallbackController))
+	m.RouterRegistry.Route("/auth/logout", "auth.logout")
+	m.RouterRegistry.Handle("auth.logout", new(interfaces.LogoutController))
 
 	m.RouterRegistry.Handle("user", new(interfaces.UserController))
 

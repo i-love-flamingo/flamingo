@@ -53,7 +53,8 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 // Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.RouterRegistry.Mount("/_flamingo/json/:handler", new(controller.DataController))
+	module.RouterRegistry.Route("/_flamingo/json/:handler", "flamingo.data.handler")
+	module.RouterRegistry.Handle("flamingo.data.handler", new(controller.DataController))
 	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
 
 	module.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)

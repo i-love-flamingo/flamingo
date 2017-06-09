@@ -2,7 +2,6 @@ package router
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -60,15 +59,6 @@ func (registry *Registry) Route(path, handler string) {
 // Alias for an existing router definition
 func (registry *Registry) Alias(name, to string) {
 	registry.alias[name] = parseHandler(to)
-}
-
-// Mount auto-generates a controller name from the path
-func (registry *Registry) Mount(path string, controller Controller) {
-	var p = NewPath(path)
-	var name = strings.Replace(strings.Trim(path, "/.: "), "/", ".", -1)
-
-	registry.Handle(name, controller)
-	registry.Route(path, fmt.Sprintf("%s(%s)", name, strings.Join(p.params, ", ")))
 }
 
 func parseHandler(h string) *handler {

@@ -29,7 +29,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
 	m.RouterRegistry.Route("/static/*n", "_static")
 
-	m.RouterRegistry.Mount("/_pugtpl/debug", new(DebugController))
+	m.RouterRegistry.Route("/_pugtpl/debug", "pugtpl.debug")
+	m.RouterRegistry.Handle("pugtpl.debug", new(DebugController))
 
 	// We bind the Template Engine to the ChildSingleton level (in case there is different config handling
 	// We use the provider to make sure both are always the same injected type

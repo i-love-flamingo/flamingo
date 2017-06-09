@@ -13,5 +13,6 @@ type Module struct {
 
 // Configure DI
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.RouterRegistry.Mount("/brand/:uid", new(controller.ViewController))
+	module.RouterRegistry.Route("/brand/:uid", "brand.view")
+	module.RouterRegistry.Handle("brand.view", new(controller.ViewController))
 }

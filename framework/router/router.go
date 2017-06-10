@@ -59,8 +59,6 @@ func NewRouter() *Router {
 
 // Init the router
 func (router *Router) Init(routingConfig *config.Area) *Router {
-	log.Println(router.ErrorHandler, router.NotFoundHandler)
-
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
 
 	// Make sure to not taint the global router registry

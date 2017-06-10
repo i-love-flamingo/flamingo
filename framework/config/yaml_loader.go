@@ -1,4 +1,4 @@
-package context
+package config
 
 import (
 	"io/ioutil"
@@ -9,7 +9,7 @@ import (
 )
 
 // LoadYaml starts to recursive read the yaml context tree
-func LoadYaml(basedir string, root *Context) error {
+func LoadYaml(basedir string, root *Area) error {
 	// load context.yml
 	err := loadyaml(basedir, "/", root)
 	if err != nil {
@@ -28,7 +28,7 @@ func LoadYaml(basedir string, root *Context) error {
 	return nil
 }
 
-func loadyaml(basedir string, curdir string, root *Context) error {
+func loadyaml(basedir string, curdir string, root *Area) error {
 	// load context.yml
 	contextfile, err := ioutil.ReadFile(path.Join(basedir, curdir, "context.yml"))
 	if err == nil {

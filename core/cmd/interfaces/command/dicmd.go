@@ -1,7 +1,7 @@
 package command
 
 import (
-	"flamingo/framework/context"
+	"flamingo/framework/config"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -9,7 +9,7 @@ import (
 
 var (
 	contextName, baseUrl string
-	Root                 *context.Context
+	Root                 *config.Area
 
 	// DiCmd shows dependency injection information
 	DiCmd = &cobra.Command{

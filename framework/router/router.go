@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"encoding/json"
-	configcontext "flamingo/framework/context"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
@@ -15,6 +14,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+
+	"flamingo/framework/config"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -57,7 +58,7 @@ func NewRouter() *Router {
 }
 
 // Init the router
-func (router *Router) Init(routingConfig *configcontext.Context) *Router {
+func (router *Router) Init(routingConfig *config.Area) *Router {
 	log.Println(router.ErrorHandler, router.NotFoundHandler)
 
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)

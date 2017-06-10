@@ -1,4 +1,4 @@
-package context
+package config
 
 import (
 	"testing"
@@ -25,32 +25,32 @@ func Register(marker string) di.RegisterFunc {
 }
 */
 
-var _ = g.Describe("Context", func() {
+var _ = g.Describe("Area", func() {
 
-	//var root = New(
+	//var root = NewArea(
 	//	"root",
 	//	//[]di.RegisterFunc{
 	//	//	Register("root"),
 	//	//},
 	//	nil,
-	//	New(
+	//	NewArea(
 	//		"main",
 	//		nil,
-	//		New("main1", nil),
-	//		New("main2", nil),
+	//		NewArea("main1", nil),
+	//		NewArea("main2", nil),
 	//	),
-	//	New(
+	//	NewArea(
 	//		"not-main",
 	//		//[]di.RegisterFunc{
 	//		//	Register("not-main"),
 	//		//},
 	//		nil,
-	//		New("notmain1", nil),
-	//		New(
+	//		NewArea("notmain1", nil),
+	//		NewArea(
 	//			"notmain2",
 	//			nil,
-	//			New("notmain2-1", nil),
-	//			//New("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
+	//			NewArea("notmain2-1", nil),
+	//			//NewArea("notmain2-2", []di.RegisterFunc{Register("not-main-deep")}),
 	//		),
 	//	),
 	//)
@@ -106,5 +106,5 @@ var _ = g.Describe("Context", func() {
 
 func TestContext(t *testing.T) {
 	RegisterFailHandler(g.Fail)
-	g.RunSpecs(t, "Context Suite")
+	g.RunSpecs(t, "Area Suite")
 }

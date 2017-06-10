@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"flamingo/core/cmd/interfaces/command"
-	"flamingo/framework/context"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ var Name = "flamingo"
 
 // Module for core/cmd
 type Module struct {
-	Root *context.Context `inject:""`
+	Root *config.Area `inject:""`
 }
 
 // Configure DI

@@ -1,11 +1,11 @@
 package template_functions
 
-import "flamingo/framework/context"
+import "flamingo/framework/config"
 
 type (
 	// ConfigFunc allows to retrieve config variables
 	ConfigFunc struct {
-		Context *context.Context `inject:""`
+		Area *config.Area `inject:""`
 	}
 )
 
@@ -17,6 +17,6 @@ func (c ConfigFunc) Name() string {
 // Func as implementation of url method
 func (c *ConfigFunc) Func() interface{} {
 	return func(what string) interface{} {
-		return c.Context.Config(what)
+		return c.Area.Config(what)
 	}
 }

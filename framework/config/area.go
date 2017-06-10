@@ -1,5 +1,5 @@
 // Package context provides supporting code for multi-tenant setups
-package context
+package config
 
 import (
 	"flamingo/framework/dingo"
@@ -8,14 +8,14 @@ import (
 )
 
 type (
-	// Context defines a configuration context for multi-site setups
+	// Area defines a configuration area for multi-site setups
 	// it is initialized by project main package and partly loaded by config files
-	Context struct {
+	Area struct {
 		Name    string
 		BaseURL string
 
-		Parent   *Context `json:"-"`
-		Childs   []*Context
+		Parent   *Area `json:"-"`
+		Childs   []*Area
 		Modules  []dingo.Module
 		Injector *dingo.Injector `json:"-"`
 
@@ -36,9 +36,9 @@ type (
 	}
 )
 
-// New creates a new Context with childs
-func New(name string, modules []dingo.Module, baseURl string, childs ...*Context) *Context {
-	ctx := &Context{
+// NewArea creates a new Area with childs
+func NewArea(name string, modules []dingo.Module, baseURl string, childs ...*Area) *Area {
+	ctx := &Area{
 		Name:    name,
 		Modules: modules,
 		Childs:  childs,
@@ -52,17 +52,17 @@ func New(name string, modules []dingo.Module, baseURl string, childs ...*Context
 	return ctx
 }
 
-// GetFlatContexts returns a map of context-relative-name->*Context, which has been flatted to inherit all parent's
-// tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of ctx.
-func (ctx *Context) GetFlatContexts() []*Context {
-	var result []*Context
-	flat := ctx.Flat()
+// GetFlatContexts returns a map of context-relative-name->*Area, which has been flatted to inherit all parent's
+// tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of area.
+func (area *Area) GetFlatContexts() []*Area {
+	var result []*Area
+	flat := area.Flat()
 
 	for relativeContextKey, context := range flat {
 		if context.BaseURL == "" {
 			continue
 		}
-		result = append(result, &Context{
+		result = append(result, &Area{
 			Name:     relativeContextKey,
 			BaseURL:  context.BaseURL,
 			Routes:   context.Routes,
@@ -75,48 +75,48 @@ func (ctx *Context) GetFlatContexts() []*Context {
 
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
-func (ctx *Context) GetInitializedInjector() *dingo.Injector {
+func (area *Area) GetInitializedInjector() *dingo.Injector {
 	var injector *dingo.Injector
-	if ctx.Parent != nil {
-		injector = ctx.Parent.Injector.Child()
+	if area.Parent != nil {
+		injector = area.Parent.Injector.Child()
 	} else {
 		injector = dingo.NewInjector()
 	}
-	injector.Bind(Context{}).ToInstance(ctx)
+	injector.Bind(Area{}).ToInstance(area)
 
-	for _, module := range ctx.Modules {
+	for _, module := range area.Modules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
 			for k, v := range cfgmodule.DefaultConfig() {
-				if _, ok := ctx.Configuration[k]; !ok {
-					ctx.Configuration[k] = v
+				if _, ok := area.Configuration[k]; !ok {
+					area.Configuration[k] = v
 				}
 			}
 		}
 	}
 
 	var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
-	for k, v := range ctx.Configuration {
+	for k, v := range area.Configuration {
 		if val, ok := v.(string); ok {
 			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
 
-	injector.InitModules(ctx.Modules...)
+	injector.InitModules(area.Modules...)
 
 	return injector
 }
 
-// Flat returns a map of name->*Context of contexts, were all values have been inherited (yet overriden) of the parent context tree.
-func (ctx *Context) Flat() map[string]*Context {
-	res := make(map[string]*Context)
-	res[ctx.Name] = ctx
+// Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overriden) of the parent context tree.
+func (area *Area) Flat() map[string]*Area {
+	res := make(map[string]*Area)
+	res[area.Name] = area
 
-	ctx.Injector = ctx.GetInitializedInjector()
+	area.Injector = area.GetInitializedInjector()
 
-	for _, child := range ctx.Childs {
+	for _, child := range area.Childs {
 		for cn, flatchild := range child.Flat() {
-			res[ctx.Name+`/`+cn] = MergeFrom(*flatchild, *ctx)
+			res[area.Name+`/`+cn] = MergeFrom(*flatchild, *area)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (ctx *Context) Flat() map[string]*Context {
 
 // MergeFrom merges two Contexts into a new one
 // We do not merge config, as we use the DI to handle it
-func MergeFrom(baseContext, incomingContext Context) *Context {
+func MergeFrom(baseContext, incomingContext Area) *Area {
 	if baseContext.Configuration == nil {
 		baseContext.Configuration = make(map[string]interface{})
 	}
@@ -145,13 +145,13 @@ func MergeFrom(baseContext, incomingContext Context) *Context {
 }
 
 // Config get a config value recursive
-func (ctx *Context) Config(key string) interface{} {
-	if config, ok := ctx.Configuration[key]; ok {
+func (area *Area) Config(key string) interface{} {
+	if config, ok := area.Configuration[key]; ok {
 		return config
 	}
 
-	if ctx.Parent != nil {
-		return ctx.Parent.Config(key)
+	if area.Parent != nil {
+		return area.Parent.Config(key)
 	}
 
 	return nil

@@ -1,17 +1,13 @@
 package prefix_router
 
 import (
-	"flamingo/framework/context"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
+	"flamingo/framework/router"
+	"fmt"
 	"log"
-
 	"net/http"
 	"os"
-
-	"fmt"
-
-	"flamingo/framework/router"
-
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -19,8 +15,8 @@ import (
 
 // Module for core/prefix_router
 type Module struct {
-	RootCmd    *cobra.Command   `inject:"flamingo"`
-	Root       *context.Context `inject:""`
+	RootCmd    *cobra.Command `inject:"flamingo"`
+	Root       *config.Area   `inject:""`
 	defaultmux *http.ServeMux
 }
 
@@ -43,15 +39,15 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 // Serve HTTP Requests
-func Serve(root *context.Context, defaultRouter *http.ServeMux, port *int) func(cmd *cobra.Command, args []string) {
+func Serve(root *config.Area, defaultRouter *http.ServeMux, port *int) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		frontRouter := NewFrontRouter()
 		frontRouter.Default(defaultRouter)
 
-		for _, ctx := range root.GetFlatContexts() {
-			ctx.Injector.Bind(new(log.Logger)).ToInstance(log.New(os.Stdout, "["+ctx.Name+"] ", 0))
-			log.Println(ctx.Name, "at", ctx.BaseURL)
-			frontRouter.Add(ctx.BaseURL, ctx.Injector.GetInstance(router.Router{}).(*router.Router).Init(ctx))
+		for _, area := range root.GetFlatContexts() {
+			area.Injector.Bind(new(log.Logger)).ToInstance(log.New(os.Stdout, "["+area.Name+"] ", 0))
+			log.Println(area.Name, "at", area.BaseURL)
+			frontRouter.Add(area.BaseURL, area.Injector.GetInstance(router.Router{}).(*router.Router).Init(area))
 		}
 
 		fmt.Println("Starting HTTP Server at :" + strconv.Itoa(*port) + " .....")

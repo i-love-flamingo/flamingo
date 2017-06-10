@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"encoding/json"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
@@ -14,8 +15,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"flamingo/framework/config"
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -183,7 +182,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if controller == nil {
 		controller = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
-	ctx.WithValue("handler", handler)
+	ctx.WithValue("handler", handlerdata{params, handler})
 	router.handle(controller).ServeHTTP(rw, req)
 }
 

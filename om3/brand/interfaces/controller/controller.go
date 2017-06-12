@@ -11,9 +11,9 @@ import (
 type (
 	// ViewController demonstrates a brand view controller
 	ViewController struct {
-		*responder.RenderAware `inject:""`
-		*responder.ErrorAware  `inject:""`
-		domain.BrandService    `inject:""`
+		responder.RenderAware `inject:""`
+		responder.ErrorAware  `inject:""`
+		domain.BrandService   `inject:""`
 	}
 
 	// ViewData is used for product rendering

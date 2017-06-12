@@ -7,7 +7,7 @@ import (
 
 // Redirect Default controller
 type Redirect struct {
-	Responder *responder.RedirectAware `inject:""`
+	Responder responder.RedirectAware `inject:""`
 }
 
 // Redirect `to` a controller, all other params are passed on

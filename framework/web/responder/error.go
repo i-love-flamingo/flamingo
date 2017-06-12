@@ -9,10 +9,16 @@ import (
 )
 
 type (
-	// ErrorAware responder can return errors
-	ErrorAware struct {
-		DebugMode    bool `inject:"config:debug.mode"`
-		*RenderAware `inject:""`
+	// ErrorAware responder trait
+	ErrorAware interface {
+		Error(context web.Context, err error) web.Response
+		ErrorNotFound(context web.Context, error error) web.Response
+	}
+
+	// FlamingoErrorAware responder can return errors
+	FlamingoErrorAware struct {
+		DebugMode   bool `inject:"config:debug.mode"`
+		RenderAware `inject:""`
 	}
 
 	// ErrorViewData for template rendering
@@ -34,6 +40,8 @@ type (
 	}
 )
 
+var _ ErrorAware = &FlamingoErrorAware{}
+
 // Error implements error interface
 func (de DebugError) Error() string {
 	return fmt.Sprintf("%+v", de.Err)
@@ -45,8 +53,8 @@ func (ee EmptyError) Error() string {
 }
 
 // ErrorNotFound returns a web.ContentResponse with status 404 and ContentType text/html
-func (r *ErrorAware) ErrorNotFound(context web.Context, error error) *web.ContentResponse {
-	var response *web.ContentResponse
+func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web.Response {
+	var response web.Response
 
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
@@ -62,14 +70,14 @@ func (r *ErrorAware) ErrorNotFound(context web.Context, error error) *web.Conten
 		)
 	}
 
-	response.Status = http.StatusNotFound
+	response.(*web.ContentResponse).Status = http.StatusNotFound
 
 	return response
 }
 
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
-func (r *ErrorAware) Error(context web.Context, err error) *web.ContentResponse {
-	var response *web.ContentResponse
+func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response {
+	var response web.Response
 
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
@@ -85,7 +93,7 @@ func (r *ErrorAware) Error(context web.Context, err error) *web.ContentResponse 
 		)
 	}
 
-	response.Status = http.StatusInternalServerError
+	response.(*web.ContentResponse).Status = http.StatusInternalServerError
 
 	return response
 }

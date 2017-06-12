@@ -73,6 +73,20 @@ const (
 	ID                 = "ID"
 )
 
+// NewContext creates a new context with a unique ID
+func NewContext() Context {
+	id := uuid.NewV4().String()
+
+	c := &ctx{
+		id:       id,
+		profiler: new(profiler.NullProfiler),
+	}
+
+	c.Context = context.WithValue(context.Background(), ID, c.id)
+
+	return c
+}
+
 // ContextFromRequest returns a ctx enriched by Request Data
 func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
 	id := uuid.NewV4().String()

@@ -9,9 +9,9 @@ import (
 type (
 	// ViewController demonstrates a product view controller
 	ViewController struct {
-		*responder.ErrorAware  `inject:""`
-		*responder.RenderAware `inject:""`
-		PageService            domain.PageService `inject:""`
+		responder.ErrorAware  `inject:""`
+		responder.RenderAware `inject:""`
+		PageService           domain.PageService `inject:""`
 	}
 
 	// ViewData for rendering

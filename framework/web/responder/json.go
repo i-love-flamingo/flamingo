@@ -5,11 +5,20 @@ import (
 	"net/http"
 )
 
-// JSONAware allows pug_template rendering
-type JSONAware struct{}
+type (
+	// JSONAware controller trait
+	JSONAware interface {
+		JSON(data interface{}) web.Response
+	}
+
+	// FlamingoJSONAware allows pug_template rendering
+	FlamingoJSONAware struct{}
+)
+
+var _ JSONAware = &FlamingoJSONAware{}
 
 // JSON returns a web.ContentResponse with status 200
-func (r *JSONAware) JSON(data interface{}) web.Response {
+func (r *FlamingoJSONAware) JSON(data interface{}) web.Response {
 	return &web.JSONResponse{
 		Status: http.StatusOK,
 		Data:   data,

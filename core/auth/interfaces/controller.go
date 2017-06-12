@@ -14,21 +14,21 @@ import (
 type (
 	// LoginController handles the login redirect
 	LoginController struct {
-		*responder.RedirectAware `inject:""`
-		AuthManager              *application.AuthManager `inject:""`
+		responder.RedirectAware `inject:""`
+		AuthManager             *application.AuthManager `inject:""`
 	}
 
 	// LogoutController handles the logout
 	LogoutController struct {
-		*responder.RedirectAware `inject:""`
-		AuthManager              *application.AuthManager `inject:""`
+		responder.RedirectAware `inject:""`
+		AuthManager             *application.AuthManager `inject:""`
 	}
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
-		*responder.RedirectAware `inject:""`
-		*responder.ErrorAware    `inject:""`
-		AuthManager              *application.AuthManager `inject:""`
+		responder.RedirectAware `inject:""`
+		responder.ErrorAware    `inject:""`
+		AuthManager             *application.AuthManager `inject:""`
 	}
 )
 

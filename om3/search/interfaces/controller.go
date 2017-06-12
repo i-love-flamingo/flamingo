@@ -10,10 +10,10 @@ import (
 type (
 	// ViewController demonstrates a search view controller
 	ViewController struct {
-		*responder.ErrorAware    `inject:""`
-		*responder.RenderAware   `inject:""`
-		*responder.RedirectAware `inject:""`
-		domain.SearchService     `inject:""`
+		responder.ErrorAware    `inject:""`
+		responder.RenderAware   `inject:""`
+		responder.RedirectAware `inject:""`
+		domain.SearchService    `inject:""`
 	}
 
 	// ViewData is used for search rendering

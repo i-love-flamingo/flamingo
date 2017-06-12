@@ -9,7 +9,7 @@ import (
 type (
 	// Error controller
 	Error struct {
-		Responder *responder.ErrorAware `inject:""`
+		Responder responder.ErrorAware `inject:""`
 	}
 )
 

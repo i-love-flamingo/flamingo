@@ -20,6 +20,7 @@ import (
 	"flamingo/framework/template"
 	"flamingo/framework/template_functions"
 	"flamingo/framework/web"
+	"flamingo/framework/web/responder"
 )
 
 const (
@@ -66,6 +67,11 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Handle(router.FLAMINGO_NOTFOUND, (*controller.Error).NotFound)
 
 	injector.BindMulti((*collector.DataCollector)(nil)).To(router.DataCollector{})
+
+	injector.Bind((*responder.RedirectAware)(nil)).To(responder.FlamingoRedirectAware{})
+	injector.Bind((*responder.RenderAware)(nil)).To(responder.FlamingoRenderAware{})
+	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})
+	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
 }
 
 // DefaultConfig for this module

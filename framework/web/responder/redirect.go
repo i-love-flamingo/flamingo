@@ -7,12 +7,25 @@ import (
 )
 
 // RedirectAware allows a controller to issue a 302 redirect
-type RedirectAware struct {
-	Router *router.Router `inject:""`
-}
+type (
+	// RedirectAware trait
+	RedirectAware interface {
+		Redirect(name string, args map[string]string) web.Response
+		RedirectUrl(url string) web.Response
+		RedirectPermanent(name string, args map[string]string) web.Response
+		RedirectPermanentUrl(url string) web.Response
+	}
+
+	// FlamingoRedirectAware flamingo's redirect aware
+	FlamingoRedirectAware struct {
+		Router *router.Router `inject:""`
+	}
+)
+
+var _ RedirectAware = &FlamingoRedirectAware{}
 
 // Redirect returns a web.RedirectResponse with the proper URL
-func (r *RedirectAware) Redirect(name string, args map[string]string) web.Response {
+func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) web.Response {
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
@@ -22,7 +35,7 @@ func (r *RedirectAware) Redirect(name string, args map[string]string) web.Respon
 }
 
 // RedirectUrl returns a web.RedirectResponse with the proper URL
-func (r *RedirectAware) RedirectUrl(url string) web.Response {
+func (r *FlamingoRedirectAware) RedirectUrl(url string) web.Response {
 	return &web.RedirectResponse{
 		Status:   http.StatusFound,
 		Location: url,
@@ -30,7 +43,7 @@ func (r *RedirectAware) RedirectUrl(url string) web.Response {
 }
 
 // RedirectPermanent returns a web.RedirectPermanentResponse with the proper URL
-func (r *RedirectAware) RedirectPermanent(name string, args map[string]string) web.Response {
+func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]string) web.Response {
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
@@ -40,7 +53,7 @@ func (r *RedirectAware) RedirectPermanent(name string, args map[string]string) w
 }
 
 // RedirectPermantentUrl returns a web.RedirectResponse with the proper URL
-func (r *RedirectAware) RedirectPermanentUrl(url string) web.Response {
+func (r *FlamingoRedirectAware) RedirectPermanentUrl(url string) web.Response {
 	return &web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,
 		Location: url,

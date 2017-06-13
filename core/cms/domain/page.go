@@ -2,22 +2,18 @@ package domain
 
 // Page defines a CMS Page
 type Page struct {
-	ID                    int    `json:"id"`
-	Identifier            string `json:"identifier"`
-	Title                 string `json:"title"`
-	PageLayout            string `json:"pageLayout"`
-	MetaKeywords          string `json:"metaKeywords"`
-	MetaDescription       string `json:"metaDescription"`
-	ContentHeading        string `json:"contentHeading"`
-	Content               string `json:"content"`
-	CreationTime          string `json:"creationTime"`
-	UpdateTime            string `json:"updateTime"`
-	SortOrder             string `json:"sortOrder"`
-	LayoutUpdateXML       string `json:"layoutUpdateXml"`
-	CustomTheme           string `json:"customTheme"`
-	CustomRootTemplate    string `json:"customRootTemplate"`
-	CustomLayoutUpdateXML string `json:"customLayoutUpdateXml"`
-	CustomThemeFrom       string `json:"customThemeFrom"`
-	CustomThemeTo         string `json:"customThemeTo"`
-	IsActive              bool   `json:"isActive"`
+	ID              int    `json:"id"`
+	Identifier      string `json:"identifier"`
+	Title           string `json:"title"`
+	PageLayout      string `json:"page_layout"`
+	MetaTitle       string `json:"meta_title"`
+	MetaKeywords    string `json:"meta_keywords"`
+	MetaDescription string `json:"meta_description"`
+	ContentHeading  string `json:"content_heading"`
+	Content         string `json:"content"`
+	CreationTime    string `json:"creation_time"`
+	UpdateTime      string `json:"update_time"`
+	SortOrder       string `json:"sort_order"`
+	LayoutUpdateXML string `json:"layout_update_xml"`
+	Active          bool   `json:"active"`
 }

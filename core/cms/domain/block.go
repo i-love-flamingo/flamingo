@@ -6,7 +6,7 @@ type Block struct {
 	Identifier   string `json:"identifier"`
 	Title        string `json:"title"`
 	Content      string `json:"content"`
-	CreationTime string `json:"creationTime"`
-	UpdateTime   string `json:"updateTime"`
-	IsActive     bool   `json:"isActive"`
+	CreationTime string `json:"creation_time"`
+	UpdateTime   string `json:"update_time"`
+	Active       bool   `json:"active"`
 }

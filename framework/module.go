@@ -57,6 +57,8 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Handle("flamingo.data.handler", new(controller.DataController))
 	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
 
+	module.RouterRegistry.Handle("flamingo.render", (*controller.Render).Render)
+
 	module.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)
 	module.RouterRegistry.Handle("flamingo.redirectUrl", (*controller.Redirect).RedirectURL)
 	module.RouterRegistry.Handle("flamingo.redirectPermanent", (*controller.Redirect).RedirectPermanent)

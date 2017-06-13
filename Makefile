@@ -1,4 +1,5 @@
 DOCKERREPO?=docker-om3.aoe.com
+TAG?=latest
 
 .PHONY: run doc dep godoc docker docker-run docker-push
 
@@ -16,7 +17,7 @@ godoc:
 	godoc -http=:6060 -v
 
 docker: Dockerfile
-	docker build -t $(DOCKERREPO)/flamingo/akl .
+	docker build -t $(DOCKERREPO)/flamingo/akl:$(TAG) .
 
 docker-run: docker
 	docker run -ti -p 3210:3210 -v $(shell pwd)/akl/frontend:/go/src/flamingo/akl/frontend $(DOCKERREPO)/flamingo/akl

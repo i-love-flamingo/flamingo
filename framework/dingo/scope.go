@@ -18,6 +18,7 @@ type (
 		instances    map[reflect.Type]map[string]reflect.Value
 	}
 
+	// ChildSingletonScope manages child-specific singleton
 	ChildSingletonScope SingletonScope
 )
 

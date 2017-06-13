@@ -1,5 +1,6 @@
 package domain
 
+// Page defines a CMS Page
 type Page struct {
 	ID                    int    `json:"id"`
 	Identifier            string `json:"identifier"`

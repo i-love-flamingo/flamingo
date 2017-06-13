@@ -20,9 +20,9 @@ func (redirect *Redirect) Redirect(ctx web.Context) web.Response {
 	return redirect.Responder.Redirect(to, params)
 }
 
-// RedirectUrl redirects to a url
-func (redirect *Redirect) RedirectUrl(ctx web.Context) web.Response {
-	return redirect.Responder.RedirectUrl(ctx.MustParam1("url"))
+// RedirectURL redirects to a url
+func (redirect *Redirect) RedirectURL(ctx web.Context) web.Response {
+	return redirect.Responder.RedirectURL(ctx.MustParam1("url"))
 }
 
 // RedirectPermanent is the same as Redirect but with a HTTP permanent redirect
@@ -35,7 +35,7 @@ func (redirect *Redirect) RedirectPermanent(ctx web.Context) web.Response {
 	return redirect.Responder.RedirectPermanent(to, params)
 }
 
-// RedirectPermanentUrl is the same as RedirectUrl but with a HTTP permanent redirect
-func (redirect *Redirect) RedirectPermanentUrl(ctx web.Context) web.Response {
-	return redirect.Responder.RedirectPermanentUrl(ctx.MustParam1("url"))
+// RedirectPermanentURL is the same as RedirectURL but with a HTTP permanent redirect
+func (redirect *Redirect) RedirectPermanentURL(ctx web.Context) web.Response {
+	return redirect.Responder.RedirectPermanentURL(ctx.MustParam1("url"))
 }

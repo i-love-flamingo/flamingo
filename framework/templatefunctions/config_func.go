@@ -1,4 +1,4 @@
-package template_functions
+package templatefunctions
 
 import "flamingo/framework/config"
 

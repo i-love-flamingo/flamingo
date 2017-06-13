@@ -15,7 +15,7 @@ type (
 
 // Data controller to return userinfo
 func (u *UserController) Data(c web.Context) interface{} {
-	id, err := u.AuthManager.IdToken(c)
+	id, err := u.AuthManager.IDToken(c)
 	if err != nil {
 		return domain.Guest
 	}

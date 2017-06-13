@@ -1,4 +1,4 @@
-package prefix_router
+package prefixrouter
 
 import (
 	"net/http"

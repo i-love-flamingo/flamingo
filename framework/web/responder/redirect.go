@@ -11,9 +11,9 @@ type (
 	// RedirectAware trait
 	RedirectAware interface {
 		Redirect(name string, args map[string]string) web.Response
-		RedirectUrl(url string) web.Response
+		RedirectURL(url string) web.Response
 		RedirectPermanent(name string, args map[string]string) web.Response
-		RedirectPermanentUrl(url string) web.Response
+		RedirectPermanentURL(url string) web.Response
 	}
 
 	// FlamingoRedirectAware flamingo's redirect aware
@@ -34,8 +34,8 @@ func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) we
 	}
 }
 
-// RedirectUrl returns a web.RedirectResponse with the proper URL
-func (r *FlamingoRedirectAware) RedirectUrl(url string) web.Response {
+// RedirectURL returns a web.RedirectResponse with the proper URL
+func (r *FlamingoRedirectAware) RedirectURL(url string) web.Response {
 	return &web.RedirectResponse{
 		Status:   http.StatusFound,
 		Location: url,
@@ -52,8 +52,8 @@ func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]s
 	}
 }
 
-// RedirectPermantentUrl returns a web.RedirectResponse with the proper URL
-func (r *FlamingoRedirectAware) RedirectPermanentUrl(url string) web.Response {
+// RedirectPermanentURL returns a web.RedirectResponse with the proper URL
+func (r *FlamingoRedirectAware) RedirectPermanentURL(url string) web.Response {
 	return &web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,
 		Location: url,

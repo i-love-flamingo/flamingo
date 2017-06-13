@@ -8,8 +8,10 @@ import (
 )
 
 var (
-	contextName, baseUrl string
-	Root                 *config.Area
+	contextName, baseURL string
+
+	// Root config area
+	Root *config.Area
 
 	// DiCmd shows dependency injection information
 	DiCmd = &cobra.Command{
@@ -21,7 +23,7 @@ var (
 				if contextName != "" && contextName != routeConfig.Name {
 					continue
 				}
-				if baseUrl != "" && baseUrl != routeConfig.BaseURL {
+				if baseURL != "" && baseURL != routeConfig.BaseURL {
 					continue
 				}
 				fmt.Println()
@@ -36,5 +38,5 @@ var (
 
 func init() {
 	DiCmd.Flags().StringVarP(&contextName, "context", "c", "", "Name of the context (relative context path) - set this if you like to see only this context. Otherwise it will show all.")
-	DiCmd.Flags().StringVarP(&baseUrl, "baseurl", "", "", "Baseurl assigned to the context  - set this if you like to see only this context. Otherwise it will show all.")
+	DiCmd.Flags().StringVarP(&baseURL, "baseurl", "", "", "Baseurl assigned to the context  - set this if you like to see only this context. Otherwise it will show all.")
 }

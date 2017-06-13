@@ -19,14 +19,14 @@ type (
 		Keywords         string             `json:"keywords"`
 		LocaleRelevance  int                `json:"localeRelevance"`
 		Language         string             `json:"language"`
-		Url              string             `json:"url"`
+		URL              string             `json:"url"`
 	}
 
 	// BrandImage can be displayed
 	BrandImage struct {
 		ID    int    `json:"id"`
 		Hash  string `json:"hash"`
-		Url   string `json:"url"`
+		URL   string `json:"url"`
 		Fixed string `json:"fixed"`
 		One1  string `json:"1-1"`
 		One69 string `json:"16-9"`

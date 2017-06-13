@@ -8,23 +8,22 @@ import (
 )
 
 type (
-	/*
-	  Registry holds a list of all routes and handlers to be registered in modules.
-
-	  We have:
-	  routes: key-params -> path, for reverse routes
-
-	  path: url-pattern -> key+params
-
-	  handler: key -> controller
-	*/
+	// Registry holds a list of all routes and handlers to be registered in modules.
+	//
+	// We have:
+	// routes: key-params -> path, for reverse routes
+	//
+	// path: url-pattern -> key+params
+	//
+	// Handler: key -> controller
 	Registry struct {
 		handler map[string]Controller
-		routes  []*handler
-		alias   map[string]*handler
+		routes  []*Handler
+		alias   map[string]*Handler
 	}
 
-	handler struct {
+	// Handler defines a concrete controller
+	Handler struct {
 		path    *Path
 		handler string
 		params  map[string]*param
@@ -40,7 +39,7 @@ type (
 func NewRegistry() *Registry {
 	return &Registry{
 		handler: make(map[string]Controller),
-		alias:   make(map[string]*handler),
+		alias:   make(map[string]*Handler),
 	}
 }
 
@@ -49,7 +48,7 @@ func (registry *Registry) Handle(name string, controller Controller) {
 	registry.handler[name] = controller
 }
 
-// Route assigns a route to a handler
+// Route assigns a route to a Handler
 func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
@@ -61,11 +60,11 @@ func (registry *Registry) Alias(name, to string) {
 	registry.alias[name] = parseHandler(to)
 }
 
-func parseHandler(h string) *handler {
+func parseHandler(h string) *Handler {
 	var tmp = strings.SplitN(h, "(", 2)
 	h = tmp[0]
 
-	var newHandler = &handler{
+	var newHandler = &Handler{
 		handler: h,
 		params:  make(map[string]*param),
 	}
@@ -209,7 +208,7 @@ func (registry *Registry) Match(path string) (controller Controller, params map[
 }
 
 // MatchRequest matches a http Request (with GET and path parameters)
-func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string, *handler) {
+func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string, *Handler) {
 	var path = req.URL.Path
 
 matchloop:

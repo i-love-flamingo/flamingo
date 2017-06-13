@@ -12,7 +12,7 @@ type DataCollector struct {
 
 // Collect data
 func (dc *DataCollector) Collect(ctx web.Context) string {
-	token, err := dc.AutoManager.IdToken(ctx)
+	token, err := dc.AutoManager.IDToken(ctx)
 	if err != nil {
 		return "AuthManager: " + err.Error()
 	}

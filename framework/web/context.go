@@ -69,8 +69,10 @@ type (
 )
 
 const (
+	// CONTEXT key for contexts
 	CONTEXT ContextKey = "context"
-	ID                 = "ID"
+	// ID for request id
+	ID ContextKey = "ID"
 )
 
 // NewContext creates a new context with a unique ID

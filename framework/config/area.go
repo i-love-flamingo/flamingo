@@ -1,4 +1,4 @@
-// Package context provides supporting code for multi-tenant setups
+// Package config provides supporting code for multi-tenant setups
 package config
 
 import (
@@ -37,12 +37,12 @@ type (
 )
 
 // NewArea creates a new Area with childs
-func NewArea(name string, modules []dingo.Module, baseURl string, childs ...*Area) *Area {
+func NewArea(name string, modules []dingo.Module, baseURL string, childs ...*Area) *Area {
 	ctx := &Area{
 		Name:    name,
 		Modules: modules,
 		Childs:  childs,
-		BaseURL: baseURl,
+		BaseURL: baseURL,
 	}
 
 	for _, c := range childs {

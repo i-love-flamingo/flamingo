@@ -16,13 +16,13 @@ type (
 		RouterRegistry *router.Registry `inject:""`
 	}
 
-	RoundTripper struct {
+	roundTripper struct {
 		Next http.RoundTripper
 	}
 )
 
 // RoundTrip a request
-func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if ctx, ok := req.Context().(web.Context); ok {
 		req.Header.Add("X-Request-ID", ctx.ID())
 		defer ctx.Profile("http.request", fmt.Sprintf("%s %s", req.Method, req.URL.String()))()
@@ -35,7 +35,7 @@ func (rt *RoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func init() {
-	http.DefaultTransport = &RoundTripper{
+	http.DefaultTransport = &roundTripper{
 		Next: http.DefaultTransport,
 	}
 }

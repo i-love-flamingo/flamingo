@@ -7,7 +7,9 @@ import (
 )
 
 const (
+	// INIT state
 	INIT = iota
+	// DEFAULT state
 	DEFAULT
 )
 
@@ -244,12 +246,11 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 
 			if res.Kind() == reflect.Slice {
 				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation)}
-			} else {
-				// set to actual value
-				res.Set(injector.getInstance(t.Out(0), annotation))
-				// return
-				return []reflect.Value{res}
 			}
+			// set to actual value
+			res.Set(injector.getInstance(t.Out(0), annotation))
+			// return
+			return []reflect.Value{res}
 		})
 	}
 

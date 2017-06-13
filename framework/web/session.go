@@ -1,7 +1,10 @@
 package web
 
 const (
-	INFO    = "info"
+	// INFO notice
+	INFO = "info"
+	// WARNING notice
 	WARNING = "warning"
-	ERROR   = "error"
+	// ERROR notice
+	ERROR = "error"
 )

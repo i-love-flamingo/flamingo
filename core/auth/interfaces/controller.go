@@ -38,14 +38,14 @@ func (l *LoginController) Get(c web.Context) web.Response {
 	c.Session().Values["auth.state"] = state
 	c.Session().Values["auth.redirect"] = c.Request().Referer()
 
-	return l.RedirectUrl(l.AuthManager.OAuth2Config().AuthCodeURL(state))
+	return l.RedirectURL(l.AuthManager.OAuth2Config().AuthCodeURL(state))
 }
 
 // Get handler for logout
 func (l *LogoutController) Get(c web.Context) web.Response {
-	delete(c.Session().Values, application.KEY_AUTHSTATE)
-	delete(c.Session().Values, application.KEY_RAWIDTOKEN)
-	delete(c.Session().Values, application.KEY_TOKEN)
+	delete(c.Session().Values, application.KeyAuthstate)
+	delete(c.Session().Values, application.KeyRawIDToken)
+	delete(c.Session().Values, application.KeyToken)
 
 	var claims struct {
 		EndSessionEndpoint string `json:"end_session_endpoint"`
@@ -59,15 +59,15 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 
 	c.Session().AddFlash("successful logged out", "warning")
 
-	return l.RedirectUrl(endurl.String())
+	return l.RedirectURL(endurl.String())
 }
 
 // Get handler for callbacks
 func (cc *CallbackController) Get(c web.Context) web.Response {
 	// Verify state and errors.
-	defer delete(c.Session().Values, application.KEY_AUTHSTATE)
+	defer delete(c.Session().Values, application.KeyAuthstate)
 
-	if c.Session().Values[application.KEY_AUTHSTATE] != c.MustQuery1("state") {
+	if c.Session().Values[application.KeyAuthstate] != c.MustQuery1("state") {
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
@@ -78,8 +78,8 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 		return cc.Error(c, errors.WithStack(err))
 	}
 
-	c.Session().Values[application.KEY_TOKEN] = oauth2Token
-	c.Session().Values[application.KEY_RAWIDTOKEN], err = cc.AuthManager.ExtractRawIdToken(oauth2Token)
+	c.Session().Values[application.KeyToken] = oauth2Token
+	c.Session().Values[application.KeyRawIDToken], err = cc.AuthManager.ExtractRawIDToken(oauth2Token)
 	if err != nil {
 		return cc.Error(c, errors.WithStack(err))
 	}
@@ -88,7 +88,7 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 
 	if redirect, ok := c.Session().Values["auth.redirect"]; ok {
 		delete(c.Session().Values, "auth.redirect")
-		return cc.RedirectUrl(redirect.(string))
+		return cc.RedirectURL(redirect.(string))
 	}
 	return cc.Redirect("home", nil)
 }

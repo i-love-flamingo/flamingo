@@ -12,15 +12,15 @@ type (
 
 	handlerdata struct {
 		match   map[string]string
-		handler *handler
+		handler *Handler
 	}
 )
 
 // Collect data
 func (dc *DataCollector) Collect(ctx web.Context) string {
-	data, ok := ctx.Value("handler").(handlerdata)
+	data, ok := ctx.Value("Handler").(handlerdata)
 	if !ok {
-		return "no handler data"
+		return "no Handler data"
 	}
 	var params []string
 	for k, v := range data.match {

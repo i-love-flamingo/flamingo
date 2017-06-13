@@ -21,9 +21,12 @@ import (
 )
 
 const (
-	FLAMINGO_ERROR             = "flamingo.error"
-	FLAMINGO_NOTFOUND          = "flamingo.notfound"
-	ERROR             ErrorKey = iota
+	// FlamingoError is the controller name for errors
+	FlamingoError = "flamingo.error"
+	// FlamingoNotfound is the controller name for 404 notfound
+	FlamingoNotfound = "flamingo.notfound"
+	// ERROR is used to bind errors to contexts
+	ERROR ErrorKey = iota
 )
 
 type (
@@ -71,7 +74,7 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 		}
 	}
 
-	var routerroutes = make([]*handler, len(router.RouterRegistry.routes))
+	var routerroutes = make([]*Handler, len(router.RouterRegistry.routes))
 	for k, v := range router.RouterRegistry.routes {
 		routerroutes[k] = v
 	}
@@ -182,7 +185,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if controller == nil {
 		controller = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
-	ctx.WithValue("handler", handlerdata{params, handler})
+	ctx.WithValue("Handler", handlerdata{params, handler})
 	router.handle(controller).ServeHTTP(rw, req)
 }
 

@@ -1,5 +1,6 @@
 package domain
 
+// Block defines a CMS block
 type Block struct {
 	ID           int    `json:"id"`
 	Identifier   string `json:"identifier"`

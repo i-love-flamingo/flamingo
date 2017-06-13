@@ -5,7 +5,7 @@ import "flamingo/framework/web"
 type (
 	// Controller defines a web controller
 	// it is an interface{} as it can be served by multiple possible controllers,
-	// such as generic GET/POST controller, http.Handler, handler-functions, etc.
+	// such as generic GET/POST controller, http.Handler, Handler-functions, etc.
 	Controller interface{}
 
 	// GETController is implemented by controllers which have a Get method

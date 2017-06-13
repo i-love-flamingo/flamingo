@@ -3,7 +3,7 @@ package domain
 import "github.com/coreos/go-oidc"
 
 type (
-	// UserType, such as guest or user
+	// UserType such as guest or user
 	UserType string
 
 	// User is a basic authenticated user
@@ -16,8 +16,11 @@ type (
 )
 
 const (
+	// GUEST user
 	GUEST UserType = "guest"
-	USER           = "user"
+
+	// USER is an authenticated user
+	USER = "user"
 )
 
 // Guest is our default guest user

@@ -14,9 +14,14 @@ import (
 )
 
 const (
-	KEY_TOKEN      = "auth.token"
-	KEY_RAWIDTOKEN = "auth.rawidtoken"
-	KEY_AUTHSTATE  = "auth.state"
+	// KeyToken defines where the authentication token is saved
+	KeyToken = "auth.token"
+
+	// KeyRawIDToken defines where the raw ID token is saved
+	KeyRawIDToken = "auth.rawidtoken"
+
+	// KeyAuthstate defines the current internal authentication state
+	KeyAuthstate = "auth.state"
 )
 
 type (
@@ -53,14 +58,14 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		return authmanager.oauth2Config
 	}
 
-	callbackUrl := authmanager.Router.URL("auth.callback", nil)
+	callbackURL := authmanager.Router.URL("auth.callback", nil)
 	myhost, _ := url.Parse(authmanager.MyHost)
-	callbackUrl.Host = myhost.Host
-	callbackUrl.Scheme = myhost.Scheme
+	callbackURL.Host = myhost.Host
+	callbackURL.Scheme = myhost.Scheme
 	authmanager.oauth2Config = &oauth2.Config{
 		ClientID:     authmanager.ClientID,
 		ClientSecret: authmanager.Secret,
-		RedirectURL:  callbackUrl.String(),
+		RedirectURL:  callbackURL.String(),
 
 		// Discovery returns the OAuth2 endpoints.
 		Endpoint: authmanager.OpenIDProvider().Endpoint(),
@@ -79,27 +84,27 @@ func (authmanager *AuthManager) Verifier() *oidc.IDTokenVerifier {
 
 // OAuth2Token retrieves the oauth2 token from the session
 func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error) {
-	if _, ok := c.Session().Values[KEY_TOKEN]; !ok {
+	if _, ok := c.Session().Values[KeyToken]; !ok {
 		return nil, errors.New("no token")
 	}
 
-	oauth2Token, ok := c.Session().Values[KEY_TOKEN].(*oauth2.Token)
+	oauth2Token, ok := c.Session().Values[KeyToken].(*oauth2.Token)
 	if !ok {
-		return nil, errors.Errorf("invalid token %T %v", c.Session().Values[KEY_TOKEN], c.Session().Values[KEY_TOKEN])
+		return nil, errors.Errorf("invalid token %T %v", c.Session().Values[KeyToken], c.Session().Values[KeyToken])
 	}
 
 	return oauth2Token, nil
 }
 
-// IdToken retrieves and validates the ID Token from the session
-func (authmanager *AuthManager) IdToken(c web.Context) (*oidc.IDToken, error) {
-	if _, ok := c.Session().Values[KEY_RAWIDTOKEN]; !ok {
+// IDToken retrieves and validates the ID Token from the session
+func (authmanager *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
+	if _, ok := c.Session().Values[KeyRawIDToken]; !ok {
 		return nil, errors.New("no id token")
 	}
 
-	rawIDToken, ok := c.Session().Values[KEY_RAWIDTOKEN].(string)
+	rawIDToken, ok := c.Session().Values[KeyRawIDToken].(string)
 	if !ok {
-		return nil, errors.Errorf("invalid id token %T %v", c.Session().Values[KEY_RAWIDTOKEN], c.Session().Values[KEY_RAWIDTOKEN])
+		return nil, errors.Errorf("invalid id token %T %v", c.Session().Values[KeyRawIDToken], c.Session().Values[KeyRawIDToken])
 	}
 
 	// Parse and verify ID Token payload.
@@ -114,8 +119,8 @@ func (authmanager *AuthManager) IdToken(c web.Context) (*oidc.IDToken, error) {
 	return idToken, nil
 }
 
-// ExtractRawIdToken from the provided (fresh) oatuh2token
-func (authmanager *AuthManager) ExtractRawIdToken(oauth2Token *oauth2.Token) (string, error) {
+// ExtractRawIDToken from the provided (fresh) oatuh2token
+func (authmanager *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, error) {
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
@@ -135,8 +140,8 @@ func (authmanager *AuthManager) TokenSource(c web.Context) (oauth2.TokenSource, 
 	return authmanager.OAuth2Config().TokenSource(c, oauth2Token), nil
 }
 
-// HttpClient to retrieve a client with automatic tokensource
-func (authmanager *AuthManager) HttpClient(c web.Context) (*http.Client, error) {
+// HTTPClient to retrieve a client with automatic tokensource
+func (authmanager *AuthManager) HTTPClient(c web.Context) (*http.Client, error) {
 	ts, err := authmanager.TokenSource(c)
 	if err != nil {
 		return nil, err

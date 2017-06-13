@@ -1,13 +1,11 @@
-/*
-Package framework provides the most necessary basics, such as
- - service_locator
- - router
- - web (including context and response)
- - web/responder
-
-Additionally it provides a router at /_flamingo/json/{handler} for convenient access to DataControllers
-Additionally it registers two template functions, `get(...)` and `url(...)`
-*/
+// Package framework provides the most necessary basics, such as
+//  - service_locator
+//  - router
+//  - web (including context and response)
+//  - web/responder
+//
+// Additionally it provides a router at /_flamingo/json/{handler} for convenient access to DataControllers
+// Additionally it registers two template functions, `get(...)` and `url(...)`
 package framework
 
 import (
@@ -18,17 +16,18 @@ import (
 	"flamingo/framework/profiler/collector"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
-	"flamingo/framework/template_functions"
+	"flamingo/framework/templatefunctions"
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
 )
 
 const (
+	// VERSION of flamingo core
 	VERSION = "1.0"
 )
 
 type (
-	// InitModule: initial module for basic setup
+	// InitModule initial module for basic setup
 	InitModule struct{}
 
 	// Module for framework functionality
@@ -47,9 +46,9 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
 
-	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.ConfigFunc{})
+	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ConfigFunc{})
 }
 
 // Configure the Module
@@ -59,12 +58,12 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
 
 	module.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)
-	module.RouterRegistry.Handle("flamingo.redirectUrl", (*controller.Redirect).RedirectUrl)
+	module.RouterRegistry.Handle("flamingo.redirectUrl", (*controller.Redirect).RedirectURL)
 	module.RouterRegistry.Handle("flamingo.redirectPermanent", (*controller.Redirect).RedirectPermanent)
-	module.RouterRegistry.Handle("flamingo.redirectPermanentUrl", (*controller.Redirect).RedirectPermanentUrl)
+	module.RouterRegistry.Handle("flamingo.redirectPermanentUrl", (*controller.Redirect).RedirectPermanentURL)
 
-	module.RouterRegistry.Handle(router.FLAMINGO_ERROR, (*controller.Error).Error)
-	module.RouterRegistry.Handle(router.FLAMINGO_NOTFOUND, (*controller.Error).NotFound)
+	module.RouterRegistry.Handle(router.FlamingoError, (*controller.Error).Error)
+	module.RouterRegistry.Handle(router.FlamingoNotfound, (*controller.Error).NotFound)
 
 	injector.BindMulti((*collector.DataCollector)(nil)).To(router.DataCollector{})
 
@@ -77,7 +76,7 @@ func (module *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for this module
 func (module *Module) DefaultConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"flamingo.router.notfound": router.FLAMINGO_NOTFOUND,
-		"flamingo.router.error":    router.FLAMINGO_ERROR,
+		"flamingo.router.notfound": router.FlamingoNotfound,
+		"flamingo.router.error":    router.FlamingoError,
 	}
 }

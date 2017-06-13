@@ -8,9 +8,9 @@ type (
 	// MockRedirectAware mock stub
 	MockRedirectAware struct {
 		CbRedirect             func(name string, args map[string]string) web.Response
-		CbRedirectUrl          func(url string) web.Response
+		CbRedirectURL          func(url string) web.Response
 		CbRedirectPermanent    func(name string, args map[string]string) web.Response
-		CbRedirectPermanentUrl func(url string) web.Response
+		CbRedirectPermanentURL func(url string) web.Response
 	}
 
 	// MockRenderAware mock stub
@@ -30,9 +30,9 @@ func (m *MockRedirectAware) Redirect(name string, args map[string]string) web.Re
 	return m.CbRedirect(name, args)
 }
 
-// RedirectUrl mock
-func (m *MockRedirectAware) RedirectUrl(url string) web.Response {
-	return m.CbRedirectUrl(url)
+// RedirectURL mock
+func (m *MockRedirectAware) RedirectURL(url string) web.Response {
+	return m.CbRedirectURL(url)
 }
 
 // RedirectPermanent mock
@@ -40,9 +40,9 @@ func (m *MockRedirectAware) RedirectPermanent(name string, args map[string]strin
 	return m.CbRedirectPermanent(name, args)
 }
 
-// RedirectUrlPermanent mock
-func (m *MockRedirectAware) RedirectPermanentUrl(url string) web.Response {
-	return m.CbRedirectPermanentUrl(url)
+// RedirectPermanentURL mock
+func (m *MockRedirectAware) RedirectPermanentURL(url string) web.Response {
+	return m.CbRedirectPermanentURL(url)
 }
 
 // Render mock

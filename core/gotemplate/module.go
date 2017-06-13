@@ -1,7 +1,7 @@
-package go_template
+package gotemplate
 
 import (
-	"flamingo/core/go_template/framework"
+	"flamingo/core/gotemplate/framework"
 	"flamingo/framework/dingo"
 	"flamingo/framework/template"
 )

@@ -53,7 +53,7 @@ func (p *partFixed) read(path string) (string, string) {
 	if pos < 0 {
 		p.length = len(path)
 		if strings.HasSuffix(path, "/") {
-			p.length -= 1
+			p.length--
 		}
 		p.part = path[:p.length]
 		return "", ""

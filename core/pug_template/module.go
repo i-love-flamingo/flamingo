@@ -6,7 +6,7 @@ import (
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
-	template_functions2 "flamingo/framework/template_functions"
+	template_functions2 "flamingo/framework/templatefunctions"
 	"flamingo/framework/web"
 	"net/http"
 )

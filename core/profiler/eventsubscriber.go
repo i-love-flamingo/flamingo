@@ -25,10 +25,8 @@ func (e *EventSubscriber) Notify(ev event.Event) {
 
 // OnResponse injects the little helper into the response, and saves the profile in memory
 func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
-	if reflect.TypeOf(event.Controller).Kind() != reflect.Ptr {
-		return
-	}
-	if reflect.TypeOf(event.Controller).Elem().Name() == reflect.TypeOf(ProfileController{}).Name() {
+	// ensure we are not profiling ourself
+	if reflect.TypeOf(event.Controller).Kind() == reflect.Ptr && reflect.TypeOf(event.Controller).Elem().Name() == reflect.TypeOf(ProfileController{}).Name() {
 		return
 	}
 

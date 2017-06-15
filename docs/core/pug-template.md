@@ -6,12 +6,63 @@
  
 ## Flamingo Pug Template
 
-Flamingo integrates with pug via a custom Compiler.
+The Flamingo `core/pug_template` package is a flamingo template module to use pug.js templates.
 
-The very basic setup is to compile Pug's AST (Abstract Syntax Tree) to native Go templates.
+Basically pug.js is by default compiled to JavaScript, and executed as HTML.
 
-Currently Flamingo uses a slightly modified version of `template/html` and `template/text` to support
-certain easy development workflows.
+This mechanism is used to render static prototypes for the templates, so the usual HTML prototype is
+just a natural artifact of this templating, instead of an extra workflow step or custom tool.
+
+This allows frontend developers to start templating very early with very few backend supports,
+yet without the need to rewrite everything or even learn a new template language.
+
+Also the static prototype can be used to test/analyze the UI in early project phases, while the backend
+might not be done yet.
+
+The way pug.js works is essentially this:
+
+```
+template -[tokenizer]-> tokens -[parser]-> AST -[compiler]-> JavaScript -[runtime]-> HTML
+```
+
+To integrate this with Flamingo we save the AST (Abstract syntax tree) in a json representation.
+pug_template will use a parser to build an internal in-memory tree of the concrete building
+blocks, and then use a render to transform these blocks into actual go template with HTML.
+
+```
+AST -[parser]-> Block tree -[render]-> go template -[go-template-runtime]-> HTML
+```
+
+One of the features of pug.js is the posibility to use arbitrary JavaScript in case the template syntax
+does not provide the correct funtions. This is used for example in loops like
+
+```jade
+ul
+  each val, index in ['zero', 'one', 'two']
+    li= index + ': ' + val
+```
+
+The term `['zero', 'one', 'two']` is actual JavaScript, and a developer is able to use more advanced
+code like
+
+```jade
+- prefix = 'foo'
+ul
+  each val, index in [prefix+'zero', prefix+'one', prefix+'two']
+    li= index + ': ' + val
+```
+
+The pug_template module takes this JavaScript and uses the go-bases JS engine otto to parse the JavaScript
+and transpile it into actual go code.
+While this works for some standard statements and language constructs (default datatypes such as maps, list, etc),
+this does not support certain things such as OOP or the JS stdlib.
+
+It is, however, possible to recreate such functionality in a third-party module via Flamingo's template functions.
+For example pug_template itself has a substitute for the JavaScript `Math` library with the `min`, `max` and `ceil`
+functions. Please note that these function have to use reflection and it's up to the implementation to properly
+reflect the functionality and handle different inputs correctly.
+
+After all extensive usage of JavaScript is not advised.
 
 ## Dynamic JavaScript
 

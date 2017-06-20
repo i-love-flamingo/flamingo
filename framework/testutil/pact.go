@@ -89,3 +89,24 @@ func PactEncodeLike(model interface{}) string {
 
 	return string(tmp)
 }
+
+// PactWithInteractions extends the pact's interactions
+func PactWithInteractions(pact dsl.Pact, interactions []*dsl.Interaction) dsl.Pact {
+	pact.Interactions = append(pact.Interactions, interactions...)
+
+	p := pact
+	mockServer := &dsl.MockService{
+		BaseURL:  fmt.Sprintf("http://%s:%d", p.Host, p.Server.Port),
+		Consumer: p.Consumer,
+		Provider: p.Provider,
+	}
+
+	for _, interaction := range p.Interactions {
+		err := mockServer.AddInteraction(interaction)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return pact
+}

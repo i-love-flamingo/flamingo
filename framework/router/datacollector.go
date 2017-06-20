@@ -29,5 +29,8 @@ func (dc *DataCollector) Collect(ctx web.Context) string {
 
 		params = append(params, ps)
 	}
-	return fmt.Sprintf("Router: %s: %s(%s)", data.handler.path.path, data.handler.handler, strings.Join(params, ", "))
+	if data.handler != nil && data.handler.path != nil {
+		return fmt.Sprintf("Router: %s: %s(%s)", data.handler.path.path, data.handler.handler, strings.Join(params, ", "))
+	}
+	return "-"
 }

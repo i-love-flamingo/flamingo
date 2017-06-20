@@ -28,6 +28,11 @@ type (
 		DefaultConfig() map[string]interface{}
 	}
 
+	// OverrideConfigModule allows to override config dynamically
+	OverrideConfigModule interface {
+		OverrideConfig(current map[string]interface{}) map[string]interface{}
+	}
+
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
 	Route struct {
 		Path       string
@@ -100,6 +105,14 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+	}
+
+	for _, module := range area.Modules {
+		if cfgmodule, ok := module.(OverrideConfigModule); ok {
+			for k, v := range cfgmodule.OverrideConfig(area.Configuration) {
+				area.Configuration[k] = v
+			}
+		}
 	}
 
 	injector.InitModules(area.Modules...)

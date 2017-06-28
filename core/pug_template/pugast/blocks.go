@@ -158,4 +158,16 @@ type (
 	MixinBlock struct {
 		PlaceholderNode
 	}
+
+	// Case switch/case construct
+	Case struct {
+		BlockNode
+		ExpressionNode
+	}
+
+	// When is a case in a case-construct
+	When struct {
+		BlockNode
+		ExpressionNode
+	}
 )

@@ -125,6 +125,22 @@ func (p *PugAst) buildNode(t *Token) (res Node) {
 	case "Comment":
 		return nil
 
+	case "Case":
+		// &pugast.Token{Type:"Case", Name:"", Mode:"", Val:"", Line:64, Block:(*pugast.Token)(0xc420187b80), Nodes:[]*pugast.Token(nil), AttributeBlocks:[]string(nil), Attrs:[]*pugast.Attr(nil), MustEscape:false, File:(*pugast.Fileref)(nil), Filename:"pages/search/view.pug", SelfClosing:false, IsInline:(*bool)(nil), Obj:"", Key:"", Call:false, Args:"", Test:"", Consequent:(*pugast.Token)(nil), Alternate:(*pugast.Token)(nil), Expr:"SearchResult.type"}
+		cas := new(Case)
+		cas.Expr = JavaScriptExpression(t.Expr)
+		cas.Block = Block{Nodes: p.build(t.Block)}
+
+		return cas
+
+	case "When":
+		// &pugast.Token{Type:"When", Name:"", Mode:"", Val:"", Line:65, Block:(*pugast.Token)(0xc4206bb400), Nodes:[]*pugast.Token(nil), AttributeBlocks:[]string(nil), Attrs:[]*pugast.Attr(nil), MustEscape:false, File:(*pugast.Fileref)(nil), Filename:"pages/search/view.pug", SelfClosing:false, IsInline:(*bool)(nil), Obj:"", Key:"", Call:false, Args:"", Test:"", Consequent:(*pugast.Token)(nil), Alternate:(*pugast.Token)(nil), Expr:"\"product\""}
+		when := new(When)
+		when.Expr = JavaScriptExpression(t.Expr)
+		when.Block = Block{Nodes: p.build(t.Block)}
+
+		return when
+
 	default:
 		log.Printf("%#v\n", t)
 		panic(t)

@@ -65,7 +65,7 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/oauth2
-  version: e7a48207996f497ea86f5736d08d99d45c0b6461
+  version: 626d87b99350690f6eb2b92c2f717221cdaf6f9a
   subpackages:
   - internal
 - name: golang.org/x/sys

@@ -2,7 +2,7 @@
 
 ## Development setup
 
-Check out flamingo into `$GOPATH/src/flamingo`.
+Check out flamingo into `$GOPATH/src/flamingo` (flamingo will be our [namespace](https://golang.org/doc/code.html#Organization)).
 
 Install `glide` (e.g. via `brew install glide`).
 

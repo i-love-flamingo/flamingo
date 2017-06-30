@@ -10,12 +10,15 @@ import (
 	"io/ioutil"
 	"runtime"
 	"time"
+	"sync"
 )
 
 var profilestorage map[string]*DefaultProfiler
+var profilelock *sync.Mutex
 
 func init() {
 	profilestorage = make(map[string]*DefaultProfiler)
+	profilelock = new(sync.Mutex)
 }
 
 type (

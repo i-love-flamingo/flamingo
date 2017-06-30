@@ -108,5 +108,7 @@ window.addEventListener("load", function load(e) {
 	if existing, ok := profilestorage[context.Request().Header.Get("X-Request-Id")]; ok {
 		existing.ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
 	}
+	profilelock.Lock()
+	defer profilelock.Unlock()
 	profilestorage[context.ID()] = p
 }

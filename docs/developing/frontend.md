@@ -108,7 +108,7 @@ block content
   h1= __('Current time: %s - %s', get('whattime').now, message)
 ```
 
-Then create a new mock file `whattime.json` for that page inside `akl/frontend/src/mocks`:
+Then create a new mock file `whattime.json` for that page inside `akl/frontend/src/mock`:
 
 ```json
 {
@@ -116,7 +116,7 @@ Then create a new mock file `whattime.json` for that page inside `akl/frontend/s
 }
 ```
 
-Add a new mock-page-mapping in `akl/frontend/src/mocks/_mockmap.js`:
+Add a new mock-page-mapping in `akl/frontend/src/mock/_mockmap.js`:
 
 ```js
 module.exports = {

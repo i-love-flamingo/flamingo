@@ -46,7 +46,7 @@ imports:
   subpackages:
   - cacheobject
 - name: github.com/robertkrimen/otto
-  version: aabe79b06556d741409a343b9bbabf653cef2a1c
+  version: 83d297c4b64aeb2de4268d9a54c9a503ae2d8139
   repo: https://github.com/thebod/otto.git
   subpackages:
   - ast

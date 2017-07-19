@@ -24,12 +24,12 @@ type (
 func (vc *ViewController) Get(c web.Context) web.Response {
 	var page, err = vc.PageService.Get(c, c.MustParam1("name"))
 
-	if err != nil {
-		return vc.Error(c, err)
+	if page == nil {
+		return vc.ErrorNotFound(c, err)
 	}
 
-	if page == nil {
-		return vc.ErrorNotFound(c, nil)
+	if err != nil {
+		return vc.Error(c, err)
 	}
 
 	template, err := c.Param1("template")

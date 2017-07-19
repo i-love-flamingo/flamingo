@@ -1,12 +1,15 @@
 # Hello World Flamingo
 
-## Development setup
+## Development setup and first steps
 
 Check out flamingo into `$GOPATH/src/flamingo` (flamingo will be our [namespace](https://golang.org/doc/code.html#Organization)).
 
 Install `glide` (e.g. via `brew install glide`).
 
 Run `glide i` to fetch dependencies.
+
+Then run the frontend template build:
+`cd akl/frontend && yarn && yarn run build`
 
 Your entrypoint is `akl/akl.go`, this is where the application is started.
 

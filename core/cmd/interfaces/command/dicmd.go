@@ -11,7 +11,7 @@ var (
 	contextName, baseURL string
 
 	// Root config area
-	Root *config.Area
+	ConfigArea *config.Area
 
 	// DiCmd shows dependency injection information
 	DiCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var (
 		Short: "Dependency Injection Debug output (for all or selected contexts)",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("\nContainer for Routed Contexts:\n")
-			for _, routeConfig := range Root.GetFlatContexts() {
+			for _, routeConfig := range ConfigArea.GetFlatContexts() {
 				if contextName != "" && contextName != routeConfig.Name {
 					continue
 				}

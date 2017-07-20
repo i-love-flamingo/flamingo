@@ -24,13 +24,13 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		Long:  `The flamingo command line interface.`,
 	}
 
-	command.Root = m.Root
+	command.ConfigArea = m.Root
 
 	rootCmd.AddCommand(
 		command.VersionCmd,
 		command.DiCmd,
 		command.RoutingConfCmd,
-		//command.RouterCmd,
+		command.RouterCmd,
 	)
 
 	injector.Bind((*cobra.Command)(nil)).AnnotatedWith("flamingo").ToInstance(rootCmd)

@@ -6,17 +6,24 @@ import (
 	"sort"
 	"strings"
 
+	"flamingo/framework/router"
+
 	"github.com/spf13/cobra"
 )
 
+type routesHelper struct {
+	RouterRegistry *router.Registry `inject:""`
+}
+
 var (
+
 	// RoutingConfCmd to show routing configuration information
 	RoutingConfCmd = &cobra.Command{
 		Use:   "routeconf",
 		Short: "Print the routing configs from the contexts",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("\nContext with Routing Config:\n")
-			for _, routeConfig := range Root.GetFlatContexts() {
+			for _, routeConfig := range ConfigArea.GetFlatContexts() {
 				fmt.Println(routeConfig.BaseURL + " [" + routeConfig.Name + "]")
 				for _, route := range routeConfig.Routes {
 					fmt.Printf("  * %s > %s \n", route.Path, route.Controller)
@@ -25,35 +32,34 @@ var (
 		},
 	}
 
-	//RouterCmd = &cobra.Command{
-	//	Use:   "routes",
-	//	Short: "Print the routes after evaluating the config. With the real resulting Controller",
-	//	Run: func(cmd *cobra.Command, args []string) {
-	//		routers := application.GetRouterForRootContext()
-	//
-	//		fmt.Println("\nRouting Result:\n")
-	//		fmt.Println("    Route-Name:            Route-Path                 (Registered Handler)")
-	//		fmt.Println("--------------------------------------------------------------------------")
-	//
-	//		for baseUrl, router := range routers {
-	//			fmt.Printf("\n**********\nContext: \"%s\":\n", baseUrl)
-	//			fmt.Println("  Hardroutes:")
-	//			for _, route := range router.GetHardRoutes() {
-	//				printRoute("--", route.Path, route.Controller, route.Args)
-	//			}
-	//
-	//			fmt.Println("  Registered Routes:")
-	//			routes := router.RouterRegistry.GetRoutes()
-	//			for _, routeName := range getSortedMapKeys(routes) {
-	//				route := routes[routeName]
-	//				handler, _ := router.RouterRegistry.GetHandleForNamedRoute(routeName)
-	//				printRoute(routeName, route, handler, nil)
-	//			}
-	//		}
-	//		fmt.Println()
-	//	},
-	//}
+	// RoutingConfCmd to show routing configuration information
+	RouterCmd = &cobra.Command{
+		Use:   "routes",
+		Short: "Print the routes registered",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("\nRoutes:\n")
+			RoutesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
+			RoutesHelper.PrintRoutes()
+		},
+	}
 )
+
+// Print Registered Routes and Theire Handle
+func (r *routesHelper) PrintRoutes() {
+	routes := make(map[string]string)
+
+	for _, routeHandler := range r.RouterRegistry.GetRoutes() {
+		routes[routeHandler.GetPath()] = routeHandler.GetHandlerName()
+	}
+
+	fmt.Println("    Route-Name:            Route-Path                 (Registered Handler)")
+	fmt.Println("--------------------------------------------------------------------------")
+
+	for _, routePath := range getSortedMapKeys(routes) {
+		_, controller := r.RouterRegistry.GetControllerForHandle(routes[routePath])
+		printRoute(routes[routePath], routePath, controller)
+	}
+}
 
 func getSortedMapKeys(theMap map[string]string) []string {
 	var keys []string
@@ -64,9 +70,9 @@ func getSortedMapKeys(theMap map[string]string) []string {
 	return keys
 }
 
-func printRoute(routeName string, routePath string, handler interface{}, args interface{}) {
-	spaceAmount1 := int(math.Max(0, float64(20-len(routeName))))
-	spaceAmount2 := int(math.Max(0, float64(30-len(routePath))))
+func printRoute(routeName string, routePath string, handler interface{}) {
+	spaceAmount1 := int(math.Max(0, float64(25-len(routePath))))
+	spaceAmount2 := int(math.Max(0, float64(30-len(routeName))))
 	var handlerOutput string
 	switch handler.(type) {
 	case string:
@@ -74,5 +80,5 @@ func printRoute(routeName string, routePath string, handler interface{}, args in
 	default:
 		handlerOutput = fmt.Sprintf("%T", handler)
 	}
-	fmt.Printf("    %s:%s%s%s(%s [%s])\n", routeName, strings.Repeat(" ", spaceAmount1), routePath, strings.Repeat(" ", spaceAmount2), handlerOutput, args)
+	fmt.Printf("    %s:%s%s%s(%s)\n", routePath, strings.Repeat(" ", spaceAmount1), routeName, strings.Repeat(" ", spaceAmount2), handlerOutput)
 }

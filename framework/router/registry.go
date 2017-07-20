@@ -57,11 +57,24 @@ func (registry *Registry) HandleIfNotSet(name string, controller Controller) boo
 	return true
 }
 
+// Returns Controller for a Handle Name
+func (registry *Registry) GetControllerForHandle(name string) (error, Controller) {
+	if val, ok := registry.handler[name]; ok {
+		return nil, val
+	}
+	return errors.New("Handle not found"), nil
+}
+
 // Route assigns a route to a Handler
 func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
 	registry.routes = append(registry.routes, h)
+}
+
+// Returns registered Routes
+func (registry *Registry) GetRoutes() []*Handler {
+	return registry.routes
 }
 
 // Alias for an existing router definition
@@ -246,4 +259,14 @@ matchloop:
 		}
 	}
 	return nil, nil, nil
+}
+
+// Get Path
+func (handler *Handler) GetPath() string {
+	return handler.path.path
+}
+
+// Get Handler Name
+func (handler *Handler) GetHandlerName() string {
+	return handler.handler
 }

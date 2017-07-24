@@ -22,7 +22,6 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 
 	for ci, ca := range callargs {
 		ca = strings.TrimSpace(ca)
-		p.knownVar[ca] = true
 		attrpart += fmt.Sprintf(
 			"{{- $%s := tryindex $__args__ %d -}}",
 			ca,

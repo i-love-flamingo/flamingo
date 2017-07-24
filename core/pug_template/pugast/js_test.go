@@ -3,6 +3,8 @@ package pugast
 import (
 	"testing"
 
+	"html/template"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -59,17 +61,14 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Identifier", func() {
 			It("Should transpile it correctly if it is known", func() {
-				p.knownVar["testknown"] = true
 				Expect(p.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown}}`))
 			})
 			It("Should transpile it correctly if it is not known", func() {
-				p.knownVar["testknown"] = false
-				Expect(p.JsExpr(`testknown`, true, true)).To(Equal(`{{.testknown}}`))
+				Expect(p.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown}}`))
 			})
 			It("Should make it raw if rawmode is on", func() {
 				p.rawmode = true
-				p.knownVar["testknown"] = false
-				Expect(p.JsExpr(`testknown`, true, true)).To(Equal(`{{.testknown | raw}}`))
+				Expect(p.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | raw}}`))
 				p.rawmode = false
 			})
 		})
@@ -129,7 +128,6 @@ var _ = Describe("JS Expression transpiling", func() {
 		})
 
 		Context("Transpile Conditional Expression", func() {
-			p.knownVar["a"], p.knownVar["b"], p.knownVar["c"] = true, true, true
 			It("Should become and if-else statement", func() {
 				Expect(p.JsExpr(`a ? b : c`, false, false)).To(Equal(`{{if $a}}{{$b}}{{else}}{{$c}}{{end}}`))
 			})
@@ -146,6 +144,7 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Call Expressions", func() {
 			It("Should transform js-call-syntax to go template call syntax", func() {
+				p.FuncMap = template.FuncMap{"foo": func(int, int) {}}
 				Expect(p.JsExpr(`foo(1+2)`, true, false)).To(Equal(`{{(foo (__op__add 1 2))}}`))
 			})
 		})
@@ -170,8 +169,8 @@ var _ = Describe("JS Expression transpiling", func() {
 	})
 
 	Describe("Known Bugs", func() {
-		It("Should render brand.heroImage.url to .brand.heroImage.url", func() {
-			Expect(p.JsExpr("`background-image:url(${brand.heroImage.url})`", false, false)).To(Equal(`(s "background-image:url(" .brand.heroImage.url ")")`))
+		It("Should render brand.heroImage.url to $brand.heroImage.url", func() {
+			Expect(p.JsExpr("`background-image:url(${brand.heroImage.url})`", false, false)).To(Equal(`(s "background-image:url(" $brand.heroImage.url ")")`))
 		})
 	})
 })

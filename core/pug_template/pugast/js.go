@@ -143,9 +143,10 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	switch expr := expr.(type) {
 	// Identifier: usually a variable name
 	case *ast.Identifier:
-		if _, known := p.FuncMap[expr.Name]; !known && p.knownVar[expr.Name] {
+		if _, known := p.FuncMap[expr.Name]; dot && !known {
 			result += `$`
 		} else if dot && !known {
+			panic("ain't no dot allowed")
 			result += `.`
 		}
 		if expr.Name == "range" {
@@ -268,7 +269,6 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 			n,
 			ops[expr.Operator],
 			p.renderExpression(expr.Right, false, true))
-		p.knownVar[n] = true
 		if wrap {
 			result = `{{- ` + result + ` -}}`
 		}
@@ -278,7 +278,6 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 		n := expr.Name
 		n = strings.TrimLeft(n, "$")
 		result = `$` + n + ` := ` + p.renderExpression(expr.Initializer, false, true)
-		p.knownVar[n] = true
 		if wrap {
 			result = `{{- ` + result + ` -}}`
 		}

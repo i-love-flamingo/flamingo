@@ -123,7 +123,11 @@ func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data in
 
 	result := new(bytes.Buffer)
 
-	templateInstance, err := t.templates[templateName].Clone()
+	tpl, ok := t.templates[templateName]
+	if !ok {
+		panic(fmt.Sprintf(`Template %s not found!`, templateName))
+	}
+	templateInstance, err := tpl.Clone()
 	if err != nil {
 		panic(err)
 	}

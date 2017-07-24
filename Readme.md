@@ -2,11 +2,22 @@
 
 ## Docs
 
-`docker run --rm -v $(pwd):/work -p 8000:8000 python bash -c 'pip install mkdocs; cd /work; mkdocs serve --dev-addr=0.0.0.0:8000'`
+Read the extensive documentation that is part of Flamingo.
 
-Then view the docs at [Docs](http://localhost:8000)
+After checkout you need to type:
 
-# Development
+`make doc`
+This will start building and previeweing the mkdocs based documentation in a Docker container.
+
+To view the docs open  [Docs](http://localhost:8000)
+
+(To end the Docker container again use `docker kill`)
+
+-----------------
+
+# Depricated
+
+See Docs for most recent documentation
 
 ## Prepare / Requirements
 

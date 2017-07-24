@@ -22,8 +22,10 @@ import:
 - package: gopkg.in/yaml.v2
 - package: html/template
   repo: https://github.com/thebod/go-html-template
+  version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
 - package: text/template
   repo: https://github.com/thebod/go-text-template
+  version: 2b3fc2bc491b75560f998794587209af030ca42d
 - package: github.com/spf13/cobra
 - package: github.com/pkg/errors
   version: ^0.8.0

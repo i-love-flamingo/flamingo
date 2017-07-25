@@ -71,7 +71,7 @@ func TestViewController_Get(t *testing.T) {
 		t.Errorf("Expected mocked response to be nil, not %v", res)
 	}
 
-	expectedTpl = "pages/cms/view"
+	expectedTpl = "cms/view"
 	ctx.LoadParams(router.P{"name": "page"})
 
 	res = vc.Get(ctx)
@@ -79,8 +79,8 @@ func TestViewController_Get(t *testing.T) {
 		t.Errorf("Expected mocked response to be nil, not %v", res)
 	}
 
-	expectedTpl = "pages/cms/template"
-	ctx.LoadParams(router.P{"name": "page", "template": "pages/cms/template"})
+	expectedTpl = "cms/template"
+	ctx.LoadParams(router.P{"name": "page", "template": "cms/template"})
 
 	res = vc.Get(ctx)
 	if res != nil {

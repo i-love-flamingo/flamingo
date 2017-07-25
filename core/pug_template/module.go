@@ -1,13 +1,18 @@
 package pug_template
 
 import (
+	"encoding/json"
 	"flamingo/core/pug_template/pugjs"
 	"flamingo/core/pug_template/template_functions"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
 	"flamingo/framework/web"
+	"io/ioutil"
+	"log"
 	"net/http"
+	"path/filepath"
+	"strings"
 )
 
 type (
@@ -48,4 +53,37 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.MathLib{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.ObjectLib{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.DebugFunc{})
+
+	m.loadmock("../src/component/*")
+	m.loadmock("../src/component/*/*")
+	m.loadmock("../src/page/*")
+	m.loadmock("../src/page/*/*")
+	m.loadmock("../src/mock")
+}
+
+func (m *Module) loadmock(where string) (interface{}, error) {
+	matches, err := filepath.Glob(m.Basedir + "/" + where + "/*.mock.json")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, match := range matches {
+		b, e := ioutil.ReadFile(match)
+		if e != nil {
+			continue
+		}
+		var res interface{}
+		json.Unmarshal(b, &res)
+		name := strings.Replace(filepath.Base(match), ".mock.json", "", 1)
+		m.RouterRegistry.HandleIfNotSet(name, mockcontroller(name, res))
+		log.Println("mocking", name)
+	}
+	return nil, nil
+}
+
+func mockcontroller(name string, data interface{}) func(web.Context) interface{} {
+	return func(ctx web.Context) interface{} {
+		defer ctx.Profile("pugmock", name)()
+		return data
+	}
 }

@@ -48,6 +48,14 @@ func (registry *Registry) Handle(name string, controller Controller) {
 	registry.handler[name] = controller
 }
 
+// HandleIfNotSet assigns a controller to a name if not already set
+func (registry *Registry) HandleIfNotSet(name string, controller Controller) {
+	if _, ok := registry.handler[name]; ok {
+		return
+	}
+	registry.handler[name] = controller
+}
+
 // Route assigns a route to a Handler
 func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)

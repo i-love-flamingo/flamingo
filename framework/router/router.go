@@ -2,21 +2,17 @@ package router
 
 import (
 	"context"
-	"encoding/json"
 	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
 	"flamingo/framework/profiler"
 	"flamingo/framework/web"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"path/filepath"
 
 	"fmt"
 
@@ -288,43 +284,7 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(getCtx)
 		}
-	} else { // mock...
-		defer ctx.Profile("fallback", handler)()
-
-		if data, err := trymock(handler, "component/*"); err == nil {
-			return data
-		}
-		if data, err := trymock(handler, "component/**"); err == nil {
-			return data
-		}
-		if data, err := trymock(handler, "page/*"); err == nil {
-			return data
-		}
-		if data, err := trymock(handler, "page/**"); err == nil {
-			return data
-		}
-		if data, err := trymock(handler, "mock"); err == nil {
-			return data
-		}
+		panic(errors.Errorf("%q is not a data controller", handler))
 	}
-	panic("not a data controller")
-}
-
-func trymock(name, part string) (interface{}, error) {
-	matches, err := filepath.Glob("frontend/src/" + part + "/" + name + ".mock.json")
-	if err != nil {
-		return nil, err
-	}
-
-	for _, m := range matches {
-		b, e := ioutil.ReadFile(m)
-		if e != nil {
-			return nil, e
-		}
-		var res interface{}
-		json.Unmarshal(b, &res)
-		return res, nil
-	}
-
-	return nil, errors.New("not found")
+	panic(errors.Errorf("data controller %q not found", handler))
 }

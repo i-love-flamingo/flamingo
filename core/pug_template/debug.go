@@ -34,9 +34,7 @@ const debugTemplate = `<!doctype html>
 
 // Get Response for Debug Info
 func (dc *DebugController) Get(ctx web.Context) web.Response {
-	//if dc.Engine.ast == nil {
-	//dc.Engine.loadTemplates()
-	//}
+	dc.Engine.LoadTemplates(ctx.MustQuery1("tpl"))
 
 	tpl, ok := dc.Engine.Ast.TplCode[ctx.MustQuery1("tpl")]
 	if !ok {

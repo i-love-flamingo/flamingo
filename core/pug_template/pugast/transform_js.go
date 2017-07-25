@@ -82,26 +82,7 @@ func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
 	}
 
 	for _, stmt := range stmtlist {
-		switch expr := stmt.(type) {
-		// an expression is just any javascript expression
-		case *ast.ExpressionStatement:
-			finalexpr += p.renderExpression(expr.Expression, wrap, true)
-
-		// a variable statement is a list of expressions, usually variable assignments (var foo = 1, bar = 2)
-		case *ast.VariableStatement:
-			for _, v := range expr.List {
-				finalexpr += p.renderExpression(v, wrap, true)
-			}
-
-		// the return statement is created by ParseFunction
-		case *ast.ReturnStatement:
-			finalexpr += p.renderExpression(expr.Argument, wrap, true)
-
-		// we cannot deal with other expressions at the moment, and we don't expect them ayway
-		default:
-			fmt.Printf("%#v\n", stmt)
-			panic("unknown expression")
-		}
+		finalexpr += p.renderStatement(stmt, wrap, true)
 	}
 
 	return finalexpr
@@ -130,6 +111,50 @@ func (p *PugAst) interpolate(input string) string {
 		index++
 	}
 	return input
+}
+
+func (p *PugAst) renderStatement(stmt ast.Statement, wrap bool, dot bool) string {
+	var finalexpr string
+
+	if stmt == nil {
+		return ""
+	}
+
+	switch expr := stmt.(type) {
+	// an expression is just any javascript expression
+	case *ast.ExpressionStatement:
+		finalexpr += p.renderExpression(expr.Expression, wrap, dot)
+
+		// a variable statement is a list of expressions, usually variable assignments (var foo = 1, bar = 2)
+	case *ast.VariableStatement:
+		for _, v := range expr.List {
+			finalexpr += p.renderExpression(v, wrap, dot)
+		}
+
+		// the return statement is created by ParseFunction
+	case *ast.ReturnStatement:
+		finalexpr += p.renderExpression(expr.Argument, wrap, dot)
+
+	case *ast.IfStatement:
+		finalexpr = `{{if ` + p.renderExpression(expr.Test, false, true) + `}}`
+		finalexpr += p.renderStatement(expr.Consequent, true, true)
+		elsebranch := p.renderStatement(expr.Alternate, true, true)
+		if elsebranch != "" && elsebranch != "{{null}}" {
+			finalexpr += `{{else}}`
+			finalexpr += elsebranch
+		}
+		finalexpr += `{{end}}`
+
+	case *ast.ThrowStatement:
+		finalexpr += p.renderExpression(expr.Argument, wrap, true)
+
+		// we cannot deal with other expressions at the moment, and we don't expect them ayway
+	default:
+		fmt.Printf("%#v\n", stmt)
+		panic("unknown expression")
+	}
+
+	return finalexpr
 }
 
 // renderExpression renders the javascript expression into go template
@@ -265,10 +290,26 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	case *ast.AssignExpression:
 		n := p.renderExpression(expr.Left, false, false)
 		n = strings.TrimLeft(n, "$")
-		result = fmt.Sprintf(`$%s :%s %s`,
-			n,
-			ops[expr.Operator],
-			p.renderExpression(expr.Right, false, true))
+		right := p.renderExpression(expr.Right, false, true)
+		if len(right) == 0 {
+			right = "null"
+		}
+
+		// special case: assign into object
+		if strings.Index(n, ".") > 0 {
+			ns := strings.Split(n, ".")
+			n = strings.Join(ns[:len(ns)-1], ".")
+			r := ns[len(ns)-1]
+			result = fmt.Sprintf(`($%s.__assign "%s" %s)`,
+				n,
+				r,
+				right)
+		} else {
+			result = fmt.Sprintf(`$%s :%s %s`,
+				n,
+				ops[expr.Operator],
+				right)
+		}
 		if wrap {
 			result = `{{- ` + result + ` -}}`
 		}
@@ -277,7 +318,11 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 	case *ast.VariableExpression:
 		n := expr.Name
 		n = strings.TrimLeft(n, "$")
-		result = `$` + n + ` := ` + p.renderExpression(expr.Initializer, false, true)
+		init := p.renderExpression(expr.Initializer, false, true)
+		if len(init) == 0 {
+			init = "null"
+		}
+		result = `$` + n + ` := ` + init
 		if wrap {
 			result = `{{- ` + result + ` -}}`
 		}
@@ -308,6 +353,16 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 			result = `{{- ` + result + ` -}}`
 		} else {
 			result = `(` + result + `)`
+		}
+
+	case *ast.NewExpression:
+		result = `(__op__array`
+		for _, o := range expr.ArgumentList {
+			result += ` ` + p.renderExpression(o, false, true)
+		}
+		result += `)`
+		if wrap {
+			result = `{{` + result + `}}`
 		}
 
 	default:

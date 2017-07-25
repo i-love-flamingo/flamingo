@@ -243,6 +243,8 @@ func (router *Router) handle(c Controller) http.Handler {
 func (router *Router) Get(handler string, ctx web.Context, params ...map[interface{}]interface{}) interface{} {
 	defer ctx.Profile("get", handler)()
 
+	// reformat data to map[string]string, just as in normal request vars would look like
+	// dataController might be called via Ajax (instead of right via template) so this should be unified
 	vars := make(map[string]string)
 	if len(params) == 1 {
 		for k, v := range params[0] {
@@ -270,11 +272,9 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(getCtx)
 		}
-
-		panic("not a data controller")
 	} else { // mock...
 		defer ctx.Profile("fallback", handler)()
-		data, err := ioutil.ReadFile("frontend/src/mock/" + handler + ".json")
+		data, err := ioutil.ReadFile("frontend/src/mock/" + handler + ".mock.json")
 		if err == nil {
 			var res interface{}
 			json.Unmarshal(data, &res)
@@ -282,4 +282,5 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		}
 		panic(err)
 	}
+	panic("not a data controller")
 }

@@ -5,19 +5,12 @@ import (
 	"fmt"
 	"html/template"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
-type (
-	Array []interface{}
-)
-
-func (a Array) Length() int {
-	return reflect.ValueOf(a).Len()
-}
-
 // FuncMap is the default runtime funcmap for pugast templates
-var FuncMap = template.FuncMap{
+var funcmap = FuncMap{
 	"__": func(s ...string) string { return strings.Join(s, "::") },
 
 	"__op__add":   runtimeAdd,
@@ -36,8 +29,22 @@ var FuncMap = template.FuncMap{
 	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
 
 	"tryindex": func(obj, key interface{}) interface{} {
-		vo := reflect.ValueOf(obj)
+		//log.Println(obj, key)
+		arr, ok := obj.(*Array)
+		idx, ok2 := key.(int)
+		if ok && ok2 {
+			return arr.items[idx]
+		}
+
+		if obj, ok := obj.(Object); ok {
+			return obj.Field(convert(key).String())
+		}
+
+		vo, _ := indirect(reflect.ValueOf(obj))
 		k := int(reflect.ValueOf(key).Int())
+		if !vo.IsValid() {
+			return nil
+		}
 		if vo.Len() > k {
 			return vo.Index(k).Interface()
 		}
@@ -49,7 +56,8 @@ var FuncMap = template.FuncMap{
 
 	"null": func() interface{} { return nil },
 
-	"_Range": func(args ...int) (res Array) {
+	"_Range": func(args ...int) Object {
+		var res []int
 		var m, o int
 		if len(args) == 1 {
 			m = args[0]
@@ -62,30 +70,37 @@ var FuncMap = template.FuncMap{
 		for i := o; i < m; i++ {
 			res = append(res, i)
 		}
-		return
+		return convert(res)
 	},
 
 	"raw":     func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
 	"tagopen": func(t, p string) template.HTML { return template.HTML(`<` + p + t) },
-	"s": func(l ...interface{}) (res string) {
+	"s": func(l ...interface{}) string {
+		var res string
 		for _, s := range l {
-			vs := reflect.ValueOf(s)
-			switch vs.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				{
-					res += fmt.Sprintf("%d", vs.Int())
-				}
-			case reflect.Float32, reflect.Float64:
-				{
-					res += fmt.Sprintf("%f", vs.Float())
-				}
-			case reflect.String:
-				{
-					res += vs.String()
-				}
+			if s != nil {
+				res += fmt.Sprint(s)
 			}
+			//vs := reflect.ValueOf(s)
+			//switch vs.Kind() {
+			//case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+			//	{
+			//		res += fmt.Sprintf("%d", vs.Int())
+			//	}
+			//case reflect.Float32, reflect.Float64:
+			//	{
+			//		res += fmt.Sprintf("%f", vs.Float())
+			//	}
+			//case reflect.String:
+			//	{
+			//		res += vs.String()
+			//	}
+			//}
 		}
-		return
+		if len(res) > 1 {
+			return " " + strings.TrimSpace(res)
+		}
+		return ""
 	},
 	"sc": func(l ...interface{}) (res template.CSS) {
 		for _, s := range l {
@@ -108,13 +123,13 @@ var FuncMap = template.FuncMap{
 		return
 	},
 
-	"__op__array": func(a ...interface{}) Array { return Array(a) },
-	"__op__map": func(a ...interface{}) map[interface{}]interface{} {
-		m := make(map[interface{}]interface{})
+	"__op__array": func(a ...interface{}) Object { return convert(a) },
+	"__op__map": func(a ...interface{}) Object {
+		m := make(map[interface{}]interface{}, len(a)/2)
 		for i := 0; i < len(a); i += 2 {
 			m[a[i]] = a[i+1]
 		}
-		return m
+		return convert(m)
 	},
 	"attr": func(attr, prefix interface{}) string {
 		if attr == nil {
@@ -135,60 +150,40 @@ var FuncMap = template.FuncMap{
 		return m
 	},
 
-	"__add_andattributes": func(attrs map[interface{}]interface{}, k ...string) template.HTMLAttr {
+	"__add_andattributes": func(attrs *Map, k ...string) template.HTMLAttr {
 		known := make(map[string]bool)
 		for _, k := range k {
 			known[k] = true
 		}
 		res := ""
-		for k, v := range attrs {
-			if !known[k.(string)] {
-				res += ` ` + k.(string) + `="` + v.(string) + `"`
+		for k, v := range attrs.Items {
+			if !known[k.String()] {
+				res += ` ` + k.String() + `="` + strings.TrimSpace(v.String()) + `"`
 			}
 		}
-		return template.HTMLAttr(res)
+		return template.HTMLAttr(strings.TrimSpace(res))
 	},
 }
 
-func runtimeAdd(x, y interface{}) interface{} {
-	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
-	switch vx.Kind() {
-	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-		{
-			switch vy.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return int(vx.Int() + vy.Int())
-			case reflect.Float32, reflect.Float64:
-				return float64(vx.Int()) + vy.Float()
-			case reflect.String:
-				return fmt.Sprintf("%d%s", vx.Int(), vy.String())
-			}
-		}
-	case reflect.Float32, reflect.Float64:
-		{
-			switch vy.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return vx.Float() + float64(vy.Int())
-			case reflect.Float32, reflect.Float64:
-				return vx.Float() + vy.Float()
-			case reflect.String:
-				return fmt.Sprintf("%f%s", vx.Float(), vy.String())
-			}
-		}
-	case reflect.String:
-		{
-			switch vy.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				return fmt.Sprintf("%s%d", vx.String(), vy.Int())
-			case reflect.Float32, reflect.Float64:
-				return fmt.Sprintf("%s%f", vx.String(), vy.Float())
-			case reflect.String:
-				return fmt.Sprintf("%s%s", vx.String(), vy.String())
-			}
+func runtimeAdd(l, r interface{}) Object {
+	x := convert(l)
+	y := convert(r)
+
+	switch x := x.(type) {
+	case String:
+		return String(x.String() + y.String())
+
+	case Number:
+		switch y := y.(type) {
+		case Number:
+			return Number(x + y)
+
+		case String:
+			f, _ := strconv.ParseFloat(y.String(), 64)
+			return Number(float64(x) + f)
 		}
 	}
-
-	return "<nil>"
+	return Nil{}
 }
 
 func runtimeInc(x interface{}) int {
@@ -207,7 +202,14 @@ func runtimeInc(x interface{}) int {
 	return 0
 }
 
-func runtimeSub(x, y interface{}) interface{} {
+func runtimeSub(i ...interface{}) interface{} {
+	y := i[0]
+	var x interface{}
+	if len(i) > 1 {
+		x = i[1]
+	} else {
+		x = 0
+	}
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:

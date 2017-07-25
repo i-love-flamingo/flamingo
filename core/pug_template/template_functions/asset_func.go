@@ -23,7 +23,7 @@ func (af AssetFunc) Name() string {
 
 // Func as implementation of asset method
 func (af *AssetFunc) Func(ctx web.Context) interface{} {
-	return func(asset string) template.URL {
+	return func(asset pugast.String) template.URL {
 		// let webpack dev server handle URL's
 		if af.Engine.Webpackserver {
 			return template.URL("/assets/" + asset)
@@ -33,13 +33,13 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		url := af.Router.URL("_static", nil)
 		var result string
 
-		assetSplitted := strings.Split(asset, "/")
+		assetSplitted := strings.Split(string(asset), "/")
 		assetName := assetSplitted[len(assetSplitted)-1]
 
 		if af.Engine.Assetrewrites[assetName] != "" {
 			result = url.String() + "/" + af.Engine.Assetrewrites[assetName]
 		} else {
-			result = url.String() + "/" + asset
+			result = url.String() + "/" + string(asset)
 		}
 
 		ctx.Push(result, nil) // h2 server push

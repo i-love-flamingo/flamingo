@@ -68,5 +68,5 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	// render page
-	return vc.Render(c, "pages/search/view", vd)
+	return vc.Render(c, "search/view", vd)
 }

@@ -93,12 +93,6 @@ imports:
   - json
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
-- name: html/template
-  version: 0e746f4c1ee8c8d256168a3a91eebf5ce880459d
-  repo: https://github.com/thebod/go-html-template
-- name: text/template
-  version: 2b3fc2bc491b75560f998794587209af030ca42d
-  repo: https://github.com/thebod/go-text-template
 testImports:
 - name: github.com/onsi/ginkgo
   version: 77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298

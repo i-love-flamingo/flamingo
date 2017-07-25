@@ -59,13 +59,13 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
-			"pages/error/404",
+			"error/404",
 			ErrorViewData{Error: EmptyError{}, Code: 404},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
-			"pages/error/404",
+			"error/404",
 			ErrorViewData{Error: DebugError{error}, Code: 404},
 		)
 	}
@@ -82,13 +82,13 @@ func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response 
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
-			"pages/error/503",
+			"error/503",
 			ErrorViewData{Error: EmptyError{}, Code: 500},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
-			"pages/error/503",
+			"error/503",
 			ErrorViewData{Error: DebugError{err}, Code: 500},
 		)
 	}

@@ -36,5 +36,5 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 		}
 	}
 
-	return vc.Render(c, "pages/brand/view", ViewData{Brand: brand})
+	return vc.Render(c, "brand/view", ViewData{Brand: brand})
 }

@@ -1,193 +1,225 @@
+// Copyright 2011 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package pugast
 
 import (
-	"bytes"
-	"encoding/json"
-	coretemplate "flamingo/framework/template"
-	"flamingo/framework/web"
-	"fmt"
-	"html/template"
-	"io"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"path"
+	"flamingo/core/pug_template/pugast/parse"
 	"reflect"
-	"strings"
 	"sync"
-	"time"
 )
 
-// PugTemplateEngine is the one and only javascript template engine for go ;)
-type PugTemplateEngine struct {
-	Basedir                   string `inject:"config:pug_template.basedir"`
-	Debug                     bool   `inject:"config:debug.mode"`
-	Assetrewrites             map[string]string
-	templates                 map[string]*template.Template
-	templatesLock             sync.Mutex
-	Webpackserver             bool
-	Ast                       *PugAst
-	TemplateFunctions         *coretemplate.FunctionRegistry
-	TemplateFunctionsProvider func() *coretemplate.FunctionRegistry `inject:""`
+// common holds the information shared by related templates.
+type common struct {
+	tmpl   map[string]*Template // Map from name to defined templates.
+	option option
+	// We use two maps, one for parsing and one for execution.
+	// This separation makes the API cleaner since it doesn't
+	// expose reflection to the client.
+	muFuncs    sync.RWMutex // protects parseFuncs and execFuncs
+	parseFuncs FuncMap
+	execFuncs  map[string]reflect.Value
 }
 
-// loadTemplate gathers configuration and templates for the Engine
-func (t *PugTemplateEngine) loadTemplates(filtername string) {
-	start := time.Now()
-
-	var err error
-
-	t.templatesLock.Lock()
-	defer t.templatesLock.Unlock()
-
-	manifest, _ := ioutil.ReadFile(path.Join(t.Basedir, "manifest.json"))
-	json.Unmarshal(manifest, &t.Assetrewrites)
-
-	t.Ast = NewPugAst(path.Join(t.Basedir, "templates"))
-
-	t.TemplateFunctions = t.TemplateFunctionsProvider()
-	t.Ast.FuncMap = t.TemplateFunctions.Populate()
-
-	t.templates, err = compileDir(t.Ast, path.Join(t.Basedir, "templates"), "", filtername)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
-		t.Webpackserver = true
-	} else {
-		t.Webpackserver = false
-	}
-
-	log.Println("Compiled templates in", time.Since(start))
+// Template is the representation of a parsed template. The *parse.Tree
+// field is exported only for use by html/template and should be treated
+// as unexported by all other clients.
+type Template struct {
+	name string
+	*parse.Tree
+	*common
+	leftDelim  string
+	rightDelim string
 }
 
-// compileDir returns a map of defined templates in directory dirname
-func compileDir(pugast *PugAst, root, dirname, filtername string) (map[string]*template.Template, error) {
-	result := make(map[string]*template.Template)
+// New allocates a new, undefined template with the given name.
+func New(name string) *Template {
+	t := &Template{
+		name: name,
+	}
+	t.init()
+	return t
+}
 
-	dir, err := os.Open(path.Join(root, dirname))
+// Name returns the name of the template.
+func (t *Template) Name() string {
+	return t.name
+}
+
+// New allocates a new, undefined template associated with the given one and with the same
+// delimiters. The association, which is transitive, allows one template to
+// invoke another with a {{template}} action.
+func (t *Template) New(name string) *Template {
+	t.init()
+	nt := &Template{
+		name:       name,
+		common:     t.common,
+		leftDelim:  t.leftDelim,
+		rightDelim: t.rightDelim,
+	}
+	return nt
+}
+
+// init guarantees that t has a valid common structure.
+func (t *Template) init() {
+	if t.common == nil {
+		c := new(common)
+		c.tmpl = make(map[string]*Template)
+		c.parseFuncs = make(FuncMap)
+		c.execFuncs = make(map[string]reflect.Value)
+		t.common = c
+	}
+}
+
+// Clone returns a duplicate of the template, including all associated
+// templates. The actual representation is not copied, but the name space of
+// associated templates is, so further calls to Parse in the copy will add
+// templates to the copy but not to the original. Clone can be used to prepare
+// common templates and use them with variant definitions for other templates
+// by adding the variants after the clone is made.
+func (t *Template) Clone() (*Template, error) {
+	nt := t.copy(nil)
+	nt.init()
+	if t.common == nil {
+		return nt, nil
+	}
+	for k, v := range t.tmpl {
+		if k == t.name {
+			nt.tmpl[t.name] = nt
+			continue
+		}
+		// The associated templates share nt's common structure.
+		tmpl := v.copy(nt.common)
+		nt.tmpl[k] = tmpl
+	}
+	t.muFuncs.RLock()
+	defer t.muFuncs.RUnlock()
+	for k, v := range t.parseFuncs {
+		nt.parseFuncs[k] = v
+	}
+	for k, v := range t.execFuncs {
+		nt.execFuncs[k] = v
+	}
+	return nt, nil
+}
+
+// copy returns a shallow copy of t, with common set to the argument.
+func (t *Template) copy(c *common) *Template {
+	nt := New(t.name)
+	nt.Tree = t.Tree
+	nt.common = c
+	nt.leftDelim = t.leftDelim
+	nt.rightDelim = t.rightDelim
+	return nt
+}
+
+// AddParseTree adds parse tree for template with given name and associates it with t.
+// If the template does not already exist, it will create a new one.
+// If the template does exist, it will be replaced.
+func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error) {
+	t.init()
+	// If the name is the name of this template, overwrite this template.
+	nt := t
+	if name != t.name {
+		nt = t.New(name)
+	}
+	// Even if nt == t, we need to install it in the common.tmpl map.
+	if replace, err := t.associate(nt, tree); err != nil {
+		return nil, err
+	} else if replace {
+		nt.Tree = tree
+	}
+	return nt, nil
+}
+
+// Templates returns a slice of defined templates associated with t.
+func (t *Template) Templates() []*Template {
+	if t.common == nil {
+		return nil
+	}
+	// Return a slice so we don't expose the map.
+	m := make([]*Template, 0, len(t.tmpl))
+	for _, v := range t.tmpl {
+		m = append(m, v)
+	}
+	return m
+}
+
+// Delims sets the action delimiters to the specified strings, to be used in
+// subsequent calls to Parse, ParseFiles, or ParseGlob. Nested template
+// definitions will inherit the settings. An empty delimiter stands for the
+// corresponding default: {{ or }}.
+// The return value is the template, so calls can be chained.
+func (t *Template) Delims(left, right string) *Template {
+	t.init()
+	t.leftDelim = left
+	t.rightDelim = right
+	return t
+}
+
+// Funcs adds the elements of the argument map to the template's function map.
+// It panics if a value in the map is not a function with appropriate return
+// type or if the name cannot be used syntactically as a function in a template.
+// It is legal to overwrite elements of the map. The return value is the template,
+// so calls can be chained.
+func (t *Template) Funcs(funcMap FuncMap) *Template {
+	t.init()
+	t.muFuncs.Lock()
+	defer t.muFuncs.Unlock()
+	addValueFuncs(t.execFuncs, funcMap)
+	addFuncs(t.parseFuncs, funcMap)
+	return t
+}
+
+// Lookup returns the template with the given name that is associated with t.
+// It returns nil if there is no such template or the template has no definition.
+func (t *Template) Lookup(name string) *Template {
+	if t.common == nil {
+		return nil
+	}
+	return t.tmpl[name]
+}
+
+// Parse parses text as a template body for t.
+// Named template definitions ({{define ...}} or {{block ...}} statements) in text
+// define additional templates associated with t and are removed from the
+// definition of t itself.
+//
+// Templates can be redefined in successive calls to Parse.
+// A template definition with a body containing only white space and comments
+// is considered empty and will not replace an existing template's body.
+// This allows using Parse to add new named template definitions without
+// overwriting the main template body.
+func (t *Template) Parse(text string) (*Template, error) {
+	t.init()
+	t.muFuncs.RLock()
+	trees, err := parse.Parse(t.name, text, t.leftDelim, t.rightDelim, t.parseFuncs, builtins)
+	t.muFuncs.RUnlock()
 	if err != nil {
 		return nil, err
 	}
-
-	filenames, err := dir.Readdir(-1)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, filename := range filenames {
-		if filename.IsDir() {
-			tpls, err := compileDir(pugast, root, path.Join(dirname, filename.Name()), filtername)
-			if err != nil {
-				return nil, err
-			}
-			for k, v := range tpls {
-				if result[k] == nil {
-					result[k] = v
-				}
-			}
-		} else {
-			if strings.HasSuffix(filename.Name(), ".ast.json") {
-				name := path.Join(dirname, filename.Name())
-				name = name[:len(name)-len(".ast.json")]
-
-				if filtername != "" && !strings.HasPrefix(name, filtername) {
-					continue
-				}
-
-				result[name] = pugast.TokenToTemplate(name, pugast.Parse(name))
-			}
+	// Add the newly parsed trees, including the one for t, into our common structure.
+	for name, tree := range trees {
+		if _, err := t.AddParseTree(name, tree); err != nil {
+			return nil, err
 		}
 	}
-
-	return result, nil
+	return t, nil
 }
 
-// Render via html/pug_template
-func (t *PugTemplateEngine) Render(ctx web.Context, templateName string, data interface{}) io.Reader {
-	defer ctx.Profile("render", templateName)()
-
-	// recompile
-	if t.templates == nil {
-		var finish = ctx.Profile("loadTemplates", "-all-")
-		t.loadTemplates("")
-		finish()
-	} else if t.Debug {
-		var finish = ctx.Profile("debugReloadTemplates", templateName)
-		t.loadTemplates(templateName)
-		finish()
+// associate installs the new template into the group of templates associated
+// with t. The two are already known to share the common structure.
+// The boolean return value reports whether to store this tree as t.Tree.
+func (t *Template) associate(new *Template, tree *parse.Tree) (bool, error) {
+	if new.common != t.common {
+		panic("internal error: associate not common")
 	}
-
-	result := new(bytes.Buffer)
-
-	tpl, ok := t.templates[templateName]
-	if !ok {
-		panic(fmt.Sprintf(`Template %s not found!`, templateName))
+	if t.tmpl[new.name] != nil && parse.IsEmptyTree(tree.Root) && t.Tree != nil {
+		// If a template by that name exists,
+		// don't replace it with an empty template.
+		return false, nil
 	}
-	templateInstance, err := tpl.Clone()
-	if err != nil {
-		panic(err)
-	}
-
-	funcs := make(template.FuncMap)
-	funcs["__"] = fmt.Sprintf // todo translate
-	for k, f := range t.TemplateFunctions.ContextAware {
-		funcs[k] = f(ctx)
-	}
-	templateInstance.Funcs(funcs)
-
-	err = templateInstance.ExecuteTemplate(result, templateName, Fixtype(data))
-	if err != nil {
-		e := err.Error() + "\n"
-		for i, l := range strings.Split(t.Ast.TplCode[templateName], "\n") {
-			e += fmt.Sprintf("%03d: %s\n", i+1, l)
-		}
-		panic(e)
-	}
-
-	return result
-}
-
-func Fixtype(val interface{}) interface{} {
-	tval := reflect.TypeOf(val)
-	if tval == nil {
-		return val
-	}
-	switch tval.Kind() {
-	case reflect.Slice:
-		rval := reflect.ValueOf(val)
-		newval := make([]interface{}, rval.Len())
-		for i := 0; i < rval.Len(); i++ {
-			newval[i] = Fixtype(rval.Index(i).Interface())
-		}
-		val = Array(newval)
-
-	case reflect.Map:
-		rval := reflect.ValueOf(val)
-		newval := make(map[string]interface{})
-		for _, k := range rval.MapKeys() {
-			newval[k.String()] = Fixtype(rval.MapIndex(k).Interface())
-		}
-		val = newval
-
-		//case reflect.Struct:
-		//	newval := make(map[string]interface{})
-		//	rval := reflect.ValueOf(val)
-		//	for i := 0; i < tval.NumField(); i++ {
-		//		if rval.Field(i).CanInterface() {
-		//			n := Fixtype(rval.Field(i).Interface())
-		//			newval[tval.Field(i).Name] = n
-		//		}
-		//	}
-		//
-		//	for i := 0; i < tval.NumMethod(); i++ {
-		//		newval[tval.Method(i).Name] = tval.Method(i).Func.Interface()
-		//	}
-		//
-		//	val = newval
-	}
-	return val
+	t.tmpl[new.name] = new
+	return true, nil
 }

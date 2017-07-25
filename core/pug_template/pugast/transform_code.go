@@ -1,7 +1,9 @@
 package pugast
 
+import "strings"
+
 // Render renders a code block
 func (c *Code) Render(p *PugAst, depth int) (string, bool) {
 	p.rawmode = !c.MustEscape
-	return p.JsExpr(c.Val, true, true), *c.IsInline
+	return strings.Replace(p.JsExpr(c.Val, true, true), "}}{{", "}}\n{{", -1), *c.IsInline
 }

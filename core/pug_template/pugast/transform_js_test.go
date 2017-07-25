@@ -100,7 +100,7 @@ var _ = Describe("JS Expression transpiling", func() {
 			})
 		})
 
-		Context("Transpile Object Literal", func() {
+		Context("Transpile Map Literal", func() {
 			It("Should map objects to __op__map", func() {
 				Expect(p.JsExpr(`{"key": 1, "key2": {"key1": [1+2, 3, 4]}}`, true, false)).To(Equal(`{{(__op__map "key" 1 "key2" (__op__map "key1" (__op__array (__op__add 1 2) 3 4)))}}`))
 				Expect(p.JsExpr(`{"key": 1, "key2": {"key1": [1+2, 3, 4]}}`, false, false)).To(Equal(`(__op__map "key" 1 "key2" (__op__map "key1" (__op__array (__op__add 1 2) 3 4)))`))

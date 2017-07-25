@@ -1,17 +1,94 @@
 package pugast
 
 import (
+	"encoding/json"
 	"fmt"
-	"html/template"
+	"io/ioutil"
 	"log"
+	"path"
 	"strings"
 )
 
+type (
+	// Attr is a simple key-value pair
+	Attr struct {
+		Name       string
+		Val        interface{}
+		MustEscape bool
+	}
+
+	// Fileref is used by include/extends
+	Fileref struct {
+		Type, Path string
+		Line       int
+	}
+
+	// Token defines the basic token read by the tokenizer
+	// Tokens form a tree, where the beginning root node starts the document
+	Token struct {
+		// default
+		Type, Name string
+		Mode, Val  string
+		Line       int
+
+		// subblock
+		Block *Token
+		// subblock childs
+		Nodes []*Token
+
+		// specific information
+		AttributeBlocks []string
+		Attrs           []*Attr
+		MustEscape      bool
+		File            *Fileref
+		Filename        string
+		SelfClosing     bool
+		IsInline        *bool
+		Obj             string
+		Key             string
+
+		// mixin
+		Call bool   // mixin call?
+		Args string // call args
+
+		// if
+		Test                  string // if
+		Consequent, Alternate *Token // if result
+
+		// Interpolated
+		Expr string
+	}
+)
+
+// Parse parses a filename into a Token-tree
+func (p *PugAst) Parse(file string) *Token {
+	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".ast.json")
+
+	if err != nil {
+		fmt.Println(file)
+		panic(err)
+	}
+
+	return p.ParseJSON(bytes, file)
+}
+
+// ParseJSON parses a json into a Token-tree
+func (p *PugAst) ParseJSON(bytes []byte, file string) *Token {
+	token := new(Token)
+
+	err := json.Unmarshal(bytes, token)
+	if err != nil {
+		fmt.Println(file)
+		panic(err)
+	}
+
+	return token
+}
+
 // TokenToTemplate gets named Template from Token
-func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
-	tpl := template.
-		New(name).
-		Funcs(FuncMap).
+func (p *PugAst) TokenToTemplate(name string, t *Token) *Template {
+	tpl := New(name).
+		Funcs(funcmap).
 		Funcs(p.FuncMap).
 		Option("missingkey=error")
 
@@ -21,6 +98,14 @@ func (p *PugAst) TokenToTemplate(name string, t *Token) *template.Template {
 	for _, b := range tr {
 		bla, _ := b.Render(p, 0)
 		tc += bla
+	}
+
+	for _, b := range p.mixinblocks {
+		tc += "\n" + b
+	}
+
+	for _, b := range p.mixin {
+		tc += "\n" + b
 	}
 
 	tpl, err := tpl.Parse(tc)
@@ -140,6 +225,9 @@ func (p *PugAst) buildNode(t *Token) (res Node) {
 		when.Block = Block{Nodes: p.build(t.Block)}
 
 		return when
+
+	case "MixinBlock":
+		return new(MixinBlock)
 
 	default:
 		log.Printf("%#v\n", t)

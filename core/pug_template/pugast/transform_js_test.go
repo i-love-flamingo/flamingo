@@ -3,8 +3,6 @@ package pugast
 import (
 	"testing"
 
-	"html/template"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -144,7 +142,7 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Call Expressions", func() {
 			It("Should transform js-call-syntax to go template call syntax", func() {
-				p.FuncMap = template.FuncMap{"foo": func(int, int) {}}
+				p.FuncMap = FuncMap{"foo": func(int, int) {}}
 				Expect(p.JsExpr(`foo(1+2)`, true, false)).To(Equal(`{{(foo (__op__add 1 2))}}`))
 			})
 		})

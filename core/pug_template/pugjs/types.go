@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -266,7 +267,7 @@ type Number float64
 
 func (n Number) Type() ObjectType    { return NUMBER }
 func (n Number) Field(string) Object { return Nil{} }
-func (n Number) String() string      { return fmt.Sprintf("%.0f", float64(n)) }
+func (n Number) String() string      { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
 
 // Bool
 

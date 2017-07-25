@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 // Render renders the mixin, either it's call or it's definition
-func (m *Mixin) Render(p *PugAst, depth int) (string, bool) {
+func (m *Mixin) Render(p *renderState, depth int) (string, bool) {
 	if m.Call {
 		return m.renderCall(p, depth), false
 	}
@@ -14,7 +14,7 @@ func (m *Mixin) Render(p *PugAst, depth int) (string, bool) {
 	return m.renderDefinition(p, depth), false
 }
 
-func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
+func (m *Mixin) renderDefinition(p *renderState, depth int) string {
 	if p.mixin[string(m.Name)] != "" {
 		return ""
 	}
@@ -27,7 +27,7 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 	for ci, ca := range callargs {
 		ca = strings.TrimSpace(ca)
 		attrpart += fmt.Sprintf(
-			"{{- $%s := tryindex $__args__ %d -}}",
+			"{{- $%s := __tryindex $__args__ %d -}}",
 			ca,
 			ci,
 		)
@@ -36,9 +36,9 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 	subblock, _ := m.Block.Render(p, depth)
 
 	p.mixin[string(m.Name)] = fmt.Sprintf(`{{- define "mixin_%s" -}}
-{{- $attributes := (tryindex . 1) -}}
-{{- $__args__ := (tryindex . 0) -}}
-{{- $block := (tryindex . 2) -}}
+{{- $attributes := (__tryindex . 1) -}}
+{{- $__args__ := (__tryindex . 0) -}}
+{{- $block := (__tryindex . 2) -}}
 %s
 %s%s
 %s
@@ -47,7 +47,7 @@ func (m *Mixin) renderDefinition(p *PugAst, depth int) string {
 	return ""
 }
 
-func (m *Mixin) renderCall(p *PugAst, depth int) string {
+func (m *Mixin) renderCall(p *renderState, depth int) string {
 	attributes := `__op__map `
 	for _, a := range m.Attrs {
 		attributes += ` "` + a.Name + `" ` + p.JsExpr(string(a.Val), false, false)
@@ -67,6 +67,6 @@ func (m *Mixin) renderCall(p *PugAst, depth int) string {
 	return fmt.Sprintf(`{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes)
 }
 
-func (m *MixinBlock) Render(p *PugAst, depth int) (string, bool) {
+func (m *MixinBlock) Render(p *renderState, depth int) (string, bool) {
 	return `{{ template $block }}`, false
 }

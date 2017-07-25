@@ -4,7 +4,7 @@
 
 // This file contains the code to handle template options.
 
-package pugast
+package pugjs
 
 import "strings"
 

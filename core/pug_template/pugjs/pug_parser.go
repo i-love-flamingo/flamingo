@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"encoding/json"
@@ -7,6 +7,8 @@ import (
 	"log"
 	"path"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -61,68 +63,66 @@ type (
 )
 
 // Parse parses a filename into a Token-tree
-func (p *PugAst) Parse(file string) *Token {
+func (p *renderState) Parse(file string) (*Token, error) {
 	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".ast.json")
 
 	if err != nil {
-		fmt.Println(file)
-		panic(err)
+		return nil, errors.Errorf("Cannot read %q", file)
 	}
 
 	return p.ParseJSON(bytes, file)
 }
 
 // ParseJSON parses a json into a Token-tree
-func (p *PugAst) ParseJSON(bytes []byte, file string) *Token {
+func (p *renderState) ParseJSON(bytes []byte, file string) (*Token, error) {
 	token := new(Token)
 
 	err := json.Unmarshal(bytes, token)
 	if err != nil {
-		fmt.Println(file)
-		panic(err)
+		return nil, errors.WithStack(err)
 	}
 
-	return token
+	return token, nil
 }
 
 // TokenToTemplate gets named Template from Token
-func (p *PugAst) TokenToTemplate(name string, t *Token) *Template {
-	tpl := New(name).
+func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, error) {
+	template := New(name).
 		Funcs(funcmap).
 		Funcs(p.FuncMap).
 		Option("missingkey=error")
 
-	tr := p.build(t)
-	tc := ""
+	nodes := p.build(t)
+	templateCode := ""
 
-	for _, b := range tr {
+	for _, b := range nodes {
 		bla, _ := b.Render(p, 0)
-		tc += bla
+		templateCode += bla
 	}
 
 	for _, b := range p.mixinblocks {
-		tc += "\n" + b
+		templateCode += "\n" + b
 	}
 
 	for _, b := range p.mixin {
-		tc += "\n" + b
+		templateCode += "\n" + b
 	}
 
-	tpl, err := tpl.Parse(tc)
-	p.TplCode[name] = tc
+	template, err := template.Parse(templateCode)
+	p.TplCode[name] = templateCode
 
 	if err != nil {
 		e := err.Error() + "\n"
-		for i, l := range strings.Split(tc, "\n") {
+		for i, l := range strings.Split(templateCode, "\n") {
 			e += fmt.Sprintf("%03d: %s\n", i+1, l)
 		}
-		panic(e)
+		return nil, errors.New(e)
 	}
 
-	return tpl
+	return template, nil
 }
 
-func (p *PugAst) build(parent *Token) (res []Node) {
+func (p *renderState) build(parent *Token) (res []Node) {
 	if parent == nil {
 		return
 	}
@@ -135,7 +135,7 @@ func (p *PugAst) build(parent *Token) (res []Node) {
 	return
 }
 
-func (p *PugAst) buildNode(t *Token) (res Node) {
+func (p *renderState) buildNode(t *Token) (res Node) {
 	switch t.Type {
 	case "Tag":
 		tag := new(Tag)
@@ -211,7 +211,6 @@ func (p *PugAst) buildNode(t *Token) (res Node) {
 		return nil
 
 	case "Case":
-		// &pugast.Token{Type:"Case", Name:"", Mode:"", Val:"", Line:64, Block:(*pugast.Token)(0xc420187b80), Nodes:[]*pugast.Token(nil), AttributeBlocks:[]string(nil), Attrs:[]*pugast.Attr(nil), MustEscape:false, File:(*pugast.Fileref)(nil), Filename:"pages/search/view.pug", SelfClosing:false, IsInline:(*bool)(nil), Obj:"", Key:"", Call:false, Args:"", Test:"", Consequent:(*pugast.Token)(nil), Alternate:(*pugast.Token)(nil), Expr:"SearchResult.type"}
 		cas := new(Case)
 		cas.Expr = JavaScriptExpression(t.Expr)
 		cas.Block = Block{Nodes: p.build(t.Block)}
@@ -219,7 +218,6 @@ func (p *PugAst) buildNode(t *Token) (res Node) {
 		return cas
 
 	case "When":
-		// &pugast.Token{Type:"When", Name:"", Mode:"", Val:"", Line:65, Block:(*pugast.Token)(0xc4206bb400), Nodes:[]*pugast.Token(nil), AttributeBlocks:[]string(nil), Attrs:[]*pugast.Attr(nil), MustEscape:false, File:(*pugast.Fileref)(nil), Filename:"pages/search/view.pug", SelfClosing:false, IsInline:(*bool)(nil), Obj:"", Key:"", Call:false, Args:"", Test:"", Consequent:(*pugast.Token)(nil), Alternate:(*pugast.Token)(nil), Expr:"\"product\""}
 		when := new(When)
 		when.Expr = JavaScriptExpression(t.Expr)
 		when.Block = Block{Nodes: p.build(t.Block)}
@@ -231,6 +229,6 @@ func (p *PugAst) buildNode(t *Token) (res Node) {
 
 	default:
 		log.Printf("%#v\n", t)
-		panic(t)
+		panic(errors.Errorf("Cannot parse Pug block %#v", t))
 	}
 }

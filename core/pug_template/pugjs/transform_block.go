@@ -1,9 +1,9 @@
-package pugast
+package pugjs
 
 import "strings"
 
 // Render renders a Block, and intends every sub-block if necessary
-func (b *Block) Render(p *PugAst, depth int) (res string, isinline bool) {
+func (b *Block) Render(p *renderState, depth int) (res string, isinline bool) {
 	prefix := strings.Repeat("    ", depth)
 	isinline = true
 	for _, n := range b.Nodes {

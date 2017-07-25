@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package pugast
+package pugjs
 
 import (
 	"bytes"
-	"flamingo/core/pug_template/pugast/parse"
+	"flamingo/core/pug_template/pugjs/parse"
 	"fmt"
 	"io"
 	"reflect"
@@ -150,7 +150,7 @@ func errRecover(errp *error) {
 	}
 }
 
-// ExecuteTemplate applies the template associated with t that has the given name
+// ExecuteTemplate applies the template associated with e that has the given name
 // to the specified data object and writes the output to wr.
 // If an error occurs executing the template or writing its output,
 // execution stops, but partial results may already have been written to
@@ -263,7 +263,7 @@ func (s *state) walk(dot reflect.Value, node parse.Node) {
 	switch node := node.(type) {
 	case *parse.ActionNode:
 		// Do not pop variables so they persist until next end.
-		// Also, if the action declares variables, don't print the result.
+		// Also, if the action declares variables, don'e print the result.
 		val := s.evalPipeline(dot, node.Pipe)
 		if len(node.Pipe.Decl) == 0 {
 			//log.Println(val, node.Pipe)
@@ -297,7 +297,7 @@ func (s *state) walkIfOrWith(typ parse.NodeType, dot reflect.Value, pipe *parse.
 	val := s.evalPipeline(dot, pipe)
 	truth, ok := isTrue(val)
 	if !ok {
-		s.errorf("if/with can't use %v", val)
+		s.errorf("if/with can'e use %v", val)
 	}
 	if truth {
 		if typ == parse.NodeWith {
@@ -414,7 +414,7 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	case reflect.Invalid:
 		break // An invalid value is likely a nil map, etc. and acts like an empty map.
 	default:
-		s.errorf("range can't iterate over %v", val)
+		s.errorf("range can'e iterate over %v", val)
 	}
 	if r.ElseList != nil {
 		s.walk(dot, r.ElseList)
@@ -472,7 +472,7 @@ func (s *state) evalPipeline(dot reflect.Value, pipe *parse.PipeNode) (value ref
 
 func (s *state) notAFunction(args []parse.Node, final reflect.Value) {
 	if len(args) > 1 || final.IsValid() {
-		s.errorf("can't give argument to non-function %s", args[0])
+		s.errorf("can'e give argument to non-function %s", args[0])
 	}
 }
 
@@ -506,16 +506,16 @@ func (s *state) evalCommand(dot reflect.Value, cmd *parse.CommandNode, final ref
 	case *parse.StringNode:
 		return reflect.ValueOf(word.Text)
 	}
-	s.errorf("can't evaluate command %q", firstWord)
+	s.errorf("can'e evaluate command %q", firstWord)
 	panic("not reached")
 }
 
 // idealConstant is called to return the value of a number in a context where
-// we don't know the type. In that case, the syntax of the number tells us
+// we don'e know the type. In that case, the syntax of the number tells us
 // its type, and we use Go rules to resolve. Note there is no such thing as
 // a uint ideal constant in this situation - the value must be of int type.
 func (s *state) idealConstant(constant *parse.NumberNode) reflect.Value {
-	// These are ideal constants but we don't know the type
+	// These are ideal constants but we don'e know the type
 	// and we have no context.  (If it was a method argument,
 	// we'd know what we need.) The syntax guides us to some extent.
 	s.at(constant)
@@ -689,7 +689,7 @@ func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, 
 			return result
 		}
 	}
-	s.errorf("can't evaluate field %s in type %s", fieldName, typ)
+	s.errorf("can'e evaluate field %s in type %s", fieldName, typ)
 	panic("not reached")
 }
 
@@ -722,7 +722,7 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 	}
 	if !goodFunc(typ) {
 		// TODO: This could still be a confusing error; maybe goodFunc should provide info.
-		s.errorf("can't call method/function %q with %d results", name, typ.NumOut())
+		s.errorf("can'e call method/function %q with %d results", name, typ.NumOut())
 	}
 	// Build the arg list.
 	argv := make([]reflect.Value, numIn)
@@ -863,7 +863,7 @@ func (s *state) evalArg(dot reflect.Value, typ reflect.Type, n parse.Node) refle
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return s.evalUnsignedInteger(typ, n)
 	}
-	s.errorf("can't handle %s for arg of type %s", n, typ)
+	s.errorf("can'e handle %s for arg of type %s", n, typ)
 	panic("not reached")
 }
 
@@ -945,7 +945,7 @@ func (s *state) evalEmptyInterface(dot reflect.Value, n parse.Node) reflect.Valu
 		return s.evalFunction(dot, n, n, nil, zero)
 	case *parse.NilNode:
 		// NilNode is handled in evalArg, the only place that calls here.
-		s.errorf("evalEmptyInterface: nil (can't happen)")
+		s.errorf("evalEmptyInterface: nil (can'e happen)")
 	case *parse.NumberNode:
 		return s.idealConstant(n)
 	case *parse.StringNode:
@@ -955,7 +955,7 @@ func (s *state) evalEmptyInterface(dot reflect.Value, n parse.Node) reflect.Valu
 	case *parse.PipeNode:
 		return s.evalPipeline(dot, n)
 	}
-	s.errorf("can't handle assignment of %s to empty interface argument", n)
+	s.errorf("can'e handle assignment of %s to empty interface argument", n)
 	panic("not reached")
 }
 
@@ -989,7 +989,7 @@ func (s *state) printValue(n parse.Node, v reflect.Value) {
 	s.at(n)
 	iface, ok := printableValue(v)
 	if !ok {
-		s.errorf("can't print %s of type %s", n, v.Type())
+		s.errorf("can'e print %s of type %s", n, v.Type())
 	}
 	if iface == "<no value>" {
 		//log.Println("ERR", n, v)

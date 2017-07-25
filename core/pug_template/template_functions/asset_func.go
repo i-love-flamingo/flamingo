@@ -1,7 +1,7 @@
 package template_functions
 
 import (
-	"flamingo/core/pug_template/pugast"
+	"flamingo/core/pug_template/pugjs"
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 	"html/template"
@@ -11,8 +11,8 @@ import (
 type (
 	// AssetFunc returns the proper URL for the asset, either local or via CDN
 	AssetFunc struct {
-		Router *router.Router            `inject:""`
-		Engine *pugast.PugTemplateEngine `inject:""`
+		Router *router.Router `inject:""`
+		Engine *pugjs.Engine  `inject:""`
 	}
 )
 
@@ -23,7 +23,7 @@ func (af AssetFunc) Name() string {
 
 // Func as implementation of asset method
 func (af *AssetFunc) Func(ctx web.Context) interface{} {
-	return func(asset pugast.String) template.URL {
+	return func(asset pugjs.String) template.URL {
 		// let webpack dev server handle URL's
 		if af.Engine.Webpackserver {
 			return template.URL("/assets/" + asset)

@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 // Render blocks
 // see https://github.com/pugjs/pug-ast-spec/blob/master/parser.md
@@ -9,7 +9,7 @@ type (
 
 	// Node is something renderable
 	Node interface {
-		Render(p *PugAst, depth int) (result string, isinline bool)
+		Render(r *renderState, depth int) (result string, isinline bool)
 	}
 
 	// Blocks

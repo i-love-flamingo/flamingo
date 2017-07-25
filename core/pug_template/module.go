@@ -1,7 +1,7 @@
 package pug_template
 
 import (
-	"flamingo/core/pug_template/pugast"
+	"flamingo/core/pug_template/pugjs"
 	"flamingo/core/pug_template/template_functions"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
@@ -37,10 +37,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	// We bind the Template Engine to the ChildSingleton level (in case there is different config handling
 	// We use the provider to make sure both are always the same injected type
-	injector.Bind(pugast.PugTemplateEngine{}).In(dingo.ChildSingleton)
-	injector.Bind((*template.Engine)(nil)).
-		In(dingo.ChildSingleton).
-		ToProvider(func(t *pugast.PugTemplateEngine, i *dingo.Injector) template.Engine { return (template.Engine)(t) })
+	injector.Bind(pugjs.Engine{}).In(dingo.ChildSingleton).ToProvider(pugjs.NewEngine)
+	injector.Bind((*template.Engine)(nil)).In(dingo.ChildSingleton).ToProvider(
+		func(t *pugjs.Engine, i *dingo.Injector) template.Engine {
+			return (template.Engine)(t)
+		},
+	)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.AssetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.MathLib{})

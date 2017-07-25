@@ -1,5 +1,5 @@
-hash: 5c1e463a16f0754717b706ab49a854ab1e79ed24909015e412407f03f94890b1
-updated: 2017-06-08T10:26:47.456630089+02:00
+hash: 64a654b825de835342a0e69b0f89895e42ca9847e3b142dffb575a2bc75af283
+updated: 2017-07-25T18:41:29.077128302+02:00
 imports:
 - name: github.com/boj/redistore
   version: fc113767cd6b051980f260d6dbe84b2740c46ab0
@@ -24,6 +24,8 @@ imports:
   version: 667fe4e3466a040b780561fe9b51a83a3753eefc
 - name: github.com/gorilla/sessions
   version: ca9ada44574153444b00d3fd9c8559e4cc95f896
+- name: github.com/hashicorp/logutils
+  version: 0dc08b1671f34c4250ce212759ebd880f743d883
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/Jumpscale/go-raml
@@ -39,6 +41,9 @@ imports:
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/pact-foundation/pact-go
   version: bcdf7b222c414fe9af75b4dc9799777faa3c78fc
+  subpackages:
+  - dsl
+  - types
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/pquerna/cachecontrol
@@ -64,6 +69,10 @@ imports:
   version: feeb485667d1fdabe727840fe00adc22431bc86e
   subpackages:
   - context
+  - context/ctxhttp
+  - html
+  - html/atom
+  - html/charset
 - name: golang.org/x/oauth2
   version: 626d87b99350690f6eb2b92c2f717221cdaf6f9a
   subpackages:
@@ -95,7 +104,7 @@ imports:
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/onsi/ginkgo
-  version: 77a8c1e5c40d6bb6c5eb4dd4bdce9763564f6298
+  version: 9eda700730cba42af70d53180f9dcce9266bc2bc
   subpackages:
   - config
   - ginkgo
@@ -116,7 +125,7 @@ testImports:
   - reporters/stenographer/support/go-isatty
   - types
 - name: github.com/onsi/gomega
-  version: 334b8f472b3af5d541c5642701c1e29e2126f486
+  version: c893efa28eb45626cdaa76c9f653b62488858837
   subpackages:
   - format
   - internal/assertion
@@ -129,3 +138,21 @@ testImports:
   - matchers/support/goraph/node
   - matchers/support/goraph/util
   - types
+- name: golang.org/x/text
+  version: 2910a502d2bf9e43193af9d68ca516529614eed3
+  subpackages:
+  - encoding
+  - encoding/charmap
+  - encoding/htmlindex
+  - encoding/internal
+  - encoding/internal/identifier
+  - encoding/japanese
+  - encoding/korean
+  - encoding/simplifiedchinese
+  - encoding/traditionalchinese
+  - encoding/unicode
+  - internal/tag
+  - internal/utf8internal
+  - language
+  - runes
+  - transform

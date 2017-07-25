@@ -24,9 +24,13 @@ var _ RenderAware = &FlamingoRenderAware{}
 
 // Render returns a web.ContentResponse with status 200 and ContentType text/html
 func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data interface{}) web.Response {
+	body, err := r.Engine.Render(context, tpl, data)
+	if err != nil {
+		panic(err)
+	}
 	return &web.ContentResponse{
 		Status:      http.StatusOK,
-		Body:        r.Engine.Render(context, tpl, data),
+		Body:        body,
 		ContentType: "text/html; charset=utf-8",
 	}
 }

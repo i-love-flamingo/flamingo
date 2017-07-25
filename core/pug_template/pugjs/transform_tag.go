@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 // args returns formatted keys and value string for given attributes from AST
-func (t *Tag) args(p *PugAst, attrs []Attribute, andattributes bool) string {
+func (t *Tag) args(p *renderState, attrs []Attribute, andattributes bool) string {
 	if len(attrs) == 0 {
 		return ""
 	}
@@ -49,7 +49,7 @@ func (t *Tag) args(p *PugAst, attrs []Attribute, andattributes bool) string {
 }
 
 // Render a tag
-func (t *Tag) Render(p *PugAst, depth int) (res string, isinline bool) {
+func (t *Tag) Render(p *renderState, depth int) (res string, isinline bool) {
 	isinline = *t.IsInline
 	prefix := strings.Repeat("    ", depth)
 

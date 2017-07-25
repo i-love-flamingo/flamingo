@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"encoding/json"
@@ -19,16 +19,12 @@ var funcmap = FuncMap{
 	"__op__mul":   runtimeMul,
 	"__op__quo":   runtimeQuo,
 	"__op__slash": runtimeQuo,
-	"__op__rem":   runtimeRem,
 	"__op__mod":   runtimeRem,
-	"__op__minus": runtimeMinus,
-	"__op__plus":  runtimePlus,
 	"__op__eql":   runtimeEql,
 	"__op__gtr":   runtimeGtr,
 	"__op__lss":   runtimeLss,
 	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
-
-	"tryindex": func(obj, key interface{}) interface{} {
+	"__tryindex": func(obj, key interface{}) interface{} {
 		//log.Println(obj, key)
 		arr, ok := obj.(*Array)
 		idx, ok2 := key.(int)
@@ -50,13 +46,10 @@ var funcmap = FuncMap{
 		}
 		return nil
 	},
-
 	"json":      runtimeJSON,
 	"unescaped": runtimeUnescaped,
-
-	"null": func() interface{} { return nil },
-
-	"_Range": func(args ...int) Object {
+	"null":      func() interface{} { return Nil{} },
+	"__Range": func(args ...int) Object {
 		var res []int
 		var m, o int
 		if len(args) == 1 {
@@ -72,30 +65,11 @@ var funcmap = FuncMap{
 		}
 		return convert(res)
 	},
-
-	"raw":     func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
-	"tagopen": func(t, p string) template.HTML { return template.HTML(`<` + p + t) },
+	"raw": func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
 	"s": func(l ...interface{}) string {
 		var res string
 		for _, s := range l {
-			if s != nil {
-				res += convert(s).String()
-			}
-			//vs := reflect.ValueOf(s)
-			//switch vs.Kind() {
-			//case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-			//	{
-			//		res += fmt.Sprintf("%d", vs.Int())
-			//	}
-			//case reflect.Float32, reflect.Float64:
-			//	{
-			//		res += fmt.Sprintf("%f", vs.Float())
-			//	}
-			//case reflect.String:
-			//	{
-			//		res += vs.String()
-			//	}
-			//}
+			res += convert(s).String()
 		}
 		if len(res) > 1 {
 			return " " + strings.TrimSpace(res)
@@ -104,21 +78,7 @@ var funcmap = FuncMap{
 	},
 	"sc": func(l ...interface{}) (res template.CSS) {
 		for _, s := range l {
-			vs := reflect.ValueOf(s)
-			switch vs.Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-				{
-					res += template.CSS(fmt.Sprintf("%d", vs.Int()))
-				}
-			case reflect.Float32, reflect.Float64:
-				{
-					res += template.CSS(fmt.Sprintf("%f", vs.Float()))
-				}
-			case reflect.String:
-				{
-					res += template.CSS(vs.String())
-				}
-			}
+			res += template.CSS(convert(s).String())
 		}
 		return
 	},
@@ -131,25 +91,6 @@ var funcmap = FuncMap{
 		}
 		return convert(m)
 	},
-	"attr": func(attr, prefix interface{}) string {
-		if attr == nil {
-			return ""
-		}
-		t := strings.Split(attr.(string), " ")
-		for k, v := range t {
-			t[k] = prefix.(string) + "-" + v
-		}
-		return strings.Join(t, " ")
-	},
-	"extend": func(deep bool, m map[interface{}]interface{}, on ...map[interface{}]interface{}) map[interface{}]interface{} {
-		for _, o := range on {
-			for k, v := range o {
-				m[k] = v
-			}
-		}
-		return m
-	},
-
 	"__add_andattributes": func(attrs Object, k ...string) template.HTMLAttr {
 		known := make(map[string]bool)
 		for _, k := range k {
@@ -299,30 +240,6 @@ func runtimeRem(x, y interface{}) interface{} {
 				return int(vx.Int() % vy.Int())
 			}
 		}
-	}
-
-	return "<nil>"
-}
-
-func runtimeMinus(x interface{}) interface{} {
-	vx := reflect.ValueOf(x)
-	switch vx.Kind() {
-	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-		return -vx.Int()
-	case reflect.Float32, reflect.Float64:
-		return -vx.Float()
-	}
-
-	return "<nil>"
-}
-
-func runtimePlus(x interface{}) interface{} {
-	vx := reflect.ValueOf(x)
-	switch vx.Kind() {
-	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
-		return int(+vx.Int())
-	case reflect.Float32, reflect.Float64:
-		return +vx.Float()
 	}
 
 	return "<nil>"

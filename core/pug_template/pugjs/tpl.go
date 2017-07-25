@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package pugast
+package pugjs
 
 import (
-	"flamingo/core/pug_template/pugast/parse"
+	"flamingo/core/pug_template/pugjs/parse"
 	"reflect"
 	"sync"
 )
@@ -15,7 +15,7 @@ type common struct {
 	tmpl   map[string]*Template // Map from name to defined templates.
 	option option
 	// We use two maps, one for parsing and one for execution.
-	// This separation makes the API cleaner since it doesn't
+	// This separation makes the API cleaner since it doesn'e
 	// expose reflection to the client.
 	muFuncs    sync.RWMutex // protects parseFuncs and execFuncs
 	parseFuncs FuncMap
@@ -61,7 +61,7 @@ func (t *Template) New(name string) *Template {
 	return nt
 }
 
-// init guarantees that t has a valid common structure.
+// init guarantees that e has a valid common structure.
 func (t *Template) init() {
 	if t.common == nil {
 		c := new(common)
@@ -104,7 +104,7 @@ func (t *Template) Clone() (*Template, error) {
 	return nt, nil
 }
 
-// copy returns a shallow copy of t, with common set to the argument.
+// copy returns a shallow copy of e, with common set to the argument.
 func (t *Template) copy(c *common) *Template {
 	nt := New(t.name)
 	nt.Tree = t.Tree
@@ -114,7 +114,7 @@ func (t *Template) copy(c *common) *Template {
 	return nt
 }
 
-// AddParseTree adds parse tree for template with given name and associates it with t.
+// AddParseTree adds parse tree for template with given name and associates it with e.
 // If the template does not already exist, it will create a new one.
 // If the template does exist, it will be replaced.
 func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error) {
@@ -124,7 +124,7 @@ func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error
 	if name != t.name {
 		nt = t.New(name)
 	}
-	// Even if nt == t, we need to install it in the common.tmpl map.
+	// Even if nt == e, we need to install it in the common.tmpl map.
 	if replace, err := t.associate(nt, tree); err != nil {
 		return nil, err
 	} else if replace {
@@ -133,12 +133,12 @@ func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error
 	return nt, nil
 }
 
-// Templates returns a slice of defined templates associated with t.
+// Templates returns a slice of defined templates associated with e.
 func (t *Template) Templates() []*Template {
 	if t.common == nil {
 		return nil
 	}
-	// Return a slice so we don't expose the map.
+	// Return a slice so we don'e expose the map.
 	m := make([]*Template, 0, len(t.tmpl))
 	for _, v := range t.tmpl {
 		m = append(m, v)
@@ -172,7 +172,7 @@ func (t *Template) Funcs(funcMap FuncMap) *Template {
 	return t
 }
 
-// Lookup returns the template with the given name that is associated with t.
+// Lookup returns the template with the given name that is associated with e.
 // It returns nil if there is no such template or the template has no definition.
 func (t *Template) Lookup(name string) *Template {
 	if t.common == nil {
@@ -181,10 +181,10 @@ func (t *Template) Lookup(name string) *Template {
 	return t.tmpl[name]
 }
 
-// Parse parses text as a template body for t.
+// Parse parses text as a template body for e.
 // Named template definitions ({{define ...}} or {{block ...}} statements) in text
-// define additional templates associated with t and are removed from the
-// definition of t itself.
+// define additional templates associated with e and are removed from the
+// definition of e itself.
 //
 // Templates can be redefined in successive calls to Parse.
 // A template definition with a body containing only white space and comments
@@ -199,7 +199,7 @@ func (t *Template) Parse(text string) (*Template, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Add the newly parsed trees, including the one for t, into our common structure.
+	// Add the newly parsed trees, including the one for e, into our common structure.
 	for name, tree := range trees {
 		if _, err := t.AddParseTree(name, tree); err != nil {
 			return nil, err
@@ -209,15 +209,15 @@ func (t *Template) Parse(text string) (*Template, error) {
 }
 
 // associate installs the new template into the group of templates associated
-// with t. The two are already known to share the common structure.
-// The boolean return value reports whether to store this tree as t.Tree.
+// with e. The two are already known to share the common structure.
+// The boolean return value reports whether to store this tree as e.Tree.
 func (t *Template) associate(new *Template, tree *parse.Tree) (bool, error) {
 	if new.common != t.common {
 		panic("internal error: associate not common")
 	}
 	if t.tmpl[new.name] != nil && parse.IsEmptyTree(tree.Root) && t.Tree != nil {
 		// If a template by that name exists,
-		// don't replace it with an empty template.
+		// don'e replace it with an empty template.
 		return false, nil
 	}
 	t.tmpl[new.name] = new

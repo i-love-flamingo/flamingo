@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"encoding/json"
@@ -76,13 +76,12 @@ func convert(in interface{}) Object {
 		newval := make(map[string]interface{})
 		for i := 0; i < val.NumField(); i++ {
 			if val.Field(i).CanInterface() {
-				n := Fixtype(val.Field(i).Interface())
-				newval[val.Type().Field(i).Name] = n
+				newval[val.Type().Field(i).Name] = convert(val.Field(i))
 			}
 		}
 
 		for i := 0; i < val.NumMethod(); i++ {
-			newval[val.Type().Method(i).Name] = convert(val.Type().Method(i).Func.Interface())
+			newval[val.Type().Method(i).Name] = convert(val.Type().Method(i).Func)
 		}
 
 		return convert(newval)

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package pugast
+package pugjs
 
 import (
 	"bytes"
@@ -72,7 +72,7 @@ func addValueFuncs(out map[string]reflect.Value, in FuncMap) {
 			panic("value for " + name + " not a function")
 		}
 		if !goodFunc(v.Type()) {
-			panic(fmt.Errorf("can't install method/function %q with %d results", name, v.Type().NumOut()))
+			panic(fmt.Errorf("can'e install method/function %q with %d results", name, v.Type().NumOut()))
 		}
 		out[name] = v
 	}
@@ -215,7 +215,7 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 			// the loop holds invariant: v.IsValid()
 			panic("unreachable")
 		default:
-			return reflect.Value{}, fmt.Errorf("can't index item of type %s", v.Type())
+			return reflect.Value{}, fmt.Errorf("can'e index item of type %s", v.Type())
 		}
 	}
 	return v, nil

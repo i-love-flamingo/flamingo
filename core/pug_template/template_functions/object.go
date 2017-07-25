@@ -1,6 +1,6 @@
 package template_functions
 
-import "flamingo/core/pug_template/pugast"
+import "flamingo/core/pug_template/pugjs"
 
 type (
 	ObjectLib struct{}
@@ -21,7 +21,7 @@ func (ol ObjectLib) Func() interface{} {
 
 func (o Object) NoConvert() {}
 
-func (o Object) Assign(target *pugast.Map, sources ...*pugast.Map) pugast.Object {
+func (o Object) Assign(target *pugjs.Map, sources ...*pugjs.Map) pugjs.Object {
 	for _, source := range sources {
 		if source != nil {
 			for k, v := range source.Items {

@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"fmt"
@@ -68,7 +68,7 @@ func FuncToStatements(expr string) []ast.Statement {
 }
 
 // JsExpr transforms a javascript expression to go code
-func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
+func (p *renderState) JsExpr(expr string, wrap, rawcode bool) string {
 	var finalexpr string
 	var stmtlist []ast.Statement
 
@@ -82,7 +82,7 @@ func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
 	}
 
 	for _, stmt := range stmtlist {
-		finalexpr += p.renderStatement(stmt, wrap, true)
+		finalexpr += p.astment(stmt, wrap, true)
 	}
 
 	return finalexpr
@@ -90,7 +90,7 @@ func (p *PugAst) JsExpr(expr string, wrap, rawcode bool) string {
 
 // interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blah`
 // we use a helper function called `s` to merge them later
-func (p *PugAst) interpolate(input string) string {
+func (p *renderState) interpolate(input string) string {
 	index := 1
 	start := 0
 
@@ -113,7 +113,7 @@ func (p *PugAst) interpolate(input string) string {
 	return input
 }
 
-func (p *PugAst) renderStatement(stmt ast.Statement, wrap bool, dot bool) string {
+func (p *renderState) astment(stmt ast.Statement, wrap bool, dot bool) string {
 	var finalexpr string
 
 	if stmt == nil {
@@ -137,8 +137,8 @@ func (p *PugAst) renderStatement(stmt ast.Statement, wrap bool, dot bool) string
 
 	case *ast.IfStatement:
 		finalexpr = `{{if ` + p.renderExpression(expr.Test, false, true) + `}}`
-		finalexpr += p.renderStatement(expr.Consequent, true, true)
-		elsebranch := p.renderStatement(expr.Alternate, true, true)
+		finalexpr += p.astment(expr.Consequent, true, true)
+		elsebranch := p.astment(expr.Alternate, true, true)
 		if elsebranch != "" && elsebranch != "{{null}}" {
 			finalexpr += `{{else}}`
 			finalexpr += elsebranch
@@ -148,7 +148,7 @@ func (p *PugAst) renderStatement(stmt ast.Statement, wrap bool, dot bool) string
 	case *ast.ThrowStatement:
 		finalexpr += p.renderExpression(expr.Argument, wrap, true)
 
-		// we cannot deal with other expressions at the moment, and we don't expect them ayway
+		// we cannot deal with other expressions at the moment, and we don'e expect them ayway
 	default:
 		fmt.Printf("%#v\n", stmt)
 		panic("unknown expression")
@@ -158,7 +158,7 @@ func (p *PugAst) renderStatement(stmt ast.Statement, wrap bool, dot bool) string
 }
 
 // renderExpression renders the javascript expression into go template
-func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) string {
+func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	if expr == nil {
 		return ""
 	}
@@ -171,11 +171,11 @@ func (p *PugAst) renderExpression(expr ast.Expression, wrap bool, dot bool) stri
 		if _, known := p.FuncMap[expr.Name]; dot && !known {
 			result += `$`
 		} else if dot && !known {
-			panic("ain't no dot allowed")
+			panic("ain'e no dot allowed")
 			result += `.`
 		}
 		if expr.Name == "range" {
-			expr.Name = "_Range"
+			expr.Name = "__Range"
 		}
 		result += expr.Name
 		if wrap {

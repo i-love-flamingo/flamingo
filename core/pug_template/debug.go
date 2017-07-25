@@ -2,7 +2,7 @@ package pug_template
 
 import (
 	"bytes"
-	"flamingo/core/pug_template/pugast"
+	"flamingo/core/pug_template/pugjs"
 	"flamingo/framework/web"
 	"fmt"
 	"html/template"
@@ -13,7 +13,7 @@ import (
 type (
 	// DebugController shows the intermediate go-template compiled from pug AST
 	DebugController struct {
-		Engine *pugast.PugTemplateEngine `inject:""`
+		Engine *pugjs.Engine `inject:""`
 	}
 )
 
@@ -36,7 +36,7 @@ const debugTemplate = `<!doctype html>
 func (dc *DebugController) Get(ctx web.Context) web.Response {
 	dc.Engine.LoadTemplates(ctx.MustQuery1("tpl"))
 
-	tpl, ok := dc.Engine.Ast.TplCode[ctx.MustQuery1("tpl")]
+	tpl, ok := dc.Engine.RenderState.TplCode[ctx.MustQuery1("tpl")]
 	if !ok {
 		panic("tpl not found")
 	}

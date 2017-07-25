@@ -1,0 +1,198 @@
+package pugjs
+
+import (
+	"bytes"
+	"encoding/json"
+	"flamingo/framework/template"
+	"flamingo/framework/web"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/pkg/errors"
+)
+
+type (
+	// RenderState holds information about the pug abstract syntax tree
+	renderState struct {
+		Path         string
+		TplCode      map[string]string
+		mixin        map[string]string
+		mixincounter int
+		mixinblocks  []string
+		mixinblock   string
+		FuncMap      FuncMap
+		rawmode      bool
+		Doctype      string
+	}
+
+	// Engine is the one and only javascript template engine for go ;)
+	Engine struct {
+		*sync.Mutex
+		Basedir                   string `inject:"config:pug_template.basedir"`
+		Debug                     bool   `inject:"config:debug.mode"`
+		Assetrewrites             map[string]string
+		templates                 map[string]*Template
+		Webpackserver             bool
+		RenderState               *renderState
+		TemplateFunctions         *template.FunctionRegistry
+		TemplateFunctionsProvider func() *template.FunctionRegistry `inject:""`
+	}
+)
+
+func NewEngine() *Engine {
+	return &Engine{
+		Mutex: new(sync.Mutex),
+	}
+}
+
+func (e *Engine) LoadTemplates(filtername string) error {
+	start := time.Now()
+
+	e.Lock()
+	defer e.Unlock()
+
+	manifest, err := ioutil.ReadFile(path.Join(e.Basedir, "manifest.json"))
+	if err != nil {
+		return err
+	}
+	json.Unmarshal(manifest, &e.Assetrewrites)
+
+	e.RenderState = &renderState{
+		Path:    path.Join(e.Basedir, "template", "page"),
+		TplCode: make(map[string]string),
+		mixin:   make(map[string]string),
+	}
+
+	e.TemplateFunctions = e.TemplateFunctionsProvider()
+	e.RenderState.FuncMap = FuncMap(e.TemplateFunctions.Populate())
+
+	e.templates, err = compileDir(e.RenderState, path.Join(e.Basedir, "template", "page"), "", filtername)
+	if err != nil {
+		return err
+	}
+
+	if _, err := http.Get("http://localhost:1337/assets/js/vendor.js"); err == nil {
+		e.Webpackserver = true
+	} else {
+		e.Webpackserver = false
+	}
+
+	log.Println("Compiled templates in", time.Since(start))
+	return nil
+}
+
+// compileDir returns a map of defined templates in directory dirname
+func compileDir(renderState *renderState, root, dirname, filtername string) (map[string]*Template, error) {
+	result := make(map[string]*Template)
+
+	dir, err := os.Open(path.Join(root, dirname))
+	if err != nil {
+		return nil, err
+	}
+
+	filenames, err := dir.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, filename := range filenames {
+		if filename.IsDir() {
+			tpls, err := compileDir(renderState, root, path.Join(dirname, filename.Name()), filtername)
+			if err != nil {
+				return nil, err
+			}
+			for k, v := range tpls {
+				if result[k] == nil {
+					result[k] = v
+				}
+			}
+		} else {
+			if strings.HasSuffix(filename.Name(), ".ast.json") {
+				name := path.Join(dirname, filename.Name())
+				name = name[:len(name)-len(".ast.json")]
+
+				if filtername != "" && !strings.HasPrefix(name, filtername) {
+					continue
+				}
+
+				renderState.mixin = make(map[string]string)
+				token, err := renderState.Parse(name)
+				if err != nil {
+					return nil, err
+				}
+				result[name], err = renderState.TokenToTemplate(name, token)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Render via html/pug_template
+func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) (io.Reader, error) {
+	defer ctx.Profile("render", templateName)()
+
+	p := strings.Split(templateName, "/")
+	for i, v := range p {
+		p[i] = strings.Title(v)
+	}
+	ctx.WithValue("page.template", "page"+strings.Join(p, ""))
+
+	// recompile
+	if e.templates == nil {
+		var finish = ctx.Profile("loadTemplates", "-all-")
+		if err := e.LoadTemplates(""); err != nil {
+			finish()
+			return nil, err
+		}
+		finish()
+	} else if e.Debug {
+		var finish = ctx.Profile("debugReloadTemplates", templateName)
+		if err := e.LoadTemplates(templateName); err != nil {
+			finish()
+			return nil, err
+		}
+		finish()
+	}
+
+	result := new(bytes.Buffer)
+
+	tpl, ok := e.templates[templateName]
+	if !ok {
+		return nil, errors.Errorf(`Template %s not found!`, templateName)
+	}
+
+	templateInstance, err := tpl.Clone()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	funcs := make(FuncMap)
+	funcs["__"] = fmt.Sprintf // todo translate
+	for k, f := range e.TemplateFunctions.ContextAware {
+		funcs[k] = f(ctx)
+	}
+	templateInstance.Funcs(funcs)
+
+	err = templateInstance.ExecuteTemplate(result, templateName, convert(data))
+	if err != nil {
+		errstr := err.Error() + "\n"
+		for i, l := range strings.Split(e.RenderState.TplCode[templateName], "\n") {
+			errstr += fmt.Sprintf("%03d: %s\n", i+1, l)
+		}
+		return nil, errors.New(errstr)
+	}
+
+	return result, nil
+}

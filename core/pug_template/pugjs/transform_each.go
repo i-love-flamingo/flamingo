@@ -1,9 +1,9 @@
-package pugast
+package pugjs
 
 import "fmt"
 
 // Render renders the loop, with obj or key+obj index
-func (e *Each) Render(p *PugAst, depth int) (string, bool) {
+func (e *Each) Render(p *renderState, depth int) (string, bool) {
 	buf := ""
 
 	if e.Key != "" {

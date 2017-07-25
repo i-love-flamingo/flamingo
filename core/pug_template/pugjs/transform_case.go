@@ -1,11 +1,11 @@
-package pugast
+package pugjs
 
 import "fmt"
 
 const defaul = "default"
 
 // Render a case node
-func (c *Case) Render(p *PugAst, depth int) (string, bool) {
+func (c *Case) Render(p *renderState, depth int) (string, bool) {
 
 	buf := `{{if false}}`
 
@@ -33,6 +33,6 @@ func (c *Case) Render(p *PugAst, depth int) (string, bool) {
 }
 
 // Render a when node
-func (w *When) Render(p *PugAst, depth int) (string, bool) {
+func (w *When) Render(p *renderState, depth int) (string, bool) {
 	return w.Block.Render(p, depth)
 }

@@ -18,6 +18,8 @@ import (
 
 	"path/filepath"
 
+	"fmt"
+
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 )
@@ -139,6 +141,29 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 	return resultURL
 }
 
+func (router *Router) _recover(ctx web.Context, rw http.ResponseWriter, err interface{}) {
+	defer func() {
+		if err := recover(); err != nil {
+			// bad bad recover
+			rw.WriteHeader(http.StatusInternalServerError)
+			if err, ok := err.(error); ok {
+				fmt.Fprintf(rw, "%+v", errors.WithStack(err))
+				return
+			}
+			fmt.Fprintf(rw, "%+v", errors.Errorf("%+v", err))
+		}
+	}()
+
+	if e, ok := err.(error); ok {
+		log.Printf("%+v", errors.WithStack(e))
+		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
+	} else if err, ok := err.(string); ok {
+		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
+	} else {
+		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
+	}
+}
+
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 // TODO simplify and merge with `handle`
 func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -165,18 +190,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// catch errors
 	defer func() {
 		if err := recover(); err != nil {
-			if e, ok := err.(error); ok {
-				type st interface {
-					StackTrace() errors.StackTrace
-				}
-				log.Printf("%#v", errors.WithStack(e))
-				log.Printf("%+v", errors.WithStack(e).(st).StackTrace())
-				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
-			} else if err, ok := err.(string); ok {
-				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
-			} else {
-				router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
-			}
+			router._recover(ctx, rw, err)
 		}
 		// fire finish event
 		router.eventrouter.Dispatch(&OnFinishEvent{rw, req, err, ctx})

@@ -1,4 +1,4 @@
-package pugast
+package pugjs
 
 import (
 	"testing"

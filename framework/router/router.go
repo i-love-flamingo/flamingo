@@ -16,6 +16,8 @@ import (
 	"strconv"
 	"strings"
 
+	"path/filepath"
+
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 )
@@ -274,13 +276,41 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		}
 	} else { // mock...
 		defer ctx.Profile("fallback", handler)()
-		data, err := ioutil.ReadFile("frontend/src/mock/" + handler + ".mock.json")
-		if err == nil {
-			var res interface{}
-			json.Unmarshal(data, &res)
-			return res
+
+		if data, err := trymock(handler, "component/*"); err == nil {
+			return data
 		}
-		panic(err)
+		if data, err := trymock(handler, "component/**"); err == nil {
+			return data
+		}
+		if data, err := trymock(handler, "page/*"); err == nil {
+			return data
+		}
+		if data, err := trymock(handler, "page/**"); err == nil {
+			return data
+		}
+		if data, err := trymock(handler, "mock"); err == nil {
+			return data
+		}
 	}
 	panic("not a data controller")
+}
+
+func trymock(name, part string) (interface{}, error) {
+	matches, err := filepath.Glob("frontend/src/" + part + "/" + name + ".mock.json")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, m := range matches {
+		b, e := ioutil.ReadFile(m)
+		if e != nil {
+			return nil, e
+		}
+		var res interface{}
+		json.Unmarshal(b, &res)
+		return res, nil
+	}
+
+	return nil, errors.New("not found")
 }

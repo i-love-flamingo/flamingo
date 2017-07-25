@@ -79,7 +79,7 @@ var funcmap = FuncMap{
 		var res string
 		for _, s := range l {
 			if s != nil {
-				res += fmt.Sprint(s)
+				res += convert(s).String()
 			}
 			//vs := reflect.ValueOf(s)
 			//switch vs.Kind() {
@@ -150,15 +150,17 @@ var funcmap = FuncMap{
 		return m
 	},
 
-	"__add_andattributes": func(attrs *Map, k ...string) template.HTMLAttr {
+	"__add_andattributes": func(attrs Object, k ...string) template.HTMLAttr {
 		known := make(map[string]bool)
 		for _, k := range k {
 			known[k] = true
 		}
 		res := ""
-		for k, v := range attrs.Items {
-			if !known[k.String()] {
-				res += ` ` + k.String() + `="` + strings.TrimSpace(v.String()) + `"`
+		if attrs, ok := attrs.(*Map); ok && attrs.Items != nil {
+			for k, v := range attrs.Items {
+				if !known[k.String()] {
+					res += ` ` + k.String() + `="` + strings.TrimSpace(v.String()) + `"`
+				}
 			}
 		}
 		return template.HTMLAttr(strings.TrimSpace(res))

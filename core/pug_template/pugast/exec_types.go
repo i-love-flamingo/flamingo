@@ -41,6 +41,10 @@ func convert(in interface{}) Object {
 		val = reflect.ValueOf(in)
 	}
 
+	if in, ok := val.Interface().(Object); ok {
+		return in
+	}
+
 	if !val.IsValid() {
 		return Nil{}
 	}
@@ -123,7 +127,7 @@ type Func struct {
 
 func (f *Func) Type() ObjectType         { return FUNC }
 func (f *Func) Field(name string) Object { return Nil{} }
-func (f *Func) String() string           { return fmt.Sprintf("%v", f.fnc) }
+func (f *Func) String() string           { return fmt.Sprintf("%s", reflect.ValueOf(f.fnc)) }
 
 // Array
 
@@ -193,8 +197,14 @@ type Map struct {
 
 func (m *Map) Type() ObjectType { return MAP }
 func (m *Map) String() string {
+	if m == nil {
+		return ""
+	}
 	b, err := m.MarshalJSON()
-	return err.Error() + string(b)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 func (m *Map) Field(field string) Object {
 	if field == "__assign" {

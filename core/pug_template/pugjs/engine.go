@@ -53,6 +53,13 @@ func NewEngine() *Engine {
 	}
 }
 
+func newRenderState(path string) *renderState {
+	return &renderState{
+		path:  path,
+		mixin: make(map[string]string),
+	}
+}
+
 func (e *Engine) LoadTemplates(filtername string) error {
 	start := time.Now()
 
@@ -115,11 +122,8 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 					continue
 				}
 
-				renderState := &renderState{
-					path:  path.Join(e.Basedir, "template", "page"),
-					mixin: make(map[string]string),
-					funcs: FuncMap(e.TemplateFunctions.Populate()),
-				}
+				renderState := newRenderState(path.Join(e.Basedir, "template", "page"))
+				renderState.funcs = FuncMap(e.TemplateFunctions.Populate())
 				token, err := renderState.Parse(name)
 				if err != nil {
 					return nil, err

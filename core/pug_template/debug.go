@@ -36,7 +36,7 @@ const debugTemplate = `<!doctype html>
 func (dc *DebugController) Get(ctx web.Context) web.Response {
 	dc.Engine.LoadTemplates(ctx.MustQuery1("tpl"))
 
-	tpl, ok := dc.Engine.RenderState.TplCode[ctx.MustQuery1("tpl")]
+	tpl, ok := dc.Engine.TemplateCode[ctx.MustQuery1("tpl")]
 	if !ok {
 		panic("tpl not found")
 	}

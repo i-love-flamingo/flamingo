@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"bytes"
+
 	"github.com/pkg/errors"
 )
 
@@ -64,7 +66,7 @@ type (
 
 // Parse parses a filename into a Token-tree
 func (p *renderState) Parse(file string) (*Token, error) {
-	bytes, err := ioutil.ReadFile(path.Join(p.Path, file) + ".ast.json")
+	bytes, err := ioutil.ReadFile(path.Join(p.path, file) + ".ast.json")
 
 	if err != nil {
 		return nil, errors.Errorf("Cannot read %q", file)
@@ -86,40 +88,38 @@ func (p *renderState) ParseJSON(bytes []byte, file string) (*Token, error) {
 }
 
 // TokenToTemplate gets named Template from Token
-func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, error) {
+func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string, error) {
 	template := New(name).
 		Funcs(funcmap).
-		Funcs(p.FuncMap).
+		Funcs(p.funcs).
 		Option("missingkey=error")
 
 	nodes := p.build(t)
-	templateCode := ""
+	wr := new(bytes.Buffer)
 
 	for _, b := range nodes {
-		bla, _ := b.Render(p, 0)
-		templateCode += bla
+		b.Render(p, wr, 0)
 	}
 
 	for _, b := range p.mixinblocks {
-		templateCode += "\n" + b
+		wr.WriteString("\n" + b)
 	}
 
 	for _, b := range p.mixin {
-		templateCode += "\n" + b
+		wr.WriteString("\n" + b)
 	}
 
-	template, err := template.Parse(templateCode)
-	p.TplCode[name] = templateCode
+	template, err := template.Parse(wr.String())
 
 	if err != nil {
 		e := err.Error() + "\n"
-		for i, l := range strings.Split(templateCode, "\n") {
+		for i, l := range strings.Split(wr.String(), "\n") {
 			e += fmt.Sprintf("%03d: %s\n", i+1, l)
 		}
-		return nil, errors.New(e)
+		return nil, "", errors.New(e)
 	}
 
-	return template, nil
+	return template, wr.String(), nil
 }
 
 func (p *renderState) build(parent *Token) (res []Node) {

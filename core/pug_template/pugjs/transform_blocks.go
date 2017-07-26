@@ -1,5 +1,7 @@
 package pugjs
 
+import "bytes"
+
 // Render blocks
 // see https://github.com/pugjs/pug-ast-spec/blob/master/parser.md
 // Not complete, and some minor things have been stripped
@@ -9,7 +11,8 @@ type (
 
 	// Node is something renderable
 	Node interface {
-		Render(r *renderState, depth int) (result string, isinline bool)
+		Render(r *renderState, wr *bytes.Buffer, depth int) error
+		Inline() bool
 	}
 
 	// Blocks
@@ -171,3 +174,36 @@ type (
 		ExpressionNode
 	}
 )
+
+func (b *Block) Inline() bool {
+	for _, n := range b.Nodes {
+		if !n.Inline() {
+			return false
+		}
+	}
+	return true
+}
+
+func (b *BlockNode) Inline() bool {
+	return b.Block.Inline()
+}
+
+func (c *CommonTag) Inline() bool {
+	return *c.IsInline
+}
+
+func (c *Code) Inline() bool {
+	return *c.IsInline
+}
+
+func (v *ValueNode) Inline() bool {
+	return true
+}
+
+func (p *PlaceholderNode) Inline() bool {
+	return true
+}
+
+func (c *Conditional) Inline() bool {
+	return true
+}

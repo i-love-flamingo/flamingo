@@ -1,38 +1,41 @@
 package pugjs
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
-const defaul = "default"
+const casedefault = "default"
 
 // Render a case node
-func (c *Case) Render(p *renderState, depth int) (string, bool) {
-
-	buf := `{{if false}}`
-
-	var els *When
+func (c *Case) Render(s *renderState, wr *bytes.Buffer, depth int) error {
+	var doElse string
+	var elseBranch *When
 
 	for _, node := range c.Block.Nodes {
-		if node.(*When).Expr == defaul {
-			els = node.(*When)
+		if node.(*When).Expr == casedefault {
+			elseBranch = node.(*When)
 		} else {
-			buf += fmt.Sprintf(`{{else if __op__eql %s %s}}`, p.JsExpr(string(c.Expr), false, false), p.JsExpr(string(node.(*When).Expr), false, false))
-			b, _ := node.Render(p, depth+1)
-			buf += b
+			fmt.Fprintf(wr, `{{- %sif __op__eql %s %s }}`, doElse, s.JsExpr(string(c.Expr), false, false), s.JsExpr(string(node.(*When).Expr), false, false))
+			doElse = "else "
+			if err := node.Render(s, wr, depth); err != nil {
+				return err
+			}
 		}
 	}
 
-	if els != nil {
-		buf += `{{else}}`
-		b, _ := els.Render(p, depth+1)
-		buf += b
+	if elseBranch != nil {
+		wr.WriteString(`{{- else }}`)
+		if err := elseBranch.Render(s, wr, depth); err != nil {
+			return err
+		}
 	}
+	wr.WriteString(`{{- end }}`)
 
-	buf += `{{end}}`
-
-	return buf, false
+	return nil
 }
 
 // Render a when node
-func (w *When) Render(p *renderState, depth int) (string, bool) {
-	return w.Block.Render(p, depth)
+func (w *When) Render(s *renderState, wr *bytes.Buffer, depth int) error {
+	return w.Block.Render(s, wr, depth)
 }

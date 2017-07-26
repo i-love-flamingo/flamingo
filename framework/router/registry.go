@@ -49,11 +49,12 @@ func (registry *Registry) Handle(name string, controller Controller) {
 }
 
 // HandleIfNotSet assigns a controller to a name if not already set
-func (registry *Registry) HandleIfNotSet(name string, controller Controller) {
+func (registry *Registry) HandleIfNotSet(name string, controller Controller) bool {
 	if _, ok := registry.handler[name]; ok {
-		return
+		return false
 	}
 	registry.handler[name] = controller
+	return true
 }
 
 // Route assigns a route to a Handler

@@ -66,7 +66,7 @@ var funcmap = FuncMap{
 		return convert(res)
 	},
 	"raw": func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
-	"s": func(l ...interface{}) string {
+	"__str": func(l ...interface{}) string {
 		var res string
 		for _, s := range l {
 			res += convert(s).String()
@@ -104,7 +104,7 @@ var funcmap = FuncMap{
 				}
 			}
 		}
-		return template.HTMLAttr(strings.TrimSpace(res))
+		return template.HTMLAttr(res)
 	},
 }
 

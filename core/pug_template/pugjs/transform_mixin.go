@@ -1,25 +1,24 @@
 package pugjs
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 )
 
 // Render renders the mixin, either it's call or it's definition
-func (m *Mixin) Render(p *renderState, depth int) (string, bool) {
+func (m *Mixin) Render(p *renderState, wr *bytes.Buffer, depth int) error {
 	if m.Call {
-		return m.renderCall(p, depth), false
+		return m.renderCall(p, wr, depth)
 	}
 
-	return m.renderDefinition(p, depth), false
+	return m.renderDefinition(p, wr, depth)
 }
 
-func (m *Mixin) renderDefinition(p *renderState, depth int) string {
+func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer, depth int) error {
 	if p.mixin[string(m.Name)] != "" {
-		return ""
+		return nil
 	}
-
-	prefix := strings.Repeat("    ", depth)
 
 	callargs := strings.Split(m.Args, ",")
 	attrpart := ""
@@ -33,40 +32,51 @@ func (m *Mixin) renderDefinition(p *renderState, depth int) string {
 		)
 	}
 
-	subblock, _ := m.Block.Render(p, depth)
+	var subblock = new(bytes.Buffer)
 
-	p.mixin[string(m.Name)] = fmt.Sprintf(`{{- define "mixin_%s" -}}
-{{- $attributes := (__tryindex . 1) -}}
-{{- $__args__ := (__tryindex . 0) -}}
-{{- $block := (__tryindex . 2) -}}
-%s
+	if err := m.Block.Render(p, subblock, depth); err != nil {
+		return err
+	}
+
+	prefix := strings.Repeat("  ", depth)
+	p.mixin[string(m.Name)] = fmt.Sprintf(`
+{{- define "mixin_%s" }}
+{{- $attributes := (__tryindex . 1) }}
+{{- $__args__ := (__tryindex . 0) }}
+{{- $block := (__tryindex . 2) }}
 %s%s
-%s
-{{- end -}}
-`, m.Name, attrpart, prefix, subblock, prefix)
-	return ""
+%s%s
+{{- end }}`, m.Name, prefix, attrpart, prefix, subblock.String())
+	return nil
 }
 
-func (m *Mixin) renderCall(p *renderState, depth int) string {
+func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer, depth int) error {
 	attributes := `__op__map `
 	for _, a := range m.Attrs {
 		attributes += ` "` + a.Name + `" ` + p.JsExpr(string(a.Val), false, false)
 	}
-	block, _ := m.Block.Render(p, depth)
-	if len(block) > 0 {
+	var subblock = new(bytes.Buffer)
+	if err := m.Block.Render(p, subblock, depth); err != nil {
+		return err
+	}
+	if len(subblock.String()) > 0 {
+		prefix := strings.Repeat("  ", depth)
 		blockname := fmt.Sprintf("block_%s_%d", m.Name, p.mixincounter)
 		p.mixincounter++
-		block = fmt.Sprintf(`
-		{{- define "%s" -}}
-		%s
-		{{- end -}}
-		`, blockname, block)
-		p.mixinblocks = append(p.mixinblocks, block)
-		return fmt.Sprintf(`{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes, blockname)
+		mixinblock := fmt.Sprintf(`
+%s{{- define "%s" -}}
+%s%s
+%s{{- end -}}`, prefix, blockname, prefix, subblock.String(), prefix)
+		p.mixinblocks = append(p.mixinblocks, mixinblock)
+		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes, blockname)
+	} else {
+		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes)
 	}
-	return fmt.Sprintf(`{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes)
+	return nil
 }
 
-func (m *MixinBlock) Render(p *renderState, depth int) (string, bool) {
-	return `{{ template $block }}`, false
+// Render MixinBlock call
+func (m *MixinBlock) Render(p *renderState, wr *bytes.Buffer, depth int) error {
+	wr.WriteString(`{{- template $block -}}`)
+	return nil
 }

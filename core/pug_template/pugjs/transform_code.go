@@ -1,9 +1,13 @@
 package pugjs
 
-import "strings"
+import (
+	"bytes"
+	"strings"
+)
 
 // Render renders a code block
-func (c *Code) Render(p *renderState, depth int) (string, bool) {
+func (c *Code) Render(p *renderState, wr *bytes.Buffer, depth int) error {
 	p.rawmode = !c.MustEscape
-	return strings.Replace(p.JsExpr(c.Val, true, true), "}}{{", "}}\n{{", -1), *c.IsInline
+	wr.WriteString(strings.Replace(p.JsExpr(c.Val, true, true), " }}{{", " -}}\n{{", -1))
+	return nil
 }

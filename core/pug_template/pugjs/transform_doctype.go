@@ -1,9 +1,13 @@
 package pugjs
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // Render renders the doctype
-func (d *Doctype) Render(p *renderState, depth int) (string, bool) {
-	p.Doctype = d.Val
-	return fmt.Sprintf("<!DOCTYPE %s>\n", d.Val), false
+func (d *Doctype) Render(p *renderState, wr *bytes.Buffer, depth int) error {
+	p.doctype = d.Val
+	fmt.Fprintf(wr, "<!DOCTYPE %s>\n", d.Val)
+	return nil
 }

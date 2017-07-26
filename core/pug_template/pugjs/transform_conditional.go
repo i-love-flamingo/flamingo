@@ -1,16 +1,20 @@
 package pugjs
 
+import "bytes"
+
 // Render renders a conditional via `if`
-func (c *Conditional) Render(p *renderState, depth int) (string, bool) {
-	buf := `{{if ` + p.JsExpr(string(c.Test), false, false) + `}}`
-	b, _ := c.Consequent.Render(p, depth)
-	buf += b
+func (c *Conditional) Render(p *renderState, wr *bytes.Buffer, depth int) error {
+	wr.WriteString(`{{ if ` + p.JsExpr(string(c.Test), false, false) + ` -}}`)
+	if err := c.Consequent.Render(p, wr, depth); err != nil {
+		return err
+	}
 
 	if c.Alternate != nil {
-		buf += `{{else}}`
-		b, _ := c.Alternate.Render(p, depth)
-		buf += b
+		wr.WriteString(`{{ else -}}`)
+		if err := c.Alternate.Render(p, wr, depth); err != nil {
+			return err
+		}
 	}
-	buf += `{{end}}`
-	return buf, false
+	wr.WriteString(`{{ end -}}`)
+	return nil
 }

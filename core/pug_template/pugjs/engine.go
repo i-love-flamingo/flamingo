@@ -22,15 +22,14 @@ import (
 type (
 	// RenderState holds information about the pug abstract syntax tree
 	renderState struct {
-		Path         string
-		TplCode      map[string]string
+		path         string
 		mixin        map[string]string
 		mixincounter int
 		mixinblocks  []string
 		mixinblock   string
-		FuncMap      FuncMap
+		funcs        FuncMap
 		rawmode      bool
-		Doctype      string
+		doctype      string
 	}
 
 	// Engine is the one and only javascript template engine for go ;)
@@ -40,8 +39,8 @@ type (
 		Debug                     bool   `inject:"config:debug.mode"`
 		Assetrewrites             map[string]string
 		templates                 map[string]*Template
+		TemplateCode              map[string]string
 		Webpackserver             bool
-		RenderState               *renderState
 		TemplateFunctions         *template.FunctionRegistry
 		TemplateFunctionsProvider func() *template.FunctionRegistry `inject:""`
 	}
@@ -49,7 +48,8 @@ type (
 
 func NewEngine() *Engine {
 	return &Engine{
-		Mutex: new(sync.Mutex),
+		Mutex:        new(sync.Mutex),
+		TemplateCode: make(map[string]string),
 	}
 }
 
@@ -65,16 +65,8 @@ func (e *Engine) LoadTemplates(filtername string) error {
 	}
 	json.Unmarshal(manifest, &e.Assetrewrites)
 
-	e.RenderState = &renderState{
-		Path:    path.Join(e.Basedir, "template", "page"),
-		TplCode: make(map[string]string),
-		mixin:   make(map[string]string),
-	}
-
 	e.TemplateFunctions = e.TemplateFunctionsProvider()
-	e.RenderState.FuncMap = FuncMap(e.TemplateFunctions.Populate())
-
-	e.templates, err = compileDir(e.RenderState, path.Join(e.Basedir, "template", "page"), "", filtername)
+	e.templates, err = e.compileDir(path.Join(e.Basedir, "template", "page"), "", filtername)
 	if err != nil {
 		return err
 	}
@@ -90,7 +82,7 @@ func (e *Engine) LoadTemplates(filtername string) error {
 }
 
 // compileDir returns a map of defined templates in directory dirname
-func compileDir(renderState *renderState, root, dirname, filtername string) (map[string]*Template, error) {
+func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Template, error) {
 	result := make(map[string]*Template)
 
 	dir, err := os.Open(path.Join(root, dirname))
@@ -105,7 +97,7 @@ func compileDir(renderState *renderState, root, dirname, filtername string) (map
 
 	for _, filename := range filenames {
 		if filename.IsDir() {
-			tpls, err := compileDir(renderState, root, path.Join(dirname, filename.Name()), filtername)
+			tpls, err := e.compileDir(root, path.Join(dirname, filename.Name()), filtername)
 			if err != nil {
 				return nil, err
 			}
@@ -123,12 +115,16 @@ func compileDir(renderState *renderState, root, dirname, filtername string) (map
 					continue
 				}
 
-				renderState.mixin = make(map[string]string)
+				renderState := &renderState{
+					path:  path.Join(e.Basedir, "template", "page"),
+					mixin: make(map[string]string),
+					funcs: FuncMap(e.TemplateFunctions.Populate()),
+				}
 				token, err := renderState.Parse(name)
 				if err != nil {
 					return nil, err
 				}
-				result[name], err = renderState.TokenToTemplate(name, token)
+				result[name], e.TemplateCode[name], err = renderState.TokenToTemplate(name, token)
 				if err != nil {
 					return nil, err
 				}
@@ -188,7 +184,7 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 	err = templateInstance.ExecuteTemplate(result, templateName, convert(data))
 	if err != nil {
 		errstr := err.Error() + "\n"
-		for i, l := range strings.Split(e.RenderState.TplCode[templateName], "\n") {
+		for i, l := range strings.Split(e.TemplateCode[templateName], "\n") {
 			errstr += fmt.Sprintf("%03d: %s\n", i+1, l)
 		}
 		return nil, errors.New(errstr)

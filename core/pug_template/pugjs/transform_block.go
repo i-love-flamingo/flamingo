@@ -1,20 +1,14 @@
 package pugjs
 
-import "strings"
+import "bytes"
 
 // Render renders a Block, and intends every sub-block if necessary
-func (b *Block) Render(p *renderState, depth int) (res string, isinline bool) {
-	prefix := strings.Repeat("    ", depth)
-	isinline = true
+func (b *Block) Render(s *renderState, wr *bytes.Buffer, depth int) error {
 	for _, n := range b.Nodes {
-		r, wasinline := n.Render(p, depth)
-		if !wasinline {
-			isinline = false
-			res += "\n" + prefix
+		err := n.Render(s, wr, depth)
+		if err != nil {
+			return err
 		}
-		res += r
 	}
-	// remove double-indentation
-	res = strings.Replace(res, "\n"+prefix+"\n"+prefix, "\n"+prefix, -1)
-	return
+	return nil
 }

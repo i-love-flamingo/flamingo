@@ -1,6 +1,7 @@
 package pugjs
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 )
@@ -15,7 +16,7 @@ func (t *Tag) args(p *renderState, attrs []Attribute, andattributes bool) string
 	for _, attr := range attrs {
 		p.rawmode = !attr.MustEscape
 		if attr.Name == "style" {
-			a[attr.Name] += ` ` + strings.Replace(p.JsExpr(string(attr.Val), true, false), `{{(s `, `{{(sc `, -1)
+			a[attr.Name] += ` ` + strings.Replace(p.JsExpr(string(attr.Val), true, false), `{{(__str `, `{{(sc `, -1)
 		} else {
 			a[attr.Name] += ` ` + p.JsExpr(string(attr.Val), true, false)
 		}
@@ -34,11 +35,11 @@ func (t *Tag) args(p *renderState, attrs []Attribute, andattributes bool) string
 		var aa string
 		k, v := attr.Name, strings.TrimSpace(a[attr.Name])
 		if andattributes {
-			aa = `{{s " " (index $__andattributes "` + k + `")}}`
+			aa = `{{__str " " (index $__andattributes "` + k + `")}}`
 		}
-		if p.Doctype == "html" && v == "true" {
+		if p.doctype == "html" && v == "true" {
 			result += ` ` + k
-		} else if p.Doctype == "html" && v == "false" {
+		} else if p.doctype == "html" && v == "false" {
 			// empty
 		} else if len(v) > 0 {
 			result += ` ` + k + `="` + v + aa + `"`
@@ -49,15 +50,24 @@ func (t *Tag) args(p *renderState, attrs []Attribute, andattributes bool) string
 }
 
 // Render a tag
-func (t *Tag) Render(p *renderState, depth int) (res string, isinline bool) {
-	isinline = *t.IsInline
-	prefix := strings.Repeat("    ", depth)
+func (t *Tag) Render(p *renderState, wr *bytes.Buffer, depth int) error {
+	var _subblock = new(bytes.Buffer)
+	if err := t.Block.Render(p, _subblock, depth+1); err != nil {
+		return err
+	}
+	subblock := _subblock.String()
 
-	subblock, wasinline := t.Block.Render(p, depth+1)
+	if strings.Index(subblock, "\n") > -1 {
+		lines := strings.Split(subblock, "\n")
+		for i, line := range lines {
+			lines[i] = "  " + line
+		}
+		subblock = strings.Join(lines, "\n")
+	}
 
 	andattrs := ""
 	if len(t.AttributeBlocks) > 0 {
-		res += `{{$__andattributes := $` + string(t.AttributeBlocks[0]) + `}}`
+		wr.WriteString(`{{$__andattributes := $` + string(t.AttributeBlocks[0]) + `}}`)
 		knownaa := make(map[string]bool)
 		for _, e := range t.Attrs {
 			if len(e.Val) > 0 {
@@ -67,25 +77,26 @@ func (t *Tag) Render(p *renderState, depth int) (res string, isinline bool) {
 		for e := range knownaa {
 			andattrs += ` "` + e + `"`
 		}
-		andattrs = ` {{__add_andattributes $__andattributes` + andattrs + `}}`
+		andattrs = `{{__add_andattributes $__andattributes` + andattrs + `}}`
 	}
 
 	switch {
 	case t.Name == "link", t.Name == "meta":
-		res += fmt.Sprintf(`<%s%s%s>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs)
+		fmt.Fprintf(wr, `<%s%s%s>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs)
 
 	case t.SelfClosing:
-		res += fmt.Sprintf(`<%s%s%s/>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs)
+		fmt.Fprintf(wr, `<%s%s%s/>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs)
 
-	case t.IsInline != nil && !*t.IsInline:
-		if !wasinline {
-			subblock = subblock + "\n" + prefix
-		}
-		res += fmt.Sprintf("<%s%s%s>%s</%s>", t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs, subblock, t.Name)
+	case !t.Block.Inline() || (t.Name == "script" && strings.Index(subblock, "\n") > -1):
+		fmt.Fprintf(wr, "<%s%s%s>\n%s\n</%s>", t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs, subblock, t.Name)
 
 	default:
-		res += fmt.Sprintf(`<%s%s%s>%s</%s>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs, subblock, t.Name)
+		fmt.Fprintf(wr, `<%s%s%s>%s</%s>`, t.Name, t.args(p, t.Attrs, len(t.AttributeBlocks) > 0), andattrs, subblock, t.Name)
 	}
 
-	return
+	if !t.Inline() {
+		wr.WriteString("\n")
+	}
+
+	return nil
 }

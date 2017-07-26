@@ -168,7 +168,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	switch expr := expr.(type) {
 	// Identifier: usually a variable name
 	case *ast.Identifier:
-		if _, known := p.FuncMap[expr.Name]; dot && !known {
+		if _, known := p.funcs[expr.Name]; dot && !known {
 			result += `$`
 		} else if dot && !known {
 			panic("ain'e no dot allowed")
@@ -188,7 +188,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	// StringLiteral: "test" or 'test' or `test`
 	case *ast.StringLiteral:
 		if strings.Index(expr.Value, "${") >= 0 {
-			result = `(s "` + p.interpolate(expr.Value) + `")`
+			result = `(__str "` + p.interpolate(expr.Value) + `")`
 			result = strings.Replace(result, `""`, ``, -1)
 			if wrap {
 				result = `{{` + result + `}}`
@@ -311,7 +311,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 				right)
 		}
 		if wrap {
-			result = `{{- ` + result + ` -}}`
+			result = `{{ ` + result + ` -}}`
 		}
 
 	// VariableExpression: creates a new variable, var foo = 1
@@ -324,7 +324,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		}
 		result = `$` + n + ` := ` + init
 		if wrap {
-			result = `{{- ` + result + ` -}}`
+			result = `{{ ` + result + ` -}}`
 		}
 
 	// SequenceExpression, just like ArrayLiteral
@@ -350,7 +350,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 			result += ops[expr.Operator] + ` ` + p.renderExpression(expr.Operand, false, true)
 		}
 		if wrap {
-			result = `{{- ` + result + ` -}}`
+			result = `{{ ` + result + ` -}}`
 		} else {
 			result = `(` + result + `)`
 		}

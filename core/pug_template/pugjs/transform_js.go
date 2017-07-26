@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto/ast"
 	ottoparser "github.com/robertkrimen/otto/parser"
 	"github.com/robertkrimen/otto/token"
@@ -53,7 +54,7 @@ var (
 func StrToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFile(nil, "", expr, 0)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, expr))
 	}
 	return p.Body
 }
@@ -62,7 +63,7 @@ func StrToStatements(expr string) []ast.Statement {
 func FuncToStatements(expr string) []ast.Statement {
 	p, err := ottoparser.ParseFunction("", "return "+expr)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, expr))
 	}
 	return p.Body.(*ast.BlockStatement).List
 }

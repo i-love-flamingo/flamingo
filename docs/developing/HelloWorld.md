@@ -11,6 +11,9 @@ Run `glide i` to fetch dependencies.
 Then run the frontend template build:
 `cd akl/frontend && yarn && yarn run build`
 
+You can also start the template dev mode by:
+`yarn run dev`
+
 Your entrypoint is `akl/akl.go`, this is where the application is started.
 
 Please make sure to set your on-save setting to `go imports` in Gogland! (Preferences > Languages & Frameworks > Go > On Save)

@@ -1,9 +1,9 @@
 package infrastructure
 
 import (
+	"context"
 	"encoding/json"
 	"flamingo/core/product/domain"
-	"flamingo/framework/web"
 	"fmt"
 	"net/http"
 
@@ -20,7 +20,7 @@ type (
 )
 
 // Get a Product
-func (ps *ProductService) Get(ctx web.Context, ID string) (*domain.Product, error) {
+func (ps *ProductService) Get(ctx context.Context, ID string) (*domain.Product, error) {
 	ID = fmt.Sprintf("%s_%s_%s", ID, ps.Locale, ps.Channel)
 	resp, err := ps.Client.Get(ctx, ID)
 	if err != nil {

@@ -2,12 +2,12 @@
 
 ## New?
 
-Start here: [Hello World](Developing/HelloWorld.md)
+Start here: [Hello World](developing/HelloWorld.md)
 
 ## Dependency Injection
 
-[How Flamingo uses Dingo to manage Dependency Injection](Framework/dependency-injection.md)
+[How Flamingo uses Dingo to manage Dependency Injection](framework/dependency-injection.md)
 
 ## Flamingo Project Structure
 
-[How the folders are structured](Developing/structure.md)
+[How the folders are structured](developing/structure.md)

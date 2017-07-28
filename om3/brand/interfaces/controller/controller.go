@@ -18,7 +18,7 @@ type (
 
 	// ViewData is used for product rendering
 	ViewData struct {
-		Brand *domain.Brand
+		Brand domain.Brand
 	}
 )
 
@@ -35,6 +35,5 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 			return vc.Error(c, err)
 		}
 	}
-
-	return vc.Render(c, "brand/view", ViewData{Brand: brand})
+	return vc.Render(c, "brand/view", ViewData{Brand: *brand})
 }

@@ -4,6 +4,7 @@ import (
 	"flamingo/core/cms/domain"
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
+	"fmt"
 )
 
 type (
@@ -16,7 +17,7 @@ type (
 
 	// ViewData for rendering
 	ViewData struct {
-		CmsPage *domain.Page
+		CmsPage domain.Page
 	}
 )
 
@@ -37,5 +38,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 		template = "cms/view"
 	}
 
-	return vc.Render(c, template, ViewData{CmsPage: page})
+	fmt.Println(page)
+
+	return vc.Render(c, template, ViewData{CmsPage: *page})
 }

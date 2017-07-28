@@ -2,19 +2,21 @@
 
 ## Development setup and first steps
 
-Check out flamingo into `$GOPATH/src/flamingo` (flamingo will be our [namespace](https://golang.org/doc/code.html#Organization)).
+1. Install go (https://golang.org/)
 
-Install `glide` (e.g. via `brew install glide`).
+2. Check out flamingo into `$GOPATH/src/flamingo` (flamingo will be our [namespace](https://golang.org/doc/code.html#Organization)).
 
-Run `glide i` to fetch dependencies.
+3. Install `glide` (e.g. via `brew install glide`). And run `glide i` to fetch dependencies.
 
-Then run the frontend template build:
+4. Then run the frontend template build:
 `cd akl/frontend && yarn && yarn run build`
 
-You can also start the template dev mode by:
-`yarn run dev`
+ You can also start the template dev mode by:
+ `yarn run dev`
 
-Your entrypoint is `akl/akl.go`, this is where the application is started.
+5. Your entrypoint is `akl/akl.go`, this is where the application is started.
+   Run `go run akl.go` to see a list of possible commands.
+   Run `go run akl.go serve` to start the server
 
 Please make sure to set your on-save setting to `go imports` in Gogland! (Preferences > Languages & Frameworks > Go > On Save)
 
@@ -22,7 +24,7 @@ Please make sure to set your on-save setting to `go imports` in Gogland! (Prefer
 
 A module in Flamingo is usually in one of five possible locations:
 
-- **akl**: This is the place where project modules live
+- **PROJECTNAME**: This is the place where project modules live (e.g. "akl")
 - **framework**: This is the Flamingo framework core
 - **core**: This is the Flamingo core, possibly open-sourced one day, and contains general Flamingo modules
 - **om3**: This is the place where OM3 specific modules go which are generic enough for multiple projects, but not intended for core

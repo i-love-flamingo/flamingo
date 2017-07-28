@@ -17,3 +17,9 @@ go test -v flamingo/core/cart/domain/
 Most of Flamingo's package use [Gingko](https://github.com/onsi/ginkgo) for BDD based testing.
 
 Take a look at the Dingo test suite to get an idea about the tests.
+
+
+## Testing with Pact
+Some tests are using Pact - so you need to prepare the test run:
+Read on [5_Test and Mock external services.md](5_Test and Mock external services.md).
+

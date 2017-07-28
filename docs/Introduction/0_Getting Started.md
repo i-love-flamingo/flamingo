@@ -1,8 +1,11 @@
-# Flamingo Development
+# Getting started with Flamingo
 
----
+## Development Setup
 
-### New? Start with [HelloWorld](HelloWorld.md)
+* 
+
+
+### New? Start with [Hello World Tutorial](1_1_Tutorial Hello World.md)
 
 ---
 

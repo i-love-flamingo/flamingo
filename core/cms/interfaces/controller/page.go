@@ -4,7 +4,6 @@ import (
 	"flamingo/core/cms/domain"
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
-	"fmt"
 )
 
 type (
@@ -37,8 +36,6 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	if err != nil {
 		template = "cms/view"
 	}
-
-	fmt.Println(page)
 
 	return vc.Render(c, template, ViewData{CmsPage: *page})
 }

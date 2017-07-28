@@ -10,7 +10,7 @@ dep:
 	glide i
 
 doc:
-	docker run --rm -v $(shell pwd):/work -p 8000:8000 python bash -c 'pip install mkdocs; cd /work; mkdocs serve --dev-addr=0.0.0.0:8000'
+	docker run --rm -v $(shell pwd)/docs:/work -p 8000:8000 python bash -c 'pip install mkdocs; cd /work; mkdocs serve --dev-addr=0.0.0.0:8000'
 
 godoc:
 	(sleep 10 ; open http://localhost:6060/pkg/flamingo/) &

@@ -1,0 +1,13 @@
+site_name: Flamingo
+markdown_extensions:
+  - extra
+  - footnotes
+  - admonition
+  - toc(permalink=true)
+use_directory_urls: false
+extra:
+  logo: assets/flamingo-icon.png
+extra_css:
+  - stylesheets/ci.css
+theme: mkdocs
+theme_dir: material

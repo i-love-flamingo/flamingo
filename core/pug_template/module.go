@@ -76,7 +76,7 @@ func (m *Module) loadmock(where string) (interface{}, error) {
 		json.Unmarshal(b, &res)
 		name := strings.Replace(filepath.Base(match), ".mock.json", "", 1)
 		if m.RouterRegistry.HandleIfNotSet(name, mockcontroller(name, res)) {
-			log.Println("mocking", name)
+			log.Println("mocking because not set:", name)
 		}
 	}
 	return nil, nil

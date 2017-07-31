@@ -53,13 +53,13 @@ As always an example illustrates the routing concept best, so here we have it:
 ```go
 func (m *Module) Configure(injector *dingo.Injector) {
     // Register the controller
-    m.RouterRegistry.Handle("search.view", new(interfaces.ViewController))
+    m.RouterRegistry.Handle("search.search", new(interfaces.ViewController))
     
     // Map `/search` to ViewController with `type` set to `product`
-    m.RouterRegistry.Route("/search", `search.view(type="product")`)
+    m.RouterRegistry.Route("/search", `search.search(type="product")`)
     
     // Map `/search/:type` to ViewController with `type` retrieved from the path
-    m.RouterRegistry.Route("/search/:type", `search.view(type)`)
+    m.RouterRegistry.Route("/search/:type", `search.search(type)`)
     
     // Map a controller action to a router (no METHOD specific handling)
     m.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)

@@ -40,7 +40,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	searchType := getSearchType(c.MustParam1("type"))
 
 	if searchType != c.MustParam1("type") {
-		return vc.Redirect("search.view?q="+query, router.P{"type": searchType})
+		return vc.Redirect("search.search?q="+query, router.P{"type": searchType})
 	}
 
 	vd := ViewData{
@@ -52,7 +52,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	if query == "" || queryErr != nil {
-		return vc.Render(c, "pages/search/view", vd)
+		return vc.Render(c, "page/search/search", vd)
 	}
 
 	searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())
@@ -68,5 +68,5 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	// render page
-	return vc.Render(c, "search/view", vd)
+	return vc.Render(c, "search/search", vd)
 }

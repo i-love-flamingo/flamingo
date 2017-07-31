@@ -52,7 +52,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	if query == "" || queryErr != nil {
-		return vc.Render(c, "page/search/search", vd)
+		return vc.Render(c, "search/search", vd)
 	}
 
 	searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())

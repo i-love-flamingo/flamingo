@@ -5,6 +5,7 @@ import (
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
 	"flamingo/om3/search/domain"
+	"fmt"
 )
 
 type (
@@ -52,6 +53,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	if query == "" || queryErr != nil {
+		fmt.Println(vd)
 		return vc.Render(c, "search/search", vd)
 	}
 

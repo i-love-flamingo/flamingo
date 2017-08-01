@@ -32,6 +32,11 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 		return vc.Error(c, err)
 	}
 
+	//fmt.Printf("%+v\n", page)
+
+	//res2B, _ := json.Marshal(page)
+	//fmt.Println(string(res2B))
+
 	template, err := c.Param1("template")
 	if err != nil {
 		template = "cms/view"

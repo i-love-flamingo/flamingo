@@ -19,3 +19,11 @@ For example we have a button component like this:
 To give us nice search hits the files should all be named / prefixed with the
 component name - if yoou search for button, you will get all the files for the button
 component.
+
+## camelCase everywhere
+
+Everything* in the project is written in lower camel case.
+
+This includes files, folders, classes, variables, ... , and even css.
+
+    * where it's possible :)

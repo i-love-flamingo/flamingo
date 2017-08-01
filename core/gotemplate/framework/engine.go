@@ -9,7 +9,7 @@ import (
 )
 
 // validate interface
-var _ flamingotemplate.Engine = new(Engine)
+var _ flamingotemplate.Engine = new(flamingotemplate.Engine)
 
 // Engine for template rendering
 type Engine struct {

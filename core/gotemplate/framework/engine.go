@@ -9,7 +9,7 @@ import (
 )
 
 // validate interface
-var _ flamingotemplate.Engine = new(flamingotemplate.Engine)
+var _ flamingotemplate.Engine = new(Engine)
 
 // Engine for template rendering
 type Engine struct {
@@ -17,11 +17,11 @@ type Engine struct {
 }
 
 // Render a template
-func (e *Engine) Render(context web.Context, name string, data interface{}) io.Reader {
+func (e *Engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
 	tpl, _ := template.ParseGlob(e.Glob)
 
 	var res = new(bytes.Buffer)
 	tpl.ExecuteTemplate(res, name+".html", data)
 
-	return res
+	return res, nil
 }

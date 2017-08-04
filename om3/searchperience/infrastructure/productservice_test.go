@@ -10,11 +10,11 @@ import (
 
 func TestProductservice(t *testing.T) {
 	pact.AddInteraction().
-		Given("A Product exists").
-		UponReceiving("A request to a product").
+		Given("The test product exists").
+		UponReceiving("A request to the test product").
 		WithRequest(dsl.Request{
 			Method: "GET",
-			Path:   "/document",
+			Path:   "/product/test",
 		}).
 		WillRespondWith(dsl.Response{
 			Status: 200,

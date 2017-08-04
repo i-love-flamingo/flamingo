@@ -39,7 +39,7 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 
 	template, err := c.Param1("template")
 	if err != nil {
-		template = "cms/view"
+		template = "cms/cms"
 	}
 
 	return vc.Render(c, template, ViewData{CmsPage: *page})

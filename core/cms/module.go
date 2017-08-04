@@ -20,6 +20,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Handle("cms.block", new(controller.DataController))
 	m.RouterRegistry.Route("/page/:name", "cms.page.view(name)")
 	if m.Debug {
-		m.RouterRegistry.Route("/cmstest", "cms.page.view(name='test',template='pages/cms/test')")
+		m.RouterRegistry.Route("/cmstest", "cms.page.view(name='test',template='cms/test')")
 	}
 }

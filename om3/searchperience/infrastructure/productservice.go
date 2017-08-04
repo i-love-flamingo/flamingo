@@ -21,14 +21,14 @@ type (
 
 // Get a Product
 func (ps *ProductService) Get(ctx context.Context, ID string) (*domain.Product, error) {
-	ID = fmt.Sprintf("%s_%s_%s", ID, ps.Locale, ps.Channel)
+	ID = fmt.Sprintf("%s%s%s", ID, ps.Locale, ps.Channel)
 	resp, err := ps.Client.Get(ctx, ID)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("Product not found")
+		return nil, errors.WithStack(domain.ProductNotFound{ID: ID})
 	}
 
 	res := &domain.Product{}

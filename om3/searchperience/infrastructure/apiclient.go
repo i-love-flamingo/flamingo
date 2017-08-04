@@ -43,9 +43,7 @@ func NewProductClient(ac *SearchperienceClient) *ProductClient {
 // Get a Product
 func (bc *ProductClient) Get(ctx context.Context, foreignID string) (*http.Response, error) {
 	query := url.Values{}
-	query.Set("type", "product")
-	query.Set("foreignId", foreignID)
-	return bc.common.request(ctx, "document", query)
+	return bc.common.request(ctx, "product/"+foreignID, query)
 }
 
 // NewSearchClient provider

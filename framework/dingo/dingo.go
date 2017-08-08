@@ -326,6 +326,9 @@ func (injector *Injector) BindScope(s Scope) {
 //	injector.Bind((*Interface)(nil))
 // To specify the interface (cast it to a pointer to a nil of the type Interface)
 func (injector *Injector) Bind(what interface{}) *Binding {
+	if what == nil {
+		panic("Cannot bind nil")
+	}
 	bindtype := reflect.TypeOf(what)
 	if bindtype.Kind() == reflect.Ptr {
 		bindtype = bindtype.Elem()

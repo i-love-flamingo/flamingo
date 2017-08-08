@@ -3,6 +3,7 @@ package config
 
 import (
 	"flamingo/framework/dingo"
+	"log"
 	"os"
 	"regexp"
 )
@@ -103,6 +104,10 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	for k, v := range area.Configuration {
 		if val, ok := v.(string); ok {
 			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
+		}
+		if v == nil {
+			log.Printf("Warning: %s has nil value Configured!", k)
+			continue
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}

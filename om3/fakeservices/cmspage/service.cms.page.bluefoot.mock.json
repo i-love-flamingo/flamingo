@@ -1,0 +1,364 @@
+{
+  "id": 1,
+  "identifier": "home",
+  "title": "Bluefoot Test",
+  "pageLayout": "layout1",
+  "metaKeywords": "keyword1, keyword2",
+  "metaDescription": "meta description",
+  "contentHeading": "Header1",
+  "content": "Test CMS page <strong>content</strong>",
+  "creationTime": "string",
+  "updateTime": "string",
+  "sortOrder": "string",
+  "layoutUpdateXml": "string",
+  "customTheme": "string",
+  "customRootTemplate": "string",
+  "customLayoutUpdateXml": "string",
+  "customThemeFrom": "string",
+  "customThemeTo": "string",
+  "isActive": true,
+  "bluefoot_enabled": true,
+  "bluefoot_content": [
+    {
+      "type": "row",
+      "children": [
+        {
+          "contentType": "tabs",
+          "formData": {
+            "entity_id": "43",
+            "tabs_items": "3",
+            "preview_view": {
+              "entity_id": "43",
+              "tabs_items": "3",
+              "align": "",
+              "metric": "",
+              "child_blocks": {
+                "tabs_items": [
+                  {
+                    "html": "\n        <div class=\"bluefoot-tab gene-bluefoot-navigation-tab no-edit bluefoot-entity-align-\">\n    gdsdfgsdgfsdg\n</div>\n<div class=\"bluefoot-tab-content\">\n    <p>dfgdsgdsgdsgfsd</p>\n</div>\n    "
+                  },
+                  {
+                    "html": "\n        <div class=\"bluefoot-tab gene-bluefoot-navigation-tab no-edit bluefoot-entity-align-\">\n    dsfgdsfg\n</div>\n<div class=\"bluefoot-tab-content\">\n    <p>dfgdsgdsfg</p>\n</div>\n    "
+                  },
+                  {
+                    "html": "\n        <div class=\"bluefoot-tab gene-bluefoot-navigation-tab no-edit bluefoot-entity-align-\">\n    sdfgdsfgsd\n</div>\n<div class=\"bluefoot-tab-content\">\n    <p style=\"text-align: left;\">dfgdfsgdsg</p>\n</div>\n    "
+                  }
+                ]
+              }
+            },
+            "align": "",
+            "metric": ""
+          },
+          "children": {
+            "tabs_items": [
+              {
+                "contentType": "tabs_item",
+                "formData": {
+                  "entity_id": "44",
+                  "title": "gdsdfgsdgfsdg",
+                  "textarea": "<p>dfgdsgdsgdsgfsd</p>",
+                  "preview_view": {
+                    "entity_id": "44",
+                    "title": "gdsdfgsdgfsdg",
+                    "textarea": "<p>dfgdsgdsgdsgfsd</p>",
+                    "align": "",
+                    "metric": ""
+                  },
+                  "align": "",
+                  "metric": ""
+                }
+              },
+              {
+                "contentType": "tabs_item",
+                "formData": {
+                  "entity_id": "45",
+                  "title": "dsfgdsfg",
+                  "textarea": "<p>dfgdsgdsfg</p>",
+                  "preview_view": {
+                    "entity_id": "45",
+                    "title": "dsfgdsfg",
+                    "textarea": "<p>dfgdsgdsfg</p>",
+                    "align": "",
+                    "metric": ""
+                  },
+                  "align": "",
+                  "metric": ""
+                }
+              },
+              {
+                "contentType": "tabs_item",
+                "formData": {
+                  "entity_id": "46",
+                  "title": "sdfgdsfgsd",
+                  "textarea": "<p style=\"text-align: left;\">dfgdfsgdsg</p>",
+                  "preview_view": {
+                    "entity_id": "46",
+                    "title": "sdfgdsfgsd",
+                    "textarea": "<p style=\"text-align: left;\">dfgdfsgdsg</p>",
+                    "align": "",
+                    "metric": ""
+                  },
+                  "align": "",
+                  "metric": ""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "contentType": "html",
+          "formData": {
+            "entity_id": "33",
+            "html": "asdasdasd",
+            "preview_view": {
+              "entity_id": "33",
+              "html": "asdasdasd",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "driver"
+        },
+        {
+          "contentType": "html",
+          "formData": {
+            "entity_id": "41",
+            "html": "dfgdsdsgffdsgdsfgs",
+            "preview_view": {
+              "entity_id": "41",
+              "html": "dfgdsdsgffdsgdsfgs",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "textarea",
+          "formData": {
+            "entity_id": "42",
+            "textarea": "<p>sdfsdsfdsbdf fb vdsfsgfdbfbd gfdgdsvb dsv vv fbvsf fdbbe gfebffevfw</p>",
+            "preview_view": {
+              "entity_id": "42",
+              "textarea": "<p>sdfsdsfdsbdf fb vdsfsgfdbfbd gfdgdsvb dsv vv fbvsf fdbbe gfebffevfw</p>",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "anchor",
+          "formData": {
+            "entity_id": "47",
+            "anchor_id": "dfdgdg",
+            "preview_view": {
+              "entity_id": "47",
+              "anchor_id": "dfdgdg",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "search",
+          "formData": {
+            "entity_id": "48",
+            "placeholder": "sdfg",
+            "preview_view": {
+              "entity_id": "48",
+              "placeholder": "sdfg",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "textarea",
+          "formData": {
+            "entity_id": "34",
+            "textarea": "<p>aasas</p>",
+            "preview_view": {
+              "entity_id": "34",
+              "textarea": "<p>aasas</p>",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "buttons",
+          "formData": {
+            "entity_id": "35",
+            "button_items": "1",
+            "preview_view": {
+              "entity_id": "35",
+              "button_items": "1",
+              "align": "",
+              "metric": "",
+              "child_blocks": {
+                "button_items": [
+                  {
+                    "html": "\n        <button type=\"button\" class=\"gene-bluefoot-block-button\">adsfg</button>\n    "
+                  }
+                ]
+              }
+            },
+            "align": "",
+            "metric": ""
+          },
+          "children": {
+            "button_items": [
+              {
+                "contentType": "button_item",
+                "formData": {
+                  "entity_id": "36",
+                  "link_text": "adsfg",
+                  "link_url": "http://magento-dev-akl/index.php/admin/admin/cms_page/edit/page_id/2/key/3e6d61b5d2e2961a1ce78e587192af9010c18fb0891cbaca73724a0a37838b8b/",
+                  "preview_view": {
+                    "entity_id": "36",
+                    "link_text": "adsfg",
+                    "link_url": "http://magento-dev-akl/index.php/admin/admin/cms_page/edit/page_id/2/key/3e6d61b5d2e2961a1ce78e587192af9010c18fb0891cbaca73724a0a37838b8b/",
+                    "align": "",
+                    "metric": ""
+                  },
+                  "align": "",
+                  "metric": ""
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "children": [
+        {
+          "contentType": "featured_product",
+          "formData": {
+            "entity_id": "37",
+            "title": "sdfghj",
+            "label": "asdfgh",
+            "link_text": "dgdgdfgfs",
+            "link_url": "http://magento-dev-akl/index.php/admin/admin/cms_page/edit/page_id/2/key/3e6d61b5d2e2961a1ce78e587192af9010c18fb0891cbaca73724a0a37838b8b/",
+            "product_id": "1",
+            "image": "/n/i/nicola-jones-281498_1.jpg",
+            "textarea": "<p>fsdghjkhdgfs</p>",
+            "preview_view": {
+              "entity_id": "37",
+              "title": "sdfghj",
+              "label": "asdfgh",
+              "link_text": "dgdgdfgfs",
+              "link_url": "http://magento-dev-akl/index.php/admin/admin/cms_page/edit/page_id/2/key/3e6d61b5d2e2961a1ce78e587192af9010c18fb0891cbaca73724a0a37838b8b/",
+              "product_id": {
+                "name": "hg",
+                "sku": "hg",
+                "image": "http://magento-dev-akl/pub/static/version1501508043/adminhtml/Magento/backend/en_US/Magento_Catalog/images/product/placeholder/image.jpg",
+                "price": "$12.00"
+              },
+              "image": "/n/i/nicola-jones-281498_1.jpg",
+              "textarea": "<p>fsdghjkhdgfs</p>",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "code",
+          "formData": {
+            "entity_id": "49",
+            "html": "sadfsadfsdfa",
+            "preview_view": {
+              "entity_id": "49",
+              "html": "sadfsadfsdfa",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "children": [
+        {
+          "contentType": "static_block",
+          "formData": {
+            "entity_id": "38",
+            "block_id": "1",
+            "preview_view": {
+              "entity_id": "38",
+              "block_id": {
+                "title": "Catalog Events Lister",
+                "identifier": "catalog_events_lister",
+                "content": "<div class=\"gene-bluefoot-content-placeholder\">Page Builder Content</div>"
+              },
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "product",
+          "formData": {
+            "entity_id": "39",
+            "product_id": "1",
+            "product_display": "21",
+            "preview_view": {
+              "entity_id": "39",
+              "product_id": {
+                "name": "hg",
+                "sku": "hg",
+                "image": "http://magento-dev-akl/pub/static/version1501508043/adminhtml/Magento/backend/en_US/Magento_Catalog/images/product/placeholder/image.jpg",
+                "price": "$12.00"
+              },
+              "product_display": "List",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        },
+        {
+          "contentType": "search",
+          "formData": {
+            "entity_id": "40",
+            "placeholder": "asdfg",
+            "preview_view": {
+              "entity_id": "40",
+              "placeholder": "asdfg",
+              "align": "",
+              "metric": ""
+            },
+            "align": "",
+            "metric": ""
+          }
+        }
+      ]
+    },
+    {
+      "type": "extra",
+      "deleted": []
+    }
+  ]
+}

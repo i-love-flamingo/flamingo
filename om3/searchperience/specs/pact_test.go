@@ -1,4 +1,4 @@
-package infrastructure
+package specs
 
 import (
 	"flamingo/framework/testutil"

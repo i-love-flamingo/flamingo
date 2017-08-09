@@ -1,0 +1,123 @@
+{
+  "locale": "de_DE",
+  "channel": "mainstore",
+  "foreignId": "searchperience-product-v2_de_DE_mainstore",
+  "marketPlaceCode": "searchperience-product-v2",
+  "productType": "simple",
+  "formatVersion": 1,
+  "stockLevel": "high",
+  "internalName": "Bombay Sapphire Gin",
+  "productFamily": "alcohol",
+  "createdAt": "2015-01-01T12:10:30Z",
+  "updatedAt": "2015-01-01T12:10:30Z",
+  "visibleFrom": "2015-01-01T12:06:30Z",
+  "visibleTo": "2015-01-01T12:10:30Z",
+  "customerRating": 5,
+  "teaserData": {
+    "title": "simple-title",
+    "shortTitle": "simple-title-short",
+    "teaser": "Gin",
+    "shortDescription": "Best gin in town",
+    "media": [
+      {
+        "type": "image-api",
+        "mimeType": "image/jpg",
+        "usage": "thumbnail",
+        "title": "Frontal View of the product",
+        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+      }
+    ]
+  },
+  "sorting": {
+    "price": 12.33,
+    "sellingCount": 100
+  },
+  "categoryPath": [
+    "Beer, Wine & Spirits",
+    "Spirits",
+    "Gin"
+  ],
+  "categoryCodes": [
+    "spirits",
+    "gin"
+  ],
+  "documentBoost": 7,
+  "highlights": {
+
+  },
+  "keywords": [
+    "gin"
+  ],
+  "keywordsImportant": [
+    "gin",
+    "sapphire"
+  ],
+  "variantVariationAttributes": [
+    "packageSize"
+  ],
+  "variants": [
+    {
+      "internalName": "Bombay Sapphire Gin 0.5L",
+      "title": "simple-title",
+      "createdAt": "2015-01-01T12:10:30Z",
+      "updatedAt": "2015-01-01T12:10:30Z",
+      "isSaleable": true,
+      "saleableFrom": "2015-01-01T12:05:30Z",
+      "saleableTo": "2015-01-01T12:10:30Z",
+      "attributes": {
+        "allergens": "Contains Borax",
+        "storageConditions": "0 °c - 4 °c",
+        "tags": [
+          "caviar"
+        ],
+        "brandName": "Prunier Caviar",
+        "brandCode": "prunier_caviar",
+        "packageSize": "0.5L",
+        "brand": "apple",
+        "campaignCodes": [
+          "supercampaign1",
+          "supercampaign2"
+        ]
+      },
+      "shortDescription": "Short description",
+      "description": "Very long description",
+      "customerRating": 5,
+      "media": [
+        {
+          "type": "image-api",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+        },
+        {
+          "type": "image-external",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "https://placehold.it/658x370"
+        },
+        {
+          "type": "youtube",
+          "usage": "detail",
+          "title": "Some sample Video Content from extern",
+          "reference": "https://youtu.be/w7yVXG4t6Ng"
+        }
+      ],
+      "marketPlaceCode": "caviarhouse_saintjames1",
+      "retailerSku": "the_loop_1",
+      "retailerCode": "theloop",
+      "retailerName": "The Loop",
+      "retailerImage": "/assets/img/dummy/retailer/the-loop-logo.jpg",
+      "originPrice": 118,
+      "originBasePrice": 393.33,
+      "originBasePriceUnit": "L",
+      "originBasePriceAmount": 100.00,
+      "specialPrice": 105.99,
+      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
+      "specialPriceTo": "2019-07-01T11:00:00+01:00",
+      "currency": "€",
+      "taxClass": "some"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-package infrastructure
+package search
 
 import (
 	"encoding/json"

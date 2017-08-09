@@ -50,7 +50,8 @@ injector.Override((*productdomain.BrandService)(nil), "").To(product.FakeService
 Better is to make this even configurable. And then add feature flags to your configuration in dev context (context_dev.yml).
 This way you automatically use the fake implementation when starting flamingo in *CONTEXT* dev.
 
-You will find examples in the sourcecode.
+**There are ready to use fakeservices in some modules (e.g. om3/fakeservices or sometime in the module itself)**
+
 
 ## Mocking in Flamingo
 
@@ -63,6 +64,8 @@ So you might need to have the Pact daemon running:
 
 1. Install pact_go ( https://github.com/pact-foundation/pact-go/#installation )
 2. Run `pact-go daemon`. Now you have the daemon running on default port 6666
+
+Checkout the example - e.g. in the package *"magento"*
 
 
 

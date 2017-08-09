@@ -1,14 +1,17 @@
 package searchperience
 
 import (
-	"flamingo/core/product/domain"
 	"flamingo/framework/dingo"
 	searchdomain "flamingo/om3/search/domain"
-	"flamingo/om3/searchperience/infrastructure"
+	searchadapter "flamingo/om3/searchperience/infrastructure/search"
+
+	productdomain "flamingo/core/product/domain"
+	productadapter "flamingo/om3/searchperience/infrastructure/product"
 )
 
-// ensure types
-var _ domain.ProductService = &infrastructure.ProductService{}
+// ensure types for the Ports and Adapters
+var _ productdomain.ProductService = &productadapter.ProductService{}
+var _ searchdomain.SearchService = &searchadapter.SearchService{}
 
 type (
 	// ProductClientModule for product client stuff
@@ -20,12 +23,12 @@ type (
 
 // Configure DI
 func (module *ProductClientModule) Configure(injector *dingo.Injector) {
-	injector.Bind(infrastructure.ProductClient{}).ToProvider(infrastructure.NewProductClient)
-	injector.Bind((*domain.ProductService)(nil)).To(infrastructure.ProductService{})
+	//injector.Bind(infrastructure.ProductClient{}).ToProvider(infrastructure.NewProductClient)
+	injector.Bind((*productdomain.ProductService)(nil)).To(productadapter.ProductService{})
 }
 
 // Configure DI
 func (module *SearchClientModule) Configure(injector *dingo.Injector) {
-	injector.Bind(infrastructure.SearchClient{}).ToProvider(infrastructure.NewSearchClient)
-	injector.Bind((*searchdomain.SearchService)(nil)).To(infrastructure.SearchService{})
+	//injector.Bind(infrastructure.SearchClient{}).ToProvider(infrastructure.NewSearchClient)
+	injector.Bind((*searchdomain.SearchService)(nil)).To(searchadapter.SearchService{})
 }

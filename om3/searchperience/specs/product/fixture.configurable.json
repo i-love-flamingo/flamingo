@@ -1,0 +1,257 @@
+{
+  "locale": "de_DE",
+  "channel": "mainstore",
+  "foreignId": "configurabletestiden_USecommerce",
+  "marketPlaceCode": "searchperience-product-v2",
+  "productType": "configurable",
+  "formatVersion": 1,
+  "stockLevel": "high",
+  "internalName": "Bombay Sapphire Gin",
+  "productFamily": "alcohol",
+  "createdAt": "2015-01-01T12:10:30Z",
+  "updatedAt": "2015-01-01T12:10:30Z",
+  "visibleFrom": "2015-01-01T12:06:30Z",
+  "visibleTo": "2015-01-01T12:10:30Z",
+  "customerRating": 5,
+  "teaserData": {
+    "title": "Bombay Sapphire Gin",
+    "shortTitle": "Bombay Sapphire Gin",
+    "teaser": "Gin",
+    "shortDescription": "Best gin in town",
+    "media": [
+      {
+        "type": "image-api",
+        "mimeType": "image/jpg",
+        "usage": "thumbnail",
+        "title": "Frontal View of the product",
+        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+      }
+    ]
+  },
+  "sorting": {
+    "price": 12.33,
+    "sellingCount": 100
+  },
+  "categoryPath": [
+    "Beer, Wine & Spirits",
+    "Spirits",
+    "Gin"
+  ],
+  "categoryCodes": [
+    "spirits",
+    "gin"
+  ],
+  "documentBoost": 7,
+  "highlights": {
+
+  },
+  "keywords": [
+    "gin"
+  ],
+  "keywordsImportant": [
+    "gin",
+    "sapphire"
+  ],
+  "configurableProduct": {
+    "internalName": "Bombay Sapphire Gin 1L",
+    "title": "Bombay Sapphire Gin Configurable",
+    "createdAt": "2015-01-01T12:10:30Z",
+    "updatedAt": "2015-01-01T12:10:30Z",
+    "attributes": {
+      "allergens": "Contains Borax",
+      "storageConditions": "0 °c - 4 °c",
+      "tags": [
+        "caviar"
+      ],
+      "brandName": "Prunier Caviar",
+      "brandCode": "prunier_caviar",
+      "packageSize": "1L"
+    },
+    "media": [
+      {
+        "type": "image-api",
+        "mimeType": "image/jpg",
+        "usage": "thumbnail",
+        "title": "Frontal View of the product",
+        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+      },
+      {
+        "type": "image-api",
+        "mimeType": "image/jpg",
+        "usage": "detail",
+        "title": "Frontal View of the product",
+        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+      },
+      {
+        "type": "youtube",
+        "usage": "detail",
+        "title": "Some sample Video Content from extern",
+        "reference": "https://youtu.be/w7yVXG4t6Ng"
+      }
+    ]
+  },
+  "variantVariationAttributes": [
+    "packageSize"
+  ],
+  "variants": [
+    {
+      "internalName": "Bombay Sapphire Gin 0.5L",
+      "title": "Bombay Sapphire Gin 0.5L",
+      "createdAt": "2015-01-01T12:10:30Z",
+      "updatedAt": "2015-01-01T12:10:30Z",
+      "isSaleable": true,
+      "saleableFrom": "2015-01-01T12:05:30Z",
+      "saleableTo": "2015-01-01T12:10:30Z",
+      "attributes": {
+        "allergens": "Contains Borax",
+        "storageConditions": "0 °c - 4 °c",
+        "tags": [
+          "caviar"
+        ],
+        "brandName": "Prunier Caviar",
+        "brandCode": "prunier_caviar",
+        "packageSize": "0.5L"
+      },
+      "shortDescription": "Short description",
+      "description": "Very long description",
+      "customerRating": 5,
+      "media": [
+        {
+          "type": "image-api",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+        },
+        {
+          "type": "image-external",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "https://placehold.it/658x370"
+        },
+        {
+          "type": "youtube",
+          "usage": "detail",
+          "title": "Some sample Video Content from extern",
+          "reference": "https://youtu.be/w7yVXG4t6Ng"
+        }
+      ],
+      "marketPlaceCode": "caviarhouse_saintjames1",
+      "retailerSku": "the_loop_1",
+      "retailerCode": "theloop",
+      "retailerName": "The Loop",
+      "retailerImage": "/assets/img/dummy/retailer/the-loop-logo.jpg",
+      "originPrice": 118,
+      "originBasePrice": 393.33,
+      "originBasePriceUnit": "L",
+      "originBasePriceAmount": 100.00,
+      "specialPrice": 105.99,
+      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
+      "specialPriceTo": "2019-07-01T11:00:00+01:00",
+      "currency": "€",
+      "taxClass": "some"
+    },
+    {
+      "internalName": "Bombay Sapphire Gin 1L",
+      "title": "Bombay Sapphire Gin 1L",
+      "createdAt": "2015-01-01T12:10:30Z",
+      "updatedAt": "2015-01-01T12:10:30Z",
+      "attributes": {
+        "allergens": "Contains Borax",
+        "storageConditions": "0 °c - 4 °c",
+        "tags": [
+          "caviar"
+        ],
+        "packageSize": "1L"
+      },
+      "shortDescription": "Short description",
+      "description": "Very long description",
+      "isSaleable": true,
+      "customerRating": 5,
+      "media": [
+        {
+          "type": "image-api",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+        },
+        {
+          "type": "image-external",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "https://placehold.it/658x370"
+        },
+        {
+          "type": "youtube",
+          "usage": "detail",
+          "title": "Some sample Video Content from extern",
+          "reference": "https://youtu.be/w7yVXG4t6Ng"
+        }
+      ],
+      "marketPlaceCode": "caviarhouse_saintjames2",
+      "retailerSku": "aelia_2",
+      "retailerCode": "aelia",
+      "retailerName": "Aelia Duty Free",
+      "retailerImage": "/assets/img/dummy/retailer/aeliadutyfree-logo.jpg",
+      "originPrice": 492,
+      "originBasePrice": 393.6,
+      "originBasePriceUnit": "L",
+      "originBasePriceAmount": 100
+    },
+    {
+      "internalName": "Bombay Sapphire Gin 0.75L",
+      "title": "Bombay Sapphire Gin 0.75L",
+      "createdAt": "2015-01-01T12:10:30Z",
+      "updatedAt": "2015-01-01T12:10:30Z",
+      "attributes": {
+        "allergens": "Contains Borax",
+        "storageConditions": "0 °c - 4 °c",
+        "tags": [
+          "caviar"
+        ],
+        "packageSize": "0.75L"
+      },
+      "shortDescription": "Short description",
+      "description": "Very long description",
+      "isSaleable": false,
+      "customerRating": 5,
+      "media": [
+        {
+          "type": "image-api",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+        },
+        {
+          "type": "image-external",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Frontal View of the product",
+          "reference": "https://placehold.it/658x370"
+        },
+        {
+          "type": "youtube",
+          "usage": "detail",
+          "title": "Some sample Video Content from extern",
+          "reference": "https://youtu.be/w7yVXG4t6Ng"
+        }
+      ],
+      "marketPlaceCode": "caviarhouse_saintjames2",
+      "retailerSku": "aelia_3",
+      "retailerCode": "aelia",
+      "retailerName": "Aelia Duty Free",
+      "retailerImage": "/assets/img/dummy/retailer/aeliadutyfree-logo.jpg",
+      "originPrice": 159,
+      "originBasePrice": 212,
+      "originBasePriceUnit": "L",
+      "originBasePriceAmount": 100.00,
+      "specialPrice": 139.99,
+      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
+      "specialPriceTo": "2019-07-01T11:00:00+01:00"
+    }
+  ]
+}

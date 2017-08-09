@@ -43,7 +43,7 @@ type (
 				Filters  []interface{} `json:"filters"`
 				PageInfo PageInfo      `json:"pageInfo"`
 				Hits     []struct {
-					Document   domain.Product `json:"document"`
+					Document   domain.BasicProduct `json:"document"`
 					Highlights struct {
 					} `json:"highlights"`
 				} `json:"hits"`

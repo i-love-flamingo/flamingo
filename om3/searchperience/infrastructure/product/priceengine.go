@@ -28,7 +28,7 @@ type (
 			Discounted       float64 `json:"discounted"`
 			DiscountText     string  `json:"discountText"`
 			ActiveBase       float64 `json:"activeBase"`
-			ActiveBaseAmount int     `json:"activeBaseAmount"`
+			ActiveBaseAmount float64 `json:"activeBaseAmount"`
 			ActiveBaseUnit   string  `json:"activeBaseUnit"`
 			Context          struct {
 				CustomerGroup interface{} `json:"customerGroup"`
@@ -37,11 +37,11 @@ type (
 			} `json:"context"`
 		} `json:"activePrice"`
 		AvailablePrices []struct {
-			Default          int     `json:"default"`
+			Default          float64 `json:"default"`
 			Discounted       float64 `json:"discounted"`
 			DiscountText     string  `json:"discountText"`
-			ActiveBase       int     `json:"activeBase"`
-			ActiveBaseAmount int     `json:"activeBaseAmount"`
+			ActiveBase       float64 `json:"activeBase"`
+			ActiveBaseAmount float64 `json:"activeBaseAmount"`
 			ActiveBaseUnit   string  `json:"activeBaseUnit"`
 			Context          struct {
 				CustomerGroup interface{} `json:"customerGroup"`

@@ -8,6 +8,8 @@ import (
 
 	"flamingo/framework/router"
 
+	"flamingo/framework/web"
+
 	"github.com/spf13/cobra"
 )
 
@@ -42,6 +44,17 @@ var (
 			RoutesHelper.PrintRoutes()
 		},
 	}
+
+	// RoutingConfCmd to show routing configuration information
+	DataControllerCmd = &cobra.Command{
+		Use:   "datacontroller",
+		Short: "Print the datacontroller handlers registered. Datacontrollers can be called in Templates and also via Ajax",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Datacontroller:\n")
+			RoutesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
+			RoutesHelper.PrintDataHandlers()
+		},
+	}
 )
 
 // Print Registered Routes and Theire Handle
@@ -58,6 +71,21 @@ func (r *routesHelper) PrintRoutes() {
 	for _, routePath := range getSortedMapKeys(routes) {
 		_, controller := r.RouterRegistry.GetControllerForHandle(routes[routePath])
 		printRoute(routes[routePath], routePath, controller)
+	}
+}
+
+// Print Registered Routes and Theire Handle
+func (r *routesHelper) PrintDataHandlers() {
+	fmt.Println("    Handler-Name:         Type        (Registered Handler)")
+	fmt.Println("----------------------------------------------------------")
+
+	for k, v := range r.RouterRegistry.GetHandler() {
+		if c, ok := v.(router.DataController); ok {
+			fmt.Printf("    %s:\t\t> %s \t(%s)\n", k, "DataController", c)
+		}
+		if c, ok := v.(func(web.Context) interface{}); ok {
+			fmt.Printf("    %s:\t\t> %s \t(%s)\n", k, "Function", c)
+		}
 	}
 }
 

@@ -257,6 +257,22 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 
 	// reformat data to map[string]string, just as in normal request vars would look like
 	// dataController might be called via Ajax (instead of right via template) so this should be unified
+	vars := reformatParams(params...)
+	getCtx := ctx.WithVars(vars)
+
+	if c, ok := router.RouterRegistry.handler[handler]; ok {
+		if c, ok := c.(DataController); ok {
+			return router.Injector.GetInstance(c).(DataController).Data(getCtx)
+		}
+		if c, ok := c.(func(web.Context) interface{}); ok {
+			return c(getCtx)
+		}
+		panic(errors.Errorf("%q is not a data controller", handler))
+	}
+	panic(errors.Errorf("data controller %q not found", handler))
+}
+
+func reformatParams(params ...map[interface{}]interface{}) map[string]string {
 	vars := make(map[string]string)
 	if len(params) == 1 {
 		for k, v := range params[0] {
@@ -274,17 +290,5 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 			}
 		}
 	}
-
-	getCtx := ctx.WithVars(vars)
-
-	if c, ok := router.RouterRegistry.handler[handler]; ok {
-		if c, ok := c.(DataController); ok {
-			return router.Injector.GetInstance(c).(DataController).Data(getCtx)
-		}
-		if c, ok := c.(func(web.Context) interface{}); ok {
-			return c(getCtx)
-		}
-		panic(errors.Errorf("%q is not a data controller", handler))
-	}
-	panic(errors.Errorf("data controller %q not found", handler))
+	return vars
 }

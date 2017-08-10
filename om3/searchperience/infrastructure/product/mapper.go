@@ -86,6 +86,8 @@ func (ps *Mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProduc
 	basicData.ShortDescription = variant1.ShortDescription
 	basicData.Description = variant1.Description
 	basicData.CreatedAt = variant1.CreatedAt
+	basicData.MarketPlaceCode = variant1.MarketPlaceCode
+	basicData.RetailerCode = variant1.RetailerCode
 
 	for _, media := range variant1.Media {
 		basicData.Media = append(basicData.Media, domain.Media(media))
@@ -133,8 +135,7 @@ func (ps *Mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableDat
 	saleData.SaleableTo = variant1.SaleableTo
 
 	saleData.RetailerSku = variant1.RetailerSku
-	saleData.MarketPlaceCode = variant1.MarketPlaceCode
-	saleData.RetailerCode = variant1.RetailerCode
+
 	return saleData
 
 }

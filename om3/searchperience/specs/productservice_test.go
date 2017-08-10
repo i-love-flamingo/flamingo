@@ -63,8 +63,8 @@ func TestProductserviceCanGetSimpleProduct(t *testing.T) {
 		}
 		// @TODO: Remove when search is ready: This is just for the time where search is not calling the priceengine
 		simpleProduct := product.(domain.SimpleProduct)
-		if simpleProduct.ActivePrice.Default != 10 {
-			t.Fatalf("Product ActivePrice is expected to be %v got %v", 10, simpleProduct.ActivePrice.Default)
+		if simpleProduct.ActivePrice.Default != 9.99 {
+			t.Fatalf("Product ActivePrice is expected to be %v got %v", 9.99, simpleProduct.ActivePrice.Default)
 		}
 		return nil
 	}); err != nil {
@@ -134,6 +134,10 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 			t.Fatalf("Variant Product Title is expected to be %v got %v", "Bombay Sapphire Gin 0.5L", configurableProduct.Variants[0].Title)
 		}
 
+		if configurableProduct.Variants[0].ActivePrice.Default != 0 {
+			t.Fatalf("Variant Product ActivePrice is expected to not be 0")
+		}
+
 		//Check result to priceeginge (
 		return nil
 	}); err != nil {
@@ -151,16 +155,16 @@ func getPriceResponseFixture(code string) string {
 	{
 		"marketplaceCode": "` + code + `",
 		"activePrice": {
-	"default": 10,
-	"discounted": 4,
+	"default": 9.99,
+	"discounted": 4.99,
 	"discountText": "Five dollars off",
-	"activeBase": 0,
+	"activeBase": 4.50,
 	"activeBaseAmount": 0,
 	"activeBaseUnit": "",
 	"context": {
-	"customerGroup": null,
-	"channelCode": "mainstore",
-	"locale": "de_DE"
+	  "customerGroup": null,
+	  "channelCode": "mainstore",
+	  "locale": "de_DE"
 	}
 	},
 		"availablePrices": null

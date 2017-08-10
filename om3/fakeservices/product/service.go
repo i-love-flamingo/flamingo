@@ -11,10 +11,10 @@ import (
 type FakeProductService struct{}
 
 // Get returns a product struct
-func (ps *FakeProductService) Get(ctx context.Context, foreignId string) (domain.BasicProduct, error) {
+func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (domain.BasicProduct, error) {
 	//defer ctx.Profile("service", "get product "+foreignId)()
 
-	if foreignId == "fake_configurable" {
+	if marketplaceCode == "fake_configurable" {
 		var product domain.ConfigurableProduct
 		product.Title = "Configurable product"
 
@@ -26,22 +26,30 @@ func (ps *FakeProductService) Get(ctx context.Context, foreignId string) (domain
 		var simpleVariant domain.Variant
 		simpleVariant.Attributes = make(map[string]interface{})
 		addSalableData(&simpleVariant.SaleableData)
+		addBasicData(&simpleVariant.BasicProductData)
+
 		simpleVariant.Title = "Variant 1 - L"
 		simpleVariant.Attributes["size"] = "L"
 		simpleVariant.ActivePrice = getPrice(50, 30)
+		simpleVariant.MarketPlaceCode = "variant1code"
 		product.Variants = append(product.Variants, simpleVariant)
+
 		simpleVariant.Title = "Variant 1 - XL"
 		simpleVariant.Attributes["size"] = "XL"
 		simpleVariant.ActivePrice = getPrice(60, 0)
+		simpleVariant.MarketPlaceCode = "variant2code"
 		product.Variants = append(product.Variants, simpleVariant)
+
+		product.MarketPlaceCode = marketplaceCode
 		return product, nil
 	}
-	if foreignId == "fake_simple" {
+	if marketplaceCode == "fake_simple" {
 		product := domain.SimpleProduct{}
 		product.Title = "Simple product"
 		addBasicData(&product.BasicProductData)
 		addSalableData(&product.SaleableData)
 		product.ActivePrice = getPrice(20, 10)
+		product.MarketPlaceCode = marketplaceCode
 		return product, nil
 	}
 	var product domain.BasicProduct
@@ -55,11 +63,10 @@ func addBasicData(product *domain.BasicProductData) {
 	product.Media = append(product.Media, domain.Media{Type: "image-external", Reference: "http://pipsum.com/1024x768.jpg"})
 	product.Attributes = make(map[string]interface{})
 	product.Attributes["brandCode"] = "Apple"
-
+	product.RetailerCode = "Testretailer"
 }
 
 func addSalableData(product *domain.SaleableData) {
-	product.RetailerCode = "Testretailer"
 	product.RetailerSku = "12345sku"
 }
 

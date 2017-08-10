@@ -1,0 +1,1329 @@
+{
+  "query": "all",
+  "type": "product",
+  "results": {
+    "retailer": {
+      "metaData": {
+        "totalHits": 0,
+        "took": 2,
+        "currentQuery": "all",
+        "facetMapping": [
+          {
+            "documentType": "retailer",
+            "facetNames": []
+          },
+          {
+            "documentType": "location",
+            "facetNames": []
+          },
+          {
+            "documentType": "brand",
+            "facetNames": []
+          },
+          {
+            "documentType": "product",
+            "facetNames": []
+          }
+        ],
+        "sortMapping": [
+          {
+            "documentType": "retailer",
+            "sorts": {}
+          },
+          {
+            "documentType": "location",
+            "sorts": {}
+          },
+          {
+            "documentType": "brand",
+            "sorts": {}
+          },
+          {
+            "documentType": "product",
+            "sorts": {}
+          }
+        ]
+      },
+      "facets": [],
+      "filters": [],
+      "pageInfo": {
+        "currentPage": 1,
+        "totalPages": 0,
+        "visiblePageLinks": 5,
+        "padding": 1
+      },
+      "hits": []
+    },
+    "location": {
+      "metaData": {
+        "totalHits": 3,
+        "took": 3,
+        "currentQuery": "all",
+        "facetMapping": [
+          {
+            "documentType": "retailer",
+            "facetNames": []
+          },
+          {
+            "documentType": "location",
+            "facetNames": []
+          },
+          {
+            "documentType": "brand",
+            "facetNames": []
+          },
+          {
+            "documentType": "product",
+            "facetNames": []
+          }
+        ],
+        "sortMapping": [
+          {
+            "documentType": "retailer",
+            "sorts": {}
+          },
+          {
+            "documentType": "location",
+            "sorts": {}
+          },
+          {
+            "documentType": "brand",
+            "sorts": {}
+          },
+          {
+            "documentType": "product",
+            "sorts": {}
+          }
+        ]
+      },
+      "facets": [],
+      "filters": [],
+      "pageInfo": {
+        "currentPage": 1,
+        "totalPages": 1,
+        "visiblePageLinks": 5,
+        "padding": 1
+      },
+      "hits": [
+        {
+          "document": {
+            "foreignId": "location-alltours-1-en_US",
+            "locale": "en_NZ",
+            "channel": "mainstore",
+            "code": "heinemann-terminal-1-area-z-non-schengen",
+            "formatVersion": 1,
+            "title": "Alltours",
+            "shortTitle": "Short title Alltours",
+            "shortDescription": "Short description Alltours",
+            "description": "Description Alltours",
+            "type": "Shop",
+            "airportZone": {
+              "title": "Airport Zone Alltours",
+              "area": "C",
+              "level": "3",
+              "terminal": "T1",
+              "landside": true,
+              "schengen": false
+            },
+            "brands": [
+              "Jim Beam",
+              "Hugo Boss",
+              "Tile",
+              "Zinc Flyte"
+            ],
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "counter": "Something",
+            "email": "info@heinemann.de",
+            "phone": "+49",
+            "pickup": true,
+            "keywords": [
+              "hot"
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "foreignId": "location-all-nippon-airways-en_US",
+            "locale": "en_NZ",
+            "channel": "mainstore",
+            "code": "heinemann-terminal-1-area-z-non-schengen",
+            "formatVersion": 1,
+            "title": "All Nippon Airways",
+            "shortTitle": "Short title All Nippon Airways",
+            "shortDescription": "Short description All Nippon Airways",
+            "description": "Description All Nippon Airways",
+            "type": "Shop",
+            "airportZone": {
+              "title": "Airport Zone All Nippon Airways",
+              "area": "B",
+              "level": "2",
+              "terminal": "T1",
+              "landside": true,
+              "schengen": false
+            },
+            "brands": [
+              "Belvedere",
+              "Talisker"
+            ],
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "counter": "Something",
+            "email": "info@heinemann.de",
+            "phone": "+49",
+            "pickup": true,
+            "keywords": [
+              "hot"
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "foreignId": "location-small-planet-airlines-en_US",
+            "locale": "en_NZ",
+            "channel": "mainstore",
+            "code": "heinemann-terminal-1-area-z-non-schengen",
+            "formatVersion": 1,
+            "title": "Small Planet Airlines",
+            "shortTitle": "Short title Small Planet Airlines",
+            "shortDescription": "Short description Small Planet Airlines",
+            "description": "Description Small Planet Airlines",
+            "type": "Shop",
+            "airportZone": {
+              "title": "Airport Zone Small Planet Airlines",
+              "area": "D",
+              "level": "2",
+              "terminal": "T2",
+              "landside": true,
+              "schengen": false
+            },
+            "brands": [
+              "Miller Harris",
+              "Kindle",
+              "Estée Lauder",
+              "Campari",
+              "Elie Saab"
+            ],
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "counter": "Something",
+            "email": "info@heinemann.de",
+            "phone": "+49",
+            "pickup": true,
+            "keywords": [
+              "hot"
+            ]
+          },
+          "highlights": {}
+        }
+      ]
+    },
+    "brand": {
+      "metaData": {
+        "totalHits": 5,
+        "took": 4,
+        "currentQuery": "all",
+        "facetMapping": [
+          {
+            "documentType": "retailer",
+            "facetNames": []
+          },
+          {
+            "documentType": "location",
+            "facetNames": []
+          },
+          {
+            "documentType": "brand",
+            "facetNames": []
+          },
+          {
+            "documentType": "product",
+            "facetNames": []
+          }
+        ],
+        "sortMapping": [
+          {
+            "documentType": "retailer",
+            "sorts": {}
+          },
+          {
+            "documentType": "location",
+            "sorts": {}
+          },
+          {
+            "documentType": "brand",
+            "sorts": {}
+          },
+          {
+            "documentType": "product",
+            "sorts": {}
+          }
+        ]
+      },
+      "facets": [],
+      "filters": [],
+      "pageInfo": {
+        "currentPage": 1,
+        "totalPages": 1,
+        "visiblePageLinks": 5,
+        "padding": 1
+      },
+      "hits": [
+        {
+          "document": {
+            "channel": "mainstore",
+            "foreignId": "4d7095cf7ae8aea857956167077e475e_en_NZ_Marshall",
+            "formatVersion": 1,
+            "keywords": [
+              "hot"
+            ],
+            "locale": "en_NZ",
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "shortDescription": "Short description Marshall",
+            "shortTitle": "Short title Marshall",
+            "teaser": "Teaser Marshall",
+            "title": "Marshall"
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "channel": "mainstore",
+            "foreignId": "1ee23660c21bb81bec31be6fee32e9de_en_NZ_TheMacallan",
+            "formatVersion": 1,
+            "keywords": [
+              "hot"
+            ],
+            "locale": "en_NZ",
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "shortDescription": "Short description The Macallan",
+            "shortTitle": "Short title The Macallan",
+            "teaser": "Teaser The Macallan",
+            "title": "The Macallan"
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "channel": "mainstore",
+            "foreignId": "33e4f5f3f110bb8176dacac30b9d289f_en_NZ_Greenalls",
+            "formatVersion": 1,
+            "keywords": [
+              "hot"
+            ],
+            "locale": "en_NZ",
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "shortDescription": "Short description Greenalls",
+            "shortTitle": "Short title Greenalls",
+            "teaser": "Teaser Greenalls",
+            "title": "Greenalls"
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "channel": "mainstore",
+            "foreignId": "65059bae7409bef82d715271faa65693_en_NZ_Ballantines",
+            "formatVersion": 1,
+            "keywords": [
+              "hot"
+            ],
+            "locale": "en_NZ",
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "shortDescription": "Short description Ballantine's",
+            "shortTitle": "Short title Ballantine's",
+            "teaser": "Teaser Ballantine's",
+            "title": "Ballantine's"
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "channel": "mainstore",
+            "foreignId": "8cc04229cdcbacf0011bb898d6a94572_en_NZ_RobertoCavalli",
+            "formatVersion": 1,
+            "keywords": [
+              "hot"
+            ],
+            "locale": "en_NZ",
+            "media": [
+              {
+                "mimeType": "image/jpg",
+                "reference": "media/images/brand/heroBrand_en_NZ_4711.jpg",
+                "title": "Frontal View of the brand",
+                "type": "image-api",
+                "usage": "thumbnail"
+              }
+            ],
+            "shortDescription": "Short description Roberto Cavalli",
+            "shortTitle": "Short title Roberto Cavalli",
+            "teaser": "Teaser Roberto Cavalli",
+            "title": "Roberto Cavalli"
+          },
+          "highlights": {}
+        }
+      ]
+    },
+    "product": {
+      "metaData": {
+        "totalHits": 214,
+        "took": 4,
+        "currentQuery": "all",
+        "facetMapping": [
+          {
+            "documentType": "retailer",
+            "facetNames": []
+          },
+          {
+            "documentType": "location",
+            "facetNames": []
+          },
+          {
+            "documentType": "brand",
+            "facetNames": []
+          },
+          {
+            "documentType": "product",
+            "facetNames": []
+          }
+        ],
+        "sortMapping": [
+          {
+            "documentType": "retailer",
+            "sorts": {}
+          },
+          {
+            "documentType": "location",
+            "sorts": {}
+          },
+          {
+            "documentType": "brand",
+            "sorts": {}
+          },
+          {
+            "documentType": "product",
+            "sorts": {}
+          }
+        ]
+      },
+      "facets": [],
+      "filters": [],
+      "pageInfo": {
+        "currentPage": 1,
+        "totalPages": 25,
+        "visiblePageLinks": 5,
+        "padding": 1
+      },
+      "hits": [
+        {
+          "document": {
+            "locale": "en_NZ",
+            "channel": "onlinestore",
+            "foreignId": "11ea208119ac6a52a5256534fb9527bc_en_NZ_onlinestore",
+            "marketPlaceCode": "11ea208119ac6a52a5256534fb9527bc",
+            "productType": "simple",
+            "formatVersion": 1,
+            "stockLevel": "high",
+            "internalName": "CLINIQUE All About Moisture",
+            "productFamily": "product family",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "visibleFrom": "2015-01-01T12:06:30Z",
+            "visibleTo": "2020-01-01T12:10:30Z",
+            "customerRating": 5,
+            "teaserData": {
+              "title": "CLINIQUE All About Moisture",
+              "shortTitle": "CLINIQUE All About Moisture",
+              "teaser": "CLINIQUE All About Moisture",
+              "shortDescription": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Teaser data media title",
+                  "reference": "media/images/configurable_product.jpg"
+                }
+              ]
+            },
+            "sorting": {
+              "price": 12.329999923706055,
+              "sellingCount": 100
+            },
+            "categoryPath": [
+              "Beauty",
+              "Beauty/Skincare",
+              "Beauty/Skincare/Travel Set"
+            ],
+            "categoryCodes": [
+              "code1",
+              "code2"
+            ],
+            "documentBoost": 0,
+            "highlights": {},
+            "keywords": [
+              "keyword"
+            ],
+            "keywordsImportant": null,
+            "configurableProduct": {
+              "internalName": "",
+              "title": "",
+              "createdAt": "0001-01-01T00:00:00Z",
+              "updatedAt": "0001-01-01T00:00:00Z",
+              "attributes": null,
+              "media": null
+            },
+            "variantVariationAttributes": null,
+            "variants": [
+              {
+                "internalName": "Variant internal name",
+                "title": "CLINIQUE All About Moisture",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "0001-01-01T00:00:00Z",
+                "saleableTo": "0001-01-01T00:00:00Z",
+                "attributes": {
+                  "allergens": "Variant attribute allergens",
+                  "brandCode": null,
+                  "brandName": "Clinique",
+                  "color": [
+                    "yellow"
+                  ],
+                  "packageSize": "Variant attribute package size",
+                  "size": [
+                    "XS",
+                    "L",
+                    "XL"
+                  ],
+                  "storageConditions": "Variant attribute storage conditions",
+                  "tags": [
+                    "Variant attribute tag"
+                  ]
+                },
+                "shortDescription": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "description": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "media/images/caviar/variant2.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://aoe.com/ImZ3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "11ea208119ac6a52a5256534fb9527bc",
+                "retailerSku": "Variant retailer sku",
+                "retailerCode": "Variant retailer code",
+                "retailerName": "Variant retailer name",
+                "retailerImage": "",
+                "originPrice": 773,
+                "originBasePrice": 393.6,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100
+              }
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "locale": "en_NZ",
+            "channel": "mainstore",
+            "foreignId": "11ea208119ac6a52a5256534fb9527bc_en_NZ_mainstore",
+            "marketPlaceCode": "11ea208119ac6a52a5256534fb9527bc",
+            "productType": "configurable",
+            "formatVersion": 1,
+            "stockLevel": "high",
+            "internalName": "CLINIQUE All About Moisture",
+            "productFamily": "Product family",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "visibleFrom": "2015-01-01T12:06:30Z",
+            "visibleTo": "2020-01-01T12:10:30Z",
+            "customerRating": 5,
+            "teaserData": {
+              "title": "CLINIQUE All About Moisture",
+              "shortTitle": "CLINIQUE All About Moisture",
+              "teaser": "CLINIQUE All About Moisture",
+              "shortDescription": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Teaser data media title",
+                  "reference": "media/images/configurable_product.jpg"
+                }
+              ]
+            },
+            "sorting": {
+              "price": 12.329999923706055,
+              "sellingCount": 100
+            },
+            "categoryPath": [
+              "Beauty",
+              "Beauty/Skincare",
+              "Beauty/Skincare/Travel Set"
+            ],
+            "categoryCodes": [
+              "code1",
+              "code2"
+            ],
+            "documentBoost": 0,
+            "highlights": {},
+            "keywords": [
+              "keyword"
+            ],
+            "keywordsImportant": null,
+            "configurableProduct": {
+              "internalName": "CLINIQUE All About Moisture",
+              "title": "CLINIQUE All About Moisture",
+              "createdAt": "2015-01-01T12:10:30Z",
+              "updatedAt": "2020-01-01T12:10:30Z",
+              "attributes": {
+                "allergens": "Configurable product attribute allergens",
+                "brandCode": "Configurable product attribute brand code",
+                "brandName": "Clinique",
+                "packageSize": "Configurable product package size",
+                "storageConditions": "Configurable product attribute storage conditions",
+                "tags": [
+                  "Configurable product attribute tag"
+                ]
+              },
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Configurable product media title 1",
+                  "reference": "media/images/configurable_product.jpg"
+                },
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "detail",
+                  "title": "Configurable product media title 2",
+                  "reference": "media/images/configurable_product.jpg"
+                },
+                {
+                  "type": "youtube",
+                  "mimeType": "",
+                  "usage": "detail",
+                  "title": "Configurable product media title 3",
+                  "reference": "https://youtu.be/w7yVXG4t6Ng"
+                }
+              ]
+            },
+            "variantVariationAttributes": [
+              "variants.attributes.size",
+              "variants.attributes.color"
+            ],
+            "variants": [
+              {
+                "internalName": "Variant_0",
+                "title": "CLINIQUE All About Moisture",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "2015-01-01T12:05:30Z",
+                "saleableTo": "2020-01-01T12:10:30Z",
+                "attributes": {
+                  "allergens": "Variant 1 attribute allergen",
+                  "brandCode": "Variant 1 attribute brand code",
+                  "brandName": "Clinique",
+                  "color": [
+                    "pink",
+                    "magenta",
+                    "yellow"
+                  ],
+                  "packageSize": "Variant 1 attribute package size",
+                  "size": [
+                    "XS",
+                    "86",
+                    "92",
+                    "S",
+                    "XL"
+                  ],
+                  "storageConditions": "Variant 1 attribute storage condition",
+                  "tags": [
+                    "Variant 1 attribute tag"
+                  ]
+                },
+                "shortDescription": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "description": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 media title 1",
+                    "reference": "media/images/caviar/variant1.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 title 2",
+                    "reference": "https://aoe.com/Z3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 1 title 3",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "11ea208119ac6a52a5256534fb9527bc",
+                "retailerSku": "Variant 1 retailer sku",
+                "retailerCode": "Variant 1 retailer code",
+                "retailerName": "Variant 1 retailer name",
+                "retailerImage": "",
+                "originPrice": 955,
+                "originBasePrice": 393.33,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100,
+                "specialPrice": 105.99,
+                "specialPriceFrom": 100.99,
+                "specialPriceTo": 112.99,
+                "currency": "usd",
+                "taxClass": "Variant 1 tax class"
+              },
+              {
+                "internalName": "Variant_1",
+                "title": "CLINIQUE All About Moisture",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "2015-01-01T12:05:30Z",
+                "saleableTo": "2020-01-01T12:10:30Z",
+                "attributes": {
+                  "allergens": "Variant 2 attribute allergen",
+                  "brandCode": "Variant 2 attribute brand code",
+                  "brandName": "Clinique",
+                  "color": [
+                    "white",
+                    "green"
+                  ],
+                  "packageSize": "Variant 2 attribute package size",
+                  "size": [
+                    "S",
+                    "M",
+                    "L",
+                    "92",
+                    "XXL"
+                  ],
+                  "storageConditions": "Variant 2 attribute storage condition",
+                  "tags": [
+                    "Variant 1 attribute tag"
+                  ]
+                },
+                "shortDescription": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "description": "The new Clinique All About Moisture travel retail exclusive set includes everything you need to keep skin hydrated and comfortable for up to 24 hours.  Like all Clinique products, the Moisture Surge range is allergy tested and 100% fragrance free.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 media title 1",
+                    "reference": "media/images/caviar/variant1.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 title 2",
+                    "reference": "https://aoe.com/Z3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 2 title 3",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "11ea208119ac6a52a5256534fb9527bc",
+                "retailerSku": "Variant 2 retailer sku",
+                "retailerCode": "Variant 2 retailer code",
+                "retailerName": "Variant 2 retailer name",
+                "retailerImage": "",
+                "originPrice": 643,
+                "originBasePrice": 393.33,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100,
+                "specialPrice": 105.99,
+                "specialPriceFrom": 100.99,
+                "specialPriceTo": 112.99,
+                "currency": "usd",
+                "taxClass": "Variant 2 tax class"
+              }
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "locale": "en_NZ",
+            "channel": "onlinestore",
+            "foreignId": "29f7236d81d20ec2501530874caaed78_en_NZ_onlinestore",
+            "marketPlaceCode": "29f7236d81d20ec2501530874caaed78",
+            "productType": "simple",
+            "formatVersion": 1,
+            "stockLevel": "high",
+            "internalName": "SWAROVSKI Angelic All Around Set",
+            "productFamily": "product family",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "visibleFrom": "2015-01-01T12:06:30Z",
+            "visibleTo": "2020-01-01T12:10:30Z",
+            "customerRating": 5,
+            "teaserData": {
+              "title": "SWAROVSKI Angelic All Around Set",
+              "shortTitle": "SWAROVSKI Angelic All Around Set",
+              "teaser": "SWAROVSKI Angelic All Around Set",
+              "shortDescription": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The",
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Teaser data media title",
+                  "reference": "media/images/configurable_product.jpg"
+                }
+              ]
+            },
+            "sorting": {
+              "price": 12.329999923706055,
+              "sellingCount": 100
+            },
+            "categoryPath": [
+              "Fashion",
+              "Fashion/Jewellery",
+              "Fashion/Jewellery/Jewellery Set"
+            ],
+            "categoryCodes": [
+              "code1",
+              "code2"
+            ],
+            "documentBoost": 0,
+            "highlights": {},
+            "keywords": [
+              "keyword"
+            ],
+            "keywordsImportant": null,
+            "configurableProduct": {
+              "internalName": "",
+              "title": "",
+              "createdAt": "0001-01-01T00:00:00Z",
+              "updatedAt": "0001-01-01T00:00:00Z",
+              "attributes": null,
+              "media": null
+            },
+            "variantVariationAttributes": null,
+            "variants": [
+              {
+                "internalName": "Variant internal name",
+                "title": "SWAROVSKI Angelic All Around Set",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "0001-01-01T00:00:00Z",
+                "saleableTo": "0001-01-01T00:00:00Z",
+                "attributes": {
+                  "allergens": "Variant attribute allergens",
+                  "brandCode": null,
+                  "brandName": "Swarovski",
+                  "color": [
+                    "black",
+                    "transparent",
+                    "neongrey",
+                    "blue",
+                    "magenta"
+                  ],
+                  "packageSize": "Variant attribute package size",
+                  "size": [
+                    "M"
+                  ],
+                  "storageConditions": "Variant attribute storage conditions",
+                  "tags": [
+                    "Variant attribute tag"
+                  ]
+                },
+                "shortDescription": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The",
+                "description": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The necklace measures 38 cm, the bracelet measures 16.5 cm, and the earrings measure 1 cm. The set also includes an extender, which can be used to increase the length of the necklace or bracelet for a perfect fit.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "media/images/caviar/variant2.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://aoe.com/ImZ3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "29f7236d81d20ec2501530874caaed78",
+                "retailerSku": "Variant retailer sku",
+                "retailerCode": "Variant retailer code",
+                "retailerName": "Variant retailer name",
+                "retailerImage": "",
+                "originPrice": 967,
+                "originBasePrice": 393.6,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100
+              }
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "locale": "en_NZ",
+            "channel": "mainstore",
+            "foreignId": "29f7236d81d20ec2501530874caaed78_en_NZ_mainstore",
+            "marketPlaceCode": "29f7236d81d20ec2501530874caaed78",
+            "productType": "configurable",
+            "formatVersion": 1,
+            "stockLevel": "high",
+            "internalName": "SWAROVSKI Angelic All Around Set",
+            "productFamily": "Product family",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "visibleFrom": "2015-01-01T12:06:30Z",
+            "visibleTo": "2020-01-01T12:10:30Z",
+            "customerRating": 5,
+            "teaserData": {
+              "title": "SWAROVSKI Angelic All Around Set",
+              "shortTitle": "SWAROVSKI Angelic All Around Set",
+              "teaser": "SWAROVSKI Angelic All Around Set",
+              "shortDescription": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The",
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Teaser data media title",
+                  "reference": "media/images/configurable_product.jpg"
+                }
+              ]
+            },
+            "sorting": {
+              "price": 12.329999923706055,
+              "sellingCount": 100
+            },
+            "categoryPath": [
+              "Fashion",
+              "Fashion/Jewellery",
+              "Fashion/Jewellery/Jewellery Set"
+            ],
+            "categoryCodes": [
+              "code1",
+              "code2"
+            ],
+            "documentBoost": 0,
+            "highlights": {},
+            "keywords": [
+              "keyword"
+            ],
+            "keywordsImportant": null,
+            "configurableProduct": {
+              "internalName": "SWAROVSKI Angelic All Around Set",
+              "title": "SWAROVSKI Angelic All Around Set",
+              "createdAt": "2015-01-01T12:10:30Z",
+              "updatedAt": "2020-01-01T12:10:30Z",
+              "attributes": {
+                "allergens": "Configurable product attribute allergens",
+                "brandCode": "Configurable product attribute brand code",
+                "brandName": "Swarovski",
+                "packageSize": "Configurable product package size",
+                "storageConditions": "Configurable product attribute storage conditions",
+                "tags": [
+                  "Configurable product attribute tag"
+                ]
+              },
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Configurable product media title 1",
+                  "reference": "media/images/configurable_product.jpg"
+                },
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "detail",
+                  "title": "Configurable product media title 2",
+                  "reference": "media/images/configurable_product.jpg"
+                },
+                {
+                  "type": "youtube",
+                  "mimeType": "",
+                  "usage": "detail",
+                  "title": "Configurable product media title 3",
+                  "reference": "https://youtu.be/w7yVXG4t6Ng"
+                }
+              ]
+            },
+            "variantVariationAttributes": [
+              "variants.attributes.size",
+              "variants.attributes.color"
+            ],
+            "variants": [
+              {
+                "internalName": "Variant_0",
+                "title": "SWAROVSKI Angelic All Around Set",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "2015-01-01T12:05:30Z",
+                "saleableTo": "2020-01-01T12:10:30Z",
+                "attributes": {
+                  "allergens": "Variant 1 attribute allergen",
+                  "brandCode": "Variant 1 attribute brand code",
+                  "brandName": "Swarovski",
+                  "color": [
+                    "magenta",
+                    "blue",
+                    "yellow",
+                    "purple",
+                    "black"
+                  ],
+                  "packageSize": "Variant 1 attribute package size",
+                  "size": [
+                    "XS"
+                  ],
+                  "storageConditions": "Variant 1 attribute storage condition",
+                  "tags": [
+                    "Variant 1 attribute tag"
+                  ]
+                },
+                "shortDescription": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The",
+                "description": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The necklace measures 38 cm, the bracelet measures 16.5 cm, and the earrings measure 1 cm. The set also includes an extender, which can be used to increase the length of the necklace or bracelet for a perfect fit.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 media title 1",
+                    "reference": "media/images/caviar/variant1.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 title 2",
+                    "reference": "https://aoe.com/Z3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 1 title 3",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "29f7236d81d20ec2501530874caaed78",
+                "retailerSku": "Variant 1 retailer sku",
+                "retailerCode": "Variant 1 retailer code",
+                "retailerName": "Variant 1 retailer name",
+                "retailerImage": "",
+                "originPrice": 60,
+                "originBasePrice": 393.33,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100,
+                "specialPrice": 105.99,
+                "specialPriceFrom": 100.99,
+                "specialPriceTo": 112.99,
+                "currency": "usd",
+                "taxClass": "Variant 1 tax class"
+              },
+              {
+                "internalName": "Variant_1",
+                "title": "SWAROVSKI Angelic All Around Set",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "2015-01-01T12:05:30Z",
+                "saleableTo": "2020-01-01T12:10:30Z",
+                "attributes": {
+                  "allergens": "Variant 2 attribute allergen",
+                  "brandCode": "Variant 2 attribute brand code",
+                  "brandName": "Swarovski",
+                  "color": [
+                    "transparent",
+                    "pink",
+                    "red",
+                    "magenta",
+                    "green"
+                  ],
+                  "packageSize": "Variant 2 attribute package size",
+                  "size": [
+                    "M"
+                  ],
+                  "storageConditions": "Variant 2 attribute storage condition",
+                  "tags": [
+                    "Variant 1 attribute tag"
+                  ]
+                },
+                "shortDescription": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The",
+                "description": "This glamorous rhodium-plated set includes three timeless essentials: a necklace, bracelet, and pair of pierced earrings. Blue crystals delicately embedded in clear crystal pavé create a glamorous sparkle. Ideal for special occasions and gift giving! The necklace measures 38 cm, the bracelet measures 16.5 cm, and the earrings measure 1 cm. The set also includes an extender, which can be used to increase the length of the necklace or bracelet for a perfect fit.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 media title 1",
+                    "reference": "media/images/caviar/variant1.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 title 2",
+                    "reference": "https://aoe.com/Z3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 2 title 3",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "29f7236d81d20ec2501530874caaed78",
+                "retailerSku": "Variant 2 retailer sku",
+                "retailerCode": "Variant 2 retailer code",
+                "retailerName": "Variant 2 retailer name",
+                "retailerImage": "",
+                "originPrice": 485,
+                "originBasePrice": 393.33,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100,
+                "specialPrice": 105.99,
+                "specialPriceFrom": 100.99,
+                "specialPriceTo": 112.99,
+                "currency": "usd",
+                "taxClass": "Variant 2 tax class"
+              }
+            ]
+          },
+          "highlights": {}
+        },
+        {
+          "document": {
+            "locale": "en_NZ",
+            "channel": "onlinestore",
+            "foreignId": "ac979b9299ce3cc2f0bd5edfb0ca669d_en_NZ_onlinestore",
+            "marketPlaceCode": "ac979b9299ce3cc2f0bd5edfb0ca669d",
+            "productType": "simple",
+            "formatVersion": 1,
+            "stockLevel": "high",
+            "internalName": "SWAROVSKI Angelic All-Around Necklace",
+            "productFamily": "product family",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "visibleFrom": "2015-01-01T12:06:30Z",
+            "visibleTo": "2020-01-01T12:10:30Z",
+            "customerRating": 5,
+            "teaserData": {
+              "title": "SWAROVSKI Angelic All-Around Necklace",
+              "shortTitle": "SWAROVSKI Angelic All-Around Necklace",
+              "teaser": "SWAROVSKI Angelic All-Around Necklace",
+              "shortDescription": "This exquisite necklace perfectly complements other pieces from Swarovski’s bestselling Angelic collection. Ideal for special occasions and gift giving, it shines in clear crystal and shiny rhodium-plated metal.",
+              "media": [
+                {
+                  "type": "image-api",
+                  "mimeType": "image/jpg",
+                  "usage": "thumbnail",
+                  "title": "Teaser data media title",
+                  "reference": "media/images/configurable_product.jpg"
+                }
+              ]
+            },
+            "sorting": {
+              "price": 12.329999923706055,
+              "sellingCount": 100
+            },
+            "categoryPath": [
+              "Fashion",
+              "Fashion/Jewellery",
+              "Fashion/Jewellery/Necklace"
+            ],
+            "categoryCodes": [
+              "code1",
+              "code2"
+            ],
+            "documentBoost": 0,
+            "highlights": {},
+            "keywords": [
+              "keyword"
+            ],
+            "keywordsImportant": null,
+            "configurableProduct": {
+              "internalName": "",
+              "title": "",
+              "createdAt": "0001-01-01T00:00:00Z",
+              "updatedAt": "0001-01-01T00:00:00Z",
+              "attributes": null,
+              "media": null
+            },
+            "variantVariationAttributes": null,
+            "variants": [
+              {
+                "internalName": "Variant internal name",
+                "title": "SWAROVSKI Angelic All-Around Necklace",
+                "createdAt": "2015-01-01T12:10:30Z",
+                "updatedAt": "2015-01-01T12:10:30Z",
+                "isSaleable": true,
+                "saleableFrom": "0001-01-01T00:00:00Z",
+                "saleableTo": "0001-01-01T00:00:00Z",
+                "attributes": {
+                  "allergens": "Variant attribute allergens",
+                  "brandCode": null,
+                  "brandName": "Swarovski",
+                  "color": [
+                    "purple"
+                  ],
+                  "packageSize": "Variant attribute package size",
+                  "size": [
+                    "S"
+                  ],
+                  "storageConditions": "Variant attribute storage conditions",
+                  "tags": [
+                    "Variant attribute tag"
+                  ]
+                },
+                "shortDescription": "This exquisite necklace perfectly complements other pieces from Swarovski’s bestselling Angelic collection. Ideal for special occasions and gift giving, it shines in clear crystal and shiny rhodium-plated metal.",
+                "description": "This exquisite necklace perfectly complements other pieces from Swarovski’s bestselling Angelic collection. Ideal for special occasions and gift giving, it shines in clear crystal and shiny rhodium-plated metal.",
+                "customerRating": 0,
+                "media": [
+                  {
+                    "type": "image-api",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "media/images/caviar/variant2.jpg"
+                  },
+                  {
+                    "type": "image-external",
+                    "mimeType": "image/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://aoe.com/ImZ3Ijo2NTh9.jpg"
+                  },
+                  {
+                    "type": "youtube",
+                    "mimeType": "",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https://youtu.be/w7yVXG4t6Ng"
+                  }
+                ],
+                "marketPlaceCode": "ac979b9299ce3cc2f0bd5edfb0ca669d",
+                "retailerSku": "Variant retailer sku",
+                "retailerCode": "Variant retailer code",
+                "retailerName": "Variant retailer name",
+                "retailerImage": "",
+                "originPrice": 385,
+                "originBasePrice": 393.6,
+                "originBasePriceUnit": "g",
+                "originBasePriceAmount": 100
+              }
+            ]
+          },
+          "highlights": {}
+        }
+      ]
+    }
+  }
+}

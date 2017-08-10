@@ -123,11 +123,11 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 	}
 	var tempPriceEngineResponseDto TempPriceEngineResponseDto
 	err = json.NewDecoder(resp.Body).Decode(&tempPriceEngineResponseDto)
-	//log.Printf("Resp %=v", resp)
+	log.Printf("Resp %=v", resp)
 	if err != nil {
 		return priceinfo, errors.WithStack(err)
 	}
-	//log.Printf("Priceengine Response %=v", tempPriceEngineResponseDto)
+	log.Printf("Priceengine Response %=v", tempPriceEngineResponseDto)
 	if len(tempPriceEngineResponseDto) != 1 {
 		return priceinfo, errors.New("Priceengine response has not exactly one array entry")
 	}

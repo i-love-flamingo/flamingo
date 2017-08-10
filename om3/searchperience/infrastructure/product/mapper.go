@@ -121,6 +121,7 @@ func (ps *Mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData
 	basicData.UpdatedAt = productDto.UpdatedAt
 	basicData.CategoryCodes = productDto.CategoryCodes
 	basicData.CategoryPath = productDto.CategoryPath
+	basicData.MarketPlaceCode = productDto.MarketPlaceCode
 }
 
 func (ps *Mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableData {

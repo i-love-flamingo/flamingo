@@ -14,7 +14,7 @@ type FakeBlockService struct{}
 func (ps *FakeBlockService) Get(ctx context.Context, name string) (*domain.Block, error) {
 	var block domain.Block
 
-	b, _ := ioutil.ReadFile("src/fakeservices/cmsblock/service.cms.block.mock.json")
+	b, _ := ioutil.ReadFile("../om3/fakeservices/cmsblock/service.cms.block.mock.json")
 	json.Unmarshal(b, &block)
 	block.Identifier = name
 

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flamingo/core/product/domain"
 	"flamingo/om3/searchperience/infrastructure/product/dto"
+
+	"log"
 )
 
 type (
@@ -42,13 +44,15 @@ func (ps *Mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Pr
 		variant := domain.Variant{}
 		variant.SaleableData = ps.dtoVariantToSaleData(&variantDto)
 		variant.BasicProductData = ps.dtoVariantToBaseData(&variantDto)
-		configurableProduct.Variants = append(configurableProduct.Variants, variant)
 		//TODO Remove when search has it
 		priceinfo, err := priceEngine.TempRequestPriceEngine(ctx, variantDto)
+		log.Printf("Variant %s Price: %v Discounted: %v Rules: %=v", variant.MarketPlaceCode, priceinfo.Default, priceinfo.Discounted, priceinfo.CampaignRules)
 		if err != nil {
 			return configurableProduct, err
 		}
 		variant.ActivePrice = priceinfo
+
+		configurableProduct.Variants = append(configurableProduct.Variants, variant)
 	}
 
 	return configurableProduct, nil

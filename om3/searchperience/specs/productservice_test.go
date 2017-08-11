@@ -134,8 +134,8 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 			t.Fatalf("Variant Product Title is expected to be %v got %v", "Bombay Sapphire Gin 0.5L", configurableProduct.Variants[0].Title)
 		}
 
-		if configurableProduct.Variants[0].ActivePrice.Default != 0 {
-			t.Fatalf("Variant Product ActivePrice is expected to not be 0")
+		if configurableProduct.Variants[0].ActivePrice.Default == 0 {
+			t.Fatalf("Variant Product ActivePrice is expected to not be 0 Got: %v", configurableProduct.Variants[0].ActivePrice.Default)
 		}
 
 		//Check result to priceeginge (

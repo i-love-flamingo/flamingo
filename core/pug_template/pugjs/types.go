@@ -26,6 +26,10 @@ type Object interface {
 	String() string
 }
 
+type Truther interface {
+	True() bool
+}
+
 func convert(in interface{}) Object {
 	//log.Printf("Converting %#v", in)
 	if in == nil {
@@ -102,14 +106,10 @@ func convert(in interface{}) Object {
 	case reflect.Func:
 		return &Func{fnc: val.Interface()}
 
-		// TODO meh?
 	case reflect.Ptr:
-		//log.Println("PTR", val, in, val.Pointer(), val.Elem())
-		//if val.Elem().IsValid() {
-		//	if o, ok := val.Elem().Interface().(Object); !ok {
-		//		return convert(o)
-		//	}
-		//}
+		if val.IsValid() && val.Elem().IsValid() {
+			return convert(val.Elem())
+		}
 		return Nil{}
 
 	case reflect.Bool:
@@ -128,6 +128,7 @@ type Func struct {
 func (f *Func) Type() ObjectType         { return FUNC }
 func (f *Func) Field(name string) Object { return Nil{} }
 func (f *Func) String() string           { return fmt.Sprintf("%s", reflect.ValueOf(f.fnc)) }
+func (f *Func) True() bool               { return true }
 
 // Array
 
@@ -189,6 +190,10 @@ func (a *Array) Push(what Object) Object {
 	return Nil{}
 }
 
+func (a *Array) True() bool {
+	return len(a.items) > 0
+}
+
 // Map
 
 type Map struct {
@@ -217,15 +222,26 @@ func (m *Map) Field(field string) Object {
 	if i, ok := m.Items[String(field)]; ok {
 		return i
 	}
+	if i, ok := m.Items[String(lowerFirst(field))]; ok {
+		return i
+	}
+	if i, ok := m.Items[String(strings.Title(field))]; ok {
+		return i
+	}
 	return Nil{}
 }
 
 func (m *Map) MarshalJSON() ([]byte, error) {
 	tmp := make(map[string]interface{}, len(m.Items))
 	for k, v := range m.Items {
-		tmp[k.String()] = v
+		//tmp[k.String()] = v
+		tmp[lowerFirst(k.String())] = v
 	}
 	return json.Marshal(tmp)
+}
+
+func (m *Map) True() bool {
+	return len(m.Items) > 0
 }
 
 // String
@@ -276,6 +292,7 @@ type Bool bool
 func (b Bool) Type() ObjectType    { return BOOL }
 func (b Bool) Field(string) Object { return Nil{} }
 func (b Bool) String() string      { return fmt.Sprintf("%v", bool(b)) }
+func (b Bool) True() bool          { return bool(b) }
 
 // Nil
 
@@ -284,3 +301,4 @@ type Nil struct{}
 func (n Nil) Type() ObjectType    { return NIL }
 func (n Nil) Field(string) Object { return Nil{} }
 func (n Nil) String() string      { return "" }
+func (n Nil) True() bool          { return false }

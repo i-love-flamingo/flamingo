@@ -338,6 +338,9 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		truth = val.Uint() != 0
 	case reflect.Struct:
+		if o, ok := val.Interface().(Truther); ok {
+			return o.True(), true
+		}
 		truth = true // Struct values are always true.
 	default:
 		return
@@ -764,7 +767,7 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 	if v.Type() == reflectValueType {
 		v = v.Interface().(reflect.Value)
 	}
-	if !v.MethodByName("NoConvert").IsValid() {
+	if v.IsValid() && !v.MethodByName("NoConvert").IsValid() {
 		v = reflect.ValueOf(convert(v))
 	}
 	return v

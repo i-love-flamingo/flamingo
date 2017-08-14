@@ -18,7 +18,7 @@ func (t *Tag) args(p *renderState, attrs []Attribute, andattributes bool) string
 		if attr.Name == "style" {
 			a[attr.Name] += ` ` + strings.Replace(p.JsExpr(string(attr.Val), true, false), `{{(__str `, `{{(sc `, -1)
 		} else {
-			a[attr.Name] += ` ` + p.JsExpr(string(attr.Val), true, false)
+			a[attr.Name] += ` ` + strings.Replace(p.JsExpr(string(attr.Val), true, false), `{{(`, `{{html (`, -1)
 		}
 	}
 

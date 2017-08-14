@@ -175,6 +175,10 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 		//	v = reflect.ValueOf(string(obj))
 		//}
 
+		//if _, ok := v.Interface().(Nil); ok {
+		//	return reflect.ValueOf(nil), nil
+		//}
+
 		var isNil bool
 		if v, isNil = indirect(v); isNil {
 			return reflect.Value{}, fmt.Errorf("index of nil pointer")

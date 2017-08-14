@@ -83,7 +83,7 @@ func (p *renderState) JsExpr(expr string, wrap, rawcode bool) string {
 	}
 
 	for _, stmt := range stmtlist {
-		finalexpr += p.astment(stmt, wrap, true)
+		finalexpr += p.renderStatement(stmt, wrap, true)
 	}
 
 	return finalexpr
@@ -114,7 +114,7 @@ func (p *renderState) interpolate(input string) string {
 	return input
 }
 
-func (p *renderState) astment(stmt ast.Statement, wrap bool, dot bool) string {
+func (p *renderState) renderStatement(stmt ast.Statement, wrap bool, dot bool) string {
 	var finalexpr string
 
 	if stmt == nil {
@@ -138,8 +138,8 @@ func (p *renderState) astment(stmt ast.Statement, wrap bool, dot bool) string {
 
 	case *ast.IfStatement:
 		finalexpr = `{{if ` + p.renderExpression(expr.Test, false, true) + `}}`
-		finalexpr += p.astment(expr.Consequent, true, true)
-		elsebranch := p.astment(expr.Alternate, true, true)
+		finalexpr += p.renderStatement(expr.Consequent, true, true)
+		elsebranch := p.renderStatement(expr.Alternate, true, true)
 		if elsebranch != "" && elsebranch != "{{null}}" {
 			finalexpr += `{{else}}`
 			finalexpr += elsebranch
@@ -148,6 +148,11 @@ func (p *renderState) astment(stmt ast.Statement, wrap bool, dot bool) string {
 
 	case *ast.ThrowStatement:
 		finalexpr += p.renderExpression(expr.Argument, wrap, true)
+
+	case *ast.BlockStatement:
+		for _, s := range expr.List {
+			finalexpr += p.renderStatement(s, wrap, true)
+		}
 
 		// we cannot deal with other expressions at the moment, and we don'e expect them ayway
 	default:

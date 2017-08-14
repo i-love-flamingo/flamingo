@@ -77,6 +77,7 @@ func getPrice(defaultP float64, discounted float64) domain.PriceInfo {
 	if discounted != 0 {
 		price.Discounted = discounted
 		price.DiscountText = "Super test campaign"
+		price.IsDiscounted = true
 	}
 	price.ActiveBase = 1
 	price.ActiveBaseAmount = 10

@@ -1,0 +1,34 @@
+{
+  "id": "test-toblerone",
+  "segmentRelevance": {
+    "Faszination Airport/Kids&Family": 0.5,
+    "Reisen/Passagiere/Business": 4
+  },
+  "Logo": {
+    "id": 272,
+    "hash": "4a2cb65faae5d3e6a7238eda787cfd53",
+    "URL": "https://static.shop.frankfurt-airport.com/retailer-images/272/fixed/h/70/Toblerone_RP.JPG",
+    "fixed": "https://static.shop.frankfurt-airport.com/retailer-images/272/fixed/w/:width:/Toblerone-Logo.png"
+  },
+  "HeroImage": {
+    "id": 129,
+    "hash": "5054e2473d6b89ed0f962280fa3a7b40",
+    "URL": "https://images.pexels.com/photos/534164/pexels-photo-534164.jpeg?w=1260&h=750&auto=compress&cs=tinysrgb",
+    "1-1": "http://static.deploy.fraport-web.aoe.host/retailer-images/129/1-1/w/:width:/toblerone_heroimage.jpg",
+    "16-9": "http://static.deploy.fraport-web.aoe.host/retailer-images/129/16-9/w/:width:/toblerone_heroimage.jpg"
+  },
+  "additionalMedia": [
+  ],
+  "withDetailPage": false,
+  "defaultRelevance": 3,
+  "lastUpdate": "2015-07-28T15:03:03+0000",
+  "Title": "AOE Test Toblerone",
+  "ShortTitle": "of Switzerland",
+  "teaser": "TOBLERONE ist in der Schweiz und im Ausland die bekannteste Schweizer Schokolade",
+  "introduction": "Ob zu Weihnachten, Ostern oder Valentins- und Muttertag. Durchstöbern Sie unsere große Auswahl an TOBLERONE-Schokoladenträumen und finden Sie das passende Geschenk zu jedem Anlass.",
+  "description": "Schweizer Milchschokolade mit Honig- und Mandel-Nougat ((9%) Zutaten: Zucker, Vollmilchpulver, Kakaobutter, Kakaomasse, Honig (3.0 %), Butterreinfett, Mandeln (1.6 %), Emulgator Soja-Lecithin, Eiklar, Aroma Vanillin. Kakao: 2(8% mindestens.",
+  "keywords": "Schokolade",
+  "localeRelevance": 2,
+  "language": "de_DE",
+  "url": "https://flamingo.dev-latest.akl.om3.cloud/de/brand/test-toblerone"
+}

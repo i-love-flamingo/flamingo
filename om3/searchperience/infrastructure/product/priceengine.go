@@ -24,26 +24,34 @@ type (
 	TempPriceEngineResponseDto []struct {
 		MarketplaceCode string `json:"marketplaceCode"`
 		ActivePrice     struct {
-			Default          float64 `json:"default"`
-			Discounted       float64 `json:"discounted"`
-			DiscountText     string  `json:"discountText"`
-			ActiveBase       float64 `json:"activeBase"`
-			ActiveBaseAmount float64 `json:"activeBaseAmount"`
-			ActiveBaseUnit   string  `json:"activeBaseUnit"`
-			Context          struct {
+			Default           float64  `json:"default"`
+			Discounted        float64  `json:"discounted"`
+			IsDiscounted      bool     `json:"isDiscounted"`
+			DiscountText      string   `json:"discountText"`
+			ActiveBase        float64  `json:"activeBase"`
+			ActiveBaseAmount  float64  `json:"activeBaseAmount"`
+			ActiveBaseUnit    string   `json:"activeBaseUnit"`
+			CampaignRules     []string `json:"campaignRules"`
+			DenyMoreDiscounts bool     `json:"denyMoreDiscounts"`
+			Currency          string   `json:"currency"`
+			Context           struct {
 				CustomerGroup interface{} `json:"customerGroup"`
 				ChannelCode   string      `json:"channelCode"`
 				Locale        string      `json:"locale"`
 			} `json:"context"`
 		} `json:"activePrice"`
 		AvailablePrices []struct {
-			Default          float64 `json:"default"`
-			Discounted       float64 `json:"discounted"`
-			DiscountText     string  `json:"discountText"`
-			ActiveBase       float64 `json:"activeBase"`
-			ActiveBaseAmount float64 `json:"activeBaseAmount"`
-			ActiveBaseUnit   string  `json:"activeBaseUnit"`
-			Context          struct {
+			Default           float64  `json:"default"`
+			IsDiscounted      bool     `json:"isDiscounted"`
+			Discounted        float64  `json:"discounted"`
+			DiscountText      string   `json:"discountText"`
+			ActiveBase        float64  `json:"activeBase"`
+			ActiveBaseAmount  float64  `json:"activeBaseAmount"`
+			ActiveBaseUnit    string   `json:"activeBaseUnit"`
+			CampaignRules     []string `json:"campaignRules"`
+			DenyMoreDiscounts bool     `json:"denyMoreDiscounts"`
+			Currency          string   `json:"currency"`
+			Context           struct {
 				CustomerGroup interface{} `json:"customerGroup"`
 				ChannelCode   string      `json:"channelCode"`
 				Locale        string      `json:"locale"`
@@ -78,7 +86,7 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 	}
 
 	//log.Printf("Call to %v", u)
-	body := []byte(`{
+	priceEngineRequest := []byte(`{
   "context": {
     "customerGroup": null,
     "channelCode": "mainstore",
@@ -108,29 +116,41 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
       }
     }]}`)
 
-	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(priceEngineRequest))
 	if err != nil {
 		panic(err)
 	}
 	log.Printf("Priceengine Request Url %s \n", u.String())
-	//log.Printf("Priceengine Request Body %v \n", string(body))
+	//log.Printf("Priceengine Request Body %v \n", string(priceEngineRequest))
 	req = req.WithContext(ctx)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 
 	if err != nil {
+		log.Printf("Priceengine Error  %s \n", err)
 		return priceinfo, err
 	}
 	var tempPriceEngineResponseDto TempPriceEngineResponseDto
 	err = json.NewDecoder(resp.Body).Decode(&tempPriceEngineResponseDto)
 	//log.Printf("Resp %=v", resp)
 	if err != nil {
+		log.Printf("Priceengine Error  %s \n", err)
 		return priceinfo, errors.WithStack(err)
 	}
 	//log.Printf("Priceengine Response %=v", tempPriceEngineResponseDto)
 	if len(tempPriceEngineResponseDto) != 1 {
+		log.Printf("Priceengine Error  - len mismatch")
 		return priceinfo, errors.New("Priceengine response has not exactly one array entry")
 	}
+
 	priceinfo.Default = tempPriceEngineResponseDto[0].ActivePrice.Default
+	priceinfo.Discounted = tempPriceEngineResponseDto[0].ActivePrice.Discounted
+	priceinfo.DiscountText = tempPriceEngineResponseDto[0].ActivePrice.DiscountText
+	priceinfo.CampaignRules = tempPriceEngineResponseDto[0].ActivePrice.CampaignRules
+	priceinfo.Currency = tempPriceEngineResponseDto[0].ActivePrice.Currency
+	priceinfo.ActiveBase = tempPriceEngineResponseDto[0].ActivePrice.ActiveBase
+	priceinfo.ActiveBaseAmount = tempPriceEngineResponseDto[0].ActivePrice.ActiveBaseAmount
+	priceinfo.IsDiscounted = tempPriceEngineResponseDto[0].ActivePrice.IsDiscounted
+
 	return priceinfo, nil
 }

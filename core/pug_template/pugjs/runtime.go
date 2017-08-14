@@ -29,6 +29,9 @@ var funcmap = FuncMap{
 		arr, ok := obj.(*Array)
 		idx, ok2 := key.(int)
 		if ok && ok2 {
+			if len(arr.items) <= idx {
+				return Nil{}
+			}
 			return arr.items[idx]
 		}
 

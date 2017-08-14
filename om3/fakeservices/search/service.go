@@ -14,7 +14,7 @@ type FakeSearchService struct{}
 
 func (searchservice *FakeSearchService) Search(ctx web.Context, query url.Values) (*domain.SearchResult, error) {
 	var s = new(domain.SearchResult)
-	b, _ := ioutil.ReadFile("frontend/src/mock/searchResult.mock.json")
+	b, _ := ioutil.ReadFile("../om3/fakeservices/search/searchResult.mock.json")
 	json.Unmarshal(b, s)
 
 	if page := query.Get("page"); page != "" {

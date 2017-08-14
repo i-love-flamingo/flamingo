@@ -17,10 +17,10 @@ func (ps *FakePageService) Get(ctx context.Context, name string) (*domain.Page, 
 
 	fmt.Println("Fake Page Service Call")
 	if name == "bluefoot" {
-		b, _ := ioutil.ReadFile("src/fakeservices/cmspage/service.cms.page.bluefoot.mock.json")
+		b, _ := ioutil.ReadFile("../om3/fakeservices/cmspage/service.cms.page.bluefoot.mock.json")
 		json.Unmarshal(b, &page)
 	} else {
-		b, _ := ioutil.ReadFile("src/fakeservices/cmspage/service.cms.page.mock.json")
+		b, _ := ioutil.ReadFile("../om3/fakeservices/cmspage/service.cms.page.mock.json")
 		json.Unmarshal(b, &page)
 	}
 

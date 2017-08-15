@@ -194,6 +194,10 @@ func (a *Array) True() bool {
 	return len(a.items) > 0
 }
 
+func (a *Array) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.items)
+}
+
 // Map
 
 type Map struct {

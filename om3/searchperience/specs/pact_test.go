@@ -11,7 +11,7 @@ import (
 var pact dsl.Pact
 
 func TestMain(m *testing.M) {
-	pact = testutil.PactSetup("flamingo", "searchperienc-frontend")
+	pact = testutil.PactSetup("flamingo", "searchperience-frontend")
 
 	status := m.Run()
 

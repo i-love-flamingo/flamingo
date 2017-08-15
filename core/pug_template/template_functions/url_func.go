@@ -1,6 +1,7 @@
-package templatefunctions
+package template_functions
 
 import (
+	"flamingo/core/pug_template/pugjs"
 	"flamingo/framework/router"
 	"html/template"
 )
@@ -19,11 +20,11 @@ func (u URLFunc) Name() string {
 
 // Func as implementation of url method
 func (u *URLFunc) Func() interface{} {
-	return func(where string, params ...map[interface{}]interface{}) template.URL {
+	return func(where string, params ...*pugjs.Map) template.URL {
 		var p = make(map[string]string)
-		if len(params) > 0 {
-			for k, v := range params[0] {
-				p[k.(string)] = v.(string)
+		if len(params) == 1 {
+			for k, v := range params[0].Items {
+				p[k.String()] = v.String()
 			}
 		}
 		return template.URL(u.Router.URL(where, p).String())

@@ -54,6 +54,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.ObjectLib{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.DebugFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsonLib{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
+	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
 
 	m.loadmock("../src/component/*")
 	m.loadmock("../src/component/*/*")

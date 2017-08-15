@@ -1,6 +1,7 @@
-package templatefunctions
+package template_functions
 
 import (
+	"flamingo/core/pug_template/pugjs"
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 )
@@ -19,7 +20,13 @@ func (g GetFunc) Name() string {
 
 // Func as implementation of get method
 func (g *GetFunc) Func(ctx web.Context) interface{} {
-	return func(what string, params ...map[interface{}]interface{}) interface{} {
-		return g.Router.Get(what, ctx, params...)
+	return func(what string, params ...*pugjs.Map) interface{} {
+		var p = make(map[interface{}]interface{})
+		if len(params) == 1 {
+			for k, v := range params[0].Items {
+				p[k.String()] = v.String()
+			}
+		}
+		return g.Router.Get(what, ctx, p)
 	}
 }

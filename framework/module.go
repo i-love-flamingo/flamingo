@@ -46,8 +46,6 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
 
-	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ConfigFunc{})
 }
 

@@ -71,6 +71,7 @@ func convert(in interface{}) Object {
 	case reflect.Map:
 		newval := &Map{
 			Items: make(map[Object]Object, val.Len()),
+			o:     val.Interface(),
 		}
 		for _, k := range val.MapKeys() {
 			newval.Items[convert(k)] = convert(val.MapIndex(k))
@@ -78,18 +79,22 @@ func convert(in interface{}) Object {
 		return newval
 
 	case reflect.Struct:
-		newval := make(map[string]interface{})
+		newval := &Map{
+			Items: make(map[Object]Object, val.Type().NumField()+val.Type().NumMethod()),
+			o:     val.Interface(),
+		}
+
 		for i := 0; i < val.NumField(); i++ {
 			if val.Field(i).CanInterface() {
-				newval[val.Type().Field(i).Name] = convert(val.Field(i))
+				newval.Items[String(val.Type().Field(i).Name)] = convert(val.Field(i))
 			}
 		}
 
 		for i := 0; i < val.NumMethod(); i++ {
-			newval[val.Type().Method(i).Name] = convert(val.Type().Method(i).Func)
+			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Type().Method(i).Func)
 		}
 
-		return convert(newval)
+		return newval
 
 	case reflect.String:
 		return String(val.String())
@@ -202,12 +207,16 @@ func (a *Array) MarshalJSON() ([]byte, error) {
 
 type Map struct {
 	Items map[Object]Object
+	o     interface{}
 }
 
 func (m *Map) Type() ObjectType { return MAP }
 func (m *Map) String() string {
 	if m == nil {
 		return ""
+	}
+	if s, ok := m.o.(fmt.Stringer); ok {
+		return s.String()
 	}
 	b, err := m.MarshalJSON()
 	if err != nil {
@@ -236,6 +245,9 @@ func (m *Map) Field(field string) Object {
 }
 
 func (m *Map) MarshalJSON() ([]byte, error) {
+	if s, ok := m.o.(json.Marshaler); ok {
+		return s.MarshalJSON()
+	}
 	tmp := make(map[string]interface{}, len(m.Items))
 	for k, v := range m.Items {
 		//tmp[k.String()] = v

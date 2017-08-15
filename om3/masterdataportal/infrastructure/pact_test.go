@@ -11,7 +11,7 @@ import (
 var pact dsl.Pact
 
 func TestMain(m *testing.M) {
-	pact = testutil.PactSetup("Flamingo", "Masterdataportal")
+	pact = testutil.PactSetup("flamingo", "masterdataportal")
 
 	status := m.Run()
 

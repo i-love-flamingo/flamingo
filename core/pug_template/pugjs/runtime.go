@@ -94,6 +94,13 @@ var funcmap = FuncMap{
 		}
 		return convert(m)
 	},
+	"__op__map_params": func(a ...interface{}) Object {
+		m := make(map[interface{}][]interface{}, len(a)/2)
+		for i := 0; i < len(a); i += 2 {
+			m[a[i]] = append(m[a[i]], a[i+1])
+		}
+		return convert(m)
+	},
 	"__add_andattributes": func(attrs Object, k ...string) template.HTMLAttr {
 		known := make(map[string]bool)
 		for _, k := range k {

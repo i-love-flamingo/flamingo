@@ -51,7 +51,7 @@ func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer, depth int) er
 }
 
 func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer, depth int) error {
-	attributes := `__op__map `
+	attributes := `__op__map_params `
 	for _, a := range m.Attrs {
 		attributes += ` "` + a.Name + `" ` + p.JsExpr(string(a.Val), false, false)
 	}

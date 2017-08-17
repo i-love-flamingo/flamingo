@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flamingo/framework"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -53,7 +54,7 @@ func PactTeardown(pact dsl.Pact) {
 		p := dsl.Publisher{}
 		file := filepath.Join(pact.PactDir, fmt.Sprintf("%s-%s.json", strings.ToLower(pact.Consumer), strings.ToLower(pact.Provider)))
 
-		p.Publish(types.PublishRequest{
+		err := p.Publish(types.PublishRequest{
 			PactURLs:        []string{file},
 			PactBroker:      pactbroker,
 			ConsumerVersion: framework.VERSION,
@@ -61,6 +62,9 @@ func PactTeardown(pact dsl.Pact) {
 			BrokerUsername:  os.Getenv("PACT_BROKER_USERNAME"),
 			BrokerPassword:  os.Getenv("PACT_BROKER_PASSWORD"),
 		})
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	pact.Teardown()

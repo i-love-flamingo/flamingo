@@ -823,6 +823,9 @@ func (s *state) validateType(value reflect.Value, typ reflect.Type) reflect.Valu
 					return reflect.ValueOf(o.String())
 				}
 			}
+			if _, ok := value.Interface().(Nil); ok {
+				return reflect.Zero(typ)
+			}
 			s.errorf("wrong type for value; expected %s; got %s", typ, value.Type())
 		}
 	}

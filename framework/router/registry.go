@@ -1,10 +1,11 @@
 package router
 
 import (
-	"errors"
 	"net/http"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -69,6 +70,9 @@ func (registry *Registry) GetControllerForHandle(name string) (error, Controller
 func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
+	if len(h.params) == 0 {
+		h.params = parseParams(strings.Join(h.path.params, ", "))
+	}
 	registry.routes = append(registry.routes, h)
 }
 
@@ -191,6 +195,7 @@ routeloop:
 		if handler.handler == name {
 			var renderparams = make(map[string]string)
 
+			// set handler default parameters
 			for key, param := range handler.params {
 				v, ok := params[key]
 
@@ -206,14 +211,22 @@ routeloop:
 				renderparams[key] = param.value
 			}
 
+			// add Reverse parameters
 			for k, v := range params {
 				renderparams[k] = v
+			}
+
+			// validate if all parameters have been used
+			for key := range params {
+				if _, ok := handler.params[key]; !ok {
+					continue routeloop
+				}
 			}
 
 			return handler.path.Render(renderparams)
 		}
 	}
-	return "", errors.New("Reverse for " + name + " not found")
+	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)
 }
 
 // Match a request path

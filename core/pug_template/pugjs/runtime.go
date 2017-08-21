@@ -25,7 +25,6 @@ var funcmap = FuncMap{
 	"__op__lss":   runtimeLss,
 	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
 	"__tryindex": func(obj, key interface{}) interface{} {
-		//log.Println(obj, key)
 		arr, ok := obj.(*Array)
 		idx, ok2 := key.(int)
 		if ok && ok2 {

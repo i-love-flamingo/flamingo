@@ -31,7 +31,7 @@ func (ps *ProductService) Get(ctx context.Context, ID string) (domain.BasicProdu
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.WithStack(domain.ProductNotFound{ID: ID})
+		return nil, errors.WithStack(domain.ProductNotFound{MarketplaceCode: ID})
 	}
 
 	productDto := &dto.Product{}

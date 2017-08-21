@@ -16,11 +16,11 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 
 	if marketplaceCode == "fake_configurable" {
 		var product domain.ConfigurableProduct
-		product.Title = "Configurable product"
+		product.Title = "TypeConfigurable product"
 
 		addBasicData(&product.BasicProductData)
 
-		//prepare Configurable
+		//prepare TypeConfigurable
 		product.VariantVariationAttributes = append(product.VariantVariationAttributes, "size")
 
 		var simpleVariant domain.Variant
@@ -45,7 +45,7 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 	}
 	if marketplaceCode == "fake_simple" {
 		product := domain.SimpleProduct{}
-		product.Title = "Simple product"
+		product.Title = "TypeSimple product"
 		addBasicData(&product.BasicProductData)
 		addSalableData(&product.SaleableData)
 		product.ActivePrice = getPrice(20, 10)

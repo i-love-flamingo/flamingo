@@ -58,8 +58,8 @@ func TestProductserviceCanGetSimpleProduct(t *testing.T) {
 		if product == nil {
 			t.Fatal("Product is nil")
 		}
-		if product.GetBaseData().Title != simpleTitleFixture {
-			t.Fatalf("Product Title is expected to be %v got %v", simpleTitleFixture, product.GetBaseData().Title)
+		if product.BaseData().Title != simpleTitleFixture {
+			t.Fatalf("Product Title is expected to be %v got %v", simpleTitleFixture, product.BaseData().Title)
 		}
 		// @TODO: Remove when search is ready: This is just for the time where search is not calling the priceengine
 		simpleProduct := product.(domain.SimpleProduct)
@@ -78,7 +78,7 @@ func getSimpleProductResponseFixture() string {
 }
 
 func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
-	var titleFixture = "Bombay Sapphire Gin Configurable"
+	var titleFixture = "Bombay Sapphire Gin TypeConfigurable"
 	pact.AddInteraction().
 		Given("The configurable test product exists").
 		UponReceiving("A request to a configurable test product").
@@ -121,13 +121,13 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 		if product == nil {
 			t.Fatal("Product is nil")
 		}
-		if product.GetBaseData().Title != titleFixture {
-			t.Fatalf("Product Title is expected to be %v got %v", titleFixture, product.GetBaseData().Title)
+		if product.BaseData().Title != titleFixture {
+			t.Fatalf("Product Title is expected to be %v got %v", titleFixture, product.BaseData().Title)
 		}
 
 		configurableProduct := product.(domain.ConfigurableProduct)
 		if len(configurableProduct.Variants) != 3 {
-			t.Fatalf("Configurable product should have 3 Variants")
+			t.Fatalf("TypeConfigurable product should have 3 Variants")
 		}
 
 		if configurableProduct.Variants[0].Title != "Bombay Sapphire Gin 0.5L" {

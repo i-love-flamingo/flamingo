@@ -33,7 +33,7 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 	context := event.Request.Context().Value(web.CONTEXT).(web.Context)
 	p := context.Profiler().(*DefaultProfiler)
 
-	event.ResponseWriter.Header().Set("X-Request-ID", context.ID())
+	event.ResponseWriter.Header().Set("X-Correlation-ID", context.ID())
 
 	if _, ok := event.Response.(*web.RedirectResponse); ok {
 		context.Session().Values["context.id"] = context.ID()
@@ -105,7 +105,7 @@ window.addEventListener("load", function load(e) {
 	if existing, ok := profilestorage[context.ID()]; ok {
 		p.Childs = append(existing.Childs, p.Childs...)
 	}
-	if existing, ok := profilestorage[context.Request().Header.Get("X-Request-Id")]; ok {
+	if existing, ok := profilestorage[context.Request().Header.Get("X-Correlation-Id")]; ok {
 		existing.ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
 	}
 	profilelock.Lock()

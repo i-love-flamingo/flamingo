@@ -24,10 +24,10 @@ type (
 // RoundTrip a request
 func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if ctx, ok := req.Context().(web.Context); ok {
-		req.Header.Add("X-Request-ID", ctx.ID())
+		req.Header.Add("X-Correlation-ID", ctx.ID())
 		defer ctx.Profile("http.request", fmt.Sprintf("%s %s", req.Method, req.URL.String()))()
 	} else if ctx, ok = req.Context().Value(web.CONTEXT).(web.Context); ok {
-		req.Header.Add("X-Request-ID", ctx.ID())
+		req.Header.Add("X-Correlation-ID", ctx.ID())
 		defer ctx.Profile("http.request", fmt.Sprintf("%s %s", req.Method, req.URL.String()))()
 	}
 

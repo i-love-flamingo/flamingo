@@ -8,8 +8,6 @@ Please check:
 3. if groovy is installed on your os, otherwise please download and install the latest groovy version (http://groovy-lang.org/download.html).
 4. if groovy plugin is installed under File -> Settings -> Plugins in IntelliJ. if not, go further with "Install JetBrains plugin" and pick it up from list
 
-
-
 #### 1.1.1) Prepare your project (IntelliJ)
 1. Open the flamingo project in IntelliJ
 2. Select your project folder ***flamingo*** and go to (***mac os***) File -> Project structure... 
@@ -36,11 +34,5 @@ All new Page Objects should be placed in this folder.
 All Modules are stored in ***src -> test -> groovy -> com.aoe.om3.akl -> modules*** \
 All new Modules should be placed in this folder.
 
-### 1.3) Run tests automatically
-1. Open a terminal (e.g. in IntelliJ) and navigate to the "akl/integration-test" folder
-2. run the `./integrationtest.sh` shell script to run all tests automatically 
-
-### 1.4) Run a local test environment with docker
-1. Open a terminal (e.g. in IntelliJ) and navigate to the "akl/integration-test" folder
-2. run the `./integrationtest-dev.sh` shell script to run all tests automatically
-3. Some docker-compose files will be executed. It could take a while to download the images and start the containers. Please be patient.
+### 1.3) Write a test
+Please see [Groovy and Spock](https://extranet.aoe.com/confluence/display/aoetestteam/Spock+and+Gradle) for an Groovy and Spock example

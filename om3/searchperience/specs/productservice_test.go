@@ -78,7 +78,7 @@ func getSimpleProductResponseFixture() string {
 }
 
 func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
-	var titleFixture = "Bombay Sapphire Gin TypeConfigurable"
+	var titleFixture = "Bombay Sapphire Gin Configurable"
 	pact.AddInteraction().
 		Given("The configurable test product exists").
 		UponReceiving("A request to a configurable test product").

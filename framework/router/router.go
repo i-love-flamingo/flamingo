@@ -59,6 +59,11 @@ func NewRouter() *Router {
 	return new(Router)
 }
 
+// SetBase for router
+func (router *Router) SetBase(u *url.URL) {
+	router.base = u
+}
+
 // Init the router
 func (router *Router) Init(routingConfig *config.Area) *Router {
 	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)

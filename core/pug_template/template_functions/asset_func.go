@@ -30,7 +30,7 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		}
 
 		// get the _static URL
-		url := af.Router.URL("_static", nil)
+		url := af.Router.URL("_static", router.P{"n": ""})
 		var result string
 
 		assetSplitted := strings.Split(string(asset), "/")

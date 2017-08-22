@@ -6,6 +6,8 @@ Please check:
 2. if java sdk is installed on your os
 3. if groovy is installed on your os, otherwise please download and install the latest groovy version (http://groovy-lang.org/download.html).
 4. if groovy plugin is installed under File -> Settings -> Plugins in IntelliJ. if not, go further with "Install JetBrains plugin" and pick it up from list
+5. Prepare your project
+6. Add an entry to your hosts file
 
 ## 1.1) Prepare your project (IntelliJ)
 1. Open the flamingo project in IntelliJ
@@ -17,5 +19,5 @@ Please check:
 7. Check that a "Gradle JVM:" is selected and press "finish" 
 8. Now you should see the "integration-test" project underneath the "flamingo" project 
 
-## 1.2) Add an entry to Hosts File
+## 1.2) Add an entry to hosts file
 Please add `127.0.0.1 flamingo` to your hosts file.

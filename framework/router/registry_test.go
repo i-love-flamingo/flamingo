@@ -22,7 +22,7 @@ var _ = Describe("Registry Test", func() {
 				Expect(handler.params).To(BeEmpty())
 			})
 
-			It("should treat params properly", func() {g
+			It("should treat params properly", func() {
 				var handler = parseHandler("foo.bar(foo, bar)")
 				Expect(handler.handler).To(Equal("foo.bar"))
 				Expect(handler.params).To(HaveLen(2))

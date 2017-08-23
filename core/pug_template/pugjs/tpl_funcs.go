@@ -195,7 +195,9 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 			case reflect.Invalid:
 				return reflect.Value{}, fmt.Errorf("cannot index slice/array with nil")
 			default:
-				return reflect.Value{}, fmt.Errorf("cannot index slice/array with type %s", index.Type())
+				if _, ok := index.Interface().(Object); !ok {
+					return reflect.Value{}, fmt.Errorf("cannot index slice/array with type %s", index.Type())
+				}
 			}
 			if x < 0 || x >= int64(v.Len()) {
 				return reflect.Value{}, fmt.Errorf("index out of range: %d", x)

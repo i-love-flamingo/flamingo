@@ -67,6 +67,31 @@ var funcmap = FuncMap{
 		}
 		return convert(res)
 	},
+	"__range_helper__": func(o Object) interface{} {
+		switch o := o.(type) {
+		case *Map:
+			return o.Items
+		case *Array:
+			return o.items
+		case String:
+			return string(o)
+		}
+		return nil
+	},
+	"__range_helper_keys__": func(o Object) []interface{} {
+		var res []interface{}
+		switch o := o.(type) {
+		case *Map:
+			for k := range o.Items {
+				res = append(res, k)
+			}
+		case *Array:
+			for i := range o.items {
+				res = append(res, i)
+			}
+		}
+		return res
+	},
 	"raw": func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
 	"__str": func(l ...interface{}) string {
 		var res string

@@ -2,13 +2,16 @@
 
 ## 1) Prerequisites
 Please check:
-1. if IntelliJ is installed on your os (optional)
-2. if java sdk is installed on your os
+1. if IntelliJ (Community Edition is enough) is installed on your os (optional)
+2. if java 8 sdk is installed on your os
 3. if groovy is installed on your os, otherwise please download and install the latest groovy version (http://groovy-lang.org/download.html)
 4. if groovy plugin is installed under File -> Settings -> Plugins in IntelliJ. if not, go further with "Install JetBrains plugin" and pick it up from list (optional)
 5. Prepare your project (optional)
-6. Creata a gradle run configuration (optional)
-7. Add an entry to your hosts file
+6. if [gradle](https://gradle.org/install/) is installed 
+7. Creata a gradle run configuration (optional)
+8. Add an entry to your hosts file
+
+***9. Please be sure, that port 3210 is NOT in use (e.g. go server)***
 
 ## 1.1) Prepare your project (IntelliJ) (optional)
 1. Open the flamingo project in IntelliJ

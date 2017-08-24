@@ -29,9 +29,12 @@ Is it possible to run the tests in different ways.
 
 ## 3) Run your Tests with a local test environment (docker) and your Terminal
 1. Execute one shell script like in 1) or 2) described
-2. Open a Terminal an navigate to the akl/integration-test folder. Run
+2. (If gradle is intalled) Open a Terminal an navigate to the akl/integration-test folder. Run
 e.g. `gradle -PtestTarget=compose -Pgeb.env=chrome` or `gradle -PtestTarget=compose -Pgeb.env=local`
-
+3. (if gradle is not installed) In Mac OS open a Terminal an navigate to the akl/integration-test folder. Run 
+e.g. `./gradlew -PtestTarget=compose -Pgeb.env=chrome` or `./gradle -PtestTarget=compose -Pgeb.env=local`
+4. (if gradle is not installed) In Windows open a Terminal an navigate to the akl/integration-test folder. Run 
+   e.g. `gradlew -PtestTarget=compose -Pgeb.env=chrome` or `gradle -PtestTarget=compose -Pgeb.env=local`
 ## 4) Shell script details: 
 ### 4.1) Complete automated (e.g. for Jenkins)
 Run your Tests and docker docker environment complete automated

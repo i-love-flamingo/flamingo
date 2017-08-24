@@ -7,7 +7,7 @@ Please check:
 3. if groovy is installed on your os, otherwise please download and install the latest groovy version (http://groovy-lang.org/download.html)
 4. if groovy plugin is installed under File -> Settings -> Plugins in IntelliJ. if not, go further with "Install JetBrains plugin" and pick it up from list (optional)
 5. Prepare your project (optional)
-6. if [gradle](https://gradle.org/install/) is installed 
+6. if [gradle](https://gradle.org/install/) is installed (Only mandatory if you use IntelliJ)
 7. Creata a gradle run configuration (optional)
 8. Add an entry to your hosts file
 

@@ -154,7 +154,15 @@ func (p *renderState) renderStatement(stmt ast.Statement, wrap bool, dot bool) s
 			finalexpr += p.renderStatement(s, wrap, true)
 		}
 
-		// we cannot deal with other expressions at the moment, and we don'e expect them ayway
+	case *ast.ForInStatement:
+		finalexpr = `{{ range ` + p.renderExpression(expr.Into, false, true) + ` := (__range_helper_keys__ ` + p.renderExpression(expr.Source, false, true) + `) }}`
+		finalexpr += p.renderStatement(expr.Body, true, true)
+		finalexpr += `{{ end }}`
+
+	//case *ast.BranchStatement:
+	//	finalexpr = `{{ if `
+
+	// we cannot deal with other expressions at the moment, and we don'e expect them ayway
 	default:
 		fmt.Printf("%#v\n", stmt)
 		panic("unknown expression")

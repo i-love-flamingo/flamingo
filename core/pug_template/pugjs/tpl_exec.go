@@ -350,10 +350,10 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 
 func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	s.at(r)
-	defer s.pop(s.mark())
+	//defer s.pop(s.mark())
 	val := s.evalPipeline(dot, r.Pipe)
 	// mark top of stack before any variables in the body are pushed.
-	mark := s.mark()
+	//mark := s.mark()
 	oneIteration := func(index, elem reflect.Value) {
 		// Set top var (lexically the second if there are two) to the element.
 		if len(r.Pipe.Decl) > 0 {
@@ -364,7 +364,7 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 			s.setVar(2, index)
 		}
 		s.walk(elem, r.List)
-		s.pop(mark)
+		//s.pop(mark)
 	}
 
 	if val.IsValid() {

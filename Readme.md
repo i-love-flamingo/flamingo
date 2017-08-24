@@ -1,16 +1,19 @@
 # Flamingo
 
+## What is Flamingo
+
+Flamingo is a go based, opinionated framework for pluggable web projects.
+
 ## Docs
 
-Read the extensive documentation that is part of Flamingo.
+To read the documentation:
 
-After checkout you need to type:
+```
+make docs
+```
 
-`make doc`
-This will start building and previeweing the mkdocs based documentation in a Docker container.
+This will start building and previewing the mkdocs based documentation in a Docker container.
 
 To view the docs open  [Docs](http://localhost:8000)
-
-(To end the Docker container again use `docker kill`)
 
 -----------------

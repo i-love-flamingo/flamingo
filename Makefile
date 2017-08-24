@@ -1,7 +1,7 @@
 DOCKERREPO?=docker-om3-akl.aoe.com
 TAG?=latest
 
-.PHONY: run doc dep godoc docker docker-run docker-push
+.PHONY: run doc docs dep godoc docker docker-run docker-push
 
 run:
 	cd akl && go run akl.go serve
@@ -9,8 +9,10 @@ run:
 dep:
 	glide i
 
-doc:
-	docker run --rm -v $(shell pwd):/work -p 8000:8000 python bash -c 'pip install mkdocs; cd /work/docs; mkdocs serve --dev-addr=0.0.0.0:8000'
+doc: docs
+
+docs:
+	docker run --rm -v $(shell pwd):/work -p 8000:8000 -ti thebod/mkdocs bash -c 'cd /work/docs; mkdocs serve --dev-addr=0.0.0.0:8000'
 
 godoc:
 	(sleep 10 ; open http://localhost:6060/pkg/flamingo/) &

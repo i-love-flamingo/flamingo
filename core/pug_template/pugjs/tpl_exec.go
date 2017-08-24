@@ -67,7 +67,7 @@ func (s *state) varValue(name string) reflect.Value {
 			return s.vars[i].value
 		}
 	}
-	s.errorf("undefined variable: %s", name)
+	//s.errorf("undefined variable: %s", name)
 	return zero
 }
 

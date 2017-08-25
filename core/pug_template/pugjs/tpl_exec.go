@@ -52,7 +52,8 @@ func (s *state) mark() int {
 
 // pop pops the variable stack up to the mark.
 func (s *state) pop(mark int) {
-	s.vars = s.vars[0:mark]
+	//log.Println("popping", s.vars[mark:])
+	//s.vars = s.vars[0:mark]
 }
 
 // setVar overwrites the top-nth variable on the stack. Used by range iterations.
@@ -69,6 +70,16 @@ func (s *state) varValue(name string) reflect.Value {
 	}
 	//s.errorf("undefined variable: %s", name)
 	return zero
+}
+
+func (s *state) setVarValue(name string, value reflect.Value) {
+	for i := s.mark() - 1; i >= 0; i-- {
+		if s.vars[i].name == name {
+			s.vars[i].value = value
+			return
+		}
+	}
+	s.push(name, value)
 }
 
 var zero reflect.Value
@@ -350,18 +361,20 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 
 func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	s.at(r)
-	//defer s.pop(s.mark())
+	defer s.pop(s.mark())
+	for _, v := range r.Pipe.Decl {
+		s.push(v.Ident[0], zero)
+	}
 	val := s.evalPipeline(dot, r.Pipe)
 	// mark top of stack before any variables in the body are pushed.
 	//mark := s.mark()
 	oneIteration := func(index, elem reflect.Value) {
-		// Set top var (lexically the second if there are two) to the element.
-		if len(r.Pipe.Decl) > 0 {
-			s.setVar(1, elem)
-		}
 		// Set next var (lexically the first if there are two) to the index.
 		if len(r.Pipe.Decl) > 1 {
-			s.setVar(2, index)
+			s.setVarValue(r.Pipe.Decl[0].Ident[0], index)
+			s.setVarValue(r.Pipe.Decl[1].Ident[0], elem)
+		} else if len(r.Pipe.Decl) > 0 {
+			s.setVarValue(r.Pipe.Decl[0].Ident[0], elem)
 		}
 		s.walk(elem, r.List)
 		//s.pop(mark)
@@ -468,7 +481,9 @@ func (s *state) evalPipeline(dot reflect.Value, pipe *parse.PipeNode) (value ref
 		}
 	}
 	for _, variable := range pipe.Decl {
-		s.push(variable.Ident[0], value)
+		// s.push(variable.Ident[0], value)
+		//log.Println("setting", variable.Ident[0], value)
+		s.setVarValue(variable.Ident[0], value)
 	}
 	return value
 }

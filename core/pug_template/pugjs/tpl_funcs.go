@@ -165,7 +165,17 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 	}
 
 	for _, i := range indices {
-		index := indirectInterface(i)
+		var index reflect.Value
+		if o, ok := i.Interface().(Object); ok {
+			switch o := o.(type) {
+			case String:
+				index = reflect.ValueOf(string(o))
+			case Number:
+				index = reflect.ValueOf(float64(o))
+			}
+		} else {
+			index = indirectInterface(i)
+		}
 
 		//if obj, ok := v.Interface().(*Array); ok {
 		//	v = reflect.ValueOf(obj.items)
@@ -192,6 +202,8 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 				x = index.Int()
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 				x = int64(index.Uint())
+			case reflect.Float64:
+				x = int64(index.Float())
 			case reflect.Invalid:
 				return reflect.Value{}, fmt.Errorf("cannot index slice/array with nil")
 			default:

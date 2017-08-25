@@ -4,8 +4,6 @@ ignore:
 - flamingo/framework
 - flamingo/om3
 import:
-- package: github.com/Jumpscale/go-raml
-  repo: https://github.com/jadhub/go-raml.git
 - package: github.com/ghodss/yaml
 - package: github.com/gorilla/mux
   version: ^1.3.0

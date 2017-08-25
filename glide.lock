@@ -1,5 +1,5 @@
-hash: 64a654b825de835342a0e69b0f89895e42ca9847e3b142dffb575a2bc75af283
-updated: 2017-07-25T18:41:29.077128302+02:00
+hash: adbac17998a56bcb43526ed187cff28ec95f31aa4c57e8db53c7cdc0ac830164
+updated: 2017-08-25T10:12:22.243821475+02:00
 imports:
 - name: github.com/boj/redistore
   version: fc113767cd6b051980f260d6dbe84b2740c46ab0
@@ -28,9 +28,6 @@ imports:
   version: 0dc08b1671f34c4250ce212759ebd880f743d883
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
-- name: github.com/Jumpscale/go-raml
-  version: 5f43ad9db14a5d117718490b17a75596fd6ce1b9
-  repo: https://github.com/jadhub/go-raml.git
 - name: github.com/labstack/gommon
   version: 1121fd3e243c202482226a7afe4dcd07ffc4139a
   subpackages:
@@ -40,7 +37,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/pact-foundation/pact-go
-  version: bcdf7b222c414fe9af75b4dc9799777faa3c78fc
+  version: e5ab27bf2c64016e153ac8a5237aa4f34d42587a
   subpackages:
   - dsl
   - types

@@ -24,7 +24,7 @@ type (
 func (vc *ViewController) Get(c web.Context) web.Response {
 	var page, err = vc.PageService.Get(c, c.MustParam1("name"))
 
-	if page == nil {
+	if page == nil && err == nil {
 		return vc.ErrorNotFound(c, err)
 	}
 

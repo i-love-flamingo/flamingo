@@ -5,9 +5,12 @@ import (
 	"errors"
 	"flamingo/core/cms/domain"
 	"flamingo/framework/router"
-	"flamingo/framework/testutil"
 	"flamingo/framework/web"
+	"flamingo/framework/web/responder/mocks"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type (
@@ -30,62 +33,36 @@ func (m *MockPageService) Get(ctx context.Context, identifier string) (*domain.P
 }
 
 func TestViewController_Get(t *testing.T) {
-	var expectedTpl string
+	ctx := web.NewContext()
+
+	errorAware := new(mocks.ErrorAware)
+	errorAware.On("Error", ctx, mock.Anything).Return(nil)
+	errorAware.On("ErrorNotFound", ctx, mock.Anything).Return(nil)
+
+	renderAware := new(mocks.RenderAware)
+	renderAware.On("Render", ctx, mock.AnythingOfType("string"), mock.Anything).Return(nil)
 
 	vc := &ViewController{
 		PageService: new(MockPageService),
-		ErrorAware: &testutil.MockErrorAware{
-			CbError: func(context web.Context, err error) web.Response {
-				_, testerr := (&MockPageService{}).Get(nil, "fail")
-				if err.Error() != testerr.Error() {
-					t.Errorf("wrong error %v returned", err)
-				}
-				return nil
-			},
-			CbErrorNotFound: func(context web.Context, error error) web.Response {
-				return nil
-			},
-		},
-		RenderAware: &testutil.MockRenderAware{
-			CbRender: func(context web.Context, tpl string, data interface{}) web.Response {
-				if tpl != expectedTpl {
-					t.Errorf("Expected template %q != %q", expectedTpl, tpl)
-				}
-				return nil
-			},
-		},
+		ErrorAware:  errorAware,
+		RenderAware: renderAware,
 	}
-	ctx := web.NewContext()
 
 	ctx.LoadParams(router.P{"name": "fail"})
-
-	res := vc.Get(ctx)
-	if res != nil {
-		t.Errorf("Expected mocked response to be nil, not %v", res)
-	}
+	vc.Get(ctx)
 
 	ctx.LoadParams(router.P{"name": "notfound"})
+	vc.Get(ctx)
 
-	res = vc.Get(ctx)
-	if res != nil {
-		t.Errorf("Expected mocked response to be nil, not %v", res)
-	}
-
-	expectedTpl = "cms/cms"
+	expectedTpl := "cms/cms"
 	ctx.LoadParams(router.P{"name": "page"})
-
-	res = vc.Get(ctx)
-	if res != nil {
-		t.Errorf("Expected mocked response to be nil, not %v", res)
-	}
+	vc.Get(ctx)
+	renderAware.AssertCalled(t, "Render", ctx, expectedTpl, mock.Anything)
 
 	expectedTpl = "cms/template"
 	ctx.LoadParams(router.P{"name": "page", "template": "cms/template"})
-
-	res = vc.Get(ctx)
-	if res != nil {
-		t.Errorf("Expected mocked response to be nil, not %v", res)
-	}
+	vc.Get(ctx)
+	renderAware.AssertCalled(t, "Render", ctx, expectedTpl, mock.Anything)
 }
 
 func (m *MockBlockService) Get(ctx context.Context, identifier string) (*domain.Block, error) {
@@ -101,17 +78,9 @@ func TestDataController_Data(t *testing.T) {
 	ctx := web.NewContext()
 
 	ctx.LoadParams(router.P{"block": "test"})
-
 	block, ok := dc.Data(ctx).(*domain.Block)
-	if !ok {
-		t.Error("Result not a block")
-	}
 
-	if block == nil {
-		t.Error("Block is nil")
-	}
-
-	if block.Identifier != "test" {
-		t.Errorf("Wrong identifier %q, expected test", block.Identifier)
-	}
+	assert.True(t, ok, "Result is not a block")
+	assert.NotNil(t, block, "Block is nil")
+	assert.Equal(t, "test", block.Identifier, "Wrong identifier %q, expected test", block.Identifier)
 }

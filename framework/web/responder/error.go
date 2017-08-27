@@ -12,7 +12,7 @@ type (
 	// ErrorAware responder trait
 	ErrorAware interface {
 		Error(context web.Context, err error) web.Response
-		ErrorNotFound(context web.Context, error error) web.Response
+		ErrorNotFound(context web.Context, err error) web.Response
 	}
 
 	// FlamingoErrorAware responder can return errors

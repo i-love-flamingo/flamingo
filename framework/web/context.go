@@ -14,6 +14,8 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+//go:generate mockery -name "Context"
+
 type (
 	// ContextKey is used for context.WithValue
 	ContextKey string

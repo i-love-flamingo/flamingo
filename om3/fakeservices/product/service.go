@@ -25,7 +25,7 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 
 		var simpleVariant domain.Variant
 		simpleVariant.Attributes = make(map[string]interface{})
-		addSalableData(&simpleVariant.SaleableData)
+
 		addBasicData(&simpleVariant.BasicProductData)
 
 		simpleVariant.Title = "Variant 1 - L"
@@ -47,7 +47,7 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 		product := domain.SimpleProduct{}
 		product.Title = "TypeSimple product"
 		addBasicData(&product.BasicProductData)
-		addSalableData(&product.SaleableData)
+
 		product.ActivePrice = getPrice(20, 10)
 		product.MarketPlaceCode = marketplaceCode
 		return product, nil
@@ -64,9 +64,6 @@ func addBasicData(product *domain.BasicProductData) {
 	product.Attributes = make(map[string]interface{})
 	product.Attributes["brandCode"] = "Apple"
 	product.RetailerCode = "Testretailer"
-}
-
-func addSalableData(product *domain.SaleableData) {
 	product.RetailerSku = "12345sku"
 }
 

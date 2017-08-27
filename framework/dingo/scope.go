@@ -24,10 +24,10 @@ type (
 
 var (
 	// Singleton is the default SingletonScope for dingo
-	Singleton = new(SingletonScope)
+	Singleton Scope = new(SingletonScope)
 
 	// ChildSingleton is a per-child singleton
-	ChildSingleton = new(ChildSingletonScope)
+	ChildSingleton Scope = new(ChildSingletonScope)
 )
 
 // ResolveType resolves a request in this scope

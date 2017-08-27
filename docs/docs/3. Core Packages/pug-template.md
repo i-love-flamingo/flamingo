@@ -33,6 +33,8 @@ blocks, and then use a render to transform these blocks into actual go template 
 AST -[parser]-> Block tree -[render]-> go template -[go-template-runtime]-> HTML
 ```
 
+(You can also view the intermediate result https://flamingoURL/_pugtpl/debug?tpl=home/home)
+
 One of the features of pug.js is the posibility to use arbitrary JavaScript in case the template syntax
 does not provide the correct funtions. This is used for example in loops like
 

@@ -1,22 +1,41 @@
 package testutil
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"flamingo/framework"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
+	"testing"
+	"time"
 
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
 )
 
-// PactSetup sets up pact environment for go tests
-func PactSetup(consumer, provider string) dsl.Pact {
+var NoPact = errors.New("No pact setup")
+
+// WithPact runs a test with a pact
+func WithPact(t *testing.T, f func(dsl.Pact)) {
+	pact, err := pactSetup("flamingo", "magento")
+
+	if err != nil {
+		t.Skip(err)
+	} else {
+		t.Run("Pact", func(t *testing.T) { f(pact) })
+		pactTeardown(pact)
+	}
+}
+
+// pactSetup sets up pact environment for go tests
+func pactSetup(consumer, provider string) (dsl.Pact, error) {
 	var pactdaemonport = 6666
 	var pactdaemonhost = "localhost"
 	var err error
@@ -35,18 +54,27 @@ func PactSetup(consumer, provider string) dsl.Pact {
 		}
 	}
 
+	var d net.Dialer
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+
+	if _, err := d.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", pactdaemonhost, pactdaemonport)); err != nil {
+		return dsl.Pact{}, NoPact
+	}
+
 	var pact = dsl.Pact{
 		Port:     pactdaemonport,
 		Host:     pactdaemonhost,
 		Consumer: consumer,
 		Provider: provider,
+		LogLevel: "WARN",
 	}
 
-	return pact
+	return pact, nil
 }
 
-// PactTeardown tears down the pact instance
-func PactTeardown(pact dsl.Pact) {
+// pactTeardown tears down the pact instance
+func pactTeardown(pact dsl.Pact) {
 	// Write pact to file `<pact-go>/pacts/my_consumer-my_provider.json`
 	pact.WritePact()
 

@@ -46,7 +46,7 @@ func (ps *Mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Pr
 		variant.BasicProductData = ps.dtoVariantToBaseData(&variantDto)
 		//TODO Remove when search has it
 		priceinfo, err := priceEngine.TempRequestPriceEngine(ctx, variantDto)
-		log.Printf("Variant %s Price: %v Discounted: %v Rules: %=v", variant.MarketPlaceCode, priceinfo.Default, priceinfo.Discounted, priceinfo.CampaignRules)
+
 		if err != nil {
 			return configurableProduct, err
 		}

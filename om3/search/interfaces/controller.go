@@ -53,7 +53,6 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	}
 
 	if query == "" || queryErr != nil {
-		fmt.Println(vd)
 		return vc.Render(c, "search/search", vd)
 	}
 

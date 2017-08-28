@@ -35,7 +35,6 @@ import:
   version: ^0.0.8
 - package: github.com/stretchr/testify
   subpackages:
-  - '...'
 testImport:
 - package: github.com/onsi/ginkgo
   version: ^1.2.0

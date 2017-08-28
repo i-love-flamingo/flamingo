@@ -1,5 +1,5 @@
-hash: aa70f542a3f72412317c8ec0ab359f0d9839d2e5a16e9eee60ccc880b59159aa
-updated: 2017-08-27T13:52:20.380566666+02:00
+hash: 3641f9ed2ac2659b4bbe2213ae2b7551649fdffb72c1be3f41027e6815490cc4
+updated: 2017-08-28T08:41:34.587271723+02:00
 imports:
 - name: github.com/boj/redistore
   version: fc113767cd6b051980f260d6dbe84b2740c46ab0
@@ -75,7 +75,6 @@ imports:
 - name: github.com/stretchr/testify
   version: 890a5c3458b43e6104ff5da8dfa139d013d77544
   subpackages:
-  - '...'
   - assert
   - mock
 - name: golang.org/x/net

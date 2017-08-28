@@ -11,7 +11,7 @@ import (
 )
 
 func TestBrandservice(t *testing.T) {
-	testutil.WithPact(t, func(pact dsl.Pact) {
+	testutil.WithPact(t, "masterdataportal", func(pact dsl.Pact) {
 		var identifier = "test-toblerone"
 		var expected = domain.Brand{
 			ID: identifier,

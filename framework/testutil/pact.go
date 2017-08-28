@@ -23,8 +23,8 @@ import (
 var NoPact = errors.New("No pact setup")
 
 // WithPact runs a test with a pact
-func WithPact(t *testing.T, f func(dsl.Pact)) {
-	pact, err := pactSetup("flamingo", "magento")
+func WithPact(t *testing.T, target string, f func(dsl.Pact)) {
+	pact, err := pactSetup("flamingo", target)
 
 	if err != nil {
 		t.Skip(err)

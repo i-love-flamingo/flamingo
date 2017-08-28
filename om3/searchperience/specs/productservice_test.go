@@ -13,7 +13,7 @@ import (
 )
 
 func TestProductserviceCanGetSimpleProduct(t *testing.T) {
-	testutil.WithPact(t, func(pact dsl.Pact) {
+	testutil.WithPact(t, "searchperience-frontend", func(pact dsl.Pact) {
 		var simpleTitleFixture = "simple-title"
 
 		pact.AddInteraction().
@@ -78,7 +78,7 @@ func getSimpleProductResponseFixture() string {
 }
 
 func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
-	testutil.WithPact(t, func(pact dsl.Pact) {
+	testutil.WithPact(t, "searchperience-frontend", func(pact dsl.Pact) {
 		var titleFixture = "Bombay Sapphire Gin Configurable"
 		pact.AddInteraction().
 			Given("The configurable test product exists").

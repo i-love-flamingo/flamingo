@@ -6,7 +6,6 @@ import (
 	"errors"
 	"flamingo/framework"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -30,7 +29,9 @@ func WithPact(t *testing.T, target string, f func(dsl.Pact)) {
 		t.Skip(err)
 	} else {
 		t.Run("Pact", func(t *testing.T) { f(pact) })
-		pactTeardown(pact)
+		if err := pactTeardown(pact); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -74,11 +75,13 @@ func pactSetup(consumer, provider string) (dsl.Pact, error) {
 }
 
 // pactTeardown tears down the pact instance
-func pactTeardown(pact dsl.Pact) {
-	// Write pact to file `<pact-go>/pacts/my_consumer-my_provider.json`
-	pact.WritePact()
-
+func pactTeardown(pact dsl.Pact) error {
 	if pactbroker := os.Getenv("PACT_BROKER_HOST"); pactbroker != "" {
+		// Write pact to file `<pact-go>/pacts/my_consumer-my_provider.json`
+		if err := pact.WritePact(); err != nil {
+			return err
+		}
+
 		p := dsl.Publisher{}
 		file := filepath.Join(pact.PactDir, fmt.Sprintf("%s-%s.json", strings.ToLower(pact.Consumer), strings.ToLower(pact.Provider)))
 
@@ -91,11 +94,12 @@ func pactTeardown(pact dsl.Pact) {
 			BrokerPassword:  os.Getenv("PACT_BROKER_PASSWORD"),
 		})
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
 	pact.Teardown()
+	return nil
 }
 
 // PactEncodeLike helper to encode a struct as a pact like type

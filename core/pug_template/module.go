@@ -50,10 +50,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.AssetFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.MathLib{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.ObjectLib{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsMath{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsObject{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.DebugFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsonLib{})
+	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsJson{})
 	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
 

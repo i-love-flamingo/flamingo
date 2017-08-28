@@ -3,24 +3,27 @@ package template_functions
 import "encoding/json"
 
 type (
-	// JsonLib is exported as a template function
-	JsonLib struct{}
+	// JsJson is exported as a template function
+	JsJson struct{}
 
 	// Json is our Javascript's JSON equivalent
 	Json struct{}
 )
 
-// Name alias for use in template
-func (jl JsonLib) Name() string {
+// Name of JS object
+func (jl JsJson) Name() string {
 	return "JSON"
 }
 
-// Func as implementation of debug method
-func (jl JsonLib) Func() interface{} {
+// Func returns the Json object
+func (jl JsJson) Func() interface{} {
 	return func() Json {
 		return Json{}
 	}
 }
+
+// NoConvert marks Json as not convertable
+func (j Json) NoConvert() {}
 
 // Stringify rounds a value up to the next biggest integer
 func (j Json) Stringify(x interface{}) string {
@@ -30,5 +33,3 @@ func (j Json) Stringify(x interface{}) string {
 	}
 	return string(b)
 }
-
-func (j Json) NoConvert() {}

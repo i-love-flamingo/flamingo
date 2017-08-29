@@ -53,6 +53,7 @@ type (
 		Name       string
 		Val        JavaScriptExpression
 		MustEscape bool
+		BoolVal *bool
 	}
 
 	// JavaScriptExpression is a string

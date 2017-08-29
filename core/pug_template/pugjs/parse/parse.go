@@ -157,7 +157,7 @@ func (t *Tree) ErrorContext(n Node) (location, context string) {
 // errorf formats the error and terminates processing.
 func (t *Tree) errorf(format string, args ...interface{}) {
 	t.Root = nil
-	format = fmt.Sprintf("template: %s:%d: %s", t.ParseName, t.token[0].line, format)
+	format = fmt.Sprintf("template: %s:%d: %s: %#v", t.ParseName, t.token[0].line, format, t.token[0])
 	panic(fmt.Errorf(format, args...))
 }
 

@@ -269,14 +269,18 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// ConditionalExpression: if (something) { ... } or foo ? a : b
 	case *ast.ConditionalExpression:
-		result = `{{if ` + p.renderExpression(expr.Test, false, true) + `}}`
-		result += p.renderExpression(expr.Consequent, true, true)
-		elsebranch := p.renderExpression(expr.Alternate, true, true)
-		if elsebranch != "" && elsebranch != "{{null}}" {
-			result += `{{else}}`
-			result += elsebranch
+		_cons := p.renderExpression(expr.Consequent, false, true)
+		if _cons == "" {
+			_cons = "null"
 		}
-		result += `{{end}}`
+		_else := p.renderExpression(expr.Alternate, false, true)
+		if _else == "" {
+			_else = "null"
+		}
+		result = `(__if (` + p.renderExpression(expr.Test, false, true) + `) (` + _cons + `) (` + _else + `) )`
+		if wrap {
+			result = `{{` + result + `}}`
+		}
 
 	// BinaryExpression:  left binary-operator right, 1 & 2, 0xff ^ 0x01
 	case *ast.BinaryExpression:

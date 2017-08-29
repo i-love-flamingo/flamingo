@@ -126,8 +126,18 @@ var funcmap = FuncMap{
 		}
 		return convert(m)
 	},
-	"__attr": func(k, v string, e bool) []Attribute {
-		return []Attribute{{Name: k, Val: JavaScriptExpression(v), MustEscape: e}}
+	"__attr": func(k string, v interface{}, e bool) []Attribute {
+		if v, ok := v.(Bool); ok {
+			b := v.True()
+			return []Attribute{{Name: k, BoolVal: &b}}
+		}
+		if v, ok := v.(Object); ok {
+			return []Attribute{{Name: k, Val: JavaScriptExpression(v.String()), MustEscape: e}}
+		}
+		if v, ok := v.(string); ok {
+			return []Attribute{{Name: k, Val: JavaScriptExpression(string(v)), MustEscape: e}}
+		}
+		return []Attribute{{Name: k, Val: JavaScriptExpression(fmt.Sprintf("%t", v)), MustEscape: e}}
 	},
 	"__attrs": func(attrs ...*Array) (res string) {
 		type tmpattr struct {
@@ -142,7 +152,16 @@ var funcmap = FuncMap{
 					continue
 				}
 				name := string(attr.(*Map).Items[String("Name")].(String))
-				val := string(attr.(*Map).Items[String("Val")].(String))
+				var val string
+				if attr.(*Map).Items[String("Val")] == nil && attr.(*Map).Items[String("BoolVal")] != nil {
+					if !attr.(*Map).Items[String("Val")].(Bool).True() {
+						continue
+					} else {
+						val = name
+					}
+				} else {
+					val = string(attr.(*Map).Items[String("Val")].(String))
+				}
 				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
 				if _, ok := a[name]; ok {
 					if name == "class" {
@@ -180,6 +199,12 @@ var funcmap = FuncMap{
 			res = append(res, Attribute{Name: k.String(), Val: JavaScriptExpression(v.String()), MustEscape: true})
 		}
 		return
+	},
+	"__if": func(test, left, right interface{}) interface{} {
+		if t, ok := IsTrue(test); ok && t {
+			return left
+		}
+		return right
 	},
 }
 

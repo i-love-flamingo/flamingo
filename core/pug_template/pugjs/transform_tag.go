@@ -42,14 +42,14 @@ func (t *Tag) Render(p *renderState, wr *bytes.Buffer, depth int) error {
 		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
 
 	case !t.Block.Inline() && p.debug:
-		fmt.Fprintf(wr, "<%s%s>{{\"\" -}}\n%s{{\"\" -}}\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
+		fmt.Fprintf(wr, "<%s%s>{{ \"\" -}}\n%s{{ \"\" -}}\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
 
 	default:
 		fmt.Fprintf(wr, `<%s%s>%s</%s>`, t.Name, attrs, _subblock.String(), t.Name)
 	}
 
 	if !t.Inline() && p.debug {
-		wr.WriteString("{{\"\" -}}\n")
+		wr.WriteString("{{ \"\" -}}\n")
 	}
 
 	return nil

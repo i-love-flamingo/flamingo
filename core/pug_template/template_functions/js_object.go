@@ -41,6 +41,9 @@ func (o Object) Assign(target *pugjs.Map, sources ...*pugjs.Map) pugjs.Object {
 // Keys returns all keys of a map in lexical order
 func (o Object) Keys(m *pugjs.Map) *pugjs.Array {
 	res := &pugjs.Array{}
+	if m == nil {
+		return res
+	}
 	var tmp []string
 
 	for k := range m.Items {

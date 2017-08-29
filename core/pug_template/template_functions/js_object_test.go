@@ -42,4 +42,5 @@ func TestJsObject(t *testing.T) {
 
 	arr := object.Keys(mx)
 	assert.Equal(t, "asd, foo", arr.Join(", ").String())
+	assert.Equal(t, "", object.Keys(nil).Join(", ").String())
 }

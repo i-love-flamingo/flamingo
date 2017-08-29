@@ -3,6 +3,7 @@ package template_functions
 import (
 	"flamingo/core/pug_template/pugjs"
 	"sort"
+	"strconv"
 )
 
 type (
@@ -39,15 +40,21 @@ func (o Object) Assign(target *pugjs.Map, sources ...*pugjs.Map) pugjs.Object {
 }
 
 // Keys returns all keys of a map in lexical order
-func (o Object) Keys(m *pugjs.Map) *pugjs.Array {
+func (o Object) Keys(obj interface{}) *pugjs.Array {
 	res := &pugjs.Array{}
-	if m == nil {
+	if obj == nil {
 		return res
 	}
 	var tmp []string
 
-	for k := range m.Items {
-		tmp = append(tmp, k.String())
+	if m, ok := obj.(*pugjs.Map); ok {
+		for k := range m.Items {
+			tmp = append(tmp, k.String())
+		}
+	} else if a, ok := obj.(*pugjs.Array); ok {
+		for i := 0; i < int(a.Length().(pugjs.Number)); i++ {
+			tmp = append(tmp, strconv.Itoa(i))
+		}
 	}
 
 	sort.Strings(tmp)

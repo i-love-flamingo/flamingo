@@ -103,13 +103,6 @@ var funcmap = FuncMap{
 		}
 		return ""
 	},
-	"sc": func(l ...interface{}) (res template.CSS) {
-		for _, s := range l {
-			res += template.CSS(convert(s).String())
-		}
-		return
-	},
-
 	"__op__array": func(a ...interface{}) Object { return convert(a) },
 	"__op__map": func(a ...interface{}) Object {
 		m := make(map[interface{}]interface{}, len(a)/2)
@@ -119,26 +112,74 @@ var funcmap = FuncMap{
 		return convert(m)
 	},
 	"__op__map_params": func(a ...interface{}) Object {
-		m := make(map[interface{}][]interface{}, len(a)/2)
+		m := make(map[interface{}]interface{}, len(a)/2)
 		for i := 0; i < len(a); i += 2 {
-			m[a[i]] = append(m[a[i]], a[i+1])
+			if _, ok := m[a[i]]; ok {
+				if x, ok := m[a[i]].([]interface{}); ok {
+					m[a[i]] = append(x, a[i+1])
+				} else {
+					m[a[i]] = []interface{}{m[a[i]], a[i+1]}
+				}
+			} else {
+				m[a[i]] = a[i+1]
+			}
 		}
 		return convert(m)
 	},
-	"__add_andattributes": func(attrs Object, k ...string) template.HTMLAttr {
-		known := make(map[string]bool)
-		for _, k := range k {
-			known[k] = true
+	"__attr": func(k, v string, e bool) []Attribute {
+		return []Attribute{{Name: k, Val: JavaScriptExpression(v), MustEscape: e}}
+	},
+	"__attrs": func(attrs ...*Array) (res string) {
+		type tmpattr struct {
+			mustEscape bool
+			val        string
 		}
-		res := ""
-		if attrs, ok := attrs.(*Map); ok && attrs.Items != nil {
-			for k, v := range attrs.Items {
-				if !known[k.String()] {
-					res += ` ` + k.String() + `="` + strings.TrimSpace(v.String()) + `"`
+		a := make(map[string][]tmpattr)
+		var order []string
+		for _, list := range attrs {
+			for _, attr := range list.items {
+				if attr == nil {
+					continue
+				}
+				name := string(attr.(*Map).Items[String("Name")].(String))
+				val := string(attr.(*Map).Items[String("Val")].(String))
+				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
+				if _, ok := a[name]; ok {
+					if name == "class" {
+						a[name] = append(a[name], tmpattr{val: val, mustEscape: mustEscape})
+					} else {
+						a[name] = []tmpattr{{val: val, mustEscape: mustEscape}}
+					}
+				} else {
+					a[name] = []tmpattr{{val: val, mustEscape: mustEscape}}
+					order = append(order, name)
 				}
 			}
 		}
-		return template.HTMLAttr(res)
+		for _, attr := range order {
+			var tmp string
+			for _, val := range a[attr] {
+				if val.val == "" {
+					continue
+				}
+				if len(tmp) > 0 {
+					tmp += ` `
+				}
+				if val.mustEscape {
+					tmp += template.HTMLEscapeString(val.val)
+				} else {
+					tmp += val.val[1 : len(val.val)-1]
+				}
+			}
+			res += ` ` + attr + `="` + strings.TrimSpace(tmp) + `"`
+		}
+		return
+	},
+	"__and_attrs": func(x *Map) (res []Attribute) {
+		for k, v := range x.Items {
+			res = append(res, Attribute{Name: k.String(), Val: JavaScriptExpression(v.String()), MustEscape: true})
+		}
+		return
 	},
 }
 

@@ -30,6 +30,7 @@ type (
 		funcs        FuncMap
 		rawmode      bool
 		doctype      string
+		debug        bool
 	}
 
 	// Engine is the one and only javascript template engine for go ;)
@@ -53,10 +54,11 @@ func NewEngine() *Engine {
 	}
 }
 
-func newRenderState(path string) *renderState {
+func newRenderState(path string, debug bool) *renderState {
 	return &renderState{
 		path:  path,
 		mixin: make(map[string]string),
+		debug: debug,
 	}
 }
 
@@ -122,7 +124,7 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 					continue
 				}
 
-				renderState := newRenderState(path.Join(e.Basedir, "template", "page"))
+				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug)
 				renderState.funcs = FuncMap(e.TemplateFunctions.Populate())
 				token, err := renderState.Parse(name)
 				if err != nil {

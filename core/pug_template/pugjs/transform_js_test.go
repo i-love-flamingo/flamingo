@@ -8,7 +8,7 @@ import (
 )
 
 var _ = Describe("JS Expression transpiling", func() {
-	var s = newRenderState("/")
+	var s = newRenderState("/", true)
 
 	Describe("JsExpr modes", func() {
 		Context("With raw, wrap", func() {

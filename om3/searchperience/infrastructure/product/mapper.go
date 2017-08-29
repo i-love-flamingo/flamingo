@@ -5,8 +5,6 @@ import (
 	"errors"
 	"flamingo/core/product/domain"
 	"flamingo/om3/searchperience/infrastructure/product/dto"
-
-	"log"
 )
 
 type (

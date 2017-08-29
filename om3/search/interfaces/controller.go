@@ -5,7 +5,6 @@ import (
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
 	"flamingo/om3/search/domain"
-	"fmt"
 )
 
 type (

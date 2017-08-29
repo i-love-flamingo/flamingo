@@ -211,7 +211,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 			if wrap {
 				result = template.HTMLEscapeString(expr.Value)
 			} else {
-				result = `"` + expr.Value + `"`
+				result = fmt.Sprintf(`%q`, expr.Value)
 			}
 		}
 

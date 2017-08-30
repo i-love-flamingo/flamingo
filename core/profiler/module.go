@@ -17,7 +17,7 @@ type (
 	}
 
 	roundTripper struct {
-		Next http.RoundTripper
+		next http.RoundTripper
 	}
 )
 
@@ -31,21 +31,21 @@ func (rt *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		defer ctx.Profile("http.request", fmt.Sprintf("%s %s", req.Method, req.URL.String()))()
 	}
 
-	return rt.Next.RoundTrip(req)
+	return rt.next.RoundTrip(req)
 }
 
 func init() {
 	http.DefaultTransport = &roundTripper{
-		Next: http.DefaultTransport,
+		next: http.DefaultTransport,
 	}
 }
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Route("/_profiler/view/:profile", "_profiler.view")
-	m.RouterRegistry.Handle("_profiler.view", new(ProfileController))
+	m.RouterRegistry.Handle("_profiler.view", new(profileController))
 
-	injector.Override((*profiler.Profiler)(nil), "").To(DefaultProfiler{})
+	injector.Override((*profiler.Profiler)(nil), "").To(defaultProfiler{})
 
-	injector.BindMulti((*event.Subscriber)(nil)).To(EventSubscriber{})
+	injector.BindMulti((*event.Subscriber)(nil)).To(eventSubscriber{})
 }

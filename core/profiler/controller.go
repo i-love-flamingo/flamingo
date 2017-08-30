@@ -10,8 +10,8 @@ import (
 )
 
 type (
-	// ProfileController shows information about a requested profile
-	ProfileController struct{}
+	// profileController shows information about a requested profile
+	profileController struct{}
 )
 
 const profileTemplate = `<!doctype html>
@@ -260,7 +260,7 @@ const profileTemplate = `<!doctype html>
 `
 
 // Get Response for Debug Info
-func (dc *ProfileController) Get(ctx web.Context) web.Response {
+func (dc *profileController) Get(ctx web.Context) web.Response {
 	t, err := template.New("tpl").Parse(profileTemplate)
 	if err != nil {
 		panic(err)
@@ -277,7 +277,7 @@ func (dc *ProfileController) Get(ctx web.Context) web.Response {
 }
 
 // Post saves offline profiling events
-func (dc *ProfileController) Post(ctx web.Context) web.Response {
+func (dc *profileController) Post(ctx web.Context) web.Response {
 	dur, _ := strconv.ParseFloat(ctx.MustForm1("duration"), 64)
 	profilestorage[ctx.MustParam1("profile")].ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
 

@@ -6,32 +6,31 @@ import (
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 	"io/ioutil"
-	"reflect"
 	"time"
 )
 
-// EventSubscriber for the profiler
-type EventSubscriber struct {
+// eventSubscriber for the profiler
+type eventSubscriber struct {
 	Router *router.Router `inject:""`
 }
 
 // Notify on events
-func (e *EventSubscriber) Notify(ev event.Event) {
+func (e *eventSubscriber) Notify(ev event.Event) {
 	switch ev := ev.(type) {
 	case *router.OnResponseEvent:
-		e.OnResponse(ev)
+		e.onResponse(ev)
 	}
 }
 
-// OnResponse injects the little helper into the response, and saves the profile in memory
-func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
+// onResponse injects the little helper into the response, and saves the profile in memory
+func (e *eventSubscriber) onResponse(event *router.OnResponseEvent) {
 	// ensure we are not profiling ourself
-	if reflect.TypeOf(event.Controller).Kind() == reflect.Ptr && reflect.TypeOf(event.Controller).Elem().Name() == reflect.TypeOf(ProfileController{}).Name() {
+	if _, ok := event.Controller.(*profileController); ok {
 		return
 	}
 
 	context := event.Request.Context().Value(web.CONTEXT).(web.Context)
-	p := context.Profiler().(*DefaultProfiler)
+	p := context.Profiler().(*defaultProfiler)
 
 	event.ResponseWriter.Header().Set("X-Correlation-ID", context.ID())
 
@@ -52,7 +51,7 @@ func (e *EventSubscriber) OnResponse(event *router.OnResponseEvent) {
 				[]byte("</head>"),
 				[]byte(`
 <script type='text/javascript'>
-var __start = 0, __open = XMLHttpRequest.prototype.open;
+var __start = Date.now(), __open = XMLHttpRequest.prototype.open;
 
 XMLHttpRequest.prototype.open = function(a, b) {
 	r = __open.call(this, a, b);
@@ -78,14 +77,13 @@ window.addEventListener("error", function (e) {
     __profileStatic("browser.error", e.error.stack, Date.now() - __start);
 });
 
-window.addEventListener("DOMContentLoaded", function(e){
-	__start = Date.now() - e.timeStamp;
-	__profileStatic("browser", "DOMContentLoaded", e.timeStamp);
-});
-
 window.addEventListener("load", function load(e) {
     window.removeEventListener("load", load);
-    __profileStatic("browser", "Load", e.timeStamp);
+    var t = window.performance.timing,
+          dcl = t.domContentLoadedEventStart - t.domLoading,
+          complete = t.domComplete - t.domLoading;
+    __profileStatic("browser", "DOMContentLoaded", dcl);
+    __profileStatic("browser", "Load", complete);
 });
 
 </script>

@@ -104,10 +104,10 @@ func (ps *Mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduc
 
 	basicData.Attributes = domain.Attributes(configurable.Attributes)
 	// check if this fields are missing in search object
-	if basicData.ShortDescription == "" {
+	if basicData.ShortDescription == "" && configurable.Attributes["shortDescription"] != nil {
 		basicData.ShortDescription = configurable.Attributes["shortDescription"].(string)
 	}
-	if basicData.Description == "" {
+	if basicData.Description == "" && configurable.Attributes["description"] != nil {
 		basicData.Description = configurable.Attributes["description"].(string)
 	}
 	basicData.CreatedAt = configurable.CreatedAt

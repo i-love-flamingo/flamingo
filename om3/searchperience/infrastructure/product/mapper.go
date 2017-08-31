@@ -104,8 +104,12 @@ func (ps *Mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduc
 
 	basicData.Attributes = domain.Attributes(configurable.Attributes)
 	// check if this fields are missing in search object
-	//basicData.ShortDescription = configurable.ShortDescription
-	//basicData.Description = configurable.Description
+	if basicData.ShortDescription == "" {
+		basicData.ShortDescription = configurable.Attributes["shortDescription"].(string)
+	}
+	if basicData.Description == "" {
+		basicData.Description = configurable.Attributes["description"].(string)
+	}
 	basicData.CreatedAt = configurable.CreatedAt
 	for _, media := range configurable.Media {
 		basicData.Media = append(basicData.Media, domain.Media(media))

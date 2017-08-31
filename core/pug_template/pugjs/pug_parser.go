@@ -135,6 +135,25 @@ func (p *renderState) build(parent *Token) (res []Node) {
 	return
 }
 
+var selfclosing = map[string]bool{
+	"area":    true,
+	"base":    true,
+	"br":      true,
+	"col":     true,
+	"command": true,
+	"embed":   true,
+	"hr":      true,
+	"img":     true,
+	"input":   true,
+	"keygen":  true,
+	"link":    true,
+	"meta":    true,
+	"param":   true,
+	"source":  true,
+	"track":   true,
+	"wbr":     true,
+}
+
 func (p *renderState) buildNode(t *Token) (res Node) {
 	switch t.Type {
 	case "Tag":
@@ -149,6 +168,8 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 		for _, a := range t.Attrs {
 			tag.Attrs = append(tag.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(fmt.Sprintf("%v", a.Val)), MustEscape: a.MustEscape})
 		}
+
+		tag.SelfClosing = selfclosing[tag.Name]
 
 		return tag
 

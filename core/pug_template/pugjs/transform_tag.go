@@ -23,33 +23,28 @@ func (t *Tag) Render(p *renderState, wr *bytes.Buffer, depth int) error {
 				attrs += fmt.Sprintf(`(__attr %q %q %t) `, attr.Name, p.JsExpr(string(attr.Val), false, false), attr.MustEscape)
 			}
 		}
-		if len(t.AttributeBlocks) > 0 {
-			for _, ab := range t.AttributeBlocks {
-				attrs += fmt.Sprintf(`(__and_attrs $%s)`, ab)
-			}
+		for _, ab := range t.AttributeBlocks {
+			attrs += fmt.Sprintf(`(__and_attrs $%s)`, ab)
 		}
 		attrs += ` }}`
 	}
 
 	switch {
-	case t.Name == "link", t.Name == "meta":
-		fmt.Fprintf(wr, `<%s%s>`, t.Name, attrs)
-
 	case t.SelfClosing:
-		fmt.Fprintf(wr, `<%s%s/>`, t.Name, attrs)
+		fmt.Fprintf(wr, `<%s%s>`, t.Name, attrs)
 
 	case t.Name == "script" && strings.Index(_subblock.String(), "\n") > -1:
 		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
 
 	case !t.Block.Inline() && p.debug:
-		fmt.Fprintf(wr, "<%s%s>{{ \"\" -}}\n%s{{ \"\" -}}\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
+		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", t.Name, attrs, _subblock.String(), t.Name)
 
 	default:
 		fmt.Fprintf(wr, `<%s%s>%s</%s>`, t.Name, attrs, _subblock.String(), t.Name)
 	}
 
 	if !t.Inline() && p.debug {
-		wr.WriteString("{{ \"\" -}}\n")
+		wr.WriteString("     {{- \"\" -}}\n")
 	}
 
 	return nil

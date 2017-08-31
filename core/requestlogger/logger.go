@@ -2,46 +2,47 @@ package requestlogger
 
 import (
 	"context"
+	"flamingo/framework/event"
 	"flamingo/framework/router"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
-	"flamingo/framework/event"
-
 	"github.com/labstack/gommon/color"
 )
 
 type (
 	contextKey string
-
-	// Logger logs requests to stdout
-	Logger struct{}
+	logger     struct{}
 )
 
 const contextTime contextKey = "time"
 
 // Notify is called on events
-func (r *Logger) Notify(e event.Event) {
+func (r *logger) Notify(e event.Event) {
 	switch e := e.(type) {
 	case *router.OnRequestEvent:
-		r.OnRequest(e)
+		r.onRequest(e)
 
 	case *router.OnFinishEvent:
-		r.OnFinish(e)
+		r.onFinish(e)
 	}
 }
 
-// OnRequest assigns the current time to the request-context
-func (r *Logger) OnRequest(event *router.OnRequestEvent) {
+// onRequest assigns the current time to the request-context
+func (r *logger) onRequest(event *router.OnRequestEvent) {
 	event.Request = event.Request.WithContext(context.WithValue(event.Request.Context(), contextTime, time.Now()))
 }
 
-// OnFinish logs the request to stdout via log.Printf
-func (r *Logger) OnFinish(event *router.OnFinishEvent) {
+// onFinish logs the request to stdout via log.Printf
+func (r *logger) onFinish(event *router.OnFinishEvent) {
 	var duration time.Duration
-	var response, _ = event.ResponseWriter.(*router.VerboseResponseWriter)
+
+	response, ok := event.ResponseWriter.(*router.VerboseResponseWriter)
+	if !ok {
+		return
+	}
 
 	if start := event.Request.Context().Value(contextTime); start != nil {
 		duration = time.Since(start.(time.Time))
@@ -58,7 +59,7 @@ func (r *Logger) OnFinish(event *router.OnFinishEvent) {
 	case response.Status >= 500 && response.Status < 600:
 		cp = color.Red
 	default:
-		cp = color.Black
+		cp = color.Grey
 	}
 
 	var extra string

@@ -34,17 +34,17 @@ var (
 
 		token.EQUAL:        "__op__eql", // ==
 		token.STRICT_EQUAL: "__op__eql", // ===
-		token.LESS:         "lt",        // <
-		token.GREATER:      "gt",        // >
+		token.LESS:         "__op__lt",  // <
+		token.GREATER:      "__op__gt",  // >
 		token.ASSIGN:       "=",         // =
 		token.NOT:          "not",       // !
 
 		token.BITWISE_NOT: "__op__bitnot", // ~
 
-		token.NOT_EQUAL:        "neq", // !=
-		token.STRICT_NOT_EQUAL: "neq", // !==
-		token.LESS_OR_EQUAL:    "lte", // <=
-		token.GREATER_OR_EQUAL: "gte", // >=
+		token.NOT_EQUAL:        "__op__neq", // !=
+		token.STRICT_NOT_EQUAL: "__op__neq", // !==
+		token.LESS_OR_EQUAL:    "__op__lte", // <=
+		token.GREATER_OR_EQUAL: "__op__gte", // >=
 
 		token.DELETE: "delete",
 	}

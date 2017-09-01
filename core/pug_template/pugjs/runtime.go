@@ -21,9 +21,22 @@ var funcmap = FuncMap{
 	"__op__slash": runtimeQuo,
 	"__op__mod":   runtimeRem,
 	"__op__eql":   runtimeEql,
-	"__op__gtr":   runtimeGtr,
-	"__op__lss":   runtimeLss,
-	"neq":         func(x, y interface{}) bool { return !runtimeEql(x, y) },
+
+	"__op__lt": runtimeLss,
+	"__op__gt": func(x, y interface{}) bool {
+		return !runtimeLss(x, y) && !runtimeEql(x, y)
+	},
+	"__op__gte": func(x, y interface{}) bool {
+		return !runtimeLss(x, y)
+	},
+	"__op__lte": func(x, y interface{}) bool {
+		return runtimeLss(x, y) || runtimeEql(x, y)
+	},
+	"__op__neq": func(x, y interface{}) bool {
+		return !runtimeEql(x, y)
+	},
+
+	"neq": func(x, y interface{}) bool { return !runtimeEql(x, y) },
 	"__tryindex": func(obj, key interface{}) interface{} {
 		arr, ok := obj.(*Array)
 		idx, ok2 := key.(int)
@@ -434,10 +447,6 @@ func runtimeLss(x, y interface{}) bool {
 	}
 
 	return false
-}
-
-func runtimeGtr(x, y interface{}) bool {
-	return !runtimeLss(x, y) && !runtimeEql(x, y)
 }
 
 func runtimeJSON(x interface{}) (res template.JS, err error) {

@@ -37,6 +37,7 @@ func (ps *mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Pr
 
 	configurableProduct.BasicProductData = ps.dtoConfigurableToBaseData(&productDto.ConfigurableProduct)
 	ps.addDtoProductDataToBaseData(productDto, &configurableProduct.BasicProductData)
+	configurableProduct.VariantVariationAttributes = productDto.VariantVariationAttributes
 
 	for _, variantDto := range productDto.Variants {
 		variant := domain.Variant{}

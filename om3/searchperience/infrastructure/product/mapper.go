@@ -8,13 +8,12 @@ import (
 )
 
 type (
-	Mapper struct{}
+	mapper struct{}
 )
 
-func (ps *Mapper) Map(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.BasicProduct, error) {
-	var basicProduct domain.BasicProduct
-
-	if productDto.ProductType == "simple" {
+// Map a product response from searchperience
+func (ps *mapper) Map(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.BasicProduct, error) {
+	if productDto.ProductType == domain.TypeSimple {
 		basicProduct, err := ps.mapSimpleProduct(ctx, productDto, priceEngine)
 		if err != nil {
 			return nil, err
@@ -22,17 +21,18 @@ func (ps *Mapper) Map(ctx context.Context, productDto *dto.Product, priceEngine 
 		return basicProduct, nil
 	}
 
-	if productDto.ProductType == "configurable" {
+	if productDto.ProductType == domain.TypeConfigurable {
 		basicProduct, err := ps.mapConfigurableProduct(ctx, productDto, priceEngine)
 		if err != nil {
 			return nil, err
 		}
 		return basicProduct, nil
 	}
-	return basicProduct, errors.New("Unknown type or product format")
+
+	return nil, errors.New("Unknown type or product format")
 }
 
-func (ps *Mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.ConfigurableProduct, error) {
+func (ps *mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.ConfigurableProduct, error) {
 	configurableProduct := domain.ConfigurableProduct{}
 
 	configurableProduct.BasicProductData = ps.dtoConfigurableToBaseData(&productDto.ConfigurableProduct)
@@ -56,7 +56,7 @@ func (ps *Mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Pr
 	return configurableProduct, nil
 }
 
-func (ps *Mapper) mapSimpleProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.SimpleProduct, error) {
+func (ps *mapper) mapSimpleProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.SimpleProduct, error) {
 	simpleProduct := domain.SimpleProduct{}
 
 	if len(productDto.Variants) < 1 {
@@ -79,7 +79,7 @@ func (ps *Mapper) mapSimpleProduct(ctx context.Context, productDto *dto.Product,
 	return simpleProduct, nil
 }
 
-func (ps *Mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProductData {
+func (ps *mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProductData {
 	basicData := domain.BasicProductData{}
 	basicData.Title = variant1.Title
 
@@ -98,7 +98,7 @@ func (ps *Mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProduc
 	return basicData
 }
 
-func (ps *Mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduct) domain.BasicProductData {
+func (ps *mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduct) domain.BasicProductData {
 	basicData := domain.BasicProductData{}
 	basicData.Title = configurable.Title
 
@@ -117,7 +117,7 @@ func (ps *Mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduc
 	return basicData
 }
 
-func (ps *Mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData *domain.BasicProductData) {
+func (ps *mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData *domain.BasicProductData) {
 
 	basicData.Keywords = productDto.Keywords
 
@@ -131,7 +131,7 @@ func (ps *Mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData
 	basicData.MarketPlaceCode = productDto.MarketPlaceCode
 }
 
-func (ps *Mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableData {
+func (ps *mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableData {
 	saleData := domain.SaleableData{}
 
 	// TODO - get active price from new serach response.. for now we do seperate request to priceeingie
@@ -146,7 +146,7 @@ func (ps *Mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableDat
 
 }
 
-func (ps *Mapper) dtoTeaserToTeaser(productDto *dto.Product) domain.TeaserData {
+func (ps *mapper) dtoTeaserToTeaser(productDto *dto.Product) domain.TeaserData {
 	teaserData := domain.TeaserData{}
 
 	teaserData.ShortDescription = productDto.TeaserData.ShortDescription

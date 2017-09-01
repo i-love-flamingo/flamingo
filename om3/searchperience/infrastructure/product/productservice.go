@@ -39,6 +39,6 @@ func (ps *ProductService) Get(ctx context.Context, ID string) (domain.BasicProdu
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	mapper := Mapper{}
+	mapper := mapper{}
 	return mapper.Map(ctx, productDto, ps.TempPriceEngineService)
 }

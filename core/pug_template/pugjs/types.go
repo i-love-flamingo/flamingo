@@ -20,16 +20,19 @@ const (
 	NIL    = "nil"
 )
 
+// Object describes a pugjs JavaScript object
 type Object interface {
 	Type() ObjectType
 	Field(name string) Object
 	String() string
 }
 
+// Truther for true check
 type Truther interface {
 	True() bool
 }
 
+// Convert an object
 func Convert(in interface{}) Object {
 	return convert(in)
 }
@@ -254,8 +257,7 @@ func (m *Map) MarshalJSON() ([]byte, error) {
 	}
 	tmp := make(map[string]interface{}, len(m.Items))
 	for k, v := range m.Items {
-		//tmp[k.String()] = v
-		tmp[k.String()] = v
+		tmp[lowerFirst(k.String())] = v
 	}
 	return json.Marshal(tmp)
 }

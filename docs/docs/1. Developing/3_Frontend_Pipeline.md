@@ -21,6 +21,19 @@ webpack basically performs the following tasks:
 ### Yarn
 
 flamingo uses [yarn](https://yarnpkg.com) for frontend dependency management and as a task runner.
+
+In order to be able to install all dependencies, you need to set the npm registry:
+
+```sh
+npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm-local/
+```
+
+Then add yourself as a user:
+
+```sh
+npm adduser
+```
+
 To list all awailable tasks, do the following:
 
 ```sh

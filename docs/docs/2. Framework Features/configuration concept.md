@@ -3,6 +3,23 @@
 ## Basics
 Configurations are yml files located in **config** folder.
 
+The configuration syntax is to specify areas either with `.` or as yaml maps:
+
+```yaml
+foo:
+  bar: x
+```
+
+is the same as
+
+```yaml
+foo.bar: x
+```
+
+Configuration can be used (either by the `config()` helper, or via dependency injection.
+Asking for either a concrete value via e.g. `foo.bar` is possible, as well as getting a whole `config.Map` instance by a partially-selector, e.g. `foo`.
+This would be a Map with element `bar` set to `x`.
+
 There is a root configuration "context.yml".
 
 You can set different CONTEXT with the environment variable *CONTEXT* and this will cause flamingo to load another configuration file.

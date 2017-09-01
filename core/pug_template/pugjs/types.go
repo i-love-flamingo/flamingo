@@ -30,6 +30,10 @@ type Truther interface {
 	True() bool
 }
 
+func Convert(in interface{}) Object {
+	return convert(in)
+}
+
 func convert(in interface{}) Object {
 	//log.Printf("Converting %#v", in)
 	if in == nil {
@@ -251,7 +255,7 @@ func (m *Map) MarshalJSON() ([]byte, error) {
 	tmp := make(map[string]interface{}, len(m.Items))
 	for k, v := range m.Items {
 		//tmp[k.String()] = v
-		tmp[lowerFirst(k.String())] = v
+		tmp[k.String()] = v
 	}
 	return json.Marshal(tmp)
 }

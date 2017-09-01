@@ -32,6 +32,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		command.RoutingConfCmd,
 		command.RouterCmd,
 		command.DataControllerCmd,
+		command.ConfigCmd,
 	)
 
 	injector.Bind((*cobra.Command)(nil)).AnnotatedWith("flamingo").ToInstance(rootCmd)

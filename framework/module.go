@@ -9,6 +9,7 @@
 package framework
 
 import (
+	"flamingo/framework/config"
 	"flamingo/framework/controller"
 	"flamingo/framework/dingo"
 	"flamingo/framework/event"
@@ -74,8 +75,8 @@ func (module *Module) Configure(injector *dingo.Injector) {
 }
 
 // DefaultConfig for this module
-func (module *Module) DefaultConfig() map[string]interface{} {
-	return map[string]interface{}{
+func (module *Module) DefaultConfig() config.Map {
+	return config.Map{
 		"flamingo.router.notfound": router.FlamingoNotfound,
 		"flamingo.router.error":    router.FlamingoError,
 	}

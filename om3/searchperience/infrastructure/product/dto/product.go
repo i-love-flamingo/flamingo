@@ -21,7 +21,7 @@ type (
 		CustomerRating             int                 `json:"customerRating"`
 		TeaserData                 TeaserData          `json:"teaserData"`
 		Sorting                    map[string]float64  `json:"sorting"`
-		CategoryPath               []string            `json:"categoryPath"`
+		CategoryPath               []string            `json:"categoryPaths"`
 		CategoryCodes              []string            `json:"categoryCodes"`
 		DocumentBoost              int                 `json:"documentBoost"`
 		Highlights                 struct{}            `json:"highlights"`

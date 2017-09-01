@@ -65,6 +65,7 @@ func addBasicData(product *domain.BasicProductData) {
 	product.Attributes["brandCode"] = "Apple"
 	product.RetailerCode = "Testretailer"
 	product.RetailerSku = "12345sku"
+	product.CategoryPath = []string{"Testproducts", "Testproducts/Fake/Configurable"}
 }
 
 func getPrice(defaultP float64, discounted float64) domain.PriceInfo {

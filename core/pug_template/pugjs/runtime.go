@@ -165,17 +165,20 @@ var funcmap = FuncMap{
 					continue
 				}
 				name := string(attr.(*Map).Items[String("Name")].(String))
+				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
 				var val string
-				if attr.(*Map).Items[String("Val")] == nil && attr.(*Map).Items[String("BoolVal")] != nil {
-					if !attr.(*Map).Items[String("Val")].(Bool).True() {
+				if _, ok := attr.(*Map).Items[String("BoolVal")].(Bool); attr.(*Map).Items[String("BoolVal")] != nil && ok {
+					if !attr.(*Map).Items[String("BoolVal")].(Bool).True() {
 						continue
 					} else {
 						val = name
+						if !mustEscape {
+							val = `"` + val + `"`
+						}
 					}
 				} else {
 					val = string(attr.(*Map).Items[String("Val")].(String))
 				}
-				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
 				if _, ok := a[name]; ok {
 					if name == "class" {
 						a[name] = append(a[name], tmpattr{val: val, mustEscape: mustEscape})

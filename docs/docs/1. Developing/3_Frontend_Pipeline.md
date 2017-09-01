@@ -25,13 +25,19 @@ flamingo uses [yarn](https://yarnpkg.com) for frontend dependency management and
 In order to be able to install all dependencies, you need to set the npm registry:
 
 ```sh
-npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm-local/
+npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm/
 ```
 
 Then add yourself as a user:
 
 ```sh
 npm adduser
+```
+
+If you want to publish an npm module, use the local registry as follows:
+
+```sh
+npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm-local/
 ```
 
 To list all awailable tasks, do the following:

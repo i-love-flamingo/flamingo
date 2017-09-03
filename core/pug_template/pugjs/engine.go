@@ -69,10 +69,9 @@ func (e *Engine) LoadTemplates(filtername string) error {
 	defer e.Unlock()
 
 	manifest, err := ioutil.ReadFile(path.Join(e.Basedir, "manifest.json"))
-	if err != nil {
-		return err
+	if err == nil {
+		json.Unmarshal(manifest, &e.Assetrewrites)
 	}
-	json.Unmarshal(manifest, &e.Assetrewrites)
 
 	e.TemplateFunctions = e.TemplateFunctionsProvider()
 	e.templates, err = e.compileDir(path.Join(e.Basedir, "template", "page"), "", filtername)

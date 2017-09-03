@@ -272,6 +272,10 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 		panic("Can not instantiate interface " + t.String())
 	}
 
+	if annotation != "" {
+		panic("Can not automatically create an annotated injection " + t.String() + " with annotation " + annotation)
+	}
+
 	n := reflect.New(t)
 	injector.requestInjection(n.Interface())
 	return n

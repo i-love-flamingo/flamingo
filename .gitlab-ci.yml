@@ -1,5 +1,5 @@
 flamingo:
-  image: go:1.9
+  image: golang:1.9
   script:
   - export GODIR="${GOPATH}/${GODIR}"
   - go get -u github.com/golang/dep/cmd/dep

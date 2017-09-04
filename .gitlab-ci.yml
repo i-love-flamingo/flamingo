@@ -1,7 +1,7 @@
 flamingo:
   image: golang:1.9
   script:
-  - export GODIR="${GOPATH}/${GODIR}"
+  - export GODIR="${GOPATH}/flamingo"
   - go get -u github.com/golang/dep/cmd/dep
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}"

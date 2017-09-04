@@ -1,0 +1,74 @@
+
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#  name = "github.com/x/y"
+#  version = "2.4.0"
+
+ignored = ["flamingo/core","flamingo/framework","flamingo/om3"]
+
+[[constraint]]
+  name = "github.com/boj/redistore"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/coreos/go-oidc"
+
+[[constraint]]
+  name = "github.com/ghodss/yaml"
+
+[[constraint]]
+  name = "github.com/gorilla/sessions"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/labstack/gommon"
+  version = "0.2.1"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/pact-foundation/pact-go"
+  version = "0.0.8"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/robertkrimen/otto"
+  source = "https://github.com/thebod/otto.git"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  version = "1.1.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+
+[[constraint]]
+  name = "golang.org/x/oauth2"

@@ -42,3 +42,9 @@ func (module *Module) Configure(injector *dingo.Injector) {
 		injector.Override((*cmsdomain.BlockService)(nil), "").To(cmsblock.FakeBlockService{})
 	}
 }
+
+func (module *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"fakeservices": config.Map{},
+	}
+}

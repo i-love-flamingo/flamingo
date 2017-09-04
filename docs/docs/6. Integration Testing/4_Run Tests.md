@@ -25,7 +25,7 @@ Is it possible to run the tests in different ways.
 
 2. Run your test with the selenium docker container against your local docker environment \
 `-PtestTarget=compose -Pgeb.env=local` \
-(use a vnc client to connect to your selenium container -> e.g. mac os -  "Gehe zu" -> "Mit Server verbinden" -> `vnc://localhost:5900`(password: seceret)
+(use a vnc client to connect to your selenium container -> e.g. mac os -  "Gehe zu" -> "Mit Server verbinden" -> `vnc://localhost:5900`(password: secret)
 
 ## 3) Run your Tests with a local test environment (docker) and your Terminal
 1. Execute one shell script like in 1) or 2) described

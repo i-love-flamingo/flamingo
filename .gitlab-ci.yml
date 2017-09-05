@@ -1,6 +1,7 @@
 stages:
 - test
 - build
+- build frontend
 - publish
 
 test flamingo:
@@ -77,8 +78,40 @@ build lhr:
   - test flamingo
   - test frontend akl
 
+build frontend akl:
+  stage: build frontend
+  image: aoepeople/fe-build-env:1.3.0
+  script:
+  - cd akl/frontend
+  - yarn run build
+  cache:
+    paths:
+    - akl/frontend/node_modules/
+    - vendor/
+  artifacts:
+    paths:
+    - akl/frontend/dist
+
+build frontend lhr:
+  image: aoepeople/fe-build-env:1.3.0
+  stage: build frontend
+  script:
+  - cd lhr/frontend
+  - yarn run build
+  cache:
+    paths:
+    - lhr/frontend/node_modules/
+    - vendor/
+  artifacts:
+    paths:
+    - akl/frontend/dist
+
 publish akl:
   stage: publish
   image: docker
+  dependencies:
+  - build akl
+  - build frontend akl
   script:
+  - cd akl
   - docker build

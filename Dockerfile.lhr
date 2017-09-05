@@ -1,16 +1,5 @@
-FROM golang:1.8
+FROM scratch
 
-RUN go get -v github.com/Masterminds/glide
-
-COPY . /go/src/flamingo
-
-RUN cd /go/src/flamingo && glide install
-
-WORKDIR /go/src/flamingo/lhr
-RUN go build -o server
-
-CMD ./server server
-
-HEALTHCHECK --interval=1m --timeout=3s --retries=10 CMD curl -f http://localhost:3210/ping
-
-EXPOSE 3210
+ADD lhr/frontend/dist /frontend/dist
+ADD lhr/lhr /lhr
+CMD /lhr serve

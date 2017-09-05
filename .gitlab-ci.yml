@@ -8,9 +8,9 @@ test flamingo:
   image: golang:1.9
   script:
   - export GODIR="${GOPATH}/src/flamingo"
-  - go get -u github.com/golang/dep/cmd/dep
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - ln -sfv "$(pwd -P)/_cache_dep" "${GOPATH}/pkg/dep"
+  - go get -u github.com/golang/dep/cmd/dep
   - cd "${GODIR}"
   - dep ensure -vendor-only
   - go test ./...

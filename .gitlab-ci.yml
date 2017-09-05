@@ -13,7 +13,7 @@ test flamingo:
   - cd "${GODIR}"
   - dep ensure -vendor-only
   - go test ./...
-  environment:
+  variables:
     PACT_DAEMON_HOST: pact
   cache:
     paths:

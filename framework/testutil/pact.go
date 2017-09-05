@@ -50,10 +50,7 @@ func pactSetup(consumer, provider string) (*dsl.Pact, error) {
 	}
 
 	if p := os.Getenv("PACT_DAEMON_HOST"); p != "" {
-		pactdaemonport, err = strconv.Atoi(p)
-		if err != nil {
-			panic(err)
-		}
+		pactdaemonhost = p
 	}
 
 	var d net.Dialer

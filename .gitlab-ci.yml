@@ -19,7 +19,7 @@ test flamingo:
     paths:
     - vendor/
   services:
-  - name: thebod/pactdocker:0.0.1
+  - name: thebod/pactdocker:0.0.2
     alias: pact
 
 test frontend akl:

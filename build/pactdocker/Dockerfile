@@ -1,8 +1,8 @@
-FROM alpine
+FROM ubuntu:16.04
 
-ADD https://github.com/pact-foundation/pact-go/releases/download/v0.0.8/linux-386.tar.gz linux-386.tar.gz
+ADD https://github.com/pact-foundation/pact-go/releases/download/v0.0.8/linux-amd64.tar.gz /pact
+RUN mv /pact/pact-go_linux_amd64 /pact/pact-go
 
 EXPOSE 6666
 
-CMD /linux-386.tar.gz/pact-go_linux_386 daemon
-
+CMD /pact/pact-go daemon

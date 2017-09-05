@@ -43,7 +43,7 @@ test frontend lhr:
 
 build akl:
   stage: build
-  image: golang:1.9
+  image: thebod/goenv:0.0.1
   script:
   - export GODIR="${GOPATH}/src/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
@@ -61,7 +61,7 @@ build akl:
 
 build lhr:
   stage: build
-  image: golang:1.9
+  image: thebod/goenv:0.0.1
   script:
   - export GODIR="${GOPATH}/src/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"

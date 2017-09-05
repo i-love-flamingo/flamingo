@@ -8,7 +8,7 @@ test flamingo:
   image: golang:1.9
   script:
   - export GODIR="${GOPATH}/src/flamingo"
-  - mkdir -p "${GOPATH}/dep"
+  - mkdir -p "${GOPATH}/pkg"
   - ln -sfv "$(pwd -P)/_cache_dep" "${GOPATH}/pkg/dep"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - go get -u github.com/golang/dep/cmd/dep

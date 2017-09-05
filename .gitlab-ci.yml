@@ -91,7 +91,7 @@ build frontend lhr:
   artifacts:
     expire_in: 2 days
     paths:
-    - akl/frontend/dist
+    - lhr/frontend/dist
 
 publish akl:
   stage: publish
@@ -101,7 +101,11 @@ publish akl:
   - build frontend akl
   script:
   - cd akl
+  - docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-akl.aoe.com
   - docker build -t docker-om3-akl.aoe.com/flamingo:latest .
+  - docker push docker-om3-akl.aoe.com/flamingo:latest
+#  only:
+#  - master
 
 publish lhr:
   stage: publish
@@ -111,4 +115,9 @@ publish lhr:
   - build frontend lhr
   script:
   - cd lhr
+  #- docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-lhr.aoe.com
+  - docker login -u ${DOCKER_LHR_USER} -p ${DOCKER_LHR_PASSWORD} docker-om3-lhr.aoe.com
   - docker build -t docker-om3-lhr.aoe.com/flamingo:latest .
+  - docker push docker-om3-lhr.aoe.com/flamingo:latest
+#  only:
+#  - master

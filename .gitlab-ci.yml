@@ -48,6 +48,7 @@ build akl:
   - cd "${GODIR}/akl"
   - go build .
   artifacts:
+    expire_in: 2 days
     paths:
     - akl/akl
   dependencies:
@@ -63,6 +64,7 @@ build lhr:
   - cd "${GODIR}/lhr"
   - go build .
   artifacts:
+    expire_in: 2 days
     paths:
     - lhr/lhr
   dependencies:
@@ -76,6 +78,7 @@ build frontend akl:
   - cd akl/frontend
   - yarn run build
   artifacts:
+    expire_in: 2 days
     paths:
     - akl/frontend/dist
 
@@ -86,6 +89,7 @@ build frontend lhr:
   - cd lhr/frontend
   - yarn run build
   artifacts:
+    expire_in: 2 days
     paths:
     - akl/frontend/dist
 
@@ -97,4 +101,14 @@ publish akl:
   - build frontend akl
   script:
   - cd akl
-  - docker build
+  - docker build -t docker-om3-akl.aoe.com/flamingo:latest .
+
+publish lhr:
+  stage: publish
+  image: docker
+  dependencies:
+  - build lhr
+  - build frontend lhr
+  script:
+  - cd lhr
+  - docker build -t docker-om3-lhr.aoe.com/flamingo:latest .

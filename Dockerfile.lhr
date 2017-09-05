@@ -1,5 +1,0 @@
-FROM scratch
-
-ADD lhr/frontend/dist /frontend/dist
-ADD lhr/lhr /lhr
-CMD /lhr serve

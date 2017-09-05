@@ -1,9 +1,9 @@
 stages:
 - test
-- test-frontend
-#- build
+- build
+- publish
 
-flamingo test:
+test flamingo:
   stage: test
   image: golang:1.9
   script:
@@ -13,12 +13,17 @@ flamingo test:
   - cd "${GODIR}"
   - dep ensure -vendor-only
   - go test ./...
+  environment:
+    PACT_DAEMON_HOST: pact
   cache:
     paths:
     - vendor/
+  services:
+  - name: thebod/pactdocker:0.0.1
+    alias: pact
 
-frontend akl:
-  stage: test-frontend
+test frontend akl:
+  stage: test
   image: aoepeople/fe-build-env:1.3.0
   script:
   - cd akl/frontend
@@ -29,7 +34,7 @@ frontend akl:
     paths:
     - akl/frontend/node_modules/
 
-frontend lhr:
+test frontend lhr:
   image: aoepeople/fe-build-env:1.3.0
   stage: test-frontend
   script:
@@ -41,8 +46,44 @@ frontend lhr:
     paths:
     - akl/frontend/node_modules/
 
-#flamingo akl:
-#  stage: build
-#
-#flamingo lhr:
-#  stage: build
+build akl:
+  stage: build
+  image: golang:1.9
+  script:
+  - export GODIR="${GOPATH}/src/flamingo"
+  - ln -sfv "$(pwd -P)" "${GODIR}"
+  - cd "${GODIR}/akl"
+  - go build .
+  cache:
+    paths:
+    - vendor/
+  artifacts:
+    paths:
+    - akl/akl
+  dependencies:
+  - test flamingo
+  - test frontend akl
+
+build lhr:
+  stage: build
+  image: golang:1.9
+  script:
+  - export GODIR="${GOPATH}/src/flamingo"
+  - ln -sfv "$(pwd -P)" "${GODIR}"
+  - cd "${GODIR}/lhr"
+  - go build .
+  cache:
+    paths:
+    - vendor/
+  artifacts:
+    paths:
+    - lhr/lhr
+  dependencies:
+  - test flamingo
+  - test frontend akl
+
+publish akl:
+  stage: publish
+  image: docker
+  script:
+  - docker build

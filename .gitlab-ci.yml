@@ -4,6 +4,12 @@ stages:
 - build frontend
 - publish
 
+cache:
+  paths:
+  - akl/frontend/node_modules/
+  - lhr/frontend/node_modules/
+  - vendor/
+
 test flamingo:
   stage: test
   image: thebod/goenv:0.0.1
@@ -14,9 +20,6 @@ test flamingo:
   - cd "${GODIR}"
   - dep ensure -vendor-only
   - go test ./...
-  cache:
-    paths:
-    - vendor/
 
 test frontend akl:
   stage: test
@@ -26,9 +29,6 @@ test frontend akl:
   - yarn install
   - npm rebuild node-sass
   - yarn test
-  cache:
-    paths:
-    - akl/frontend/node_modules/
 
 test frontend lhr:
   image: aoepeople/fe-build-env:1.3.0
@@ -38,9 +38,6 @@ test frontend lhr:
   - yarn install
   - npm rebuild node-sass
   - yarn test
-  cache:
-    paths:
-    - lhr/frontend/node_modules/
 
 build akl:
   stage: build
@@ -50,9 +47,6 @@ build akl:
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/akl"
   - go build .
-  cache:
-    paths:
-    - vendor/
   artifacts:
     paths:
     - akl/akl
@@ -68,9 +62,6 @@ build lhr:
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/lhr"
   - go build .
-  cache:
-    paths:
-    - vendor/
   artifacts:
     paths:
     - lhr/lhr
@@ -84,10 +75,6 @@ build frontend akl:
   script:
   - cd akl/frontend
   - yarn run build
-  cache:
-    paths:
-    - akl/frontend/node_modules/
-    - vendor/
   artifacts:
     paths:
     - akl/frontend/dist
@@ -98,10 +85,6 @@ build frontend lhr:
   script:
   - cd lhr/frontend
   - yarn run build
-  cache:
-    paths:
-    - lhr/frontend/node_modules/
-    - vendor/
   artifacts:
     paths:
     - akl/frontend/dist

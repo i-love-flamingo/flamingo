@@ -9,6 +9,7 @@ import (
 
 	cmsdomain "flamingo/core/cms/domain"
 	productdomain "flamingo/core/product/domain"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	branddomain "flamingo/om3/brand/domain"
 	searchdomain "flamingo/om3/search/domain"
@@ -16,7 +17,7 @@ import (
 
 // Module for AKL internalmock configuration
 type Module struct {
-	Config map[string]interface{} `inject:"config:fakeservices"`
+	Config config.Map `inject:"config:fakeservices"`
 }
 
 // Configure DI
@@ -39,5 +40,11 @@ func (module *Module) Configure(injector *dingo.Injector) {
 
 	if v, ok := module.Config["cmsblock"].(bool); v && ok {
 		injector.Override((*cmsdomain.BlockService)(nil), "").To(cmsblock.FakeBlockService{})
+	}
+}
+
+func (module *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"fakeservices": config.Map{},
 	}
 }

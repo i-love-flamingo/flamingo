@@ -156,6 +156,7 @@ var funcmap = FuncMap{
 		type tmpattr struct {
 			mustEscape bool
 			val        string
+			bool       *bool
 		}
 		a := make(map[string][]tmpattr)
 		var order []string
@@ -165,34 +166,39 @@ var funcmap = FuncMap{
 					continue
 				}
 				name := string(attr.(*Map).Items[String("Name")].(String))
+				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
 				var val string
-				if attr.(*Map).Items[String("Val")] == nil && attr.(*Map).Items[String("BoolVal")] != nil {
-					if !attr.(*Map).Items[String("Val")].(Bool).True() {
-						continue
-					} else {
+				att := tmpattr{mustEscape: mustEscape}
+				if _, ok := attr.(*Map).Items[String("BoolVal")].(Bool); attr.(*Map).Items[String("BoolVal")] != nil && ok {
+					b := attr.(*Map).Items[String("BoolVal")].(Bool).True()
+					att.bool = &b
+					if mustEscape {
 						val = name
+					} else {
+						val = `"` + name + `"`
 					}
 				} else {
 					val = string(attr.(*Map).Items[String("Val")].(String))
 				}
-				mustEscape := bool(attr.(*Map).Items[String("MustEscape")].(Bool))
+				att.val = val
 				if _, ok := a[name]; ok {
 					if name == "class" {
-						a[name] = append(a[name], tmpattr{val: val, mustEscape: mustEscape})
+						a[name] = append(a[name], att)
 					} else {
-						a[name] = []tmpattr{{val: val, mustEscape: mustEscape}}
+						a[name] = []tmpattr{att}
 					}
 				} else {
-					a[name] = []tmpattr{{val: val, mustEscape: mustEscape}}
+					a[name] = []tmpattr{att}
 					order = append(order, name)
 				}
 			}
 		}
+	renderloop:
 		for _, attr := range order {
 			var tmp string
 			for _, val := range a[attr] {
-				if val.val == "" {
-					continue
+				if val.bool != nil && !*val.bool {
+					continue renderloop
 				}
 				if len(tmp) > 0 {
 					tmp += ` `

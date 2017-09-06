@@ -3,9 +3,11 @@ package config
 
 import (
 	"flamingo/framework/dingo"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type (
@@ -20,18 +22,22 @@ type (
 		Modules  []dingo.Module
 		Injector *dingo.Injector `json:"-"`
 
-		Routes        []Route                `yaml:"routes"`
-		Configuration map[string]interface{} `yaml:"config" json:"config"`
+		Routes        []Route `yaml:"routes"`
+		Configuration Map     `yaml:"-" json:"-"`
+		LoadedConfig  Map     `yaml:"config" json:"config"`
 	}
+
+	// Map contains configuration
+	Map map[string]interface{}
 
 	// DefaultConfigModule is used to get a module's default configuration
 	DefaultConfigModule interface {
-		DefaultConfig() map[string]interface{}
+		DefaultConfig() Map
 	}
 
 	// OverrideConfigModule allows to override config dynamically
 	OverrideConfigModule interface {
-		OverrideConfig(current map[string]interface{}) map[string]interface{}
+		OverrideConfig(current Map) Map
 	}
 
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
@@ -79,6 +85,57 @@ func (area *Area) GetFlatContexts() []*Area {
 	return result
 }
 
+// Add to the map (deep merge)
+func (m Map) Add(cfg Map) {
+	for k, v := range cfg {
+		if vv, ok := v.(map[string]interface{}); ok {
+			v = Map(vv)
+		}
+
+		if strings.Index(k, ".") > -1 {
+			k, sub := strings.SplitN(k, ".", 2)[0], strings.SplitN(k, ".", 2)[1]
+			if mm, ok := m[k]; !ok {
+				m[k] = make(Map)
+				m[k].(Map).Add(Map{sub: v})
+			} else if mm, ok := mm.(Map); ok {
+				mm.Add(Map{sub: v})
+			} else {
+				panic(fmt.Sprintf("Config conflict! %q.%q: %v into %v", k, sub, v, m[k]))
+			}
+		} else {
+			_, mapleft := m[k].(Map)
+			_, mapright := v.(Map)
+			if mapleft && mapright {
+				m[k].(Map).Add(v.(Map))
+			} else if mapleft && !mapright {
+				panic(fmt.Sprintf("Config conflict! %q:%v into %v", k, v, m[k]))
+			} else if mapright {
+				m[k] = make(Map)
+				m[k].(Map).Add(v.(Map))
+			} else {
+				m[k] = v
+			}
+		}
+	}
+}
+
+// Flat map
+func (m Map) Flat() Map {
+	res := make(Map)
+
+	for k, v := range m {
+		res[k] = v
+
+		if v, ok := v.(Map); ok {
+			for sk, sv := range v.Flat() {
+				res[k+"."+sk] = sv
+			}
+		}
+	}
+
+	return res
+}
+
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
 func (area *Area) GetInitializedInjector() *dingo.Injector {
@@ -90,18 +147,23 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	}
 	injector.Bind(Area{}).ToInstance(area)
 
+	area.Configuration = make(Map)
 	for _, module := range area.Modules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
-			for k, v := range cfgmodule.DefaultConfig() {
-				if _, ok := area.Configuration[k]; !ok {
-					area.Configuration[k] = v
-				}
-			}
+			area.Configuration.Add(cfgmodule.DefaultConfig())
 		}
 	}
 
-	var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
-	for k, v := range area.Configuration {
+	area.Configuration.Add(area.LoadedConfig)
+
+	for _, module := range area.Modules {
+		if cfgmodule, ok := module.(OverrideConfigModule); ok {
+			area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration))
+		}
+	}
+
+	regex := regexp.MustCompile(`%%ENV:([^%]+)%%`)
+	for k, v := range area.Configuration.Flat() {
 		if val, ok := v.(string); ok {
 			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
 		}
@@ -110,14 +172,6 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 			continue
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
-	}
-
-	for _, module := range area.Modules {
-		if cfgmodule, ok := module.(OverrideConfigModule); ok {
-			for k, v := range cfgmodule.OverrideConfig(area.Configuration) {
-				area.Configuration[k] = v
-			}
-		}
 	}
 
 	injector.InitModules(area.Modules...)
@@ -145,7 +199,7 @@ func (area *Area) Flat() map[string]*Area {
 // We do not merge config, as we use the DI to handle it
 func MergeFrom(baseContext, incomingContext Area) *Area {
 	if baseContext.Configuration == nil {
-		baseContext.Configuration = make(map[string]interface{})
+		baseContext.Configuration = make(Map)
 	}
 
 	knownhandler := make(map[string]bool)
@@ -164,7 +218,7 @@ func MergeFrom(baseContext, incomingContext Area) *Area {
 
 // Config get a config value recursive
 func (area *Area) Config(key string) interface{} {
-	if config, ok := area.Configuration[key]; ok {
+	if config, ok := area.Configuration.Flat()[key]; ok {
 		return config
 	}
 

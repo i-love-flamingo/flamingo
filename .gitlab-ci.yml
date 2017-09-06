@@ -62,7 +62,7 @@ build akl:
     - akl/akl
   dependencies:
   - test flamingo
-  - test frontend akl
+  - frontend akl
 
 build lhr:
   stage: build
@@ -78,14 +78,14 @@ build lhr:
     - lhr/lhr
   dependencies:
   - test flamingo
-  - test frontend akl
+  - frontend akl
 
 publish akl:
   stage: publish
   image: docker
   dependencies:
   - build akl
-  - build frontend akl
+  - frontend akl
   script:
   - cd akl
   - docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-akl.aoe.com
@@ -99,7 +99,7 @@ publish lhr:
   image: docker
   dependencies:
   - build lhr
-  - build frontend lhr
+  - frontend lhr
   script:
   - cd lhr
   #- docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-lhr.aoe.com

@@ -7,8 +7,8 @@ flamingo (Project Root)
 │   Dockerfile
 │   Makefile
 │   Jenkinsfile
-│   glide.yaml
-│   glide.lock
+│   Gopkg.lock
+│   Gopkg.toml
 │
 └───PROJECTNAME
 │   │   PROJECTNAME.go (Main executable)

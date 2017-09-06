@@ -1,7 +1,6 @@
 stages:
 - test
 - build
-- build frontend
 - publish
 
 cache:
@@ -21,7 +20,7 @@ test flamingo:
   - dep ensure -vendor-only
   - go test ./...
 
-test frontend akl:
+frontend akl:
   stage: test
   image: aoepeople/fe-build-env:1.3.0
   script:
@@ -29,8 +28,13 @@ test frontend akl:
   - yarn install
   - npm rebuild node-sass
   - yarn test
+  - yarn run build
+  artifacts:
+    expire_in: 2 days
+    paths:
+    - akl/frontend/dist
 
-test frontend lhr:
+frontend lhr:
   image: aoepeople/fe-build-env:1.3.0
   stage: test
   script:
@@ -38,6 +42,11 @@ test frontend lhr:
   - yarn install
   - npm rebuild node-sass
   - yarn test
+  - yarn run build
+  artifacts:
+    expire_in: 2 days
+    paths:
+    - lhr/frontend/dist
 
 build akl:
   stage: build
@@ -70,28 +79,6 @@ build lhr:
   dependencies:
   - test flamingo
   - test frontend akl
-
-build frontend akl:
-  stage: build frontend
-  image: aoepeople/fe-build-env:1.3.0
-  script:
-  - cd akl/frontend
-  - yarn run build
-  artifacts:
-    expire_in: 2 days
-    paths:
-    - akl/frontend/dist
-
-build frontend lhr:
-  image: aoepeople/fe-build-env:1.3.0
-  stage: build frontend
-  script:
-  - cd lhr/frontend
-  - yarn run build
-  artifacts:
-    expire_in: 2 days
-    paths:
-    - lhr/frontend/dist
 
 publish akl:
   stage: publish

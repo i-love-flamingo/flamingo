@@ -104,7 +104,7 @@ publish lhr:
   image: docker
   dependencies:
   - build lhr
-  - frontend lhr
+  - test frontend lhr
   script:
   - cd lhr
   #- docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-lhr.aoe.com

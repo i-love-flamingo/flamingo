@@ -67,7 +67,7 @@ build akl:
     - akl/akl
   dependencies:
   - test flamingo
-  - frontend akl
+  - test frontend akl
 
 build lhr:
   stage: build
@@ -83,7 +83,7 @@ build lhr:
     - lhr/lhr
   dependencies:
   - test flamingo
-  - frontend akl
+  - test frontend lhr
 
 publish akl:
   stage: publish

@@ -90,7 +90,7 @@ publish akl:
   image: docker
   dependencies:
   - build akl
-  - frontend akl
+  - test frontend akl
   script:
   - cd akl
   - docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} docker-om3-akl.aoe.com

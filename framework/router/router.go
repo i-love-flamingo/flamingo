@@ -174,7 +174,11 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// initialize the session
 	s, err := router.Sessions.Get(req, router.SessionName)
 	if err != nil {
-		s, _ = router.Sessions.New(req, router.SessionName)
+		log.Println(err)
+		s, err = router.Sessions.New(req, router.SessionName)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	// retrieve a new context

@@ -8,6 +8,7 @@ cache:
   - akl/frontend/node_modules/
   - lhr/frontend/node_modules/
   - vendor/
+  key: "$CI_COMMIT_REF_NAME"
 
 test flamingo:
   stage: test

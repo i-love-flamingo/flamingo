@@ -22,4 +22,9 @@ func TestJsMath(t *testing.T) {
 	assert.Equal(t, 2, math.Ceil(2.))
 	assert.Equal(t, 3, math.Ceil(2.4))
 	assert.Equal(t, 3, math.Ceil(2.5))
+
+	assert.Equal(t, 2, math.Trunc(2))
+	assert.Equal(t, 2, math.Trunc(int64(2)))
+	assert.Equal(t, 2, math.Trunc(2.))
+	assert.Equal(t, 2, math.Trunc(2.1))
 }

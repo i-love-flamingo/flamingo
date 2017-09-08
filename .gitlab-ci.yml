@@ -30,6 +30,7 @@ test frontend akl:
   - echo 'email=om3.common.jenkins@aoe.com' > .npmrc
   - echo 'registry=https://extranet.aoe.com/artifactory/api/npm/om3-npm/' >> .npmrc
   - echo '//extranet.aoe.com/artifactory/api/npm/om3-npm/:_authToken=${NPM_TOKEN}' >> .npmrc
+  - npm set progress=false
   - npm install
   - npm rebuild node-sass
   - npm test
@@ -46,6 +47,7 @@ test frontend lhr:
   - echo 'email=om3.common.jenkins@aoe.com' > .npmrc
   - echo 'registry=https://extranet.aoe.com/artifactory/api/npm/om3-npm/' >> .npmrc
   - echo '//extranet.aoe.com/artifactory/api/npm/om3-npm/:_authToken=${NPM_TOKEN}' >> .npmrc
+  - npm set progress=false
   - npm install
   - npm rebuild node-sass
   - npm test

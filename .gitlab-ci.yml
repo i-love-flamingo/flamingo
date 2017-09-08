@@ -62,6 +62,7 @@ build akl:
   - export GODIR="${GOPATH}/src/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/akl"
+  - dep ensure -vendor-only
   - CGO_ENABLED=0 go build .
   artifacts:
     expire_in: 2 days
@@ -78,6 +79,7 @@ build lhr:
   - export GODIR="${GOPATH}/src/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/lhr"
+  - dep ensure -vendor-only
   - CGO_ENABLED=0 go build .
   artifacts:
     expire_in: 2 days

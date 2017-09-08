@@ -7,7 +7,7 @@ run:
 	cd akl && go run akl.go serve
 
 dep:
-	glide i
+	dep ensure -vendor-only
 
 doc: docs
 

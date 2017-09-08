@@ -66,3 +66,13 @@ func (m Math) Max(x ...interface{}) (res float64) {
 	}
 	return
 }
+
+// Trunc drops the decimals
+func (m Math) Trunc(x interface{}) int {
+	if reflect.TypeOf(x).Kind() == reflect.Int {
+		x = float64(reflect.ValueOf(x).Int())
+	} else if reflect.TypeOf(x).Kind() == reflect.Int64 {
+		x = float64(reflect.ValueOf(x).Int())
+	}
+	return int(math.Trunc(x.(float64)))
+}

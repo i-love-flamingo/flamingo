@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"math"
+
 	"github.com/pkg/errors"
 )
 
@@ -145,14 +147,16 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 		return priceinfo, errors.New("Priceengine response has not exactly one array entry")
 	}
 
-	priceinfo.Default = tempPriceEngineResponseDto[0].ActivePrice.Default
-	priceinfo.Discounted = tempPriceEngineResponseDto[0].ActivePrice.Discounted
+	priceinfo.Default = tempPriceEngineResponseDto[0].ActivePrice.Default + 0.42
+	//priceinfo.Discounted = tempPriceEngineResponseDto[0].ActivePrice.Discounted
+	priceinfo.Discounted = math.Ceil((priceinfo.Default/100)*80) + 0.41
 	priceinfo.DiscountText = tempPriceEngineResponseDto[0].ActivePrice.DiscountText
 	priceinfo.CampaignRules = tempPriceEngineResponseDto[0].ActivePrice.CampaignRules
 	priceinfo.Currency = tempPriceEngineResponseDto[0].ActivePrice.Currency
 	priceinfo.ActiveBase = tempPriceEngineResponseDto[0].ActivePrice.ActiveBase
 	priceinfo.ActiveBaseAmount = tempPriceEngineResponseDto[0].ActivePrice.ActiveBaseAmount
 	priceinfo.IsDiscounted = tempPriceEngineResponseDto[0].ActivePrice.IsDiscounted
+	priceinfo.IsDiscounted = true
 
 	return priceinfo, nil
 }

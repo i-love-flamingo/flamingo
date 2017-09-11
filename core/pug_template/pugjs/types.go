@@ -280,6 +280,8 @@ func (s String) Field(field string) Object {
 		return &Func{fnc: s.ToUpperCase}
 	case "slice":
 		return &Func{fnc: s.Slice}
+	case "replace":
+		return &Func{fnc: s.Replace}
 	}
 	return Nil{}
 }
@@ -297,6 +299,10 @@ func (s String) ToUpperCase() string {
 
 func (s String) Slice(from int) string {
 	return string(s[from:])
+}
+
+func (s String) Replace(what, with String) String {
+	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
 
 // Number

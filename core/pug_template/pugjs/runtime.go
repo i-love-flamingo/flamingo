@@ -225,6 +225,15 @@ var funcmap = FuncMap{
 		}
 		return right
 	},
+
+	"parseInt": func(num Object, base Number) Number {
+		f, _ := strconv.ParseFloat(num.String(), 64)
+		n, err := strconv.ParseInt(strconv.Itoa(int(f)), int(base), 64)
+		if err != nil {
+			panic(err)
+		}
+		return Number(n)
+	},
 }
 
 func runtimeAdd(l, r interface{}) Object {

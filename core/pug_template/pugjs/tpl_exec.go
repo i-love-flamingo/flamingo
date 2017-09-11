@@ -890,6 +890,25 @@ func (s *state) evalArg(dot reflect.Value, typ reflect.Type, n parse.Node) refle
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return s.evalUnsignedInteger(typ, n)
 	}
+	if typ == reflect.TypeOf((*Object)(nil)).Elem() {
+		switch n := n.(type) {
+		case *parse.BoolNode:
+			return reflect.ValueOf(convert(n.True))
+		case *parse.NumberNode:
+			switch {
+			case n.IsComplex:
+				return reflect.ValueOf(convert(n.Complex128))
+			case n.IsFloat:
+				return reflect.ValueOf(convert(n.Float64))
+			case n.IsInt:
+				return reflect.ValueOf(convert(n.Int64))
+			case n.IsUint:
+				return reflect.ValueOf(convert(n.Uint64))
+			}
+		case *parse.StringNode:
+			return reflect.ValueOf(convert(n.Text))
+		}
+	}
 	s.errorf("can'e handle %s for arg of type %s", n, typ)
 	panic("not reached")
 }

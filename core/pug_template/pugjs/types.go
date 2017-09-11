@@ -115,6 +115,12 @@ func convert(in interface{}) Object {
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
 		return Number(float64(val.Int()))
 
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		return Number(float64(val.Uint()))
+
+	case reflect.Complex128:
+		return Number(-1)
+
 	case reflect.Func:
 		return &Func{fnc: val.Interface()}
 

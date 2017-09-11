@@ -86,8 +86,14 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 		}
 	}
 
-	price, _ := strconv.ParseFloat(variant.Attributes["price"].(string), 64)
-	basePrice, _ := strconv.ParseFloat(variant.Attributes["basePrice"].(string), 64)
+	price := 0.0
+	if _price, ok := variant.Attributes["price"].(string); ok {
+		price, _ = strconv.ParseFloat(_price, 64)
+	}
+	basePrice := 0.0
+	if _price, ok := variant.Attributes["basePrice"].(string); ok {
+		basePrice, _ = strconv.ParseFloat(_price, 64)
+	}
 
 	//log.Printf("Call to %v", u)
 	priceEngineRequest := []byte(`{

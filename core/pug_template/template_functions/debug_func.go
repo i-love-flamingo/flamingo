@@ -1,6 +1,8 @@
 package template_functions
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type (
 	// DebugFunc renders data as JSON, which allows debugging in templates

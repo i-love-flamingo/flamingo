@@ -47,6 +47,7 @@ func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer, depth int) er
 %s%s
 %s%s
 {{- end }}`, m.Name, prefix, attrpart, prefix, subblock.String())
+	p.mixinorder = append(p.mixinorder, string(m.Name))
 	return nil
 }
 

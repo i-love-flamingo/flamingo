@@ -45,7 +45,7 @@ func (dc *DebugController) Get(ctx web.Context) web.Response {
 
 	tpls := ""
 	for i, l := range strings.Split(tpl, "\n") {
-		tpls += fmt.Sprintf("%03d: %s\n", i+1, l)
+		tpls += fmt.Sprintf("%03d: %s\n", i+1, strings.TrimSpace(strings.TrimSuffix(l, `{{- "" -}}`)))
 	}
 
 	t.Execute(body, tpls)

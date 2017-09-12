@@ -304,6 +304,9 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		}
 		result += `)`
 		if wrap {
+			if !p.rawmode {
+				result += ` | html`
+			}
 			result = `{{` + result + `}}`
 		}
 
@@ -360,6 +363,9 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	case *ast.BracketExpression:
 		result += `(index ` + p.renderExpression(expr.Left, false, true) + ` ` + p.renderExpression(expr.Member, false, true) + `)`
 		if wrap {
+			if !p.rawmode {
+				result += ` | html`
+			}
 			result = `{{` + result + `}}`
 		}
 

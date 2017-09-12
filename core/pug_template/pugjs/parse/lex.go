@@ -154,11 +154,7 @@ func (l *lexer) backup() {
 // emit passes an item back to the client.
 func (l *lexer) emit(t itemType) {
 	l.items <- item{t, l.start, l.input[l.start:l.pos], l.line}
-	// Some items contain text internally. If so, count their newlines.
-	switch t {
-	case itemText, itemRawString, itemLeftDelim, itemRightDelim:
-		l.line += strings.Count(l.input[l.start:l.pos], "\n")
-	}
+	l.line = strings.Count(l.input[0:l.pos], "\n") + 1
 	l.start = l.pos
 }
 

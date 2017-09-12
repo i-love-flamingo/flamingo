@@ -59,14 +59,14 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Identifier", func() {
 			It("Should transpile it correctly if it is known", func() {
-				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown}}`))
+				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | html}}`))
 			})
 			It("Should transpile it correctly if it is not known", func() {
-				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown}}`))
+				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | html}}`))
 			})
 			It("Should make it raw if rawmode is on", func() {
 				s.rawmode = true
-				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | raw}}`))
+				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown}}`))
 				s.rawmode = false
 			})
 		})
@@ -120,7 +120,7 @@ var _ = Describe("JS Expression transpiling", func() {
 			})
 			It("Should be raw and escaped if rawmode and wrap is set", func() {
 				s.rawmode = true
-				Expect(s.JsExpr(`a.b`, true, false)).To(Equal(`{{$a.b | raw}}`))
+				Expect(s.JsExpr(`a.b`, true, false)).To(Equal(`{{$a.b}}`))
 				s.rawmode = false
 			})
 		})

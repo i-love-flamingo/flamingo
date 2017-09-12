@@ -25,12 +25,16 @@ func (ml JsMath) Func() interface{} {
 	}
 }
 
+func (m Math) NoConvert(){}
+
 // Ceil rounds a value up to the next biggest integer
 func (m Math) Ceil(x interface{}) int {
 	if reflect.TypeOf(x).Kind() == reflect.Int {
 		x = float64(reflect.ValueOf(x).Int())
 	} else if reflect.TypeOf(x).Kind() == reflect.Int64 {
 		x = float64(reflect.ValueOf(x).Int())
+	} else if reflect.TypeOf(x).Kind() == reflect.Float64 {
+		x = float64(reflect.ValueOf(x).Float())
 	}
 	return int(math.Ceil(x.(float64)))
 }
@@ -43,6 +47,8 @@ func (m Math) Min(x ...interface{}) (res float64) {
 			v = float64(reflect.ValueOf(v).Int())
 		} else if reflect.TypeOf(v).Kind() == reflect.Int64 {
 			v = float64(reflect.ValueOf(v).Int())
+		} else if reflect.TypeOf(v).Kind() == reflect.Float64 {
+			v = float64(reflect.ValueOf(v).Float())
 		}
 		if v.(float64) < res {
 			res = v.(float64)
@@ -59,6 +65,8 @@ func (m Math) Max(x ...interface{}) (res float64) {
 			v = float64(reflect.ValueOf(v).Int())
 		} else if reflect.TypeOf(v).Kind() == reflect.Int64 {
 			v = float64(reflect.ValueOf(v).Int())
+		} else if reflect.TypeOf(v).Kind() == reflect.Float64 {
+			v = float64(reflect.ValueOf(v).Float())
 		}
 		if v.(float64) > res {
 			res = v.(float64)
@@ -73,6 +81,8 @@ func (m Math) Trunc(x interface{}) int {
 		x = float64(reflect.ValueOf(x).Int())
 	} else if reflect.TypeOf(x).Kind() == reflect.Int64 {
 		x = float64(reflect.ValueOf(x).Int())
+	} else if reflect.TypeOf(x).Kind() == reflect.Float64 {
+		x = float64(reflect.ValueOf(x).Float())
 	}
 	return int(math.Trunc(x.(float64)))
 }

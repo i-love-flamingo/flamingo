@@ -1,11 +1,12 @@
 package brand
 
+//go:generate go-bindata -pkg brand -prefix mocks/ mocks/
+
 import (
 	"context"
 	"encoding/json"
 	"flamingo/om3/brand/domain"
 	"fmt"
-	"io/ioutil"
 )
 
 // FakeBrandService is just mocking stuff
@@ -15,7 +16,7 @@ type FakeBrandService struct{}
 func (ps *FakeBrandService) Get(context context.Context, ID string) (*domain.Brand, error) {
 	var brand domain.Brand
 
-	b, _ := ioutil.ReadFile("../om3/fakeservices/brand/service.brand.mock.json")
+	b, _ := Asset("service.brand.mock.json")
 	json.Unmarshal(b, &brand)
 	brand.ID = ID
 	fmt.Println("fake brand service called")

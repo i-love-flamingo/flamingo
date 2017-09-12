@@ -84,6 +84,9 @@ func (p *renderState) JsExpr(expr string, wrap, rawcode bool) string {
 
 	for _, stmt := range stmtlist {
 		finalexpr += p.renderStatement(stmt, wrap, true)
+		if p.debug && wrap && len(stmtlist) > 1 {
+			finalexpr += "     {{- \"\" -}}\n"
+		}
 	}
 
 	return finalexpr
@@ -193,8 +196,8 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		}
 		result += expr.Name
 		if wrap {
-			if p.rawmode {
-				result += ` | raw`
+			if !p.rawmode {
+				result += ` | html`
 			}
 			result = `{{` + result + `}}`
 		}
@@ -261,8 +264,8 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		}
 		result += identifier
 		if wrap {
-			if p.rawmode {
-				result += ` | raw`
+			if !p.rawmode {
+				result += ` | html`
 			}
 			result = `{{` + result + `}}`
 		}

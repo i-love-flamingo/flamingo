@@ -144,6 +144,9 @@ var funcmap = FuncMap{
 			b := v.True()
 			return []Attribute{{Name: k, BoolVal: &b}}
 		}
+		if v, ok := v.(bool); ok {
+			return []Attribute{{Name: k, BoolVal: &v}}
+		}
 		if v, ok := v.(Object); ok {
 			return []Attribute{{Name: k, Val: JavaScriptExpression(v.String()), MustEscape: e}}
 		}
@@ -215,7 +218,12 @@ var funcmap = FuncMap{
 	},
 	"__and_attrs": func(x *Map) (res []Attribute) {
 		for k, v := range x.Items {
-			res = append(res, Attribute{Name: k.String(), Val: JavaScriptExpression(v.String()), MustEscape: true})
+			if b, ok := v.(Bool); ok {
+				boolval := b.True()
+				res = append(res, Attribute{Name: k.String(), Val: JavaScriptExpression(v.String()), MustEscape: true, BoolVal: &boolval})
+			} else {
+				res = append(res, Attribute{Name: k.String(), Val: JavaScriptExpression(v.String()), MustEscape: true})
+			}
 		}
 		return
 	},
@@ -224,6 +232,15 @@ var funcmap = FuncMap{
 			return left
 		}
 		return right
+	},
+
+	"parseInt": func(num Object, base Number) Number {
+		f, _ := strconv.ParseFloat(num.String(), 64)
+		n, err := strconv.ParseInt(strconv.Itoa(int(f)), int(base), 64)
+		if err != nil {
+			panic(err)
+		}
+		return Number(n)
 	},
 }
 

@@ -1,10 +1,11 @@
 package search
 
+//go:generate go-bindata -pkg search -prefix mocks/ mocks/
+
 import (
 	"encoding/json"
 	"flamingo/framework/web"
 	"flamingo/om3/search/domain"
-	"io/ioutil"
 	"net/url"
 	"strconv"
 )
@@ -14,7 +15,7 @@ type FakeSearchService struct{}
 
 func (searchservice *FakeSearchService) Search(ctx web.Context, query url.Values) (*domain.SearchResult, error) {
 	var s = new(domain.SearchResult)
-	b, _ := ioutil.ReadFile("../om3/fakeservices/search/searchResult.mock.json")
+	b, _ := Asset("searchResult.mock.json")
 	json.Unmarshal(b, s)
 
 	if page := query.Get("page"); page != "" {

@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"math"
+
 	"github.com/pkg/errors"
 )
 
@@ -61,7 +63,6 @@ type (
 )
 
 func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, variant dto.Variant) (domain.PriceInfo, error) {
-
 	var priceinfo domain.PriceInfo
 	//Set default baseurl
 	if ps.TempPriceEngineBaseURL == "" {
@@ -85,6 +86,15 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 		}
 	}
 
+	price := 0.0
+	if _price, ok := variant.Attributes["price"].(string); ok {
+		price, _ = strconv.ParseFloat(_price, 64)
+	}
+	basePrice := 0.0
+	if _price, ok := variant.Attributes["basePrice"].(string); ok {
+		basePrice, _ = strconv.ParseFloat(_price, 64)
+	}
+
 	//log.Printf("Call to %v", u)
 	priceEngineRequest := []byte(`{
   "context": {
@@ -102,10 +112,10 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
         "winter"
       ],
       "pricedata": {
-        "default": ` + strconv.FormatFloat(variant.OriginPrice, 'f', 1, 64) + `,
+        "default": ` + strconv.FormatFloat(price, 'f', 1, 64) + `,
         "currency": "EUR",
         "taxClass": "test",
-        "base": ` + strconv.FormatFloat(variant.OriginBasePrice, 'f', 1, 64) + `,
+        "base": ` + strconv.FormatFloat(basePrice, 'f', 1, 64) + `,
         "baseUnit": "` + variant.OriginBasePriceUnit + `",
         "baseAmount": ` + strconv.FormatFloat(variant.OriginBasePriceAmount, 'f', 1, 64) + `,
         "special": ` + strconv.FormatFloat(variant.SpecialPrice, 'f', 1, 64) + `,
@@ -143,14 +153,16 @@ func (ps *PriceEngineService) TempRequestPriceEngine(ctx context.Context, varian
 		return priceinfo, errors.New("Priceengine response has not exactly one array entry")
 	}
 
-	priceinfo.Default = tempPriceEngineResponseDto[0].ActivePrice.Default
-	priceinfo.Discounted = tempPriceEngineResponseDto[0].ActivePrice.Discounted
+	priceinfo.Default = tempPriceEngineResponseDto[0].ActivePrice.Default + 0.42
+	//priceinfo.Discounted = tempPriceEngineResponseDto[0].ActivePrice.Discounted
+	priceinfo.Discounted = math.Ceil((priceinfo.Default/100)*80) + 0.41
 	priceinfo.DiscountText = tempPriceEngineResponseDto[0].ActivePrice.DiscountText
 	priceinfo.CampaignRules = tempPriceEngineResponseDto[0].ActivePrice.CampaignRules
 	priceinfo.Currency = tempPriceEngineResponseDto[0].ActivePrice.Currency
 	priceinfo.ActiveBase = tempPriceEngineResponseDto[0].ActivePrice.ActiveBase
 	priceinfo.ActiveBaseAmount = tempPriceEngineResponseDto[0].ActivePrice.ActiveBaseAmount
 	priceinfo.IsDiscounted = tempPriceEngineResponseDto[0].ActivePrice.IsDiscounted
+	priceinfo.IsDiscounted = true
 
 	return priceinfo, nil
 }

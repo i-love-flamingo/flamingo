@@ -115,6 +115,12 @@ func convert(in interface{}) Object {
 	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
 		return Number(float64(val.Int()))
 
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		return Number(float64(val.Uint()))
+
+	case reflect.Complex128:
+		return Number(-1)
+
 	case reflect.Func:
 		return &Func{fnc: val.Interface()}
 
@@ -280,6 +286,8 @@ func (s String) Field(field string) Object {
 		return &Func{fnc: s.ToUpperCase}
 	case "slice":
 		return &Func{fnc: s.Slice}
+	case "replace":
+		return &Func{fnc: s.Replace}
 	}
 	return Nil{}
 }
@@ -297,6 +305,10 @@ func (s String) ToUpperCase() string {
 
 func (s String) Slice(from int) string {
 	return string(s[from:])
+}
+
+func (s String) Replace(what, with String) String {
+	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
 
 // Number

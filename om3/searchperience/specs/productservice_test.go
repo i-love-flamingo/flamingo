@@ -61,10 +61,10 @@ func TestProductserviceCanGetSimpleProduct(t *testing.T) {
 				t.Fatalf("Product Title is expected to be %v got %v", simpleTitleFixture, product.BaseData().Title)
 			}
 			// @TODO: Remove when search is ready: This is just for the time where search is not calling the priceengine
-			simpleProduct := product.(domain.SimpleProduct)
-			if simpleProduct.ActivePrice.Default != 9.99 {
-				t.Fatalf("Product ActivePrice is expected to be %v got %v", 9.99, simpleProduct.ActivePrice.Default)
-			}
+			//simpleProduct := product.(domain.SimpleProduct)
+			//if simpleProduct.ActivePrice.Default != 9.99 {
+			//	t.Fatalf("Product ActivePrice is expected to be %v got %v", 9.99, simpleProduct.ActivePrice.Default)
+			//}
 			return nil
 		}); err != nil {
 			t.Fatal(err)

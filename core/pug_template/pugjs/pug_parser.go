@@ -41,7 +41,7 @@ type (
 		Nodes []*Token
 
 		// specific information
-		AttributeBlocks []string
+		AttributeBlocks []*Token
 		Attrs           []*Attr
 		MustEscape      bool
 		File            *Fileref
@@ -105,8 +105,8 @@ func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string,
 		wr.WriteString("\n" + b)
 	}
 
-	for _, b := range p.mixin {
-		wr.WriteString("\n" + b)
+	for _, b := range p.mixinorder {
+		wr.WriteString("\n" + p.mixin[b])
 	}
 
 	template, err := template.Parse(wr.String())
@@ -114,7 +114,7 @@ func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string,
 	if err != nil {
 		e := err.Error() + "\n"
 		for i, l := range strings.Split(wr.String(), "\n") {
-			e += fmt.Sprintf("%03d: %s\n", i+1, l)
+			e += fmt.Sprintf("%03d: %s\n", i+1, strings.TrimSpace(strings.TrimSuffix(l, `{{- "" -}}`)))
 		}
 		return nil, "", errors.New(e)
 	}
@@ -162,7 +162,7 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 		tag.IsInline = t.IsInline
 		tag.SelfClosing = t.SelfClosing
 		for _, a := range t.AttributeBlocks {
-			tag.AttributeBlocks = append(tag.AttributeBlocks, JavaScriptExpression(a))
+			tag.AttributeBlocks = append(tag.AttributeBlocks, JavaScriptExpression(a.Val))
 		}
 		tag.Block = Block{Nodes: p.build(t.Block)}
 		for _, a := range t.Attrs {
@@ -177,7 +177,7 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 		mixin := new(Mixin)
 		mixin.Block = Block{Nodes: p.build(t.Block)}
 		for _, a := range t.AttributeBlocks {
-			mixin.AttributeBlocks = append(mixin.AttributeBlocks, JavaScriptExpression(a))
+			mixin.AttributeBlocks = append(mixin.AttributeBlocks, JavaScriptExpression(a.Val))
 		}
 		mixin.Name = JavaScriptIdentifier(t.Name)
 		mixin.Args = t.Args

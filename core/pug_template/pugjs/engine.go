@@ -24,6 +24,7 @@ type (
 	renderState struct {
 		path         string
 		mixin        map[string]string
+		mixinorder   []string
 		mixincounter int
 		mixinblocks  []string
 		mixinblock   string
@@ -191,7 +192,7 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 	if err != nil {
 		errstr := err.Error() + "\n"
 		for i, l := range strings.Split(e.TemplateCode[templateName], "\n") {
-			errstr += fmt.Sprintf("%03d: %s\n", i+1, l)
+			errstr += fmt.Sprintf("%03d: %s\n", i+1, strings.TrimSpace(strings.TrimSuffix(l, `{{- "" -}}`)))
 		}
 		return nil, errors.New(errstr)
 	}

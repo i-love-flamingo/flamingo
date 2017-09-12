@@ -1,10 +1,11 @@
 package cmsblock
 
+//go:generate go-bindata -pkg cmsblock -prefix mocks/ mocks/
+
 import (
 	"context"
 	"encoding/json"
 	"flamingo/core/cms/domain"
-	"io/ioutil"
 )
 
 // FakeBlockService for CMS Blocks
@@ -14,7 +15,7 @@ type FakeBlockService struct{}
 func (ps *FakeBlockService) Get(ctx context.Context, name string) (*domain.Block, error) {
 	var block domain.Block
 
-	b, _ := ioutil.ReadFile("../om3/fakeservices/cmsblock/service.cms.block.mock.json")
+	b, _ := Asset("service.cms.block.mock.json")
 	json.Unmarshal(b, &block)
 	block.Identifier = name
 

@@ -86,3 +86,28 @@ func (m Math) Trunc(x interface{}) int {
 	}
 	return int(math.Trunc(x.(float64)))
 }
+
+// Round rounds a value to the nearest integer
+func round(n float64) float64 {
+	if n >= 0.5 {
+		return math.Trunc(n + 0.5)
+	}
+	if n <= -0.5 {
+		return math.Trunc(n - 0.5)
+	}
+	if math.IsNaN(n) {
+		return math.NaN()
+	}
+	return 0
+}
+
+func (m Math) Round(x interface{}) int {
+	if reflect.TypeOf(x).Kind() == reflect.Int {
+		x = float64(reflect.ValueOf(x).Int())
+	} else if reflect.TypeOf(x).Kind() == reflect.Int64 {
+		x = float64(reflect.ValueOf(x).Int())
+	} else if reflect.TypeOf(x).Kind() == reflect.Float64 {
+		x = float64(reflect.ValueOf(x).Float())
+	}
+	return int(round(x.(float64)))
+}

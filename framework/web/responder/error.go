@@ -93,7 +93,9 @@ func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response 
 		)
 	}
 
-	response.(*web.ContentResponse).Status = http.StatusInternalServerError
+	if r, ok := response.(*web.ContentResponse); ok {
+		r.Status = http.StatusInternalServerError
+	}
 
 	return response
 }

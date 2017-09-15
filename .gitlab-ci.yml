@@ -27,14 +27,10 @@ test frontend akl:
   stage: test
   script:
   - cd akl/frontend
-  - echo 'email=om3.common.jenkins@aoe.com' > .npmrc
-  - echo 'registry=https://extranet.aoe.com/artifactory/api/npm/om3-npm/' >> .npmrc
-  - echo '//extranet.aoe.com/artifactory/api/npm/om3-npm/:_authToken=${NPM_TOKEN}' >> .npmrc
-  - npm set progress=false
-  - npm install
+  - yarn
   - npm rebuild node-sass
-  - npm test
-  - npm run build
+  - yarn test
+  - yarn run build
   artifacts:
     expire_in: 2 days
     paths:
@@ -44,14 +40,10 @@ test frontend lhr:
   stage: test
   script:
   - cd lhr/frontend
-  - echo 'email=om3.common.jenkins@aoe.com' > .npmrc
-  - echo 'registry=https://extranet.aoe.com/artifactory/api/npm/om3-npm/' >> .npmrc
-  - echo '//extranet.aoe.com/artifactory/api/npm/om3-npm/:_authToken=${NPM_TOKEN}' >> .npmrc
-  - npm set progress=false
-  - npm install
+  - yarn
   - npm rebuild node-sass
-  - npm test
-  - npm run build
+  - yarn test
+  - yarn run build
   artifacts:
     expire_in: 2 days
     paths:

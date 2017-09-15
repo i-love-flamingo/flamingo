@@ -18,36 +18,10 @@ webpack basically performs the following tasks:
 - creating source map files in development environment
 - bundling all assets into minified production ready assets in production environment
 
-### npm
+### yarn
 
-flamingo uses [npm](https://www.npmjs.com/) for frontend dependency management and as a task runner.
-
-In order to be able to install all dependencies, you need to set the npm registry:
-
-```sh
-npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm/
-```
-
-Then add yourself as a user:
-
-```sh
-npm adduser
-```
-
-If you want to publish an npm module, use the local registry as follows:
-
-```sh
-npm config set registry https://extranet.aoe.com/artifactory/api/npm/om3-npm-local/
-```
-
-To list all awailable tasks, do the following:
-
-```sh
-cd akl/frontend
-yarn run
-```
-
-Please get familiar with npm and especially with how it handles [dependency locking](https://docs.npmjs.com/files/package-locks).
+flamingo uses [yarn](https://yarnpkg.com) for frontend dependency management and as a task runner.
+Please get familiar with yarn and especially with how it handles [dependency locking](https://yarnpkg.com/lang/en/docs/yarn-lock/).
 
 ### Main build tasks
 

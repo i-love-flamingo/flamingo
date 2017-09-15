@@ -1,4 +1,4 @@
-image: node:latest
+image: aoepeople/fe-build-env:1.4.0
 
 stages:
 - test

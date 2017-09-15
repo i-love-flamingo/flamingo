@@ -2,11 +2,13 @@ package fakeservices
 
 import (
 	"flamingo/om3/fakeservices/brand"
+	"flamingo/om3/fakeservices/category"
 	"flamingo/om3/fakeservices/cmsblock"
 	"flamingo/om3/fakeservices/cmspage"
 	"flamingo/om3/fakeservices/product"
 	"flamingo/om3/fakeservices/search"
 
+	categorydomain "flamingo/core/category/domain"
 	cmsdomain "flamingo/core/cms/domain"
 	productdomain "flamingo/core/product/domain"
 	"flamingo/framework/config"
@@ -41,6 +43,11 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	if v, ok := module.Config["cmsblock"].(bool); v && ok {
 		injector.Override((*cmsdomain.BlockService)(nil), "").To(cmsblock.FakeBlockService{})
 	}
+
+	injector.Bind((*categorydomain.CategoryService)(nil)).To(category.FakeCategoryService{})
+	//if v, ok := module.Config["category"].(bool); v && ok {
+	//injector.Override((*categorydomain.CategoryService)(nil), "").To(category.FakeCategoryService{})
+	//}
 }
 
 func (module *Module) DefaultConfig() config.Map {

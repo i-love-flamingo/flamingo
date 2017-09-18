@@ -7,28 +7,51 @@ import (
 	"flamingo/om3/fakeservices/product"
 )
 
-// FakeBlockService for CMS Blocks
-type FakeCategoryService struct{}
+type (
+	// FakeBlockService for CMS Blocks
+	FakeCategoryService struct{}
+
+	fakeCategory struct {
+		code       string
+		name       string
+		categories []domain.Category
+	}
+)
+
+// Code return the category code
+func (f *fakeCategory) Code() string {
+	return f.code
+}
+
+// Name returns the category name
+func (f *fakeCategory) Name() string {
+	return f.name
+}
+
+// Categories returns a list of child categories
+func (f *fakeCategory) Categories() []domain.Category {
+	return f.categories
+}
 
 // Get returns a category struct
 func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (domain.Category, error) {
-	return domain.Category{
-		Categories: []*domain.Category{
-			{
-				Name: "Test2",
-				Code: "test2",
+	return &fakeCategory{
+		name: "Test",
+		code: "test",
+		categories: []domain.Category{
+			&fakeCategory{
+				name: "Test2",
+				code: "test2",
 			},
-			{
-				Name: "Test3",
-				Code: "test3",
+			&fakeCategory{
+				name: "Test3",
+				code: "test3",
 			},
-			{
-				Name: "Test4",
-				Code: "test4",
+			&fakeCategory{
+				name: "Test4",
+				code: "test4",
 			},
 		},
-		Name: "Test",
-		Code: "test",
 	}, nil
 }
 

@@ -22,9 +22,6 @@ func (jl JsJson) Func() interface{} {
 	}
 }
 
-// NoConvert marks Json as not convertable
-func (j Json) NoConvert() {}
-
 // Stringify rounds a value up to the next biggest integer
 func (j Json) Stringify(x interface{}) string {
 	b, err := json.Marshal(x)

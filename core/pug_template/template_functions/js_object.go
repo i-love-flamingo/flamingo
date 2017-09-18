@@ -23,9 +23,6 @@ func (ol JsObject) Func() interface{} {
 	}
 }
 
-// NoConvert marker
-func (o Object) NoConvert() {}
-
 // Assign all properties from the sources to the target map
 func (o Object) Assign(target *pugjs.Map, sources ...*pugjs.Map) pugjs.Object {
 	for _, source := range sources {

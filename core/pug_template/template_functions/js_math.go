@@ -25,8 +25,6 @@ func (ml JsMath) Func() interface{} {
 	}
 }
 
-func (m Math) NoConvert(){}
-
 // Ceil rounds a value up to the next biggest integer
 func (m Math) Ceil(x interface{}) int {
 	if reflect.TypeOf(x).Kind() == reflect.Int {

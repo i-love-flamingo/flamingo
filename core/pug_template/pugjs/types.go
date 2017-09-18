@@ -98,7 +98,7 @@ func convert(in interface{}) Object {
 		}
 
 		for i := 0; i < val.NumMethod(); i++ {
-			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Type().Method(i).Func)
+			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
 		}
 
 		return newval
@@ -122,7 +122,7 @@ func convert(in interface{}) Object {
 		return Number(-1)
 
 	case reflect.Func:
-		return &Func{fnc: val.Interface()}
+		return &Func{fnc: val}
 
 	case reflect.Ptr:
 		if val.IsValid() && val.Elem().IsValid() {
@@ -140,7 +140,7 @@ func convert(in interface{}) Object {
 // Func
 
 type Func struct {
-	fnc interface{}
+	fnc reflect.Value
 }
 
 func (f *Func) Type() ObjectType         { return FUNC }
@@ -165,16 +165,16 @@ func (a *Array) String() string {
 func (a *Array) Field(name string) Object {
 	switch name {
 	case "length":
-		return &Func{fnc: a.Length}
+		return &Func{fnc: reflect.ValueOf(a.Length)}
 
 	case "indexOf":
-		return &Func{fnc: a.IndexOf}
+		return &Func{fnc: reflect.ValueOf(a.IndexOf)}
 
 	case "join":
-		return &Func{fnc: a.Join}
+		return &Func{fnc: reflect.ValueOf(a.Join)}
 
 	case "push":
-		return &Func{fnc: a.Push}
+		return &Func{fnc: reflect.ValueOf(a.Push)}
 	}
 
 	panic("field not found")
@@ -239,10 +239,10 @@ func (m *Map) String() string {
 }
 func (m *Map) Field(field string) Object {
 	if field == "__assign" {
-		return &Func{fnc: func(k, v interface{}) Object {
+		return &Func{fnc: reflect.ValueOf(func(k, v interface{}) Object {
 			m.Items[convert(k)] = convert(v)
 			return Nil{}
-		}}
+		})}
 	}
 
 	if i, ok := m.Items[String(field)]; ok {
@@ -281,13 +281,13 @@ func (s String) String() string   { return string(s) }
 func (s String) Field(field string) Object {
 	switch field {
 	case "charAt":
-		return &Func{fnc: s.CharAt}
+		return &Func{fnc: reflect.ValueOf(s.CharAt)}
 	case "toUpperCase":
-		return &Func{fnc: s.ToUpperCase}
+		return &Func{fnc: reflect.ValueOf(s.ToUpperCase)}
 	case "slice":
-		return &Func{fnc: s.Slice}
+		return &Func{fnc: reflect.ValueOf(s.Slice)}
 	case "replace":
-		return &Func{fnc: s.Replace}
+		return &Func{fnc: reflect.ValueOf(s.Replace)}
 	}
 	return Nil{}
 }

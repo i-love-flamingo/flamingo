@@ -376,7 +376,7 @@ func (injector *Injector) requestInjection(object interface{}) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			log.Printf("%s\n%s\n", current.Type(), current.String())
+			log.Printf("%s: %s\n%s\n", current.Type().PkgPath(), current.Type().Name(), current.String())
 			panic(e)
 		}
 	}()

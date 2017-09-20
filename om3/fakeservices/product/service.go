@@ -7,6 +7,7 @@ import (
 	"math/rand"
 
 	"github.com/pkg/errors"
+	"flag"
 )
 
 // FakeProductService is just mocking stuff
@@ -89,7 +90,7 @@ func fakeVariant(marketplaceCode string) domain.Variant {
 func addBasicData(product *domain.BasicProductData) {
 	product.ShortDescription = "Short Description"
 	product.Description = "Description"
-	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg"})
+	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg", Usage: "detail"})
 	product.Attributes = make(map[string]interface{})
 	product.Attributes["brandCode"] = "Apple"
 	product.RetailerCode = "Testretailer"

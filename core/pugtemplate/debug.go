@@ -1,8 +1,8 @@
-package pug_template
+package pugtemplate
 
 import (
 	"bytes"
-	"flamingo/core/pug_template/pugjs"
+	"flamingo/core/pugtemplate/pugjs"
 	"flamingo/framework/web"
 	"fmt"
 	"html/template"

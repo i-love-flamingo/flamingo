@@ -62,7 +62,7 @@ func (s *Service) GetProducts(ctx context.Context, searchMeta domain.SearchMeta,
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
-		return searchMeta, nil, nil, domain.SearchNotFound
+		return searchMeta, nil, nil, domain.ErrNotFound
 	}
 
 	res := new(dto.Result)

@@ -6,7 +6,7 @@ package pugjs
 
 import (
 	"bytes"
-	"flamingo/core/pug_template/pugjs/parse"
+	"flamingo/core/pugtemplate/pugjs/parse"
 	"fmt"
 	"io"
 	"reflect"

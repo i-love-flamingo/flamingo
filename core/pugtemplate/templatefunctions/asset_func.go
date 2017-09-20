@@ -1,7 +1,7 @@
-package template_functions
+package templatefunctions
 
 import (
-	"flamingo/core/pug_template/pugjs"
+	"flamingo/core/pugtemplate/pugjs"
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 	"html/template"

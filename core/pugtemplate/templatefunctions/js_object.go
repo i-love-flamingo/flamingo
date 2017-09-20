@@ -1,14 +1,17 @@
-package template_functions
+package templatefunctions
 
 import (
-	"flamingo/core/pug_template/pugjs"
+	"flamingo/core/pugtemplate/pugjs"
 	"sort"
 	"strconv"
 )
 
 type (
+	// JsObject template function
 	JsObject struct{}
-	Object   struct{}
+
+	// Object implementation
+	Object struct{}
 )
 
 // Name alias for use in template

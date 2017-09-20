@@ -189,7 +189,6 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 			result += `$`
 		} else if dot && !known {
 			panic("ain'e no dot allowed")
-			result += `.`
 		}
 		if expr.Name == "range" {
 			expr.Name = "__Range"

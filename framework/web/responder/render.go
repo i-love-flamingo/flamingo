@@ -3,7 +3,7 @@ package responder
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core/pug_template/pugjs"
+	"flamingo/core/pugtemplate/pugjs"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
 	"flamingo/framework/web"

@@ -4,6 +4,8 @@ import (
 	"context"
 	"flamingo/core/product/domain"
 
+	"math/rand"
+
 	"github.com/pkg/errors"
 )
 
@@ -15,46 +17,73 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 	//defer ctx.Profile("service", "get product "+foreignId)()
 
 	if marketplaceCode == "fake_configurable" {
-		var product domain.ConfigurableProduct
+		product := fakeConfigurable(marketplaceCode)
 		product.Title = "TypeConfigurable product"
 
-		addBasicData(&product.BasicProductData)
+		product.VariantVariationAttributes = []string{"color", "size"}
 
-		//prepare TypeConfigurable
-		product.VariantVariationAttributes = append(product.VariantVariationAttributes, "size")
+		variants := []struct {
+			marketplacecode string
+			title           string
+			attributes      domain.Attributes
+		}{
+			{"shirt-white-s", "Shirt White S", domain.Attributes{"size": "S", "color": "white"}},
+			{"shirt-red-s", "Shirt Red S", domain.Attributes{"size": "S", "color": "red"}},
+			{"shirt-white-m", "Shirt White M", domain.Attributes{"size": "M", "color": "white"}},
+			{"shirt-black-m", "Shirt Black M", domain.Attributes{"size": "M", "color": "black"}},
+			{"shirt-black-l", "Shirt Black L", domain.Attributes{"size": "L", "color": "black"}},
+			{"shirt-red-l", "Shirt Red L", domain.Attributes{"size": "L", "color": "red"}},
+		}
 
-		var simpleVariant domain.Variant
-		simpleVariant.Attributes = make(map[string]interface{})
+		for _, variant := range variants {
+			simpleVariant := fakeVariant(variant.marketplacecode)
+			simpleVariant.Title = variant.title
+			simpleVariant.Attributes = variant.attributes
 
-		addBasicData(&simpleVariant.BasicProductData)
+			product.Variants = append(product.Variants, simpleVariant)
+		}
 
-		simpleVariant.Title = "Variant 1 - L"
-		simpleVariant.Attributes["size"] = "L"
-		simpleVariant.ActivePrice = getPrice(50, 30)
-		simpleVariant.MarketPlaceCode = "variant1code"
-		product.Variants = append(product.Variants, simpleVariant)
-
-		simpleVariant.Title = "Variant 1 - XL"
-		simpleVariant.Attributes["size"] = "XL"
-		simpleVariant.ActivePrice = getPrice(60, 0)
-		simpleVariant.MarketPlaceCode = "variant2code"
-		product.Variants = append(product.Variants, simpleVariant)
-
-		product.MarketPlaceCode = marketplaceCode
 		return product, nil
 	}
 	if marketplaceCode == "fake_simple" {
-		product := domain.SimpleProduct{}
+		product := fakeSimple(marketplaceCode)
 		product.Title = "TypeSimple product"
-		addBasicData(&product.BasicProductData)
-
-		product.ActivePrice = getPrice(20, 10)
-		product.MarketPlaceCode = marketplaceCode
 		return product, nil
 	}
-	var product domain.BasicProduct
-	return product, errors.New("Not implemented in FAKE: Only code 'fake_configurable' or 'fake_simple' should be used")
+	return nil, errors.New("Not implemented in FAKE: Only code 'fake_configurable' or 'fake_simple' should be used")
 
+}
+
+func fakeSimple(marketplaceCode string) domain.SimpleProduct {
+	product := domain.SimpleProduct{}
+	product.Title = "TypeSimple product"
+	addBasicData(&product.BasicProductData)
+
+	product.ActivePrice = getPrice(20.99+float64(rand.Intn(10)), 10.49+float64(rand.Intn(10)))
+	product.MarketPlaceCode = marketplaceCode
+
+	return product
+}
+
+func fakeConfigurable(marketplaceCode string) domain.ConfigurableProduct {
+	product := domain.ConfigurableProduct{}
+	product.Title = "TypeSimple product"
+	addBasicData(&product.BasicProductData)
+	product.MarketPlaceCode = marketplaceCode
+
+	return product
+}
+
+func fakeVariant(marketplaceCode string) domain.Variant {
+	var simpleVariant domain.Variant
+	simpleVariant.Attributes = make(map[string]interface{})
+
+	addBasicData(&simpleVariant.BasicProductData)
+
+	simpleVariant.ActivePrice = getPrice(30.99+float64(rand.Intn(10)), 20.49+float64(rand.Intn(10)))
+	simpleVariant.MarketPlaceCode = marketplaceCode
+
+	return simpleVariant
 }
 
 func addBasicData(product *domain.BasicProductData) {

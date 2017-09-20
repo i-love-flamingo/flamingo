@@ -14,17 +14,16 @@ import (
 type (
 	// ProductService for service usage
 	ProductService struct {
-		Client                 *ProductApiClient  `inject:""`
-		Locale                 string             `inject:"config:locale"`
-		Channel                string             `inject:"config:searchperience.frontend.channel"`
-		TempPriceEngineService PriceEngineService `inject:""`
+		Client  *ProductApiClient `inject:""`
+		Locale  string            `inject:"config:locale"`
+		Channel string            `inject:"config:searchperience.frontend.channel"`
 	}
 )
 
 // Get a Product
 func (ps *ProductService) Get(ctx context.Context, ID string) (domain.BasicProduct, error) {
 
-	ID = fmt.Sprintf("%s%s%s", ID, ps.Locale, ps.Channel)
+	ID = fmt.Sprintf("%s-%s-%s", ID, ps.Locale, ps.Channel)
 	resp, err := ps.Client.Get(ctx, ID)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -39,6 +38,6 @@ func (ps *ProductService) Get(ctx context.Context, ID string) (domain.BasicProdu
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	mapper := mapper{}
-	return mapper.Map(ctx, productDto, ps.TempPriceEngineService)
+
+	return dto.Map(ctx, productDto)
 }

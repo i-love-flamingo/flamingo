@@ -16,7 +16,6 @@ type (
 )
 
 func (ac *SearchperienceClient) Request(ctx context.Context, path string, query url.Values) (*http.Response, error) {
-
 	u, _ := url.Parse(ac.BaseURL)
 	u.Path += path
 	u.RawQuery = query.Encode()

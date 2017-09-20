@@ -1,4 +1,4 @@
-package template_functions
+package templatefunctions
 
 import (
 	"math"
@@ -24,8 +24,6 @@ func (ml JsMath) Func() interface{} {
 		return Math{}
 	}
 }
-
-func (m Math) NoConvert(){}
 
 // Ceil rounds a value up to the next biggest integer
 func (m Math) Ceil(x interface{}) int {
@@ -87,7 +85,6 @@ func (m Math) Trunc(x interface{}) int {
 	return int(math.Trunc(x.(float64)))
 }
 
-// Round rounds a value to the nearest integer
 func round(n float64) float64 {
 	if n >= 0.5 {
 		return math.Trunc(n + 0.5)
@@ -101,6 +98,7 @@ func round(n float64) float64 {
 	return 0
 }
 
+// Round rounds a value to the nearest integer
 func (m Math) Round(x interface{}) int {
 	if reflect.TypeOf(x).Kind() == reflect.Int {
 		x = float64(reflect.ValueOf(x).Int())

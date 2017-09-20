@@ -19,7 +19,8 @@ import (
 	"github.com/pact-foundation/pact-go/types"
 )
 
-var NoPact = errors.New("No pact setup")
+// ErrNoPact error
+var ErrNoPact = errors.New("no pact setup")
 
 // WithPact runs a test with a pact
 func WithPact(t *testing.T, target string, f func(*dsl.Pact)) {
@@ -58,7 +59,7 @@ func pactSetup(consumer, provider string) (*dsl.Pact, error) {
 	defer cancel()
 
 	if _, err := d.DialContext(ctx, "tcp", fmt.Sprintf("%s:%d", pactdaemonhost, pactdaemonport)); err != nil {
-		return nil, NoPact
+		return nil, ErrNoPact
 	}
 
 	var pact = &dsl.Pact{

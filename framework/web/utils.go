@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// UrlTitle normalizes a title for nice usage in URLs
-func UrlTitle(title string) string {
+// URLTitle normalizes a title for nice usage in URLs
+func URLTitle(title string) string {
 	newTitle := strings.ToLower(strings.Replace(title, " ", "-", -1))
 	return url.QueryEscape(newTitle)
 }

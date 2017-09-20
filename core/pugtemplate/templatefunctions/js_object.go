@@ -1,14 +1,17 @@
-package template_functions
+package templatefunctions
 
 import (
-	"flamingo/core/pug_template/pugjs"
+	"flamingo/core/pugtemplate/pugjs"
 	"sort"
 	"strconv"
 )
 
 type (
+	// JsObject template function
 	JsObject struct{}
-	Object   struct{}
+
+	// Object implementation
+	Object struct{}
 )
 
 // Name alias for use in template
@@ -22,9 +25,6 @@ func (ol JsObject) Func() interface{} {
 		return Object{}
 	}
 }
-
-// NoConvert marker
-func (o Object) NoConvert() {}
 
 // Assign all properties from the sources to the target map
 func (o Object) Assign(target *pugjs.Map, sources ...*pugjs.Map) pugjs.Object {

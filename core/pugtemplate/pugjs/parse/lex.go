@@ -255,9 +255,9 @@ func lexText(l *lexer) stateFn {
 		l.pos += trimLength
 		l.ignore()
 		return lexLeftDelim
-	} else {
-		l.pos = Pos(len(l.input))
 	}
+	l.pos = Pos(len(l.input))
+
 	// Correctly reached EOF.
 	if l.pos > l.start {
 		l.emit(itemText)

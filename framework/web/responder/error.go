@@ -23,8 +23,8 @@ type (
 
 	// ErrorViewData for template rendering
 	ErrorViewData struct {
-		Code  int
-		Error error
+		Code  int   `json:"code"`
+		Error error `json:"error"`
 	}
 
 	// DebugError holds additional information

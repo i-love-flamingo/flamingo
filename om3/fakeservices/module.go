@@ -11,10 +11,10 @@ import (
 	categorydomain "flamingo/core/category/domain"
 	cmsdomain "flamingo/core/cms/domain"
 	productdomain "flamingo/core/product/domain"
+	searchdomain "flamingo/core/search/domain"
 	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	branddomain "flamingo/om3/brand/domain"
-	searchdomain "flamingo/om3/search/domain"
 )
 
 // Module for AKL internalmock configuration
@@ -44,10 +44,9 @@ func (module *Module) Configure(injector *dingo.Injector) {
 		injector.Override((*cmsdomain.BlockService)(nil), "").To(cmsblock.FakeBlockService{})
 	}
 
-	injector.Bind((*categorydomain.CategoryService)(nil)).To(category.FakeCategoryService{})
-	//if v, ok := module.Config["category"].(bool); v && ok {
-	//injector.Override((*categorydomain.CategoryService)(nil), "").To(category.FakeCategoryService{})
-	//}
+	if v, ok := module.Config["category"].(bool); v && ok {
+		injector.Override((*categorydomain.CategoryService)(nil), "").To(category.FakeCategoryService{})
+	}
 }
 
 func (module *Module) DefaultConfig() config.Map {

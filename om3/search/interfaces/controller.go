@@ -1,10 +1,10 @@
 package interfaces
 
 import (
+	"flamingo/core/search/domain"
 	"flamingo/framework/router"
 	"flamingo/framework/web"
 	"flamingo/framework/web/responder"
-	"flamingo/om3/search/domain"
 )
 
 type (
@@ -54,18 +54,18 @@ func (vc *ViewController) Get(c web.Context) web.Response {
 	if query == "" || queryErr != nil {
 		return vc.Render(c, "search/search", vd)
 	}
-
-	searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())
-	if err != nil {
-		return vc.Error(c, err)
-	}
-
-	vd.SearchResult["results"] = map[string]interface{}{
-		"product":  searchResult.Results.Product,
-		"brand":    searchResult.Results.Brand,
-		"location": searchResult.Results.Location,
-		"retailer": searchResult.Results.Retailer,
-	}
+	//
+	//searchResult, err := vc.SearchService.Search(c, c.Request().URL.Query())
+	//if err != nil {
+	//	return vc.Error(c, err)
+	//}
+	//
+	//vd.SearchResult["results"] = map[string]interface{}{
+	//	"product":  searchResult.Results.Product,
+	//	"brand":    searchResult.Results.Brand,
+	//	"location": searchResult.Results.Location,
+	//	"retailer": searchResult.Results.Retailer,
+	//}
 
 	// render page
 	return vc.Render(c, "search/search", vd)

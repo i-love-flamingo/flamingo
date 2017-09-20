@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// DiCmd shows dependency injection information
+	// ConfigCmd shows config information
 	ConfigCmd = &cobra.Command{
 		Use:   "config",
 		Short: "Config dump",

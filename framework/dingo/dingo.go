@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 )
 
 const (
@@ -144,7 +145,7 @@ func (injector *Injector) getInstance(of interface{}, annotatedWith string) refl
 		}
 	}
 
-	return injector.resolveType(oftype, annotatedWith)
+	return injector.resolveType(oftype, annotatedWith, false)
 }
 
 func (injector *Injector) findBinding(t reflect.Type, annotation string) *Binding {
@@ -163,7 +164,7 @@ func (injector *Injector) findBinding(t reflect.Type, annotation string) *Bindin
 }
 
 // resolveType resolves a requested type, with annotation
-func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect.Value {
+func (injector *Injector) resolveType(t reflect.Type, annotation string, optional bool) reflect.Value {
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
@@ -184,7 +185,7 @@ func (injector *Injector) resolveType(t reflect.Type, annotation string) reflect
 	}
 
 	if !final.IsValid() {
-		final = injector.internalResolveType(t, annotation)
+		final = injector.internalResolveType(t, annotation, optional)
 	}
 
 	if !final.IsValid() {
@@ -210,7 +211,7 @@ func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect
 }
 
 // internalResolveType resolves a type request with the current injector
-func (injector *Injector) internalResolveType(t reflect.Type, annotation string) reflect.Value {
+func (injector *Injector) internalResolveType(t reflect.Type, annotation string, optional bool) reflect.Value {
 	if binding := injector.findBinding(t, annotation); binding != nil {
 		if binding.instance != nil {
 			return binding.instance.ivalue
@@ -219,7 +220,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 		if binding.provider != nil {
 			result := binding.provider.Create(injector)
 			if result.Kind() == reflect.Slice {
-				result = injector.internalResolveType(result.Type(), "")
+				result = injector.internalResolveType(result.Type(), "", optional)
 			} else {
 				injector.requestInjection(result.Interface())
 			}
@@ -230,7 +231,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			if binding.to == t {
 				panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
 			}
-			return injector.resolveType(binding.to, "")
+			return injector.resolveType(binding.to, "", optional)
 		}
 	}
 
@@ -245,7 +246,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 			}
 
 			if res.Kind() == reflect.Slice {
-				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation)}
+				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
 			}
 			// set to actual value
 			res.Set(injector.getInstance(t.Out(0), annotation))
@@ -268,11 +269,11 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string)
 		}
 	}
 
-	if t.Kind() == reflect.Interface {
+	if t.Kind() == reflect.Interface && !optional {
 		panic("Can not instantiate interface " + t.String())
 	}
 
-	if annotation != "" {
+	if annotation != "" && !optional {
 		panic("Can not automatically create an annotated injection " + t.String() + " with annotation " + annotation)
 	}
 
@@ -376,7 +377,7 @@ func (injector *Injector) requestInjection(object interface{}) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			log.Printf("%s\n%s\n", current.Type(), current.String())
+			log.Printf("%s: %s\n%s\n", current.Type().PkgPath(), current.Type().Name(), current.String())
 			panic(e)
 		}
 	}()
@@ -402,7 +403,12 @@ func (injector *Injector) requestInjection(object interface{}) {
 			for fieldIndex := 0; fieldIndex < ctype.NumField(); fieldIndex++ {
 				if tag, ok := ctype.Field(fieldIndex).Tag.Lookup("inject"); ok {
 					field := current.Field(fieldIndex)
-					instance := injector.resolveType(field.Type(), tag)
+					var optional bool
+					if strings.HasSuffix(tag, ",optional") {
+						optional = true
+						tag = tag[:len(tag)-9]
+					}
+					instance := injector.resolveType(field.Type(), tag, optional)
 					if instance.Kind() == reflect.Ptr {
 						if instance.Elem().Kind() == reflect.Func || instance.Elem().Kind() == reflect.Interface || instance.Elem().Kind() == reflect.Slice {
 							instance = instance.Elem()

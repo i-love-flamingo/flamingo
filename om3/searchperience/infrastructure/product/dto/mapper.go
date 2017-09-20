@@ -1,20 +1,15 @@
-package product
+package dto
 
 import (
 	"context"
 	"errors"
 	"flamingo/core/product/domain"
-	"flamingo/om3/searchperience/infrastructure/product/dto"
-)
-
-type (
-	mapper struct{}
 )
 
 // Map a product response from searchperience
-func (ps *mapper) Map(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.BasicProduct, error) {
+func Map(ctx context.Context, productDto *Product) (domain.BasicProduct, error) {
 	if productDto.ProductType == domain.TypeSimple {
-		basicProduct, err := ps.mapSimpleProduct(ctx, productDto, priceEngine)
+		basicProduct, err := mapSimpleProduct(ctx, productDto)
 		if err != nil {
 			return nil, err
 		}
@@ -22,42 +17,34 @@ func (ps *mapper) Map(ctx context.Context, productDto *dto.Product, priceEngine 
 	}
 
 	if productDto.ProductType == domain.TypeConfigurable {
-		basicProduct, err := ps.mapConfigurableProduct(ctx, productDto, priceEngine)
+		basicProduct, err := mapConfigurableProduct(ctx, productDto)
 		if err != nil {
 			return nil, err
 		}
 		return basicProduct, nil
 	}
 
-	return nil, errors.New("Unknown type or product format")
+	return nil, errors.New("unknown type or product format")
 }
 
-func (ps *mapper) mapConfigurableProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.ConfigurableProduct, error) {
+func mapConfigurableProduct(ctx context.Context, productDto *Product) (domain.ConfigurableProduct, error) {
 	configurableProduct := domain.ConfigurableProduct{}
 
-	configurableProduct.BasicProductData = ps.dtoConfigurableToBaseData(&productDto.ConfigurableProduct)
-	ps.addDtoProductDataToBaseData(productDto, &configurableProduct.BasicProductData)
+	configurableProduct.BasicProductData = dtoConfigurableToBaseData(&productDto.ConfigurableProduct)
+	addDtoProductDataToBaseData(productDto, &configurableProduct.BasicProductData)
 	configurableProduct.VariantVariationAttributes = productDto.VariantVariationAttributes
 
 	for _, variantDto := range productDto.Variants {
 		variant := domain.Variant{}
-		variant.SaleableData = ps.dtoVariantToSaleData(&variantDto)
-		variant.BasicProductData = ps.dtoVariantToBaseData(&variantDto)
-		//TODO Remove when search has it
-		priceinfo, err := priceEngine.TempRequestPriceEngine(ctx, variantDto)
-
-		if err != nil {
-			return configurableProduct, err
-		}
-		variant.ActivePrice = priceinfo
-
+		variant.SaleableData = dtoVariantToSaleData(&variantDto)
+		variant.BasicProductData = dtoVariantToBaseData(&variantDto)
 		configurableProduct.Variants = append(configurableProduct.Variants, variant)
 	}
 
 	return configurableProduct, nil
 }
 
-func (ps *mapper) mapSimpleProduct(ctx context.Context, productDto *dto.Product, priceEngine PriceEngineService) (domain.SimpleProduct, error) {
+func mapSimpleProduct(ctx context.Context, productDto *Product) (domain.SimpleProduct, error) {
 	simpleProduct := domain.SimpleProduct{}
 
 	if len(productDto.Variants) < 1 {
@@ -66,21 +53,15 @@ func (ps *mapper) mapSimpleProduct(ctx context.Context, productDto *dto.Product,
 	variant1 := productDto.Variants[0]
 	simpleProduct.Identifier = productDto.ForeignID
 
-	simpleProduct.BasicProductData = ps.dtoVariantToBaseData(&variant1)
-	ps.addDtoProductDataToBaseData(productDto, &simpleProduct.BasicProductData)
-	simpleProduct.SaleableData = ps.dtoVariantToSaleData(&variant1)
-	simpleProduct.Teaser = ps.dtoTeaserToTeaser(productDto)
-	//TODO Remove when search has it
-	priceinfo, err := priceEngine.TempRequestPriceEngine(ctx, variant1)
-	if err != nil {
-		return simpleProduct, err
-	}
-	simpleProduct.ActivePrice = priceinfo
+	simpleProduct.BasicProductData = dtoVariantToBaseData(&variant1)
+	addDtoProductDataToBaseData(productDto, &simpleProduct.BasicProductData)
+	simpleProduct.SaleableData = dtoVariantToSaleData(&variant1)
+	simpleProduct.Teaser = dtoTeaserToTeaser(productDto)
 
 	return simpleProduct, nil
 }
 
-func (ps *mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProductData {
+func dtoVariantToBaseData(variant1 *Variant) domain.BasicProductData {
 	basicData := domain.BasicProductData{}
 	basicData.Title = variant1.Title
 
@@ -99,7 +80,7 @@ func (ps *mapper) dtoVariantToBaseData(variant1 *dto.Variant) domain.BasicProduc
 	return basicData
 }
 
-func (ps *mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduct) domain.BasicProductData {
+func dtoConfigurableToBaseData(configurable *ConfigurableProduct) domain.BasicProductData {
 	basicData := domain.BasicProductData{}
 	basicData.Title = configurable.Title
 
@@ -118,7 +99,7 @@ func (ps *mapper) dtoConfigurableToBaseData(configurable *dto.ConfigurableProduc
 	return basicData
 }
 
-func (ps *mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData *domain.BasicProductData) {
+func addDtoProductDataToBaseData(productDto *Product, basicData *domain.BasicProductData) {
 
 	basicData.Keywords = productDto.Keywords
 
@@ -132,7 +113,7 @@ func (ps *mapper) addDtoProductDataToBaseData(productDto *dto.Product, basicData
 	basicData.MarketPlaceCode = productDto.MarketPlaceCode
 }
 
-func (ps *mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableData {
+func dtoVariantToSaleData(variant1 *Variant) domain.SaleableData {
 	saleData := domain.SaleableData{}
 
 	// TODO - get active price from new serach response.. for now we do seperate request to priceeingie
@@ -147,7 +128,7 @@ func (ps *mapper) dtoVariantToSaleData(variant1 *dto.Variant) domain.SaleableDat
 
 }
 
-func (ps *mapper) dtoTeaserToTeaser(productDto *dto.Product) domain.TeaserData {
+func dtoTeaserToTeaser(productDto *Product) domain.TeaserData {
 	teaserData := domain.TeaserData{}
 
 	teaserData.ShortDescription = productDto.TeaserData.ShortDescription

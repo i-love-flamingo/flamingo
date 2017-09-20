@@ -6,7 +6,7 @@ package pugjs
 
 import (
 	"bytes"
-	"flamingo/core/pug_template/pugjs/parse"
+	"flamingo/core/pugtemplate/pugjs/parse"
 	"fmt"
 	"io"
 	"reflect"
@@ -625,7 +625,7 @@ func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, 
 	if obj, ok := receiver.Interface().(Object); ok {
 		res := reflect.ValueOf(obj.Field(fieldName))
 		if fnc, ok := res.Interface().(*Func); ok {
-			return s.evalCall(dot, reflect.ValueOf(fnc.fnc), node, fieldName, args, final)
+			return s.evalCall(dot, fnc.fnc, node, fieldName, args, final)
 		}
 		return res
 	}
@@ -782,7 +782,7 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 	if v.Type() == reflectValueType {
 		v = v.Interface().(reflect.Value)
 	}
-	if v.IsValid() && !v.MethodByName("NoConvert").IsValid() {
+	if v.IsValid() {
 		v = reflect.ValueOf(convert(v))
 	}
 	return v

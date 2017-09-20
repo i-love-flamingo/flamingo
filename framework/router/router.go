@@ -35,7 +35,7 @@ type (
 	Router struct {
 		base *url.URL
 
-		Sessions            sessions.Store           `inject:""` // Sessions storage, which are used to retrieve user-context session
+		Sessions            sessions.Store           `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
 		SessionName         string                   `inject:"config:session.name"`
 		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
 		ProfilerProvider    func() profiler.Profiler `inject:""`
@@ -95,6 +95,9 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 			c = router.Injector.GetInstance(reflect.TypeOf(c))
 		default:
 			var rv = reflect.ValueOf(c)
+			if !rv.IsValid() {
+				panic(fmt.Sprintf("Invalid Controller bound! %s: %#v", name, c))
+			}
 			// Check if we have a Receiver Function of the type
 			// func(c Controller, ctx web.Context) web.Response
 			// If so, we instantiate c Controller and convert it to
@@ -171,13 +174,18 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// shadow the response writer
 	rw = &VerboseResponseWriter{ResponseWriter: rw}
 
+	var s *sessions.Session
+	var err error
+
 	// initialize the session
-	s, err := router.Sessions.Get(req, router.SessionName)
-	if err != nil {
-		log.Println(err)
-		s, err = router.Sessions.New(req, router.SessionName)
+	if router.Sessions != nil {
+		s, err = router.Sessions.Get(req, router.SessionName)
 		if err != nil {
 			log.Println(err)
+			s, err = router.Sessions.New(req, router.SessionName)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 
@@ -251,7 +259,9 @@ func (router *Router) handle(c Controller) http.Handler {
 		// fire response event
 		router.eventrouter.Dispatch(&OnResponseEvent{c, response, req, w, ctx})
 
-		router.Sessions.Save(req, w, ctx.Session())
+		if router.Sessions != nil {
+			router.Sessions.Save(req, w, ctx.Session())
+		}
 
 		if response != nil {
 			response.Apply(ctx, w)

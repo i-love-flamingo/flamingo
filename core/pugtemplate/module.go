@@ -1,9 +1,10 @@
-package pug_template
+package pugtemplate
 
 import (
 	"encoding/json"
-	"flamingo/core/pug_template/pugjs"
-	"flamingo/core/pug_template/template_functions"
+	"flamingo/core/pugtemplate/pugjs"
+	"flamingo/core/pugtemplate/templatefunctions"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
@@ -49,19 +50,26 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		},
 	)
 
-	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.AssetFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsMath{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsObject{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.DebugFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.JsJson{})
-	injector.BindMulti((*template.Function)(nil)).To(template_functions.URLFunc{})
-	injector.BindMulti((*template.ContextFunction)(nil)).To(template_functions.GetFunc{})
+	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.AssetFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsMath{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsObject{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DebugFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsJSON{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
+	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
 
 	m.loadmock("../src/component/*")
 	m.loadmock("../src/component/*/*")
 	m.loadmock("../src/page/*")
 	m.loadmock("../src/page/*/*")
 	m.loadmock("../src/mock")
+}
+
+func (m *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"pug_template.basedir": "frontend/dist",
+		"pug_template.debug":   true,
+	}
 }
 
 func (m *Module) loadmock(where string) (interface{}, error) {

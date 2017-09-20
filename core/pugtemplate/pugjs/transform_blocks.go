@@ -53,7 +53,7 @@ type (
 		Name       string
 		Val        JavaScriptExpression
 		MustEscape bool
-		BoolVal *bool
+		BoolVal    *bool
 	}
 
 	// JavaScriptExpression is a string
@@ -176,6 +176,7 @@ type (
 	}
 )
 
+// Inline check for a block
 func (b *Block) Inline() bool {
 	for _, n := range b.Nodes {
 		if !n.Inline() {
@@ -185,26 +186,32 @@ func (b *Block) Inline() bool {
 	return true
 }
 
+// Inline for BlockNodes
 func (b *BlockNode) Inline() bool {
 	return b.Block.Inline()
 }
 
+// Inline for CommonTags
 func (c *CommonTag) Inline() bool {
 	return *c.IsInline
 }
 
+// Inline for Code
 func (c *Code) Inline() bool {
 	return *c.IsInline
 }
 
+// Inline for ValueNodes
 func (v *ValueNode) Inline() bool {
 	return true
 }
 
+// Inline for PlaceholderNodes
 func (p *PlaceholderNode) Inline() bool {
 	return true
 }
 
+// Inline for Conditionals
 func (c *Conditional) Inline() bool {
 	return true
 }

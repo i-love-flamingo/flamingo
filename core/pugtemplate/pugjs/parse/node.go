@@ -15,6 +15,7 @@ import (
 
 var textFormat = "%s" // Changed to "%q" in tests for better error messages.
 
+// Node interface
 // A Node is an element in the parse tree. The interface is trivial.
 // The interface contains an unexported method so that only
 // types local to this package can satisfy it.
@@ -38,6 +39,7 @@ type NodeType int
 // this template was parsed.
 type Pos int
 
+// Position getter
 func (p Pos) Position() Pos {
 	return p
 }
@@ -93,6 +95,7 @@ func (l *ListNode) tree() *Tree {
 	return l.tr
 }
 
+// String formatter
 func (l *ListNode) String() string {
 	b := new(bytes.Buffer)
 	for _, n := range l.Nodes {
@@ -101,6 +104,7 @@ func (l *ListNode) String() string {
 	return b.String()
 }
 
+// CopyList helper
 func (l *ListNode) CopyList() *ListNode {
 	if l == nil {
 		return l
@@ -112,6 +116,7 @@ func (l *ListNode) CopyList() *ListNode {
 	return n
 }
 
+// Copy a node
 func (l *ListNode) Copy() Node {
 	return l.CopyList()
 }
@@ -128,6 +133,7 @@ func (t *Tree) newText(pos Pos, text string) *TextNode {
 	return &TextNode{tr: t, NodeType: NodeText, Pos: pos, Text: []byte(text)}
 }
 
+// String formatter
 func (t *TextNode) String() string {
 	return fmt.Sprintf(textFormat, t.Text)
 }
@@ -136,6 +142,7 @@ func (t *TextNode) tree() *Tree {
 	return t.tr
 }
 
+// Copy a node
 func (t *TextNode) Copy() Node {
 	return &TextNode{tr: t.tr, NodeType: NodeText, Pos: t.Pos, Text: append([]byte{}, t.Text...)}
 }
@@ -158,6 +165,7 @@ func (p *PipeNode) append(command *CommandNode) {
 	p.Cmds = append(p.Cmds, command)
 }
 
+// String formatter
 func (p *PipeNode) String() string {
 	s := ""
 	if len(p.Decl) > 0 {
@@ -182,6 +190,7 @@ func (p *PipeNode) tree() *Tree {
 	return p.tr
 }
 
+// CopyPipe function
 func (p *PipeNode) CopyPipe() *PipeNode {
 	if p == nil {
 		return p
@@ -197,6 +206,7 @@ func (p *PipeNode) CopyPipe() *PipeNode {
 	return n
 }
 
+// Copy a node
 func (p *PipeNode) Copy() Node {
 	return p.CopyPipe()
 }
@@ -216,6 +226,7 @@ func (t *Tree) newAction(pos Pos, line int, pipe *PipeNode) *ActionNode {
 	return &ActionNode{tr: t, NodeType: NodeAction, Pos: pos, Line: line, Pipe: pipe}
 }
 
+// String formatter
 func (a *ActionNode) String() string {
 	return fmt.Sprintf("{{%s}}", a.Pipe)
 
@@ -225,6 +236,7 @@ func (a *ActionNode) tree() *Tree {
 	return a.tr
 }
 
+// Copy a node
 func (a *ActionNode) Copy() Node {
 	return a.tr.newAction(a.Pos, a.Line, a.Pipe.CopyPipe())
 
@@ -246,6 +258,7 @@ func (c *CommandNode) append(arg Node) {
 	c.Args = append(c.Args, arg)
 }
 
+// String formatter
 func (c *CommandNode) String() string {
 	s := ""
 	for i, arg := range c.Args {
@@ -265,6 +278,7 @@ func (c *CommandNode) tree() *Tree {
 	return c.tr
 }
 
+// Copy a node
 func (c *CommandNode) Copy() Node {
 	if c == nil {
 		return c
@@ -305,6 +319,7 @@ func (i *IdentifierNode) SetTree(t *Tree) *IdentifierNode {
 	return i
 }
 
+// String formatter
 func (i *IdentifierNode) String() string {
 	return i.Ident
 }
@@ -313,6 +328,7 @@ func (i *IdentifierNode) tree() *Tree {
 	return i.tr
 }
 
+// Copy a node
 func (i *IdentifierNode) Copy() Node {
 	return NewIdentifier(i.Ident).SetTree(i.tr).SetPos(i.Pos)
 }
@@ -330,6 +346,7 @@ func (t *Tree) newVariable(pos Pos, ident string) *VariableNode {
 	return &VariableNode{tr: t, NodeType: NodeVariable, Pos: pos, Ident: strings.Split(ident, ".")}
 }
 
+// String formatter
 func (v *VariableNode) String() string {
 	s := ""
 	for i, id := range v.Ident {
@@ -345,6 +362,7 @@ func (v *VariableNode) tree() *Tree {
 	return v.tr
 }
 
+// Copy a node
 func (v *VariableNode) Copy() Node {
 	return &VariableNode{tr: v.tr, NodeType: NodeVariable, Pos: v.Pos, Ident: append([]string{}, v.Ident...)}
 }
@@ -360,6 +378,7 @@ func (t *Tree) newDot(pos Pos) *DotNode {
 	return &DotNode{tr: t, NodeType: NodeDot, Pos: pos}
 }
 
+// Type getter
 func (d *DotNode) Type() NodeType {
 	// Override method on embedded NodeType for API compatibility.
 	// TODO: Not really a problem; could change API without effect but
@@ -367,6 +386,7 @@ func (d *DotNode) Type() NodeType {
 	return NodeDot
 }
 
+// String formatter
 func (d *DotNode) String() string {
 	return "."
 }
@@ -375,6 +395,7 @@ func (d *DotNode) tree() *Tree {
 	return d.tr
 }
 
+// Copy a node
 func (d *DotNode) Copy() Node {
 	return d.tr.newDot(d.Pos)
 }
@@ -390,6 +411,7 @@ func (t *Tree) newNil(pos Pos) *NilNode {
 	return &NilNode{tr: t, NodeType: NodeNil, Pos: pos}
 }
 
+// Type getter
 func (n *NilNode) Type() NodeType {
 	// Override method on embedded NodeType for API compatibility.
 	// TODO: Not really a problem; could change API without effect but
@@ -397,6 +419,7 @@ func (n *NilNode) Type() NodeType {
 	return NodeNil
 }
 
+// String formatter
 func (n *NilNode) String() string {
 	return "nil"
 }
@@ -405,6 +428,7 @@ func (n *NilNode) tree() *Tree {
 	return n.tr
 }
 
+// Copy a node
 func (n *NilNode) Copy() Node {
 	return n.tr.newNil(n.Pos)
 }
@@ -423,6 +447,7 @@ func (t *Tree) newField(pos Pos, ident string) *FieldNode {
 	return &FieldNode{tr: t, NodeType: NodeField, Pos: pos, Ident: strings.Split(ident[1:], ".")} // [1:] to drop leading period
 }
 
+// String formatter
 func (f *FieldNode) String() string {
 	s := ""
 	for _, id := range f.Ident {
@@ -435,6 +460,7 @@ func (f *FieldNode) tree() *Tree {
 	return f.tr
 }
 
+// Copy a node
 func (f *FieldNode) Copy() Node {
 	return &FieldNode{tr: f.tr, NodeType: NodeField, Pos: f.Pos, Ident: append([]string{}, f.Ident...)}
 }
@@ -466,6 +492,7 @@ func (c *ChainNode) Add(field string) {
 	c.Field = append(c.Field, field)
 }
 
+// String formatter
 func (c *ChainNode) String() string {
 	s := c.Node.String()
 	if _, ok := c.Node.(*PipeNode); ok {
@@ -481,6 +508,7 @@ func (c *ChainNode) tree() *Tree {
 	return c.tr
 }
 
+// Copy a node
 func (c *ChainNode) Copy() Node {
 	return &ChainNode{tr: c.tr, NodeType: NodeChain, Pos: c.Pos, Node: c.Node, Field: append([]string{}, c.Field...)}
 }
@@ -497,6 +525,7 @@ func (t *Tree) newBool(pos Pos, true bool) *BoolNode {
 	return &BoolNode{tr: t, NodeType: NodeBool, Pos: pos, True: true}
 }
 
+// String formatter
 func (b *BoolNode) String() string {
 	if b.True {
 		return "true"
@@ -508,6 +537,7 @@ func (b *BoolNode) tree() *Tree {
 	return b.tr
 }
 
+// Copy a node
 func (b *BoolNode) Copy() Node {
 	return b.tr.newBool(b.Pos, b.True)
 }
@@ -633,6 +663,7 @@ func (n *NumberNode) simplifyComplex() {
 	}
 }
 
+// String formatter
 func (n *NumberNode) String() string {
 	return n.Text
 }
@@ -641,6 +672,7 @@ func (n *NumberNode) tree() *Tree {
 	return n.tr
 }
 
+// Copy a node
 func (n *NumberNode) Copy() Node {
 	nn := new(NumberNode)
 	*nn = *n // Easy, fast, correct.
@@ -660,6 +692,7 @@ func (t *Tree) newString(pos Pos, orig, text string) *StringNode {
 	return &StringNode{tr: t, NodeType: NodeString, Pos: pos, Quoted: orig, Text: text}
 }
 
+// String formatter
 func (s *StringNode) String() string {
 	return s.Quoted
 }
@@ -668,6 +701,7 @@ func (s *StringNode) tree() *Tree {
 	return s.tr
 }
 
+// Copy a node
 func (s *StringNode) Copy() Node {
 	return s.tr.newString(s.Pos, s.Quoted, s.Text)
 }
@@ -684,6 +718,7 @@ func (t *Tree) newEnd(pos Pos) *endNode {
 	return &endNode{tr: t, NodeType: nodeEnd, Pos: pos}
 }
 
+// String formatter
 func (e *endNode) String() string {
 	return "{{end}}"
 }
@@ -692,6 +727,7 @@ func (e *endNode) tree() *Tree {
 	return e.tr
 }
 
+// Copy a node
 func (e *endNode) Copy() Node {
 	return e.tr.newEnd(e.Pos)
 }
@@ -708,10 +744,12 @@ func (t *Tree) newElse(pos Pos, line int) *elseNode {
 	return &elseNode{tr: t, NodeType: nodeElse, Pos: pos, Line: line}
 }
 
+// Type getter
 func (e *elseNode) Type() NodeType {
 	return nodeElse
 }
 
+// String formatter
 func (e *elseNode) String() string {
 	return "{{else}}"
 }
@@ -720,6 +758,7 @@ func (e *elseNode) tree() *Tree {
 	return e.tr
 }
 
+// Copy a node
 func (e *elseNode) Copy() Node {
 	return e.tr.newElse(e.Pos, e.Line)
 }
@@ -735,6 +774,7 @@ type BranchNode struct {
 	ElseList *ListNode // What to execute if the value is empty (nil if absent).
 }
 
+// String formatter
 func (b *BranchNode) String() string {
 	name := ""
 	switch b.NodeType {
@@ -757,6 +797,7 @@ func (b *BranchNode) tree() *Tree {
 	return b.tr
 }
 
+// Copy a node
 func (b *BranchNode) Copy() Node {
 	switch b.NodeType {
 	case NodeIf:
@@ -779,6 +820,7 @@ func (t *Tree) newIf(pos Pos, line int, pipe *PipeNode, list, elseList *ListNode
 	return &IfNode{BranchNode{tr: t, NodeType: NodeIf, Pos: pos, Line: line, Pipe: pipe, List: list, ElseList: elseList}}
 }
 
+// Copy a node
 func (i *IfNode) Copy() Node {
 	return i.tr.newIf(i.Pos, i.Line, i.Pipe.CopyPipe(), i.List.CopyList(), i.ElseList.CopyList())
 }
@@ -792,6 +834,7 @@ func (t *Tree) newRange(pos Pos, line int, pipe *PipeNode, list, elseList *ListN
 	return &RangeNode{BranchNode{tr: t, NodeType: NodeRange, Pos: pos, Line: line, Pipe: pipe, List: list, ElseList: elseList}}
 }
 
+// Copy a node
 func (r *RangeNode) Copy() Node {
 	return r.tr.newRange(r.Pos, r.Line, r.Pipe.CopyPipe(), r.List.CopyList(), r.ElseList.CopyList())
 }
@@ -805,6 +848,7 @@ func (t *Tree) newWith(pos Pos, line int, pipe *PipeNode, list, elseList *ListNo
 	return &WithNode{BranchNode{tr: t, NodeType: NodeWith, Pos: pos, Line: line, Pipe: pipe, List: list, ElseList: elseList}}
 }
 
+// Copy a node
 func (w *WithNode) Copy() Node {
 	return w.tr.newWith(w.Pos, w.Line, w.Pipe.CopyPipe(), w.List.CopyList(), w.ElseList.CopyList())
 }
@@ -823,6 +867,7 @@ func (t *Tree) newTemplate(pos Pos, line int, name string, pipe *PipeNode) *Temp
 	return &TemplateNode{tr: t, NodeType: NodeTemplate, Pos: pos, Line: line, Name: name, Pipe: pipe}
 }
 
+// String formatter
 func (t *TemplateNode) String() string {
 	if t.Pipe == nil {
 		return fmt.Sprintf("{{template %q}}", t.Name)
@@ -834,6 +879,7 @@ func (t *TemplateNode) tree() *Tree {
 	return t.tr
 }
 
+// Copy a node
 func (t *TemplateNode) Copy() Node {
 	return t.tr.newTemplate(t.Pos, t.Line, t.Name, t.Pipe.CopyPipe())
 }

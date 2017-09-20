@@ -1,10 +1,13 @@
 package responder
 
 import (
+	"bytes"
+	"encoding/json"
 	"flamingo/core/pug_template/pugjs"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
 	"flamingo/framework/web"
+	"io"
 	"net/http"
 )
 
@@ -17,7 +20,7 @@ type (
 	// FlamingoRenderAware allows pug_template rendering
 	FlamingoRenderAware struct {
 		Router *router.Router  `inject:""`
-		Engine template.Engine `inject:""`
+		Engine template.Engine `inject:",optional"`
 	}
 )
 
@@ -31,7 +34,15 @@ func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data inter
 		}
 	}
 
-	body, err := r.Engine.Render(context, tpl, data)
+	var body io.Reader
+	var err error
+	if r.Engine != nil {
+		body, err = r.Engine.Render(context, tpl, data)
+	} else {
+		var b []byte
+		b, err = json.Marshal(data)
+		body = bytes.NewBuffer(b)
+	}
 	if err != nil {
 		panic(err)
 	}

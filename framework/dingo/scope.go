@@ -8,7 +8,7 @@ import (
 type (
 	// Scope defines a scope's behaviour
 	Scope interface {
-		ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value
+		ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string, optional bool) reflect.Value) reflect.Value
 	}
 
 	// SingletonScope is our Scope to handle Singletons
@@ -31,7 +31,7 @@ var (
 )
 
 // ResolveType resolves a request in this scope
-func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value {
+func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string, optional bool) reflect.Value) reflect.Value {
 	// we got one :)
 	if found, ok := s.instances[t]; ok {
 		if found, ok := found[annotation]; ok {
@@ -86,13 +86,13 @@ func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped
 	s.Unlock()
 
 	// save our new generated singleton
-	s.instances[t][annotation] = unscoped(t, annotation)
+	s.instances[t][annotation] = unscoped(t, annotation, false)
 
 	// return the new singleton
 	return s.instances[t][annotation]
 }
 
 // ResolveType delegates to SingletonScope.ResolveType
-func (c *ChildSingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string) reflect.Value) reflect.Value {
+func (c *ChildSingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string, optional bool) reflect.Value) reflect.Value {
 	return (*SingletonScope)(c).ResolveType(t, annotation, unscoped)
 }

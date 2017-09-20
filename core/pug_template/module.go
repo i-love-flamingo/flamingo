@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flamingo/core/pug_template/pugjs"
 	"flamingo/core/pug_template/template_functions"
+	"flamingo/framework/config"
 	"flamingo/framework/dingo"
 	"flamingo/framework/router"
 	"flamingo/framework/template"
@@ -62,6 +63,13 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.loadmock("../src/page/*")
 	m.loadmock("../src/page/*/*")
 	m.loadmock("../src/mock")
+}
+
+func (m *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"pug_template.basedir": "frontend/dist",
+		"pug_template.debug":   true,
+	}
 }
 
 func (m *Module) loadmock(where string) (interface{}, error) {

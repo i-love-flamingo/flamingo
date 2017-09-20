@@ -7,7 +7,6 @@ import (
 	"math/rand"
 
 	"github.com/pkg/errors"
-	"flag"
 )
 
 // FakeProductService is just mocking stuff

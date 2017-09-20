@@ -48,6 +48,7 @@ type (
 	}
 )
 
+// NewEngine constructor
 func NewEngine() *Engine {
 	return &Engine{
 		Mutex:        new(sync.Mutex),
@@ -63,6 +64,7 @@ func newRenderState(path string, debug bool) *renderState {
 	}
 }
 
+// LoadTemplates with an optional filter
 func (e *Engine) LoadTemplates(filtername string) error {
 	start := time.Now()
 

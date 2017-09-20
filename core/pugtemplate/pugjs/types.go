@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-type ObjectType string
-
 const (
 	STRING = "string"
 	NUMBER = "number"
@@ -20,17 +18,22 @@ const (
 	NIL    = "nil"
 )
 
-// Object describes a pugjs JavaScript object
-type Object interface {
-	Type() ObjectType
-	Field(name string) Object
-	String() string
-}
+type (
+	// Object describes a pugjs JavaScript object
+	Object interface {
+		Type() ObjectType
+		Field(name string) Object
+		String() string
+	}
 
-// Truther for true check
-type Truther interface {
-	True() bool
-}
+	// Truther for true check
+	Truther interface {
+		True() bool
+	}
+
+	// ObjectType identifier
+	ObjectType string
+)
 
 // Convert an object
 func Convert(in interface{}) Object {
@@ -137,24 +140,32 @@ func convert(in interface{}) Object {
 	panic(fmt.Sprintf("Cannot convert %#v %T %s %s", val, val, val.Type(), val.Kind()))
 }
 
-// Func
-
+// Func type
 type Func struct {
 	fnc reflect.Value
 }
 
-func (f *Func) Type() ObjectType         { return FUNC }
+// Type getter
+func (f *Func) Type() ObjectType { return FUNC }
+
+// Field getter
 func (f *Func) Field(name string) Object { return Nil{} }
-func (f *Func) String() string           { return fmt.Sprintf("%s", reflect.ValueOf(f.fnc)) }
-func (f *Func) True() bool               { return true }
 
-// Array
+// String formatter
+func (f *Func) String() string { return fmt.Sprintf("%s", reflect.ValueOf(f.fnc)) }
 
+// True getter
+func (f *Func) True() bool { return true }
+
+// Array type
 type Array struct {
 	items []Object
 }
 
+// Type getter
 func (a *Array) Type() ObjectType { return ARRAY }
+
+// String formatter
 func (a *Array) String() string {
 	tmp := make([]string, len(a.items))
 	for i, v := range a.items {
@@ -162,6 +173,8 @@ func (a *Array) String() string {
 	}
 	return strings.Join(tmp, " ")
 }
+
+// Field getter
 func (a *Array) Field(name string) Object {
 	switch name {
 	case "length":
@@ -180,10 +193,12 @@ func (a *Array) Field(name string) Object {
 	panic("field not found")
 }
 
+// Length getter
 func (a *Array) Length() Object {
 	return Number(len(a.items))
 }
 
+// IndexOf array element
 func (a *Array) IndexOf(what interface{}) Object {
 	for i, w := range a.items {
 		if reflect.DeepEqual(w, what) {
@@ -193,6 +208,7 @@ func (a *Array) IndexOf(what interface{}) Object {
 	return Number(-1)
 }
 
+// Join array
 func (a *Array) Join(sep string) Object {
 	var aa []string
 
@@ -203,27 +219,32 @@ func (a *Array) Join(sep string) Object {
 	return String(strings.Join(aa, sep))
 }
 
+// Push into array
 func (a *Array) Push(what Object) Object {
 	a.items = append(a.items, what)
 	return Nil{}
 }
 
+// True getter
 func (a *Array) True() bool {
 	return len(a.items) > 0
 }
 
+// MarshalJSON implementation
 func (a *Array) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.items)
 }
 
-// Map
-
+// Map type
 type Map struct {
 	Items map[Object]Object
 	o     interface{}
 }
 
+// Type getter
 func (m *Map) Type() ObjectType { return MAP }
+
+// String formatter
 func (m *Map) String() string {
 	if m == nil {
 		return ""
@@ -237,6 +258,8 @@ func (m *Map) String() string {
 	}
 	return string(b)
 }
+
+// Field getter
 func (m *Map) Field(field string) Object {
 	if field == "__assign" {
 		return &Func{fnc: reflect.ValueOf(func(k, v interface{}) Object {
@@ -257,6 +280,7 @@ func (m *Map) Field(field string) Object {
 	return Nil{}
 }
 
+// MarshalJSON implementation
 func (m *Map) MarshalJSON() ([]byte, error) {
 	if s, ok := m.o.(json.Marshaler); ok {
 		return s.MarshalJSON()
@@ -268,16 +292,21 @@ func (m *Map) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tmp)
 }
 
+// True getter
 func (m *Map) True() bool {
 	return len(m.Items) > 0
 }
 
-// String
-
+// String type
 type String string
 
+// Type getter
 func (s String) Type() ObjectType { return STRING }
-func (s String) String() string   { return string(s) }
+
+// String formatter
+func (s String) String() string { return string(s) }
+
+// Field getter
 func (s String) Field(field string) Object {
 	switch field {
 	case "charAt":
@@ -292,6 +321,7 @@ func (s String) Field(field string) Object {
 	return Nil{}
 }
 
+// CharAt function
 func (s String) CharAt(pos int) string {
 	if pos >= len(s) {
 		return ""
@@ -299,40 +329,59 @@ func (s String) CharAt(pos int) string {
 	return string(s[pos])
 }
 
+// ToUpperCase converter
 func (s String) ToUpperCase() string {
 	return strings.ToUpper(string(s))
 }
 
+// Slice a string
 func (s String) Slice(from int) string {
 	return string(s[from:])
 }
 
+// Replace string values
 func (s String) Replace(what, with String) String {
 	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
 
-// Number
-
+// Number type
 type Number float64
 
-func (n Number) Type() ObjectType    { return NUMBER }
+// Type getter
+func (n Number) Type() ObjectType { return NUMBER }
+
+// Field getter
 func (n Number) Field(string) Object { return Nil{} }
-func (n Number) String() string      { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
 
-// Bool
+// String formatter
+func (n Number) String() string { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
 
+// Bool type
 type Bool bool
 
-func (b Bool) Type() ObjectType    { return BOOL }
+// Type getter
+func (b Bool) Type() ObjectType { return BOOL }
+
+// Field getter
 func (b Bool) Field(string) Object { return Nil{} }
-func (b Bool) String() string      { return fmt.Sprintf("%v", bool(b)) }
-func (b Bool) True() bool          { return bool(b) }
 
-// Nil
+// String formatter
+func (b Bool) String() string { return fmt.Sprintf("%v", bool(b)) }
 
+// True getter
+func (b Bool) True() bool { return bool(b) }
+
+// Nil type
 type Nil struct{}
 
-func (n Nil) Type() ObjectType    { return NIL }
+// Type getter
+func (n Nil) Type() ObjectType { return NIL }
+
+// Field is always nil
 func (n Nil) Field(string) Object { return Nil{} }
-func (n Nil) String() string      { return "" }
-func (n Nil) True() bool          { return false }
+
+// String is always empty
+func (n Nil) String() string { return "" }
+
+// True is always false
+func (n Nil) True() bool { return false }

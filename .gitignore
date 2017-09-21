@@ -13,6 +13,7 @@ coverage
 junit.xml
 /vendor
 /akl/integration-test/shared
+context_local.yml
 
 # pact
 **/logs/pact.log

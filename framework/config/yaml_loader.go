@@ -41,6 +41,12 @@ func loadyaml(basedir string, curdir string, root *Area) error {
 		yaml.Unmarshal(contextfile, root)
 	}
 
+	// load context_local.yml
+	contextfile, err = ioutil.ReadFile(path.Join(basedir, curdir, "context_local.yml"))
+	if err == nil {
+		yaml.Unmarshal(contextfile, root)
+	}
+
 	if envconfig := os.Getenv("CONFIG"); envconfig != "" {
 		yaml.Unmarshal([]byte(envconfig), root)
 	}

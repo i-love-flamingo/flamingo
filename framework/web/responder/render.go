@@ -7,7 +7,6 @@ import (
 	"flamingo/framework/router"
 	"flamingo/framework/template"
 	"flamingo/framework/web"
-	"io"
 	"net/http"
 )
 
@@ -27,28 +26,33 @@ type (
 var _ RenderAware = &FlamingoRenderAware{}
 
 // Render returns a web.ContentResponse with status 200 and ContentType text/html
-func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data interface{}) web.Response {
+func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data interface{}) (response web.Response) {
 	if d, err := context.Query1("debugdata"); err == nil && d != "" {
 		return &web.JSONResponse{
 			Data: pugjs.Convert(data),
 		}
 	}
 
-	var body io.Reader
-	var err error
 	if r.Engine != nil {
-		body, err = r.Engine.Render(context, tpl, data)
+		body, err := r.Engine.Render(context, tpl, data)
+		if err != nil {
+			panic(err)
+		}
+		response = &web.ContentResponse{
+			Status:      http.StatusOK,
+			Body:        body,
+			ContentType: "text/html; charset=utf-8",
+		}
 	} else {
-		var b []byte
-		b, err = json.Marshal(data)
-		body = bytes.NewBuffer(b)
+		body, err := json.Marshal(pugjs.Convert(data))
+		if err != nil {
+			panic(err)
+		}
+		response = &web.ContentResponse{
+			Status:      http.StatusOK,
+			Body:        bytes.NewReader(body),
+			ContentType: "application/json; charset=utf-8",
+		}
 	}
-	if err != nil {
-		panic(err)
-	}
-	return &web.ContentResponse{
-		Status:      http.StatusOK,
-		Body:        body,
-		ContentType: "text/html; charset=utf-8",
-	}
+	return
 }

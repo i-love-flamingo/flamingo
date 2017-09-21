@@ -304,6 +304,13 @@ For every requested injection (unless an exception applies) Dingo does the follo
   - Binding is bound to a type: request injection of this type (might return in a new loop to resolve the binding)
 - No binding? Try to create (only possible for concrete types, not interfaces or functions)
 
+## Optional injection
+
+An injection struct tag can be marked as optional by adding the suffix `,optional` to it.
+This means that for interfaces, slices, pointers etc where dingo can not resolve a concrete type, the `nil`-type is injected.
+
+You can check via `if my.Prop == nil` if this is nil.
+
 ## MultiBindings
 
 Injection of multibindings:

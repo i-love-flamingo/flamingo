@@ -34,10 +34,12 @@ func (e *eventSubscriber) onResponse(event *router.OnResponseEvent) {
 
 	event.ResponseWriter.Header().Set("X-Correlation-ID", context.ID())
 
-	if _, ok := event.Response.(*web.RedirectResponse); ok {
-		context.Session().Values["context.id"] = context.ID()
-	} else {
-		delete(context.Session().Values, "context.id")
+	if context.Session() != nil {
+		if _, ok := event.Response.(*web.RedirectResponse); ok {
+			context.Session().Values["context.id"] = context.ID()
+		} else {
+			delete(context.Session().Values, "context.id")
+		}
 	}
 
 	p.Collect(context)

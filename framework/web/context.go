@@ -95,8 +95,10 @@ func NewContext() Context {
 func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
 	id := uuid.NewV4().String()
 
-	if oid, ok := session.Values["context.id"]; ok {
-		id = oid.(string)
+	if session != nil {
+		if oid, ok := session.Values["context.id"]; ok {
+			id = oid.(string)
+		}
 	}
 
 	c := &ctx{

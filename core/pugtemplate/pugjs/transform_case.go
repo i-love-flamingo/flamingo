@@ -8,7 +8,7 @@ import (
 const casedefault = "default"
 
 // Render a case node
-func (c *Case) Render(s *renderState, wr *bytes.Buffer, depth int) error {
+func (c *Case) Render(s *renderState, wr *bytes.Buffer) error {
 	var doElse string
 	var elseBranch *When
 
@@ -18,7 +18,7 @@ func (c *Case) Render(s *renderState, wr *bytes.Buffer, depth int) error {
 		} else {
 			fmt.Fprintf(wr, `{{- %sif __op__eql %s %s }}`, doElse, s.JsExpr(string(c.Expr), false, false), s.JsExpr(string(node.(*When).Expr), false, false))
 			doElse = "else "
-			if err := node.Render(s, wr, depth); err != nil {
+			if err := node.Render(s, wr); err != nil {
 				return err
 			}
 		}
@@ -26,7 +26,7 @@ func (c *Case) Render(s *renderState, wr *bytes.Buffer, depth int) error {
 
 	if elseBranch != nil {
 		wr.WriteString(`{{- else }}`)
-		if err := elseBranch.Render(s, wr, depth); err != nil {
+		if err := elseBranch.Render(s, wr); err != nil {
 			return err
 		}
 	}
@@ -36,6 +36,6 @@ func (c *Case) Render(s *renderState, wr *bytes.Buffer, depth int) error {
 }
 
 // Render a when node
-func (w *When) Render(s *renderState, wr *bytes.Buffer, depth int) error {
-	return w.Block.Render(s, wr, depth)
+func (w *When) Render(s *renderState, wr *bytes.Buffer) error {
+	return w.Block.Render(s, wr)
 }

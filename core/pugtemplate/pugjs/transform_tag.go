@@ -7,9 +7,9 @@ import (
 )
 
 // Render a tag
-func (t *Tag) Render(p *renderState, wr *bytes.Buffer, depth int) error {
+func (t *Tag) Render(p *renderState, wr *bytes.Buffer) error {
 	var _subblock = new(bytes.Buffer)
-	if err := t.Block.Render(p, _subblock, depth+1); err != nil {
+	if err := t.Block.Render(p, _subblock); err != nil {
 		return err
 	}
 

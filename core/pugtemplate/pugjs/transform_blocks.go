@@ -11,7 +11,7 @@ type (
 
 	// Node is something renderable
 	Node interface {
-		Render(r *renderState, wr *bytes.Buffer, depth int) error
+		Render(r *renderState, wr *bytes.Buffer) error
 		Inline() bool
 	}
 

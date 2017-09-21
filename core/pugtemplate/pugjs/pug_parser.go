@@ -1,14 +1,13 @@
 package pugjs
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"path"
 	"strings"
-
-	"bytes"
 
 	"github.com/pkg/errors"
 )
@@ -98,7 +97,7 @@ func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string,
 	wr := new(bytes.Buffer)
 
 	for _, b := range nodes {
-		b.Render(p, wr, 0)
+		b.Render(p, wr)
 	}
 
 	for _, b := range p.mixinblocks {

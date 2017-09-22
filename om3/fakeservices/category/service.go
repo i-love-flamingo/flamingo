@@ -37,19 +37,61 @@ func (f *fakeCategory) Categories() []domain.Category {
 func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (domain.Category, error) {
 	return &fakeCategory{
 		name: "Test",
-		code: "test",
+		code: categoryCode,
 		categories: []domain.Category{
 			&fakeCategory{
 				name: "Test2",
 				code: "test2",
+				categories: []domain.Category{
+					&fakeCategory{
+						name: "Test2",
+						code: "test2",
+					},
+					&fakeCategory{
+						name: "Test3",
+						code: "test3",
+					},
+					&fakeCategory{
+						name: "Test4",
+						code: "test4",
+					},
+				},
 			},
 			&fakeCategory{
 				name: "Test3",
 				code: "test3",
+				categories: []domain.Category{
+					&fakeCategory{
+						name: "Test2",
+						code: "test2",
+					},
+					&fakeCategory{
+						name: "Test3",
+						code: "test3",
+					},
+					&fakeCategory{
+						name: "Test4",
+						code: "test4",
+					},
+				},
 			},
 			&fakeCategory{
 				name: "Test4",
 				code: "test4",
+				categories: []domain.Category{
+					&fakeCategory{
+						name: "Test2",
+						code: "test2",
+					},
+					&fakeCategory{
+						name: "Test3",
+						code: "test3",
+					},
+					&fakeCategory{
+						name: "Test4",
+						code: "test4",
+					},
+				},
 			},
 		},
 	}, nil

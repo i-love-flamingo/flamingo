@@ -46,9 +46,7 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 		return product, nil
 	}
 	if marketplaceCode == "fake_simple" {
-		product := fakeSimple(marketplaceCode)
-		product.Title = "TypeSimple product"
-		return product, nil
+		return fakeSimple(marketplaceCode), nil
 	}
 	return nil, errors.New("Not implemented in FAKE: Only code 'fake_configurable' or 'fake_simple' should be used")
 

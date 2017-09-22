@@ -11,7 +11,7 @@ import (
 	"github.com/pact-foundation/pact-go/dsl"
 )
 
-func TestProductserviceCanGetSimpleProduct(t *testing.T) {
+func NoTestProductserviceCanGetSimpleProduct(t *testing.T) {
 	testutil.WithPact(t, "searchperience-frontend", func(pact *dsl.Pact) {
 		var simpleTitleFixture = "TED BAKER Cro Polo"
 
@@ -57,7 +57,7 @@ func getSimpleProductResponseFixture() string {
 	return string(b)
 }
 
-func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
+func NoTestProductserviceCanGetConfigurableProduct(t *testing.T) {
 	testutil.WithPact(t, "searchperience-frontend", func(pact *dsl.Pact) {
 		//var titleFixture = "TUMI Travel Accessories Large Packing Cube"
 		pact.AddInteraction().

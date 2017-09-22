@@ -174,7 +174,7 @@ func (f *Func) MarshalJSON() ([]byte, error) {
 	if f.fnc.Type().NumIn() == 0 && f.fnc.Type().NumOut() == 1 {
 		return json.Marshal(convert(f.fnc.Call(nil)[0]))
 	}
-	return []byte(f.String()), nil
+	return []byte(`"` + f.String() + `"`), nil
 }
 
 // Array type

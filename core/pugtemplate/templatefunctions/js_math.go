@@ -106,6 +106,8 @@ func (m Math) Round(x interface{}) int {
 		x = float64(reflect.ValueOf(x).Int())
 	} else if reflect.TypeOf(x).Kind() == reflect.Float64 {
 		x = float64(reflect.ValueOf(x).Float())
+	} else {
+		return 0
 	}
 	return int(round(x.(float64)))
 }

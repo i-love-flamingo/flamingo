@@ -388,6 +388,9 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 
 			case *Map:
 				val = reflect.ValueOf(obj.Items)
+
+			case Nil:
+				val = reflect.ValueOf(nil)
 			}
 		} else {
 			val, _ = indirect(val)

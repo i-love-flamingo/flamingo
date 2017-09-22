@@ -36,7 +36,7 @@ func mapConfigurableProduct(ctx context.Context, productDto *Product) (domain.Co
 
 	for _, variantDto := range productDto.Variants {
 		variant := domain.Variant{}
-		variant.SaleableData = dtoVariantToSaleData(&variantDto)
+		variant.Saleable = dtoVariantToSaleData(&variantDto)
 		variant.BasicProductData = dtoVariantToBaseData(&variantDto)
 		configurableProduct.Variants = append(configurableProduct.Variants, variant)
 	}
@@ -55,7 +55,7 @@ func mapSimpleProduct(ctx context.Context, productDto *Product) (domain.SimplePr
 
 	simpleProduct.BasicProductData = dtoVariantToBaseData(&variant1)
 	addDtoProductDataToBaseData(productDto, &simpleProduct.BasicProductData)
-	simpleProduct.SaleableData = dtoVariantToSaleData(&variant1)
+	simpleProduct.Saleable = dtoVariantToSaleData(&variant1)
 	simpleProduct.Teaser = dtoTeaserToTeaser(productDto)
 
 	return simpleProduct, nil
@@ -113,8 +113,8 @@ func addDtoProductDataToBaseData(productDto *Product, basicData *domain.BasicPro
 	basicData.MarketPlaceCode = productDto.MarketPlaceCode
 }
 
-func dtoVariantToSaleData(variant1 *Variant) domain.SaleableData {
-	saleData := domain.SaleableData{}
+func dtoVariantToSaleData(variant1 *Variant) domain.Saleable {
+	saleData := domain.Saleable{}
 
 	// TODO - get active price from new serach response.. for now we do seperate request to priceeingie
 	//saleData.ActivePrice.Default = variant1.OriginPrice

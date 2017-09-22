@@ -66,7 +66,7 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 			UponReceiving("A request to a configurable test product").
 			WithRequest(dsl.Request{
 				Method: "GET",
-				Path:   "/product/UMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore",
+				Path:   "/product/TUMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore",
 			}).
 			WillRespondWith(dsl.Response{
 				Status: 200,
@@ -79,7 +79,7 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 			productclient.SearchperienceClient.BaseURL = fmt.Sprintf("http://localhost:%d/", pact.Server.Port)
 			var productService = product.ProductService{Client: &productclient, Locale: "en_EN", Channel: "mainstore"}
 
-			var testProduct, err = productService.Get(context.Background(), "UMITravelAccessoriesLargePackingCube_configurable")
+			var testProduct, err = productService.Get(context.Background(), "TUMITravelAccessoriesLargePackingCube_configurable")
 
 			if err != nil {
 				t.Error(err)

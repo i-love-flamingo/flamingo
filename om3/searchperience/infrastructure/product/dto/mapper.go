@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flamingo/core/product/domain"
+	"strconv"
 )
 
 // Map a product response from searchperience
@@ -123,6 +124,13 @@ func dtoVariantToSaleData(variant1 *Variant) domain.Saleable {
 	saleData.IsSaleable = variant1.IsSaleable
 	saleData.SaleableFrom = variant1.SaleableFrom
 	saleData.SaleableTo = variant1.SaleableTo
+
+	if p, ok := variant1.Attributes["price"]; ok {
+		price, _ := strconv.ParseFloat(p.(string), 64)
+		saleData.ActivePrice = domain.PriceInfo{
+			Default: price,
+		}
+	}
 
 	return saleData
 

@@ -88,6 +88,7 @@ func dtoVariantToBaseData(variant1 *Variant) domain.BasicProductData {
 		for _, media := range variant1.Media {
 			if media.Usage == "detail" {
 				media := domain.Media(media)
+				media.Usage = "list"
 				basicData.Media = append(basicData.Media, media)
 				break
 			}

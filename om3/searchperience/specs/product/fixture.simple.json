@@ -1,126 +1,145 @@
 {
-    "locale": "en_EN",
-    "channel": "onlinestore",
-    "foreignId": "TEDBAKERCroPolo_simple-en_EN-onlinestore",
-    "marketplaceCode": "ff97c10c6e69a71d80cb39510830b2c5",
-    "productType": "simple",
-    "formatVersion": 1,
-    "stockLevel": "high",
-    "internalName": "TED BAKER Cro Polo",
-    "productFamily": "product family",
-    "createdAt": "2015-01-01T12:10:30Z",
-    "updatedAt": "2015-01-01T12:10:30Z",
-    "visibleFrom": "2015-01-01T12:06:30Z",
-    "visibleTo": "2020-01-01T12:10:30Z",
-    "visibilityScope": [
-        "search"
-    ],
-    "customerRating": 5,
-    "sorting": {
-        "price": 12.33,
-        "sellingCount": 100
-    },
-    "categoryPaths": [
-        "Fashion",
-        "Fashion\/Clothing",
-        "Fashion\/Clothing\/Shirt"
-    ],
-    "categoryCodes": [
-        "code1",
-        "code2"
-    ],
-    "documentBoost": 7,
-    "keywords": [
-        "keyword"
-    ],
-    "keywordsImportant": [
-        "keyword 1 important",
-        "keyword 2 important"
-    ],
-    "categoryForeignId": "FragranceId",
-    "categoryToForeignIdMapping": "Beauty\/Fragrance:FragranceId",
-    "boostKeywords": [],
-    "variants": [
-        {
-            "urlPath": "Some\/category\/path\/product_simple_0_en_EN_onlinestore\/variant",
-            "internalName": "Variant internal name",
-            "title": "TED BAKER Cro Polo",
-            "shortTitle": "Variant short title",
-            "createdAt": "2015-01-01T12:10:30Z",
-            "updatedAt": "2015-01-01T12:10:30Z",
-            "attributes": {
-                "allergen": "Variant attribute allergens",
-                "storageCondition": "Variant attribute storage conditions",
-                "tags": [
-                    "Variant attribute tag"
-                ],
-                "packageSize": "Variant attribute package size",
-                "dimension": "Variant attribute dimensions",
-                "brandName": "",
-                "colors": [
-                    "blue",
-                    "black"
-                ],
-                "colorLabel": "blue-black",
-                "sizes": [
-                    "86",
-                    "L",
-                    "M"
-                ],
-                "sizeLabel": "86-L-M"
-            },
-            "shortDescription": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
-            "description": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
-            "isSaleable": true,
-            "customerRating": 5,
-            "media": [
-                {
-                    "type": "image-api",
-                    "mimeType": "image\/jpg",
-                    "usage": "detail",
-                    "title": "Variant media title",
-                    "reference": "media\/images\/caviar\/variant2.jpg"
-                },
-                {
-                    "type": "image-external",
-                    "mimeType": "image\/jpg",
-                    "usage": "detail",
-                    "title": "Variant media title",
-                    "reference": "https:\/\/aoe.com\/ImZ3Ijo2NTh9.jpg"
-                },
-                {
-                    "type": "youtube",
-                    "usage": "detail",
-                    "title": "Variant media title",
-                    "reference": "https:\/\/youtu.be\/w7yVXG4t6Ng"
-                }
-            ],
-            "marketplaceCode": "dcca48101505dd86b703689a604fe3c4",
-            "retailerSku": "Variant retailer sku",
-            "retailerCode": "Variant retailer code",
-            "retailerName": "Variant retailer name",
-            "priceData": {
-                "default": 60,
-                "currency": "EUR",
-                "taxClass": "test",
-                "base": 1,
-                "baseUnit": "ml",
-                "baseAmount": 10,
-                "special": 4.99,
-                "specialTo": "2017-07-01T11:00:00+01:00",
-                "specialFrom": "2022-07-01T11:00:00+01:00",
-                "groupPrices": [
-                    {
-                        "groupName": "stratas",
-                        "price": 3.99
-                    }
-                ]
-            }
-        }
-    ],
-    "categoryToCodeMapping": [
-        "Fashion\/Clothing\/Shirt:fashion_clothing_shirt",
-        "Fashion\/Clothing:fashion_clothing",
-        "Fashion:fashion"
+  "categoryPaths": [
+    "Fashion",
+    "Fashion/Clothing",
+    "Fashion/Clothing/Shirt"
+  ],
+  "categoryCodes": [
+    "code1",
+    "code2"
+  ],
+  "categoryForeignId": [
+    "BodyFragranceId"
+  ],
+  "updatedAt": "2015-01-01T12:10:30Z",
+  "channel": "onlinestore",
+  "stockLevel": "high",
+  "formatVersion": 1,
+  "categoryToCodeMapping": [
+    "Fashion/Clothing/Shirt:fashion_clothing_shirt",
+    "Fashion/Clothing:fashion_clothing",
+    "Fashion:fashion"
+  ],
+  "categoryToForeignIdMapping": [
+    "Beauty/Foo/Body Fragrance:BodyFragranceId"
+  ],
+  "internalName": "TED BAKER Cro Polo",
+  "visibleTo": "2020-01-01T12:10:30Z",
+  "productType": "simple",
+  "locale": "en_EN",
+  "foreignId": "TEDBAKERCroPolo_simple-en_EN-onlinestore",
+  "sorting": {
+    "price": 12.33,
+    "sellingCount": 100
+  },
+  "visibilityScope": [
+    "search"
+  ],
+  "createdAt": "2015-01-01T12:10:30Z",
+  "keywords": [
+    "keyword"
+  ],
+  "teaserData": {
+    "urlPath": "Some/category/path/product_simple_0_en_EN_onlinestore/variant",
+    "shortTitle": "Variant short title",
+    "shortDescription": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
+    "media": [
+      {
+        "type": "image-api",
+        "mimeType": "image/jpg",
+        "usage": "detail",
+        "title": "Variant media title",
+        "reference": "media/images/caviar/variant2.jpg"
+      },
+      {
+        "type": "image-external",
+        "mimeType": "image/jpg",
+        "usage": "detail",
+        "title": "Variant media title",
+        "reference": "https://aoe.com/ImZ3Ijo2NTh9.jpg"
+      },
+      {
+        "type": "youtube",
+        "mimeType": null,
+        "usage": "detail",
+        "title": "Variant media title",
+        "reference": "https://youtu.be/w7yVXG4t6Ng"
+      }
     ]
+  },
+  "marketplaceCode": "ff97c10c6e69a71d80cb39510830b2c5",
+  "visibleFrom": "2015-01-01T12:06:30Z",
+  "campaigns": [],
+  "customerRating": 5,
+  "boostKeywords": [],
+  "variants": [
+    {
+      "availableTo": null,
+      "updatedAt": "2015-01-01T12:10:30Z",
+      "shortTitle": "Variant short title",
+      "retailerSku": "Variant retailer sku",
+      "urlPath": "Some/category/path/product_simple_0_en_EN_onlinestore/variant",
+      "description": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
+      "shortDescription": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
+      "internalName": "Variant internal name",
+      "availablePrices": null,
+      "retailerCode": "Variant retailer code",
+      "attributes": {
+        "packageSize": "Variant attribute package size",
+        "sizeLabel": "XL-86-92",
+        "tags": [
+          "Variant attribute tag"
+        ],
+        "colorLabel": "pink-green",
+        "brandName": "",
+        "colors": [
+          "pink",
+          "green"
+        ],
+        "allergen": "Variant attribute allergens",
+        "sizes": [
+          "XL",
+          "86",
+          "92"
+        ],
+        "dimension": "Variant attribute dimensions",
+        "storageCondition": "Variant attribute storage conditions"
+      },
+      "availableFrom": null,
+      "activePrice": null,
+      "createdAt": "2015-01-01T12:10:30Z",
+      "media": [
+        {
+          "type": "image-api",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Variant media title",
+          "reference": "media/images/caviar/variant2.jpg"
+        },
+        {
+          "type": "image-external",
+          "mimeType": "image/jpg",
+          "usage": "detail",
+          "title": "Variant media title",
+          "reference": "https://aoe.com/ImZ3Ijo2NTh9.jpg"
+        },
+        {
+          "type": "youtube",
+          "mimeType": null,
+          "usage": "detail",
+          "title": "Variant media title",
+          "reference": "https://youtu.be/w7yVXG4t6Ng"
+        }
+      ],
+      "marketplaceCode": "dcca48101505dd86b703689a604fe3c4",
+      "retailerName": "Variant retailer name",
+      "title": "TED BAKER Cro Polo",
+      "boostKeywords": [],
+      "saleableFrom": null,
+      "saleableTo": null,
+      "isSaleable": true,
+      "productFamily": null
+    }
+  ],
+  "productFamily": "product family"
 }

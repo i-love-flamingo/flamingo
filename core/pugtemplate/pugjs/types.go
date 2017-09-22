@@ -110,7 +110,19 @@ func convert(in interface{}) Object {
 		return String(val.String())
 
 	case reflect.Interface:
-		return convert(val.Interface())
+		if val.Type().NumMethod() == 0 {
+			return convert(val.Interface())
+		}
+		newval := &Map{
+			Items: make(map[Object]Object, val.Type().NumMethod()),
+			o:     val.Interface(),
+		}
+
+		for i := 0; i < val.NumMethod(); i++ {
+			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+		}
+
+		return newval
 
 	case reflect.Float32, reflect.Float64:
 		return Number(val.Float())
@@ -152,10 +164,18 @@ func (f *Func) Type() ObjectType { return FUNC }
 func (f *Func) Field(name string) Object { return Nil{} }
 
 // String formatter
-func (f *Func) String() string { return fmt.Sprintf("%s", reflect.ValueOf(f.fnc)) }
+func (f *Func) String() string { return f.fnc.String() }
 
 // True getter
 func (f *Func) True() bool { return true }
+
+// MarshalJSON implementation
+func (f *Func) MarshalJSON() ([]byte, error) {
+	if f.fnc.Type().NumIn() == 0 && f.fnc.Type().NumOut() == 1 {
+		return json.Marshal(convert(f.fnc.Call(nil)[0]))
+	}
+	return []byte(f.String()), nil
+}
 
 // Array type
 type Array struct {

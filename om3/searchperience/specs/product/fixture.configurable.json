@@ -1,257 +1,272 @@
 {
-  "locale": "de_DE",
-  "channel": "mainstore",
-  "foreignId": "configurabletestiden_USecommerce",
-  "marketPlaceCode": "searchperience-product-v2",
-  "productType": "configurable",
-  "formatVersion": 1,
-  "stockLevel": "high",
-  "internalName": "Bombay Sapphire Gin",
-  "productFamily": "alcohol",
-  "createdAt": "2015-01-01T12:10:30Z",
-  "updatedAt": "2015-01-01T12:10:30Z",
-  "visibleFrom": "2015-01-01T12:06:30Z",
-  "visibleTo": "2015-01-01T12:10:30Z",
-  "customerRating": 5,
-  "teaserData": {
-    "title": "Bombay Sapphire Gin",
-    "shortTitle": "Bombay Sapphire Gin",
-    "teaser": "Gin",
-    "shortDescription": "Best gin in town",
-    "media": [
-      {
-        "type": "image-api",
-        "mimeType": "image/jpg",
-        "usage": "thumbnail",
-        "title": "Frontal View of the product",
-        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-      }
-    ]
-  },
-  "sorting": {
-    "price": 12.33,
-    "sellingCount": 100
-  },
-  "categoryPath": [
-    "Beer, Wine & Spirits",
-    "Spirits",
-    "Gin"
-  ],
-  "categoryCodes": [
-    "spirits",
-    "gin"
-  ],
-  "documentBoost": 7,
-  "highlights": {
-
-  },
-  "keywords": [
-    "gin"
-  ],
-  "keywordsImportant": [
-    "gin",
-    "sapphire"
-  ],
-  "configurableProduct": {
-    "internalName": "Bombay Sapphire Gin 1L",
-    "title": "Bombay Sapphire Gin Configurable",
+    "locale": "en_EN",
+    "channel": "mainstore",
+    "foreignId": "TUMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore",
+    "marketplaceCode": "ffcc20eba8cf906d59233e12dd102c3d",
+    "productType": "configurable",
+    "formatVersion": 1,
+    "stockLevel": "high",
+    "internalName": "TUMI Travel Accessories Large Packing Cube",
+    "productFamily": "Product family",
     "createdAt": "2015-01-01T12:10:30Z",
     "updatedAt": "2015-01-01T12:10:30Z",
-    "attributes": {
-      "allergens": "Contains Borax",
-      "storageConditions": "0 °c - 4 °c",
-      "tags": [
-        "caviar"
-      ],
-      "brandName": "Prunier Caviar",
-      "brandCode": "prunier_caviar",
-      "packageSize": "1L"
+    "visibleFrom": "2015-01-01T12:06:30Z",
+    "visibleTo": "2020-01-01T12:10:30Z",
+    "customerRating": 5,
+    "sorting": {
+        "price": 12.33,
+        "sellingCount": 100
     },
-    "media": [
-      {
-        "type": "image-api",
-        "mimeType": "image/jpg",
-        "usage": "thumbnail",
-        "title": "Frontal View of the product",
-        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-      },
-      {
-        "type": "image-api",
-        "mimeType": "image/jpg",
-        "usage": "detail",
-        "title": "Frontal View of the product",
-        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-      },
-      {
-        "type": "youtube",
-        "usage": "detail",
-        "title": "Some sample Video Content from extern",
-        "reference": "https://youtu.be/w7yVXG4t6Ng"
-      }
-    ]
-  },
-  "variantVariationAttributes": [
-    "packageSize"
-  ],
-  "variants": [
-    {
-      "internalName": "Bombay Sapphire Gin 0.5L",
-      "title": "Bombay Sapphire Gin 0.5L",
-      "createdAt": "2015-01-01T12:10:30Z",
-      "updatedAt": "2015-01-01T12:10:30Z",
-      "isSaleable": true,
-      "saleableFrom": "2015-01-01T12:05:30Z",
-      "saleableTo": "2015-01-01T12:10:30Z",
-      "attributes": {
-        "allergens": "Contains Borax",
-        "storageConditions": "0 °c - 4 °c",
-        "tags": [
-          "caviar"
-        ],
-        "brandName": "Prunier Caviar",
-        "brandCode": "prunier_caviar",
-        "packageSize": "0.5L"
-      },
-      "shortDescription": "Short description",
-      "description": "Very long description",
-      "customerRating": 5,
-      "media": [
-        {
-          "type": "image-api",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+    "categoryPaths": [
+        "Luggage",
+        "Luggage\/Travel Accessories"
+    ],
+    "categoryCodes": [
+        "sommer_schuhe"
+    ],
+    "categoryToCodeMapping": [
+        "Luggage\/Travel Accessories:luggage_travel_accessories",
+        "Luggage:luggage"
+    ],
+    "documentBoost": 7,
+    "keywords": [
+        "keyword"
+    ],
+    "keywordsImportant": [
+        "keyword 1 important",
+        "keyword 2 important"
+    ],
+    "configurableProduct": {
+        "internalName": "TUMI Travel Accessories Large Packing Cube",
+        "title": "TUMI Travel Accessories Large Packing Cube",
+        "createdAt": "2015-01-01T12:10:30Z",
+        "updatedAt": "2020-01-01T12:10:30Z",
+        "attributes": {
+            "allergen": "Configurable product attribute allergens",
+            "storageCondition": "Configurable product attribute storage conditions",
+            "tags": [
+                "Configurable product attribute tag1",
+                "Configurable product attribute tag2"
+            ],
+            "brandName": "Tumi",
+            "brandCode": "Configurable product attribute brand code",
+            "group": 0,
+            "isDiscounted": false,
+            "packageSizes": [
+                10,
+                20
+            ]
         },
-        {
-          "type": "image-external",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "https://placehold.it/658x370"
-        },
-        {
-          "type": "youtube",
-          "usage": "detail",
-          "title": "Some sample Video Content from extern",
-          "reference": "https://youtu.be/w7yVXG4t6Ng"
-        }
-      ],
-      "marketPlaceCode": "caviarhouse_saintjames1",
-      "retailerSku": "the_loop_1",
-      "retailerCode": "theloop",
-      "retailerName": "The Loop",
-      "retailerImage": "/assets/img/dummy/retailer/the-loop-logo.jpg",
-      "originPrice": 118,
-      "originBasePrice": 393.33,
-      "originBasePriceUnit": "L",
-      "originBasePriceAmount": 100.00,
-      "specialPrice": 105.99,
-      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
-      "specialPriceTo": "2019-07-01T11:00:00+01:00",
-      "currency": "€",
-      "taxClass": "some"
+        "media": [
+            {
+                "type": "image-api",
+                "mimeType": "image\/jpg",
+                "usage": "thumbnail",
+                "title": "Configurable product media title 1",
+                "reference": "media\/images\/configurable_product.jpg"
+            },
+            {
+                "type": "image-api",
+                "mimeType": "image\/jpg",
+                "usage": "detail",
+                "title": "Configurable product media title 2",
+                "reference": "media\/images\/configurable_product.jpg"
+            },
+            {
+                "type": "youtube",
+                "usage": "detail",
+                "title": "Configurable product media title 3",
+                "reference": "https:\/\/youtu.be\/w7yVXG4t6Ng"
+            }
+        ]
     },
-    {
-      "internalName": "Bombay Sapphire Gin 1L",
-      "title": "Bombay Sapphire Gin 1L",
-      "createdAt": "2015-01-01T12:10:30Z",
-      "updatedAt": "2015-01-01T12:10:30Z",
-      "attributes": {
-        "allergens": "Contains Borax",
-        "storageConditions": "0 °c - 4 °c",
-        "tags": [
-          "caviar"
-        ],
-        "packageSize": "1L"
-      },
-      "shortDescription": "Short description",
-      "description": "Very long description",
-      "isSaleable": true,
-      "customerRating": 5,
-      "media": [
+    "variantVariationAttributes": [
+        "sizeLabel",
+        "colorLabel"
+    ],
+    "variants": [
         {
-          "type": "image-api",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
+            "urlPath": "Luggage\/TUMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore\/variant_0",
+            "internalName": "Variant_0",
+            "title": "TUMI Travel Accessories Large Packing Cube",
+            "shortTitle": "TUMI Travel Accessories Large Packing Cube",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "isSaleable": true,
+            "saleableFrom": "2015-01-01T12:05:30Z",
+            "saleableTo": "2020-01-01T12:10:30Z",
+            "attributes": {
+                "allergen": "Variant 1 attribute allergen",
+                "storageCondition": "Variant 1 attribute storage condition",
+                "tags": [
+                    "Variant 1 attribute tag1",
+                    "Variant 1 attribute tag2"
+                ],
+                "brandName": "Tumi",
+                "brandCode": "Variant 1 attribute brand code",
+                "group": 0,
+                "isDiscounted": false,
+                "packageSizes": [
+                    10,
+                    20
+                ],
+                "colors": [
+                    "red",
+                    "yellow",
+                    "magenta",
+                    "black",
+                    "neongrey"
+                ],
+                "colorLabel": "red-yellow-magenta-black-neongrey",
+                "sizes": [
+                    "L",
+                    "XL",
+                    "86"
+                ],
+                "sizeLabel": "L-XL-86"
+            },
+            "shortDescription": "<p>Hassle-free packing starts here. Organize your travels with this large, lightweight packing cube. The quintessential must-pack item for frequent flyers, it allows you to organize daily outfits or simply keep your delicates separate from heavier items.<",
+            "description": "<p>Hassle-free packing starts here. Organize your travels with this large, lightweight packing cube. The quintessential must-pack item for frequent flyers, it allows you to organize daily outfits or simply keep your delicates separate from heavier items.<\/p>",
+            "customerRating": 5,
+            "media": [
+                {
+                    "type": "image-api",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 media title 1",
+                    "reference": "media\/images\/caviar\/variant1.jpg"
+                },
+                {
+                    "type": "image-external",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant 1 title 2",
+                    "reference": "https:\/\/aoe.com\/Z3Ijo2NTh9.jpg"
+                },
+                {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 1 title 3",
+                    "reference": "https:\/\/youtu.be\/w7yVXG4t6Ng"
+                }
+            ],
+            "marketplaceCode": "fae94d32952d9979818739945589eac4",
+            "retailerSku": "Variant 1 retailer sku",
+            "retailerCode": "Variant 1 retailer code",
+            "retailerName": "Variant 1 retailer name",
+            "priceData": {
+                "default": 540,
+                "currency": "EUR",
+                "taxClass": "test",
+                "base": 15.99,
+                "baseUnit": "ml",
+                "baseAmount": 100,
+                "special": 69.99,
+                "specialFrom": "2022-07-01T11:00:00+01:00",
+                "specialTo": "2017-07-01T11:00:00+01:00",
+                "groupPrices": [
+                    {
+                        "groupName": "stratas",
+                        "price": 65.99
+                    }
+                ]
+            },
+            "boostKeywords": []
         },
         {
-          "type": "image-external",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "https://placehold.it/658x370"
-        },
-        {
-          "type": "youtube",
-          "usage": "detail",
-          "title": "Some sample Video Content from extern",
-          "reference": "https://youtu.be/w7yVXG4t6Ng"
+            "urlPath": "Luggage\/TUMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore\/variant_1",
+            "internalName": "Variant_1",
+            "title": "TUMI Travel Accessories Large Packing Cube",
+            "shortTitle": "TUMI Travel Accessories Large Packing Cube",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "isSaleable": true,
+            "saleableFrom": "2015-01-01T12:05:30Z",
+            "saleableTo": "2020-01-01T12:10:30Z",
+            "attributes": {
+                "allergen": "Variant 2 attribute allergen",
+                "storageCondition": "Variant 2 attribute storage condition",
+                "tags": [
+                    "Variant 1 attribute tag1",
+                    "Variant 1 attribute tag2"
+                ],
+                "brandName": "Tumi",
+                "brandCode": "Variant 2 attribute brand code",
+                "group": 0,
+                "isDiscounted": false,
+                "packageSizes": [
+                    10,
+                    20
+                ],
+                "colors": [
+                    "transparent",
+                    "neongrey",
+                    "white",
+                    "black"
+                ],
+                "colorLabel": "transparent-neongrey-white-black",
+                "sizes": [
+                    "S",
+                    "XXXL",
+                    "XL"
+                ],
+                "sizeLabel": "S-XXXL-XL"
+            },
+            "shortDescription": "<p>Hassle-free packing starts here. Organize your travels with this large, lightweight packing cube. The quintessential must-pack item for frequent flyers, it allows you to organize daily outfits or simply keep your delicates separate from heavier items.<",
+            "description": "<p>Hassle-free packing starts here. Organize your travels with this large, lightweight packing cube. The quintessential must-pack item for frequent flyers, it allows you to organize daily outfits or simply keep your delicates separate from heavier items.<\/p>",
+            "customerRating": 5,
+            "media": [
+                {
+                    "type": "image-api",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 media title 1",
+                    "reference": "media\/images\/caviar\/variant1.jpg"
+                },
+                {
+                    "type": "image-external",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant 2 title 2",
+                    "reference": "https:\/\/aoe.com\/Z3Ijo2NTh9.jpg"
+                },
+                {
+                    "type": "youtube",
+                    "mimeType": "video",
+                    "usage": "detail",
+                    "title": "Variant 2 title 3",
+                    "reference": "https:\/\/youtu.be\/w7yVXG4t6Ng"
+                }
+            ],
+            "marketplaceCode": "95e0bc50068f29149604b6ec91c3c5e6",
+            "retailerSku": "Variant 2 retailer sku",
+            "retailerCode": "Variant 2 retailer code",
+            "retailerName": "Variant 2 retailer name",
+            "priceData": {
+                "default": 807,
+                "currency": "EUR",
+                "taxClass": "test",
+                "base": 9.99,
+                "baseUnit": "ml",
+                "baseAmount": 100,
+                "special": 99.99,
+                "specialFrom": "2017-07-01T11:00:00+01:00",
+                "specialTo": "2020-07-01T11:00:00+01:00",
+                "groupPrices": [
+                    {
+                        "groupName": "stratas",
+                        "price": 89.99
+                    }
+                ]
+            },
+            "boostKeywords": []
         }
-      ],
-      "marketPlaceCode": "caviarhouse_saintjames2",
-      "retailerSku": "aelia_2",
-      "retailerCode": "aelia",
-      "retailerName": "Aelia Duty Free",
-      "retailerImage": "/assets/img/dummy/retailer/aeliadutyfree-logo.jpg",
-      "originPrice": 492,
-      "originBasePrice": 393.6,
-      "originBasePriceUnit": "L",
-      "originBasePriceAmount": 100
-    },
-    {
-      "internalName": "Bombay Sapphire Gin 0.75L",
-      "title": "Bombay Sapphire Gin 0.75L",
-      "createdAt": "2015-01-01T12:10:30Z",
-      "updatedAt": "2015-01-01T12:10:30Z",
-      "attributes": {
-        "allergens": "Contains Borax",
-        "storageConditions": "0 °c - 4 °c",
-        "tags": [
-          "caviar"
-        ],
-        "packageSize": "0.75L"
-      },
-      "shortDescription": "Short description",
-      "description": "Very long description",
-      "isSaleable": false,
-      "customerRating": 5,
-      "media": [
-        {
-          "type": "image-api",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-        },
-        {
-          "type": "image-external",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "https://placehold.it/658x370"
-        },
-        {
-          "type": "youtube",
-          "usage": "detail",
-          "title": "Some sample Video Content from extern",
-          "reference": "https://youtu.be/w7yVXG4t6Ng"
-        }
-      ],
-      "marketPlaceCode": "caviarhouse_saintjames2",
-      "retailerSku": "aelia_3",
-      "retailerCode": "aelia",
-      "retailerName": "Aelia Duty Free",
-      "retailerImage": "/assets/img/dummy/retailer/aeliadutyfree-logo.jpg",
-      "originPrice": 159,
-      "originBasePrice": 212,
-      "originBasePriceUnit": "L",
-      "originBasePriceAmount": 100.00,
-      "specialPrice": 139.99,
-      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
-      "specialPriceTo": "2019-07-01T11:00:00+01:00"
-    }
-  ]
+    ],
+    "visibilityScope": [
+        "catalog"
+    ],
+    "categoryForeignId": "MeanId",
+    "categoryToForeignIdMapping": "Mean:MeanId",
+    "boostKeywords": []
 }

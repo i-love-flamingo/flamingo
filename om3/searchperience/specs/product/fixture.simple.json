@@ -1,123 +1,126 @@
 {
-  "locale": "de_DE",
-  "channel": "mainstore",
-  "foreignId": "searchperience-product-v2_de_DE_mainstore",
-  "marketPlaceCode": "searchperience-product-v2",
-  "productType": "simple",
-  "formatVersion": 1,
-  "stockLevel": "high",
-  "internalName": "Bombay Sapphire Gin",
-  "productFamily": "alcohol",
-  "createdAt": "2015-01-01T12:10:30Z",
-  "updatedAt": "2015-01-01T12:10:30Z",
-  "visibleFrom": "2015-01-01T12:06:30Z",
-  "visibleTo": "2015-01-01T12:10:30Z",
-  "customerRating": 5,
-  "teaserData": {
-    "title": "simple-title",
-    "shortTitle": "simple-title-short",
-    "teaser": "Gin",
-    "shortDescription": "Best gin in town",
-    "media": [
-      {
-        "type": "image-api",
-        "mimeType": "image/jpg",
-        "usage": "thumbnail",
-        "title": "Frontal View of the product",
-        "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-      }
-    ]
-  },
-  "sorting": {
-    "price": 12.33,
-    "sellingCount": 100
-  },
-  "categoryPath": [
-    "Beer, Wine & Spirits",
-    "Spirits",
-    "Gin"
-  ],
-  "categoryCodes": [
-    "spirits",
-    "gin"
-  ],
-  "documentBoost": 7,
-  "highlights": {
-
-  },
-  "keywords": [
-    "gin"
-  ],
-  "keywordsImportant": [
-    "gin",
-    "sapphire"
-  ],
-  "variantVariationAttributes": [
-    "packageSize"
-  ],
-  "variants": [
-    {
-      "internalName": "Bombay Sapphire Gin 0.5L",
-      "title": "simple-title",
-      "createdAt": "2015-01-01T12:10:30Z",
-      "updatedAt": "2015-01-01T12:10:30Z",
-      "isSaleable": true,
-      "saleableFrom": "2015-01-01T12:05:30Z",
-      "saleableTo": "2015-01-01T12:10:30Z",
-      "attributes": {
-        "allergens": "Contains Borax",
-        "storageConditions": "0 °c - 4 °c",
-        "tags": [
-          "caviar"
-        ],
-        "brandName": "Prunier Caviar",
-        "brandCode": "prunier_caviar",
-        "packageSize": "0.5L",
-        "brand": "apple",
-        "campaignCodes": [
-          "supercampaign1",
-          "supercampaign2"
-        ]
-      },
-      "shortDescription": "Short description",
-      "description": "Very long description",
-      "customerRating": 5,
-      "media": [
+    "locale": "en_EN",
+    "channel": "onlinestore",
+    "foreignId": "TEDBAKERCroPolo_simple-en_EN-onlinestore",
+    "marketplaceCode": "ff97c10c6e69a71d80cb39510830b2c5",
+    "productType": "simple",
+    "formatVersion": 1,
+    "stockLevel": "high",
+    "internalName": "TED BAKER Cro Polo",
+    "productFamily": "product family",
+    "createdAt": "2015-01-01T12:10:30Z",
+    "updatedAt": "2015-01-01T12:10:30Z",
+    "visibleFrom": "2015-01-01T12:06:30Z",
+    "visibleTo": "2020-01-01T12:10:30Z",
+    "visibilityScope": [
+        "search"
+    ],
+    "customerRating": 5,
+    "sorting": {
+        "price": 12.33,
+        "sellingCount": 100
+    },
+    "categoryPaths": [
+        "Fashion",
+        "Fashion\/Clothing",
+        "Fashion\/Clothing\/Shirt"
+    ],
+    "categoryCodes": [
+        "code1",
+        "code2"
+    ],
+    "documentBoost": 7,
+    "keywords": [
+        "keyword"
+    ],
+    "keywordsImportant": [
+        "keyword 1 important",
+        "keyword 2 important"
+    ],
+    "categoryForeignId": "FragranceId",
+    "categoryToForeignIdMapping": "Beauty\/Fragrance:FragranceId",
+    "boostKeywords": [],
+    "variants": [
         {
-          "type": "image-api",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "/assets/img/dummy/products/bombay-sapphire.jpg"
-        },
-        {
-          "type": "image-external",
-          "mimeType": "image/jpg",
-          "usage": "detail",
-          "title": "Frontal View of the product",
-          "reference": "https://placehold.it/658x370"
-        },
-        {
-          "type": "youtube",
-          "usage": "detail",
-          "title": "Some sample Video Content from extern",
-          "reference": "https://youtu.be/w7yVXG4t6Ng"
+            "urlPath": "Some\/category\/path\/product_simple_0_en_EN_onlinestore\/variant",
+            "internalName": "Variant internal name",
+            "title": "TED BAKER Cro Polo",
+            "shortTitle": "Variant short title",
+            "createdAt": "2015-01-01T12:10:30Z",
+            "updatedAt": "2015-01-01T12:10:30Z",
+            "attributes": {
+                "allergen": "Variant attribute allergens",
+                "storageCondition": "Variant attribute storage conditions",
+                "tags": [
+                    "Variant attribute tag"
+                ],
+                "packageSize": "Variant attribute package size",
+                "dimension": "Variant attribute dimensions",
+                "brandName": "",
+                "colors": [
+                    "blue",
+                    "black"
+                ],
+                "colorLabel": "blue-black",
+                "sizes": [
+                    "86",
+                    "L",
+                    "M"
+                ],
+                "sizeLabel": "86-L-M"
+            },
+            "shortDescription": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
+            "description": "The CRO polo shirt will fit into your weekend wardrobe without a hitch. Trimmed with his signature geo print, Ted suggests teaming this off-duty essential with a pair of black chinos to ensure your look is smooth sailing",
+            "isSaleable": true,
+            "customerRating": 5,
+            "media": [
+                {
+                    "type": "image-api",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "media\/images\/caviar\/variant2.jpg"
+                },
+                {
+                    "type": "image-external",
+                    "mimeType": "image\/jpg",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https:\/\/aoe.com\/ImZ3Ijo2NTh9.jpg"
+                },
+                {
+                    "type": "youtube",
+                    "usage": "detail",
+                    "title": "Variant media title",
+                    "reference": "https:\/\/youtu.be\/w7yVXG4t6Ng"
+                }
+            ],
+            "marketplaceCode": "dcca48101505dd86b703689a604fe3c4",
+            "retailerSku": "Variant retailer sku",
+            "retailerCode": "Variant retailer code",
+            "retailerName": "Variant retailer name",
+            "priceData": {
+                "default": 60,
+                "currency": "EUR",
+                "taxClass": "test",
+                "base": 1,
+                "baseUnit": "ml",
+                "baseAmount": 10,
+                "special": 4.99,
+                "specialTo": "2017-07-01T11:00:00+01:00",
+                "specialFrom": "2022-07-01T11:00:00+01:00",
+                "groupPrices": [
+                    {
+                        "groupName": "stratas",
+                        "price": 3.99
+                    }
+                ]
+            }
         }
-      ],
-      "marketPlaceCode": "caviarhouse_saintjames1",
-      "retailerSku": "the_loop_1",
-      "retailerCode": "theloop",
-      "retailerName": "The Loop",
-      "retailerImage": "/assets/img/dummy/retailer/the-loop-logo.jpg",
-      "originPrice": 118,
-      "originBasePrice": 393.33,
-      "originBasePriceUnit": "L",
-      "originBasePriceAmount": 100.00,
-      "specialPrice": 105.99,
-      "specialPriceFrom": "2017-07-01T11:00:00+01:00",
-      "specialPriceTo": "2019-07-01T11:00:00+01:00",
-      "currency": "€",
-      "taxClass": "some"
-    }
-  ]
+    ],
+    "categoryToCodeMapping": [
+        "Fashion\/Clothing\/Shirt:fashion_clothing_shirt",
+        "Fashion\/Clothing:fashion_clothing",
+        "Fashion:fashion"
+    ]
 }

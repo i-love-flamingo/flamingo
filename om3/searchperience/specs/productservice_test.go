@@ -2,7 +2,6 @@ package specs
 
 import (
 	"context"
-	"flamingo/core/product/domain"
 	"flamingo/framework/testutil"
 	"flamingo/om3/searchperience/infrastructure/product"
 	"fmt"
@@ -60,7 +59,7 @@ func getSimpleProductResponseFixture() string {
 
 func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 	testutil.WithPact(t, "searchperience-frontend", func(pact *dsl.Pact) {
-		var titleFixture = "TUMI Travel Accessories Large Packing Cube"
+		//var titleFixture = "TUMI Travel Accessories Large Packing Cube"
 		pact.AddInteraction().
 			Given("The configurable test product exists").
 			UponReceiving("A request to a configurable test product").

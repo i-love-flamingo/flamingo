@@ -46,13 +46,13 @@ func (ps *FakeProductService) Get(ctx context.Context, marketplaceCode string) (
 		return product, nil
 	}
 	if marketplaceCode == "fake_simple" {
-		return fakeSimple(marketplaceCode), nil
+		return FakeSimple(marketplaceCode), nil
 	}
 	return nil, errors.New("Not implemented in FAKE: Only code 'fake_configurable' or 'fake_simple' should be used")
 
 }
 
-func fakeSimple(marketplaceCode string) domain.SimpleProduct {
+func FakeSimple(marketplaceCode string) domain.SimpleProduct {
 	product := domain.SimpleProduct{}
 	product.Title = "TypeSimple product"
 	addBasicData(&product.BasicProductData)
@@ -87,7 +87,8 @@ func fakeVariant(marketplaceCode string) domain.Variant {
 func addBasicData(product *domain.BasicProductData) {
 	product.ShortDescription = "Short Description"
 	product.Description = "Description"
-	product.Media = append(product.Media, domain.Media{Type: "image-external", Reference: "http://pipsum.com/1024x768.jpg"})
+	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg", Usage: "detail"})
+	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg", Usage: "list"})
 	product.Attributes = make(map[string]interface{})
 	product.Attributes["brandCode"] = "Apple"
 	product.RetailerCode = "Testretailer"

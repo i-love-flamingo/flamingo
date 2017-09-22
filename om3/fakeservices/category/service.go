@@ -56,14 +56,11 @@ func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (do
 }
 
 func (cs *FakeCategoryService) GetProducts(ctx context.Context, categoryCode string) ([]productdomain.BasicProduct, error) {
-	ps := new(product.FakeProductService)
-	p, _ := ps.Get(ctx, "fake_simple")
-
 	return []productdomain.BasicProduct{
-		p,
-		p,
-		p,
-		p,
-		p,
+		product.FakeSimple("product-1"),
+		product.FakeSimple("product-2"),
+		product.FakeSimple("product-3"),
+		product.FakeSimple("product-4"),
+		product.FakeSimple("product-5"),
 	}, nil
 }

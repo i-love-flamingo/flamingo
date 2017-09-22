@@ -69,8 +69,7 @@ func TestProductserviceCanGetConfigurableProduct(t *testing.T) {
 				Path:   "/product/TUMITravelAccessoriesLargePackingCube_configurable-en_EN-mainstore",
 			}).
 			WillRespondWith(dsl.Response{
-				Status: 200,
-				Body:   getConfigurableProductResponseFixture(),
+				Status: 200
 			})
 
 		if err := pact.Verify(func() error {

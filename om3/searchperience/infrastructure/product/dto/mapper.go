@@ -160,7 +160,8 @@ func dtoVariantToSaleData(variant1 *Variant) domain.Saleable {
 	if p, ok := variant1.Attributes["price"]; ok {
 		price, _ := strconv.ParseFloat(p.(string), 64)
 		saleData.ActivePrice = domain.PriceInfo{
-			Default: price,
+			Default:  price,
+			Currency: "£",
 		}
 	}
 

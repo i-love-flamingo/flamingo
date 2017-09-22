@@ -87,9 +87,8 @@ func dtoVariantToBaseData(variant1 *Variant) domain.BasicProductData {
 	if !haslist {
 		for _, media := range variant1.Media {
 			if media.Usage == "detail" {
-				media := domain.Media(media)
 				media.Usage = "list"
-				basicData.Media = append(basicData.Media, media)
+				basicData.Media = append(basicData.Media, domain.Media(media))
 				break
 			}
 		}
@@ -110,9 +109,26 @@ func dtoConfigurableToBaseData(configurable *ConfigurableProduct) domain.BasicPr
 		basicData.Description = configurable.Attributes["description"].(string)
 	}
 	basicData.CreatedAt = configurable.CreatedAt
+
+	haslist := false
+
 	for _, media := range configurable.Media {
 		basicData.Media = append(basicData.Media, domain.Media(media))
+		if media.Usage == "list" {
+			haslist = true
+		}
 	}
+
+	if !haslist {
+		for _, media := range configurable.Media {
+			if media.Usage == "detail" {
+				media.Usage = "list"
+				basicData.Media = append(basicData.Media, domain.Media(media))
+				break
+			}
+		}
+	}
+
 	return basicData
 }
 

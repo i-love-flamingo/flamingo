@@ -75,8 +75,17 @@ func dtoVariantToBaseData(variant1 *Variant) domain.BasicProductData {
 	basicData.RetailerCode = variant1.RetailerCode
 	basicData.RetailerSku = variant1.RetailerSku
 
+	haslist := false
 	for _, media := range variant1.Media {
 		basicData.Media = append(basicData.Media, domain.Media(media))
+		if media.Usage == "list" {
+			haslist = true
+		}
+	}
+	if !haslist && len(variant1.Media) > 0 {
+		media := domain.Media(variant1.Media[0])
+		media.Usage = "list"
+		basicData.Media = append(basicData.Media, media)
 	}
 	return basicData
 }

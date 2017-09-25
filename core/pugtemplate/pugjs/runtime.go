@@ -377,6 +377,15 @@ func runtimeRem(x, y interface{}) interface{} {
 				return int(vx.Int() % vy.Int())
 			}
 		}
+	case reflect.Float64, reflect.Float32:
+		{
+			switch vy.Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+				return int64(vx.Float()) % vy.Int()
+			case reflect.Float32, reflect.Float64:
+				return int64(vx.Float()) % int64(vy.Float())
+			}
+		}
 	}
 
 	return "<nil>"

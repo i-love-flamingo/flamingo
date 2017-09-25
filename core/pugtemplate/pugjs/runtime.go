@@ -289,6 +289,7 @@ func runtimeSub(i ...interface{}) interface{} {
 	} else {
 		x = 0
 	}
+	x, y = y, x
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:

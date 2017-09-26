@@ -5,6 +5,7 @@ import (
 	"flamingo/core/category/domain"
 	productdomain "flamingo/core/product/domain"
 	"flamingo/om3/fakeservices/product"
+	"strconv"
 )
 
 type (
@@ -15,6 +16,7 @@ type (
 		code       string
 		name       string
 		categories []domain.Category
+		active     bool
 	}
 )
 
@@ -33,63 +35,71 @@ func (f *fakeCategory) Categories() []domain.Category {
 	return f.categories
 }
 
+// Active indicator
+func (f *fakeCategory) Active() bool {
+	return f.active
+}
+
 // Get returns a category struct
 func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (domain.Category, error) {
 	return &fakeCategory{
-		name: "Test",
-		code: categoryCode,
+		name:   "Test",
+		code:   categoryCode,
+		active: true,
 		categories: []domain.Category{
 			&fakeCategory{
-				name: "Test2",
-				code: "test2",
+				name: "Sub 1",
+				code: "sub1",
 				categories: []domain.Category{
 					&fakeCategory{
-						name: "Test2",
-						code: "test2",
+						name: "Sub 1 / 1",
+						code: "sub11",
 					},
 					&fakeCategory{
-						name: "Test3",
-						code: "test3",
+						name: "Sub 1 / 2",
+						code: "sub12",
 					},
 					&fakeCategory{
-						name: "Test4",
-						code: "test4",
+						name: "Sub 1 / 3",
+						code: "sub13",
 					},
 				},
 			},
 			&fakeCategory{
-				name: "Test3",
-				code: "test3",
+				name:   "Sub 2",
+				code:   "sub2",
+				active: true,
 				categories: []domain.Category{
 					&fakeCategory{
-						name: "Test2",
-						code: "test2",
+						name:   "Sub 2 / 1",
+						code:   "sub21",
+						active: true,
 					},
 					&fakeCategory{
-						name: "Test3",
-						code: "test3",
+						name: "Sub 2 / 2",
+						code: "sub22",
 					},
 					&fakeCategory{
-						name: "Test4",
-						code: "test4",
+						name: "Sub 2 / 3",
+						code: "sub23",
 					},
 				},
 			},
 			&fakeCategory{
-				name: "Test4",
-				code: "test4",
+				name: "Sub 3",
+				code: "sub3",
 				categories: []domain.Category{
 					&fakeCategory{
-						name: "Test2",
-						code: "test2",
+						name: "Sub 3 / 1",
+						code: "sub31",
 					},
 					&fakeCategory{
-						name: "Test3",
-						code: "test3",
+						name: "Sub 3 / 2",
+						code: "sub32",
 					},
 					&fakeCategory{
-						name: "Test4",
-						code: "test4",
+						name: "Sub 3 / 3",
+						code: "sub33",
 					},
 				},
 			},
@@ -98,11 +108,11 @@ func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (do
 }
 
 func (cs *FakeCategoryService) GetProducts(ctx context.Context, categoryCode string) ([]productdomain.BasicProduct, error) {
-	return []productdomain.BasicProduct{
-		product.FakeSimple("product-1"),
-		product.FakeSimple("product-2"),
-		product.FakeSimple("product-3"),
-		product.FakeSimple("product-4"),
-		product.FakeSimple("product-5"),
-	}, nil
+	products := make([]productdomain.BasicProduct, 30)
+
+	for i := 1; i <= 30; i++ {
+		products[i] = product.FakeSimple("product-" + strconv.Itoa(i))
+	}
+
+	return products, nil
 }

@@ -25,13 +25,15 @@ type (
 	}
 
 	searchCategory struct {
-		Locale  string        `json:"locale"`
-		Channel string        `json:"channel"`
-		Path    string        `json:"path"`
-		CCode   string        `json:"code"`
-		Media   []interface{} `json:"media"`
-		Label   string        `json:"label"`
-		Content string        `json:"content"`
+		Locale      string            `json:"locale"`
+		Channel     string            `json:"channel"`
+		Path        string            `json:"path"`
+		CCode       string            `json:"code"`
+		Media       []interface{}     `json:"media"`
+		CName       string            `json:"name"`
+		Content     string            `json:"content"`
+		CCategories []*searchCategory `json:"categories"`
+		active      bool
 	}
 )
 
@@ -47,24 +49,30 @@ func (sc *searchCategory) Code() string {
 
 // Name getter
 func (sc *searchCategory) Name() string {
-	return sc.CCode
+	return sc.CName
 }
 
 // Categories getter
 func (sc *searchCategory) Categories() []domain.Category {
-	return nil
+	categories := make([]domain.Category, len(sc.CCategories))
+	for i, c := range sc.CCategories {
+		categories[i] = c
+	}
+	return categories
+}
+
+// Active indicator
+func (sc *searchCategory) Active() bool {
+	return sc.active
 }
 
 // Get a category request
 func (cc *Client) Get(ctx context.Context, category string, query url.Values) (*http.Response, error) {
-	return cc.SearchperienceClient.Request(ctx, "category/"+category, query)
+	return cc.SearchperienceClient.Request(ctx, "categories/tree", query)
 }
 
 // Get a category object
 func (cs *Service) Get(ctx context.Context, categoryCode string) (domain.Category, error) {
-	// todo: fix this!
-	cs.Channel = "onlineStore"
-
 	query := url.Values{
 		"locale":  {cs.Locale},
 		"channel": {cs.Channel},
@@ -86,5 +94,21 @@ func (cs *Service) Get(ctx context.Context, categoryCode string) (domain.Categor
 		return nil, errors.WithStack(err)
 	}
 
+	markActive(res, categoryCode)
+
 	return res, nil
+}
+
+func markActive(sc *searchCategory, categoryCode string) (marked bool) {
+	for _, sub := range sc.CCategories {
+		if markActive(sub, categoryCode) {
+			sc.active = true
+			return true
+		}
+	}
+	if sc.CCode == categoryCode {
+		sc.active = true
+		return true
+	}
+	return
 }

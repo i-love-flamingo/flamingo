@@ -242,6 +242,10 @@ var funcmap = FuncMap{
 		}
 		return Number(n)
 	},
+
+	"__freeze": func(name string) Nil {
+		return Nil{}
+	},
 }
 
 func runtimeAdd(l, r interface{}) Object {

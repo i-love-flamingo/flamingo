@@ -65,6 +65,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.loadmock("../src/mock")
 }
 
+// DefaultConfig for setting pug-related config options
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"pug_template.basedir": "frontend/dist",

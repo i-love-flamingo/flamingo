@@ -143,6 +143,7 @@ func addDtoProductDataToBaseData(productDto *Product, basicData *domain.BasicPro
 	basicData.UpdatedAt = productDto.UpdatedAt
 	basicData.CategoryCodes = productDto.CategoryCodes
 	basicData.CategoryPath = productDto.CategoryPath
+	basicData.CategoryToCodeMapping = productDto.CategoryToCodeMapping
 	basicData.MarketPlaceCode = productDto.MarketPlaceCode
 }
 

@@ -23,6 +23,7 @@ type (
 		Sorting                    map[string]float64   `json:"sorting"`
 		CategoryPath               []string             `json:"categoryPaths"`
 		CategoryCodes              []string             `json:"categoryCodes"`
+		CategoryToCodeMapping      []string             `json:"categoryToCodeMapping"`
 		Keywords                   []string             `json:"keywords,omitempty"`
 		BoostKeywords              []string             `json:"boostKeywords,omitempty"`
 		ConfigurableProduct        *ConfigurableProduct `json:"configurableProduct,omitempty"`

@@ -67,7 +67,7 @@ func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer) error {
 %s
 {{- end -}}`, blockname, subblock.String())
 		p.mixinblocks = append(p.mixinblocks, mixinblock)
-		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes, blockname)
+		fmt.Fprintf(wr, `{{ __freeze "%s" }}{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, blockname, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes, blockname)
 	} else {
 		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes)
 	}

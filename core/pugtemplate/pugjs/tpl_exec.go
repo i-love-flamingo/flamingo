@@ -27,11 +27,12 @@ const maxExecDepth = 100000
 // template so that multiple executions of the same template
 // can execute in parallel.
 type state struct {
-	tmpl  *Template
-	wr    io.Writer
-	node  parse.Node // current node, for errors
-	vars  []variable // push-down stack of variable values.
-	depth int        // the height of the stack of executing templates.
+	tmpl    *Template
+	wr      io.Writer
+	node    parse.Node // current node, for errors
+	vars    []variable // push-down stack of variable values.
+	depth   int        // the height of the stack of executing templates.
+	globals []variable
 }
 
 // variable holds the dynamic value of a variable such as $, $x etc.
@@ -219,8 +220,8 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 	switch value.Kind() {
 	case reflect.Struct:
 		for i := 0; i < value.Type().NumField(); i++ {
-			state.vars = append(
-				state.vars,
+			state.globals = append(
+				state.globals,
 				variable{`$` + value.Type().Field(i).Name, value.Field(i)},
 				variable{`$` + lowerFirst(value.Type().Field(i).Name), value.Field(i)},
 			)
@@ -230,13 +231,18 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 			if k.Kind() == reflect.Interface {
 				k = k.Elem()
 			}
-			state.vars = append(
-				state.vars,
+			state.globals = append(
+				state.globals,
 				variable{`$` + k.String(), value.MapIndex(k)},
 				variable{`$` + lowerFirst(k.String()), value.MapIndex(k)},
 			)
 		}
 	}
+
+	for _, v := range state.globals {
+		state.vars = append(state.vars, v)
+	}
+
 	//log.Printf("%v, %v, %T", state.vars, data, data)
 	state.walk(value, t.Root)
 	return
@@ -440,6 +446,8 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	}
 }
 
+var statemap = make(map[string]*state)
+
 func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	s.at(t)
 	name := t.Name
@@ -455,11 +463,18 @@ func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	}
 	// Variables declared by the pipeline persist.
 	dot = s.evalPipeline(dot, t.Pipe)
+
 	newState := *s
+	if os, ok := statemap[name]; ok {
+		newState = *os
+	} else {
+		newState.vars = make([]variable, len(s.globals))
+		copy(newState.vars, s.globals)
+	}
 	newState.depth++
 	newState.tmpl = tmpl
 	// No dynamic scoping: template invocations inherit no variables.
-	newState.vars = s.vars
+
 	newState.walk(dot, tmpl.Root)
 }
 
@@ -775,6 +790,11 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 		}
 		argv[i] = s.validateType(final, t)
 	}
+
+	if name == "__freeze" {
+		statemap[argv[0].String()] = s
+	}
+
 	result := fun.Call(argv)
 	// If we have an error that is not nil, stop execution and return that error to the caller.
 	if len(result) == 2 && !result[1].IsNil() {

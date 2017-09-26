@@ -6,6 +6,9 @@ import (
 
 	"math/rand"
 
+	"fmt"
+	"strconv"
+
 	"github.com/pkg/errors"
 )
 
@@ -97,6 +100,9 @@ func addBasicData(product *domain.BasicProductData) {
 }
 
 func getPrice(defaultP float64, discounted float64) domain.PriceInfo {
+	defaultP, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", defaultP), 64)
+	discounted, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", discounted), 64)
+
 	var price domain.PriceInfo
 	price.Currency = "EUR"
 	price.Default = defaultP

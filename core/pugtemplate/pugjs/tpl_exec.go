@@ -27,11 +27,12 @@ const maxExecDepth = 100000
 // template so that multiple executions of the same template
 // can execute in parallel.
 type state struct {
-	tmpl  *Template
-	wr    io.Writer
-	node  parse.Node // current node, for errors
-	vars  []variable // push-down stack of variable values.
-	depth int        // the height of the stack of executing templates.
+	tmpl    *Template
+	wr      io.Writer
+	node    parse.Node // current node, for errors
+	vars    []variable // push-down stack of variable values.
+	depth   int        // the height of the stack of executing templates.
+	globals []variable
 }
 
 // variable holds the dynamic value of a variable such as $, $x etc.
@@ -219,8 +220,8 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 	switch value.Kind() {
 	case reflect.Struct:
 		for i := 0; i < value.Type().NumField(); i++ {
-			state.vars = append(
-				state.vars,
+			state.globals = append(
+				state.globals,
 				variable{`$` + value.Type().Field(i).Name, value.Field(i)},
 				variable{`$` + lowerFirst(value.Type().Field(i).Name), value.Field(i)},
 			)
@@ -230,13 +231,18 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 			if k.Kind() == reflect.Interface {
 				k = k.Elem()
 			}
-			state.vars = append(
-				state.vars,
+			state.globals = append(
+				state.globals,
 				variable{`$` + k.String(), value.MapIndex(k)},
 				variable{`$` + lowerFirst(k.String()), value.MapIndex(k)},
 			)
 		}
 	}
+
+	for _, v := range state.globals {
+		state.vars = append(state.vars, v)
+	}
+
 	//log.Printf("%v, %v, %T", state.vars, data, data)
 	state.walk(value, t.Root)
 	return
@@ -459,7 +465,10 @@ func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	newState.depth++
 	newState.tmpl = tmpl
 	// No dynamic scoping: template invocations inherit no variables.
-	newState.vars = s.vars
+
+	newState.vars = make([]variable, len(s.globals))
+	copy(newState.vars, s.globals)
+
 	newState.walk(dot, tmpl.Root)
 }
 

@@ -24,6 +24,7 @@ type (
 		Type() ObjectType
 		Field(name string) Object
 		String() string
+		copy() Object
 	}
 
 	// Truther for true check
@@ -177,6 +178,10 @@ func (f *Func) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + f.String() + `"`), nil
 }
 
+func (f *Func) copy() Object {
+	return &(*f)
+}
+
 // Array type
 type Array struct {
 	items []Object
@@ -255,6 +260,18 @@ func (a *Array) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.items)
 }
 
+func (a *Array) copy() Object {
+	c := &Array{
+		items: make([]Object, len(a.items)),
+	}
+
+	for i, o := range a.items {
+		c.items[i] = o.copy()
+	}
+
+	return c
+}
+
 // Map type
 type Map struct {
 	Items map[Object]Object
@@ -317,6 +334,19 @@ func (m *Map) True() bool {
 	return len(m.Items) > 0
 }
 
+func (m *Map) copy() Object {
+	c := &Map{
+		Items: make(map[Object]Object, len(m.Items)),
+		o:     m.o,
+	}
+
+	for k, v := range m.Items {
+		c.Items[k.copy()] = v.copy()
+	}
+
+	return c
+}
+
 // String type
 type String string
 
@@ -364,6 +394,10 @@ func (s String) Replace(what, with String) String {
 	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
 
+func (s String) copy() Object {
+	return s
+}
+
 // Number type
 type Number float64
 
@@ -375,6 +409,10 @@ func (n Number) Field(string) Object { return Nil{} }
 
 // String formatter
 func (n Number) String() string { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
+
+func (n Number) copy() Object {
+	return n
+}
 
 // Bool type
 type Bool bool
@@ -391,6 +429,10 @@ func (b Bool) String() string { return fmt.Sprintf("%v", bool(b)) }
 // True getter
 func (b Bool) True() bool { return bool(b) }
 
+func (b Bool) copy() Object {
+	return b
+}
+
 // Nil type
 type Nil struct{}
 
@@ -405,3 +447,7 @@ func (n Nil) String() string { return "" }
 
 // True is always false
 func (n Nil) True() bool { return false }
+
+func (n Nil) copy() Object {
+	return Nil{}
+}

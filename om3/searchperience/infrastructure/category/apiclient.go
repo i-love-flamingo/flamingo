@@ -96,6 +96,12 @@ func (cs *Service) Get(ctx context.Context, categoryCode string) (domain.Categor
 
 	markActive(res, categoryCode)
 
+	for _, sub := range res.CCategories {
+		if sub.active {
+			return sub, nil
+		}
+	}
+
 	return res, nil
 }
 

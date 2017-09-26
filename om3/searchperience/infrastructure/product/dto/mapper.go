@@ -31,7 +31,7 @@ func Map(ctx context.Context, productDto *Product) (domain.BasicProduct, error) 
 func mapConfigurableProduct(ctx context.Context, productDto *Product) (domain.ConfigurableProduct, error) {
 	configurableProduct := domain.ConfigurableProduct{}
 
-	configurableProduct.BasicProductData = dtoConfigurableToBaseData(&productDto.ConfigurableProduct)
+	configurableProduct.BasicProductData = dtoConfigurableToBaseData(productDto.ConfigurableProduct)
 	addDtoProductDataToBaseData(productDto, &configurableProduct.BasicProductData)
 	configurableProduct.VariantVariationAttributes = productDto.VariantVariationAttributes
 
@@ -136,7 +136,7 @@ func addDtoProductDataToBaseData(productDto *Product, basicData *domain.BasicPro
 
 	basicData.Keywords = productDto.Keywords
 
-	basicData.Keywords = append(basicData.Keywords, productDto.KeywordsImportant...)
+	basicData.Keywords = append(basicData.Keywords, productDto.BoostKeywords...)
 
 	basicData.VisibleFrom = productDto.VisibleFrom
 	basicData.VisibleTo = productDto.VisibleTo
@@ -154,8 +154,12 @@ func dtoVariantToSaleData(variant1 *Variant) domain.Saleable {
 	//saleData.ActivePrice.Currency = variant1.Currency
 
 	saleData.IsSaleable = variant1.IsSaleable
-	saleData.SaleableFrom = variant1.SaleableFrom
-	saleData.SaleableTo = variant1.SaleableTo
+	if variant1.SaleableFrom != nil {
+		saleData.SaleableFrom = *variant1.SaleableFrom
+	}
+	if variant1.SaleableTo != nil {
+		saleData.SaleableTo = *variant1.SaleableTo
+	}
 
 	if p, ok := variant1.Attributes["price"]; ok {
 		price, _ := strconv.ParseFloat(p.(string), 64)
@@ -173,11 +177,9 @@ func dtoTeaserToTeaser(productDto *Product) domain.TeaserData {
 	teaserData := domain.TeaserData{}
 
 	teaserData.ShortDescription = productDto.TeaserData.ShortDescription
-	teaserData.Teaser = productDto.TeaserData.Teaser
 	for _, media := range productDto.TeaserData.Media {
 		teaserData.Media = append(teaserData.Media, domain.Media(media))
 	}
-	teaserData.Title = productDto.TeaserData.Title
 	teaserData.ShortTitle = productDto.TeaserData.ShortTitle
 	return teaserData
 }

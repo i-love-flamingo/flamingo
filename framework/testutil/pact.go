@@ -23,7 +23,7 @@ import (
 var ErrNoPact = errors.New("no pact setup")
 
 // WithPact runs a test with a pact
-func WithPact(t *testing.T, target string, f func(*dsl.Pact)) {
+func WithPact(t *testing.T, target string, fs ...func(*testing.T, *dsl.Pact)) {
 	pact, err := pactSetup("flamingo", target)
 
 	if err != nil {
@@ -31,7 +31,10 @@ func WithPact(t *testing.T, target string, f func(*dsl.Pact)) {
 		return
 	}
 
-	t.Run("Pact", func(t *testing.T) { f(pact) })
+	for i, f := range fs {
+		t.Run("Pact-"+strconv.Itoa(i), func(t *testing.T) { f(t, pact) })
+	}
+
 	if err := pactTeardown(pact); err != nil {
 		t.Error(err)
 	}

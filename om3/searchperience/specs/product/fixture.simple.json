@@ -60,7 +60,7 @@
       },
       {
         "type": "youtube",
-        "mimeType": null,
+        "mimeType": "",
         "usage": "detail",
         "title": "Variant media title",
         "reference": "https://youtu.be/w7yVXG4t6Ng"
@@ -125,7 +125,7 @@
         },
         {
           "type": "youtube",
-          "mimeType": null,
+          "mimeType": "",
           "usage": "detail",
           "title": "Variant media title",
           "reference": "https://youtu.be/w7yVXG4t6Ng"

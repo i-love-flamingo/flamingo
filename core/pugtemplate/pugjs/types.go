@@ -216,6 +216,9 @@ func (a *Array) Field(name string) Object {
 
 	case "splice":
 		return &Func{fnc: reflect.ValueOf(a.Splice)}
+
+	case "slice":
+		return &Func{fnc: reflect.ValueOf(a.Slice)}
 	}
 
 	panic("field not found")
@@ -228,6 +231,13 @@ func (a *Array) Splice(n Number) Object {
 	}
 	a.items = a.items[:int(n)]
 	return right
+}
+
+// Slice an array
+func (a *Array) Slice(n Number) Object {
+	return &Array{
+		items: a.items[int(n):],
+	}
 }
 
 // Length getter

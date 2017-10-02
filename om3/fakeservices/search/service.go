@@ -7,6 +7,7 @@ import (
 	productdomain "flamingo/core/product/domain"
 	"flamingo/core/search/domain"
 	"flamingo/om3/fakeservices/product"
+	"strconv"
 )
 
 type (
@@ -19,11 +20,13 @@ var (
 )
 
 func (searchservice *FakeSearchService) GetProducts(ctx context.Context, searchMeta domain.SearchMeta, filter ...domain.Filter) (domain.SearchMeta, []productdomain.BasicProduct, []domain.Filter, error) {
-	ps := new(product.FakeProductService)
-	p, _ := ps.Get(ctx, "fake_simple")
-	searchMeta.NumResults = 5
+	searchMeta.NumResults = 30
 	searchMeta.NumPages = 20
-	return searchMeta, []productdomain.BasicProduct{p, p, p, p, p}, filter, nil
+	products := make([]productdomain.BasicProduct, 30)
+	for i := 0; i < 30; i++ {
+		products[i] = product.FakeSimple("product-" + strconv.Itoa(i))
+	}
+	return searchMeta, products, filter, nil
 }
 
 //func (searchservice *FakeSearchService) Search(ctx web.Context, query url.Values) (*domain.SearchResult, error) {

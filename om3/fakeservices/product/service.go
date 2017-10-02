@@ -3,13 +3,20 @@ package product
 import (
 	"context"
 	"flamingo/core/product/domain"
-
-	"math/rand"
-
 	"fmt"
+	"math/rand"
 	"strconv"
 
 	"github.com/pkg/errors"
+)
+
+var (
+	brands = []string{
+		"Apple",
+		"Bose",
+		"Dior",
+		"Hugo Boss",
+	}
 )
 
 // FakeProductService is just mocking stuff
@@ -90,10 +97,10 @@ func fakeVariant(marketplaceCode string) domain.Variant {
 func addBasicData(product *domain.BasicProductData) {
 	product.ShortDescription = "Short Description"
 	product.Description = "Description"
-	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg", Usage: "detail"})
-	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg", Usage: "list"})
+	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg?" + strconv.Itoa(rand.Intn(10)), Usage: "detail"})
+	product.Media = append(product.Media, domain.Media{Type: "image-api", Reference: "http://pipsum.com/1024x768.jpg?" + strconv.Itoa(rand.Intn(10)), Usage: "list"})
 	product.Attributes = make(map[string]interface{})
-	product.Attributes["brandCode"] = "Apple"
+	product.Attributes["brandCode"] = brands[rand.Intn(len(brands))]
 	product.RetailerCode = "Testretailer"
 	product.RetailerSku = "12345sku"
 	product.CategoryPath = []string{"Testproducts", "Testproducts/Fake/Configurable"}

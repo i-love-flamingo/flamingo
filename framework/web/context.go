@@ -243,7 +243,7 @@ func (c *ctx) FormAll() map[string][]string {
 // Param1 get first querystring param
 func (c *ctx) Param1(n string) (string, error) {
 	if r, ok := c.vars[n]; ok {
-		return r, nil
+		return url.QueryUnescape(r)
 	}
 	return "", errors.New("param " + n + " not found")
 }

@@ -42,10 +42,9 @@ func (f *fakeCategory) Active() bool {
 
 // Get returns a category struct
 func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (domain.Category, error) {
-	return &fakeCategory{
-		name:   "Test",
-		code:   categoryCode,
-		active: true,
+	r := &fakeCategory{
+		name: "Test",
+		code: "test",
 		categories: []domain.Category{
 			&fakeCategory{
 				name: "Sub 1",
@@ -66,14 +65,12 @@ func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (do
 				},
 			},
 			&fakeCategory{
-				name:   "Sub 2",
-				code:   "sub2",
-				active: true,
+				name: "Sub 2",
+				code: "sub2",
 				categories: []domain.Category{
 					&fakeCategory{
-						name:   "Sub 2 / 1",
-						code:   "sub21",
-						active: true,
+						name: "Sub 2 / 1",
+						code: "sub21",
 					},
 					&fakeCategory{
 						name: "Sub 2 / 2",
@@ -104,7 +101,23 @@ func (cs *FakeCategoryService) Get(ctx context.Context, categoryCode string) (do
 				},
 			},
 		},
-	}, nil
+	}
+	markActive(r, categoryCode)
+	return r, nil
+}
+
+func markActive(sc *fakeCategory, categoryCode string) (marked bool) {
+	for _, sub := range sc.categories {
+		if markActive(sub.(*fakeCategory), categoryCode) {
+			sc.active = true
+			return true
+		}
+	}
+	if sc.code == categoryCode {
+		sc.active = true
+		return true
+	}
+	return
 }
 
 func (cs *FakeCategoryService) GetProducts(ctx context.Context, categoryCode string) ([]productdomain.BasicProduct, error) {

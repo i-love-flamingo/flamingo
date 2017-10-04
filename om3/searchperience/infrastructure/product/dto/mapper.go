@@ -9,7 +9,7 @@ import (
 
 // Map a product response from searchperience
 func Map(ctx context.Context, productDto *Product) (domain.BasicProduct, error) {
-	if productDto.ProductType == domain.TypeSimple {
+	if productDto.ProductType == domain.TYPESIMPLE {
 		basicProduct, err := mapSimpleProduct(ctx, productDto)
 		if err != nil {
 			return nil, err
@@ -17,7 +17,7 @@ func Map(ctx context.Context, productDto *Product) (domain.BasicProduct, error) 
 		return basicProduct, nil
 	}
 
-	if productDto.ProductType == domain.TypeConfigurable {
+	if productDto.ProductType == domain.TYPECONFIGURABLE {
 		basicProduct, err := mapConfigurableProduct(ctx, productDto)
 		if err != nil {
 			return nil, err
@@ -164,6 +164,7 @@ func dtoVariantToSaleData(variant1 *Variant) domain.Saleable {
 
 	if p, ok := variant1.Attributes["price"]; ok {
 		price, _ := strconv.ParseFloat(p.(string), 64)
+
 		saleData.ActivePrice = domain.PriceInfo{
 			Default:  price,
 			Currency: "£",

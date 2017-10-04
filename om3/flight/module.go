@@ -13,13 +13,15 @@ type Module struct {
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 
-	m.RouterRegistry.Handle("flight.api.autosuggest", (*controller.FlightApiController).AutosuggestAction)
-	m.RouterRegistry.Handle("flight.api.search.flightsByAirport", (*controller.FlightApiController).SearchFlightsByAirportAction)
+	m.RouterRegistry.Handle("flight.api.search.flights", (*controller.FlightApiController).SearchFlightsAction)
+	m.RouterRegistry.Handle("flight.api.search.airports", (*controller.FlightApiController).SearchAirportsAction)
+	m.RouterRegistry.Handle("flight.api.search.flightsPerAirline", (*controller.FlightApiController).SearchFlightsPerAirlineAction)
 	m.RouterRegistry.Handle("flight.api.saveFlight", (*controller.FlightApiController).SaveFlightAction)
 	m.RouterRegistry.Handle("flight.api.getSessionFlight", (*controller.FlightApiController).GetSessionFlightAction)
 
-	m.RouterRegistry.Route("/api/flight/autosuggest", "flight.api.autosuggest")
-	m.RouterRegistry.Route("/api/flight/searchByAirport", "flight.api.search.flightsByAirport")
+	m.RouterRegistry.Route("/api/flight/search/flights", "flight.api.search.flights")
+	m.RouterRegistry.Route("/api/flight/search/airports", "flight.api.search.airports")
+	m.RouterRegistry.Route("/api/flight/search/flightsPerAirline", "flight.api.search.flightsPerAirline")
 	m.RouterRegistry.Route("/api/flight/saveFlight", "flight.api.saveFlight")
 	m.RouterRegistry.Route("/api/flight/getSessionFlight", "flight.api.getSessionFlight")
 }

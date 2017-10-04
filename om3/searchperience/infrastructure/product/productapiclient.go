@@ -2,9 +2,10 @@ package product
 
 import (
 	"context"
-	"flamingo/om3/searchperience/infrastructure"
 	"net/http"
 	"net/url"
+
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure"
 )
 
 type (

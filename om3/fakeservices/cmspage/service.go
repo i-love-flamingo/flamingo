@@ -5,8 +5,9 @@ package cmspage
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/cms/domain"
 	"fmt"
+
+	"go.aoe.com/flamingo/core/cms/domain"
 )
 
 // FakePageService for CMS Pages

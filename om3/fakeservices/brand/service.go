@@ -5,8 +5,9 @@ package brand
 import (
 	"context"
 	"encoding/json"
-	"flamingo/om3/brand/domain"
 	"fmt"
+
+	"go.aoe.com/flamingo/om3/brand/domain"
 )
 
 // FakeBrandService is just mocking stuff

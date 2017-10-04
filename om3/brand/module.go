@@ -1,9 +1,9 @@
 package brand
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
-	"flamingo/om3/brand/interfaces/controller"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/om3/brand/interfaces/controller"
 )
 
 // Module for om3/brand package

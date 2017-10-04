@@ -1,8 +1,9 @@
 package templatefunctions
 
 import (
-	"flamingo/framework/template"
 	"testing"
+
+	"go.aoe.com/flamingo/framework/template"
 
 	"github.com/stretchr/testify/assert"
 )

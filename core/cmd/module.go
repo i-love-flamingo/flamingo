@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"flamingo/core/cmd/interfaces/command"
-	"flamingo/framework/config"
-	"flamingo/framework/dingo"
+	"go.aoe.com/flamingo/core/cmd/interfaces/command"
+	"go.aoe.com/flamingo/framework/config"
+	"go.aoe.com/flamingo/framework/dingo"
 
 	"github.com/spf13/cobra"
 )

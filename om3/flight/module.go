@@ -1,9 +1,9 @@
 package flight
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
-	"flamingo/om3/flight/interfaces/controller"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/om3/flight/interfaces/controller"
 )
 
 type Module struct {

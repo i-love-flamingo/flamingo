@@ -2,10 +2,11 @@ package category
 
 import (
 	"context"
-	"flamingo/core/category/domain"
-	productdomain "flamingo/core/product/domain"
-	"flamingo/om3/fakeservices/product"
 	"strconv"
+
+	"go.aoe.com/flamingo/core/category/domain"
+	productdomain "go.aoe.com/flamingo/core/product/domain"
+	"go.aoe.com/flamingo/om3/fakeservices/product"
 )
 
 type (

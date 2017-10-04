@@ -2,10 +2,11 @@ package controller
 
 import (
 	"context"
-	"flamingo/core/cms/domain"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"testing"
+
+	"go.aoe.com/flamingo/core/cms/domain"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/stretchr/testify/assert"
 )

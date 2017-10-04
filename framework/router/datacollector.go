@@ -1,9 +1,10 @@
 package router
 
 import (
-	"flamingo/framework/web"
 	"fmt"
 	"strings"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

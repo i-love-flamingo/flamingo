@@ -3,10 +3,11 @@ package category
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/category/domain"
-	"flamingo/om3/searchperience/infrastructure"
 	"net/http"
 	"net/url"
+
+	"go.aoe.com/flamingo/core/category/domain"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure"
 
 	"github.com/pkg/errors"
 )

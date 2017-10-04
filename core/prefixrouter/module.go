@@ -1,14 +1,15 @@
 package prefixrouter
 
 import (
-	"flamingo/framework/config"
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"go.aoe.com/flamingo/framework/config"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
 
 	"github.com/spf13/cobra"
 )

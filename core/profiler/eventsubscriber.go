@@ -2,11 +2,12 @@ package profiler
 
 import (
 	"bytes"
-	"flamingo/framework/event"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"io/ioutil"
 	"time"
+
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 // eventSubscriber for the profiler

@@ -3,8 +3,9 @@ package dto
 import (
 	"context"
 	"errors"
-	"flamingo/core/product/domain"
 	"strconv"
+
+	"go.aoe.com/flamingo/core/product/domain"
 )
 
 // Map a product response from searchperience

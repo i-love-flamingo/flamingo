@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"flamingo/framework/web"
-	"flamingo/framework/web/responder"
-	"flamingo/om3/brand/domain"
+	"go.aoe.com/flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web/responder"
+	"go.aoe.com/flamingo/om3/brand/domain"
 
 	"github.com/pkg/errors"
 )

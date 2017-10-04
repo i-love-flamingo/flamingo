@@ -2,11 +2,12 @@ package profiler
 
 import (
 	"bytes"
-	"flamingo/framework/web"
 	"html/template"
 	"net/http"
 	"strconv"
 	"time"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

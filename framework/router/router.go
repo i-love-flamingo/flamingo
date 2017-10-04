@@ -2,17 +2,18 @@ package router
 
 import (
 	"context"
-	"flamingo/framework/config"
-	"flamingo/framework/dingo"
-	"flamingo/framework/event"
-	"flamingo/framework/profiler"
-	"flamingo/framework/web"
 	"log"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"go.aoe.com/flamingo/framework/config"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/profiler"
+	"go.aoe.com/flamingo/framework/web"
 
 	"fmt"
 

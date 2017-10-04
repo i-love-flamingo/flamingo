@@ -1,6 +1,6 @@
 package dto
 
-import "flamingo/om3/searchperience/infrastructure/product/dto"
+import "go.aoe.com/flamingo/om3/searchperience/infrastructure/product/dto"
 
 type (
 	// Result defines our search model

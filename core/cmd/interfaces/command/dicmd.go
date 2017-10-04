@@ -1,8 +1,9 @@
 package command
 
 import (
-	"flamingo/framework/config"
 	"fmt"
+
+	"go.aoe.com/flamingo/framework/config"
 
 	"github.com/spf13/cobra"
 )

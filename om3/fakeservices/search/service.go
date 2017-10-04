@@ -4,10 +4,11 @@ package search
 
 import (
 	"context"
-	productdomain "flamingo/core/product/domain"
-	"flamingo/core/search/domain"
-	"flamingo/om3/fakeservices/product"
 	"strconv"
+
+	productdomain "go.aoe.com/flamingo/core/product/domain"
+	"go.aoe.com/flamingo/core/search/domain"
+	"go.aoe.com/flamingo/om3/fakeservices/product"
 )
 
 type (

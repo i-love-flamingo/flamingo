@@ -1,13 +1,13 @@
 package searchperience
 
 import (
-	categorydomain "flamingo/core/category/domain"
-	productdomain "flamingo/core/product/domain"
-	searchdomain "flamingo/core/search/domain"
-	"flamingo/framework/dingo"
-	categoryadapter "flamingo/om3/searchperience/infrastructure/category"
-	productadapter "flamingo/om3/searchperience/infrastructure/product"
-	searchadapter "flamingo/om3/searchperience/infrastructure/search"
+	categorydomain "go.aoe.com/flamingo/core/category/domain"
+	productdomain "go.aoe.com/flamingo/core/product/domain"
+	searchdomain "go.aoe.com/flamingo/core/search/domain"
+	"go.aoe.com/flamingo/framework/dingo"
+	categoryadapter "go.aoe.com/flamingo/om3/searchperience/infrastructure/category"
+	productadapter "go.aoe.com/flamingo/om3/searchperience/infrastructure/product"
+	searchadapter "go.aoe.com/flamingo/om3/searchperience/infrastructure/search"
 )
 
 // ensure types for the Ports and Adapters

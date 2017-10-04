@@ -5,7 +5,8 @@ package cmsblock
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/cms/domain"
+
+	"go.aoe.com/flamingo/core/cms/domain"
 )
 
 // FakeBlockService for CMS Blocks

@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flamingo/framework/event"
-	"flamingo/framework/profiler"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/profiler"
 
 	"github.com/gorilla/sessions"
 	"github.com/satori/go.uuid"

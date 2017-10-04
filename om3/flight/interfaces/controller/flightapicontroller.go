@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"flamingo/framework/web"
-	"flamingo/framework/web/responder"
 	"strings"
+
+	"go.aoe.com/flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web/responder"
 )
 
 type (

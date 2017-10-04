@@ -1,8 +1,8 @@
 package requestlogger
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/event"
 )
 
 // Module for core/requestlogger

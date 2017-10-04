@@ -1,8 +1,9 @@
 package template
 
 import (
-	"flamingo/framework/web"
 	"io"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

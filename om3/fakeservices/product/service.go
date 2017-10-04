@@ -2,10 +2,11 @@ package product
 
 import (
 	"context"
-	"flamingo/core/product/domain"
 	"fmt"
 	"math/rand"
 	"strconv"
+
+	"go.aoe.com/flamingo/core/product/domain"
 
 	"github.com/pkg/errors"
 )

@@ -2,11 +2,12 @@ package stats
 
 import (
 	"expvar"
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"runtime"
 	"runtime/debug"
+
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 func init() {

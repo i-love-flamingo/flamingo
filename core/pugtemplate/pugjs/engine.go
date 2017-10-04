@@ -3,8 +3,6 @@ package pugjs
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/framework/template"
-	"flamingo/framework/web"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"go.aoe.com/flamingo/framework/template"
+	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/pkg/errors"
 )

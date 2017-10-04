@@ -2,18 +2,19 @@ package pugtemplate
 
 import (
 	"encoding/json"
-	"flamingo/core/pugtemplate/pugjs"
-	"flamingo/core/pugtemplate/templatefunctions"
-	"flamingo/framework/config"
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
-	"flamingo/framework/template"
-	"flamingo/framework/web"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"go.aoe.com/flamingo/core/pugtemplate/templatefunctions"
+	"go.aoe.com/flamingo/framework/config"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/template"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

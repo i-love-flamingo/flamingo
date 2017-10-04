@@ -3,15 +3,15 @@ package search
 import (
 	"context"
 	"encoding/json"
-	categorydomain "flamingo/core/category/domain"
-	productdomain "flamingo/core/product/domain"
-	"flamingo/core/search/domain"
-	productdto "flamingo/om3/searchperience/infrastructure/product/dto"
-	"flamingo/om3/searchperience/infrastructure/search/dto"
 	"net/http"
 	"net/url"
 
 	"github.com/pkg/errors"
+	categorydomain "go.aoe.com/flamingo/core/category/domain"
+	productdomain "go.aoe.com/flamingo/core/product/domain"
+	"go.aoe.com/flamingo/core/search/domain"
+	productdto "go.aoe.com/flamingo/om3/searchperience/infrastructure/product/dto"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure/search/dto"
 )
 
 type (

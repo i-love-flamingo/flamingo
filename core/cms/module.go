@@ -1,9 +1,9 @@
 package cms
 
 import (
-	"flamingo/core/cms/interfaces/controller"
-	"flamingo/framework/dingo"
-	"flamingo/framework/router"
+	"go.aoe.com/flamingo/core/cms/interfaces/controller"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/router"
 )
 
 type (

@@ -16,7 +16,7 @@ test flamingo:
   stage: test
   image: thebod/goenv:0.0.1
   script:
-  - export GODIR="${GOPATH}/src/flamingo"
+  - export GODIR="${GOPATH}/src/go.aoe.com/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - /pact/pact-go_linux_amd64 daemon &
   - cd "${GODIR}"
@@ -53,7 +53,7 @@ build akl:
   stage: build
   image: thebod/goenv:0.0.1
   script:
-  - export GODIR="${GOPATH}/src/flamingo"
+  - export GODIR="${GOPATH}/src/go.aoe.com/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/akl"
   - dep ensure -vendor-only
@@ -70,7 +70,7 @@ build lhr:
   stage: build
   image: thebod/goenv:0.0.1
   script:
-  - export GODIR="${GOPATH}/src/flamingo"
+  - export GODIR="${GOPATH}/src/go.aoe.com/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - cd "${GODIR}/lhr"
   - dep ensure -vendor-only

@@ -1,9 +1,9 @@
 package templatefunctions
 
 import (
-	"flamingo/core/pugtemplate/pugjs"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

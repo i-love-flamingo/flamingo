@@ -7,9 +7,9 @@ import (
 	"sort"
 	"strings"
 
-	"flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/router"
 
-	"flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/spf13/cobra"
 )

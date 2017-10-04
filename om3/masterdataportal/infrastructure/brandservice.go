@@ -3,9 +3,10 @@ package infrastructure
 import (
 	"context"
 	"encoding/json"
-	"flamingo/framework/web"
-	"flamingo/om3/brand/domain"
 	"net/http"
+
+	"go.aoe.com/flamingo/framework/web"
+	"go.aoe.com/flamingo/om3/brand/domain"
 
 	"github.com/pkg/errors"
 )

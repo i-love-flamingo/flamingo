@@ -3,13 +3,14 @@ package specs
 import (
 	"context"
 	"encoding/json"
-	"flamingo/framework/testutil"
-	"flamingo/om3/searchperience/infrastructure/product"
-	"flamingo/om3/searchperience/infrastructure/product/dto"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"testing"
+
+	"go.aoe.com/flamingo/framework/testutil"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure/product"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure/product/dto"
 
 	"github.com/pact-foundation/pact-go/dsl"
 )

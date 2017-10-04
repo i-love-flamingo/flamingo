@@ -3,10 +3,11 @@ package category
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/category/domain"
-	"flamingo/om3/searchperience/infrastructure"
 	"net/http"
 	"net/url"
+
+	"go.aoe.com/flamingo/core/category/domain"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure"
 
 	"github.com/pkg/errors"
 )
@@ -68,7 +69,7 @@ func (sc *searchCategory) Active() bool {
 
 // Get a category request
 func (cc *Client) Get(ctx context.Context, category string, query url.Values) (*http.Response, error) {
-	return cc.SearchperienceClient.Request(ctx, "categories/tree", query)
+	return cc.SearchperienceClient.Request(ctx, "category/tree", query)
 }
 
 // Get a category object

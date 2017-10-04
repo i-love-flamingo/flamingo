@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flamingo/framework/event"
-	"flamingo/framework/profiler"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/profiler"
 
 	"github.com/gorilla/sessions"
 	"github.com/satori/go.uuid"
@@ -243,7 +244,7 @@ func (c *ctx) FormAll() map[string][]string {
 // Param1 get first querystring param
 func (c *ctx) Param1(n string) (string, error) {
 	if r, ok := c.vars[n]; ok {
-		return r, nil
+		return url.QueryUnescape(r)
 	}
 	return "", errors.New("param " + n + " not found")
 }

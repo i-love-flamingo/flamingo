@@ -1,7 +1,7 @@
 package router
 
 import (
-	"flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web"
 
 	"net/http"
 

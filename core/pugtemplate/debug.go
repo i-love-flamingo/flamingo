@@ -2,12 +2,13 @@ package pugtemplate
 
 import (
 	"bytes"
-	"flamingo/core/pugtemplate/pugjs"
-	"flamingo/framework/web"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

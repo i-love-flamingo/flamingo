@@ -2,11 +2,12 @@ package application
 
 import (
 	"context"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"net/http"
 	"net/url"
 	"time"
+
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"

@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"flamingo/framework/web"
 	"net/url"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 // SearchService interface

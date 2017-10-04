@@ -22,4 +22,3 @@ Example
 package responder
 
 //go:generate mockery -name ".+Aware"
-

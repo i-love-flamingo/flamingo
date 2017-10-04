@@ -1,8 +1,9 @@
 package application
 
 import (
-	"flamingo/framework/web"
 	"fmt"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 // DataCollector for profiling

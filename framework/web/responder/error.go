@@ -1,9 +1,10 @@
 package responder
 
 import (
-	"flamingo/framework/web"
 	"fmt"
 	"net/http"
+
+	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/pkg/errors"
 )

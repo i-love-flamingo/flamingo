@@ -2,12 +2,13 @@ package requestlogger
 
 import (
 	"context"
-	"flamingo/framework/event"
-	"flamingo/framework/router"
 	"fmt"
 	"log"
 	"strings"
 	"time"
+
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/router"
 
 	"github.com/labstack/gommon/color"
 )

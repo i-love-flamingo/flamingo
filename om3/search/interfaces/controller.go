@@ -1,10 +1,10 @@
 package interfaces
 
 import (
-	"flamingo/core/search/domain"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
-	"flamingo/framework/web/responder"
+	"go.aoe.com/flamingo/core/search/domain"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web/responder"
 )
 
 type (

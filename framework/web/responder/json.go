@@ -1,8 +1,9 @@
 package responder
 
 import (
-	"flamingo/framework/web"
 	"net/http"
+
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

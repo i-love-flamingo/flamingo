@@ -2,12 +2,13 @@
 package config
 
 import (
-	"flamingo/framework/dingo"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
 	"strings"
+
+	"go.aoe.com/flamingo/framework/dingo"
 )
 
 type (

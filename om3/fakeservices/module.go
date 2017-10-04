@@ -1,20 +1,20 @@
 package fakeservices
 
 import (
-	"flamingo/om3/fakeservices/brand"
-	"flamingo/om3/fakeservices/category"
-	"flamingo/om3/fakeservices/cmsblock"
-	"flamingo/om3/fakeservices/cmspage"
-	"flamingo/om3/fakeservices/product"
-	"flamingo/om3/fakeservices/search"
+	"go.aoe.com/flamingo/om3/fakeservices/brand"
+	"go.aoe.com/flamingo/om3/fakeservices/category"
+	"go.aoe.com/flamingo/om3/fakeservices/cmsblock"
+	"go.aoe.com/flamingo/om3/fakeservices/cmspage"
+	"go.aoe.com/flamingo/om3/fakeservices/product"
+	"go.aoe.com/flamingo/om3/fakeservices/search"
 
-	categorydomain "flamingo/core/category/domain"
-	cmsdomain "flamingo/core/cms/domain"
-	productdomain "flamingo/core/product/domain"
-	searchdomain "flamingo/core/search/domain"
-	"flamingo/framework/config"
-	"flamingo/framework/dingo"
-	branddomain "flamingo/om3/brand/domain"
+	categorydomain "go.aoe.com/flamingo/core/category/domain"
+	cmsdomain "go.aoe.com/flamingo/core/cms/domain"
+	productdomain "go.aoe.com/flamingo/core/product/domain"
+	searchdomain "go.aoe.com/flamingo/core/search/domain"
+	"go.aoe.com/flamingo/framework/config"
+	"go.aoe.com/flamingo/framework/dingo"
+	branddomain "go.aoe.com/flamingo/om3/brand/domain"
 )
 
 // Module for AKL internalmock configuration

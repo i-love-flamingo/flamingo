@@ -3,11 +3,12 @@ package responder
 import (
 	"bytes"
 	"encoding/json"
-	"flamingo/core/pugtemplate/pugjs"
-	"flamingo/framework/router"
-	"flamingo/framework/template"
-	"flamingo/framework/web"
 	"net/http"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/template"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

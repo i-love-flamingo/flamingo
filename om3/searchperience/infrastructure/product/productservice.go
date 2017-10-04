@@ -3,10 +3,11 @@ package product
 import (
 	"context"
 	"encoding/json"
-	"flamingo/core/product/domain"
-	"flamingo/om3/searchperience/infrastructure/product/dto"
 	"fmt"
 	"net/http"
+
+	"go.aoe.com/flamingo/core/product/domain"
+	"go.aoe.com/flamingo/om3/searchperience/infrastructure/product/dto"
 
 	"github.com/pkg/errors"
 )

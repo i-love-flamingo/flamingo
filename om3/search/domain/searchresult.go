@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"flamingo/core/product/domain"
+	"go.aoe.com/flamingo/core/product/domain"
 )
 
 type (

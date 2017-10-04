@@ -1,9 +1,10 @@
 package templatefunctions
 
 import (
-	"flamingo/core/pugtemplate/pugjs"
 	"sort"
 	"strconv"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
 
 type (

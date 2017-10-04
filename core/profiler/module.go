@@ -1,13 +1,14 @@
 package profiler
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/framework/event"
-	"flamingo/framework/profiler"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"fmt"
 	"net/http"
+
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/framework/event"
+	"go.aoe.com/flamingo/framework/profiler"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (

@@ -2,15 +2,16 @@ package profiler
 
 import (
 	"bytes"
-	"flamingo/framework/profiler"
-	"flamingo/framework/profiler/collector"
-	"flamingo/framework/router"
-	"flamingo/framework/web"
 	"fmt"
 	"io/ioutil"
 	"runtime"
 	"sync"
 	"time"
+
+	"go.aoe.com/flamingo/framework/profiler"
+	"go.aoe.com/flamingo/framework/profiler/collector"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 var (

@@ -1,9 +1,9 @@
 package masterdataportal
 
 import (
-	"flamingo/framework/dingo"
-	"flamingo/om3/brand/domain"
-	"flamingo/om3/masterdataportal/infrastructure"
+	"go.aoe.com/flamingo/framework/dingo"
+	"go.aoe.com/flamingo/om3/brand/domain"
+	"go.aoe.com/flamingo/om3/masterdataportal/infrastructure"
 )
 
 // check types at compile time ;)

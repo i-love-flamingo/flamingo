@@ -6,7 +6,6 @@ package pugjs
 
 import (
 	"bytes"
-	"flamingo/core/pugtemplate/pugjs/parse"
 	"fmt"
 	"io"
 	"reflect"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs/parse"
 )
 
 // maxExecDepth specifies the maximum stack depth of templates within

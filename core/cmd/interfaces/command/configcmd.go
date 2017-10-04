@@ -2,8 +2,9 @@ package command
 
 import (
 	"encoding/json"
-	"flamingo/framework/config"
 	"fmt"
+
+	"go.aoe.com/flamingo/framework/config"
 
 	"github.com/spf13/cobra"
 )

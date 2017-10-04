@@ -1,9 +1,9 @@
 package interfaces
 
 import (
-	"flamingo/core/auth/application"
-	"flamingo/framework/web"
-	"flamingo/framework/web/responder"
+	"go.aoe.com/flamingo/core/auth/application"
+	"go.aoe.com/flamingo/framework/web"
+	"go.aoe.com/flamingo/framework/web/responder"
 
 	"net/url"
 

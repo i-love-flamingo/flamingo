@@ -1,6 +1,6 @@
 package collector
 
-import "flamingo/framework/web"
+import "go.aoe.com/flamingo/framework/web"
 
 type (
 	// DataCollector for external collections

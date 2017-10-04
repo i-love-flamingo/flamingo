@@ -2,10 +2,11 @@ package infrastructure
 
 import (
 	"context"
-	"flamingo/framework/testutil"
-	"flamingo/om3/brand/domain"
 	"fmt"
 	"testing"
+
+	"go.aoe.com/flamingo/framework/testutil"
+	"go.aoe.com/flamingo/om3/brand/domain"
 
 	"github.com/pact-foundation/pact-go/dsl"
 )

@@ -20,8 +20,8 @@ type Module struct {
 func (m *Module) Configure(injector *dingo.Injector) {
 	var rootCmd = &cobra.Command{
 		Use:   Name,
-		Short: "Flamingo Console",
-		Long:  `The flamingo command line interface.`,
+		Short: Name + " Console",
+		Long:  "The" + Name + " command line interface.",
 	}
 
 	command.ConfigArea = m.Root

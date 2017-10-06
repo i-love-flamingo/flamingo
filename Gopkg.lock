@@ -151,6 +151,12 @@
   revision = "890a5c3458b43e6104ff5da8dfa139d013d77544"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/zemirco/memorystore"
+  packages = ["."]
+  revision = "ecd57e5134f622ea7ebd8ae93ea00b4fe94741a5"
+
+[[projects]]
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp","html","html/atom","html/charset"]
   revision = "feeb485667d1fdabe727840fe00adc22431bc86e"
@@ -195,6 +201,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e3afad64e946bcf6bf6a5b44362b28d4031becab836c714e20de79055f7b07d4"
+  inputs-digest = "90b2e69e8cd9fb77b1a72ccf9a3120e83208f4a272e4d53371111a6b18beaa6a"
   solver-name = "gps-cdcl"
   solver-version = 1

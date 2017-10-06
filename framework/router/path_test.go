@@ -24,13 +24,13 @@ var _ = Describe("Path Test", func() {
 					"something": "something123",
 					"id":        "445566",
 					"foo":       "foo/bar",
-				})).To(Equal(`/path/to/something123/445566/foo/bar`))
+				}, map[string]struct{}{})).To(Equal(`/path/to/something123/445566/foo/bar`))
 
 				_, err := path.Render(map[string]string{
 					"something": "something123",
 					"id":        "aaa",
 					"foo":       "foo/bar",
-				})
+				}, map[string]struct{}{})
 				Expect(err).To(MatchError(`param id in wrong format`))
 			})
 		})

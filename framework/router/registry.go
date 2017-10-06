@@ -194,6 +194,7 @@ routeloop:
 	for _, handler := range registry.routes {
 		if handler.handler == name {
 			var renderparams = make(map[string]string)
+			var usedValues = make(map[string]struct{})
 
 			// set handler default parameters
 			for key, param := range handler.params {
@@ -209,10 +210,15 @@ routeloop:
 					continue routeloop
 				}
 				renderparams[key] = param.value
+				usedValues[key] = struct{}{}
 			}
 
 			// add Reverse parameters
 			for k, v := range params {
+				if v != renderparams[k] {
+					delete(usedValues, k)
+				}
+
 				renderparams[k] = v
 			}
 
@@ -223,7 +229,7 @@ routeloop:
 				}
 			}
 
-			return handler.path.Render(renderparams)
+			return handler.path.Render(renderparams, usedValues)
 		}
 	}
 	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)

@@ -153,5 +153,25 @@ var _ = Describe("Registry Test", func() {
 			Expect(params).To(HaveLen(1))
 			Expect(params).To(HaveKeyWithValue("page", "foo"))
 		})
+
+		It("should render get requests if possible", func() {
+			registry.Handle("page.get", testController)
+			registry.Route("/path_mustget", `page.get(page)`)
+
+			registry.Handle("page.get2", testController)
+			registry.Route("/path_mustget2", `page.get2(page?="test")`)
+
+			path, err := registry.Reverse("page.get", map[string]string{"page": "test"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(path).To(Equal("/path_mustget?page=test"))
+
+			path, err = registry.Reverse("page.get2", map[string]string{"page": "test"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(path).To(Equal("/path_mustget2"))
+
+			path, err = registry.Reverse("page.get2", map[string]string{"page": "nottest"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(path).To(Equal("/path_mustget2?page=nottest"))
+		})
 	})
 })

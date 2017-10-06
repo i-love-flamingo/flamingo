@@ -25,7 +25,7 @@ type (
 	part interface {
 		match(path string) (matched bool, key, value string, length int)
 		read(segment string) (leftover, paramname string)
-		render(values map[string]string) (string, error)
+		render(values map[string]string) (string, []string, error)
 	}
 
 	partFixed struct {
@@ -72,8 +72,8 @@ func (p *partFixed) match(path string) (matched bool, key, value string, length 
 	return false, "", "", 0
 }
 
-func (p *partFixed) render(values map[string]string) (string, error) {
-	return p.part, nil
+func (p *partFixed) render(values map[string]string) (string, []string, error) {
+	return p.part, []string{}, nil
 }
 
 func (p *partParam) read(path string) (string, string) {
@@ -113,11 +113,11 @@ func (p *partParam) match(path string) (matched bool, key, value string, length 
 	return true, p.name, val, len(parts[0])
 }
 
-func (p *partParam) render(values map[string]string) (string, error) {
+func (p *partParam) render(values map[string]string) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
-		return url.QueryEscape(value) + p.suffix, nil
+		return url.QueryEscape(value) + p.suffix, []string{p.name}, nil
 	}
-	return "", errors.New("param " + p.name + " not found")
+	return "", []string{}, errors.New("param " + p.name + " not found")
 }
 
 var partRegexMatch = regexp.MustCompile(`([^<]*)<([^>]+)>(.*)`)
@@ -142,14 +142,14 @@ func (p *partRegex) match(path string) (matched bool, key, value string, length 
 	return true, p.name, matches[0], len(matches[0])
 }
 
-func (p *partRegex) render(values map[string]string) (string, error) {
+func (p *partRegex) render(values map[string]string) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
 		if p.regex.FindStringSubmatch(value) != nil {
-			return value, nil
+			return value, []string{p.name}, nil
 		}
-		return "", errors.New("param " + p.name + " in wrong format")
+		return "", []string{}, errors.New("param " + p.name + " in wrong format")
 	}
-	return "", errors.New("param " + p.name + " not found")
+	return "", []string{}, errors.New("param " + p.name + " not found")
 }
 
 func (p *partWildcard) read(path string) (string, string) {
@@ -171,11 +171,11 @@ func (p *partWildcard) match(path string) (matched bool, key, value string, leng
 	return true, p.name, path, len(path)
 }
 
-func (p *partWildcard) render(values map[string]string) (string, error) {
+func (p *partWildcard) render(values map[string]string) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
-		return value, nil
+		return value, []string{p.name}, nil
 	}
-	return "", nil
+	return "", []string{}, nil
 }
 
 // NewPath returns a new path
@@ -265,18 +265,19 @@ func (p *Path) Match(path string) *Match {
 }
 
 // Render a path for a given list of values
-func (p *Path) Render(values map[string]string) (string, error) {
+func (p *Path) Render(values map[string]string, usedValues map[string]struct{}) (string, error) {
 	var path string
 
 	for _, part := range p.parts {
-		val, err := part.render(values)
+		val, used, err := part.render(values)
 		if err != nil {
 			return "", err
 		}
 
-		//log.Printf("%#v: %s", part, val)
-
 		path += `/` + val
+		for _, u := range used {
+			usedValues[u] = struct{}{}
+		}
 	}
 
 	if len(path) == 0 {
@@ -285,5 +286,17 @@ func (p *Path) Render(values map[string]string) (string, error) {
 		path += "/"
 	}
 
+	query := url.Values{}
+	queryUsed := false
+	for k, v := range values {
+		if _, ok := usedValues[k]; !ok {
+			queryUsed = true
+			query.Set(k, v)
+		}
+	}
+
+	if queryUsed {
+		return path + `?` + query.Encode(), nil
+	}
 	return path, nil
 }

@@ -71,6 +71,12 @@
   version = "v0.2.1"
 
 [[projects]]
+  name = "github.com/leekchan/accounting"
+  packages = ["."]
+  revision = "a35854c075934d6aa1a6c1ab3ea8a82ee0dc1a93"
+  version = "v0.2"
+
+[[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   revision = "ded68f7a9561c023e790de24279db7ebf473ea80"

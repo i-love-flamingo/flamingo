@@ -76,3 +76,4 @@ ignored = ["flamingo/core","flamingo/framework","flamingo/om3"]
 [[constraint]]
   branch = "master"
   name = "github.com/zemirco/memorystore"
+

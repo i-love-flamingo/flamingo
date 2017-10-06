@@ -118,9 +118,10 @@ func convert(in interface{}) Object {
 			Items: make(map[Object]Object, val.Type().NumMethod()),
 			o:     val.Interface(),
 		}
-
-		for i := 0; i < val.NumMethod(); i++ {
-			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+		if !val.IsNil() {
+			for i := 0; i < val.NumMethod(); i++ {
+				newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+			}
 		}
 
 		return newval
@@ -148,6 +149,9 @@ func convert(in interface{}) Object {
 
 	case reflect.Bool:
 		return Bool(val.Bool())
+
+	case reflect.Chan:
+		return Nil{}
 	}
 
 	panic(fmt.Sprintf("Cannot convert %#v %T %s %s", val, val, val.Type(), val.Kind()))

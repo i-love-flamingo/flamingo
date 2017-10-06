@@ -180,7 +180,7 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 		//if obj, ok := v.Interface().(*Array); ok {
 		//	v = reflect.ValueOf(obj.items)
 		//} else if obj, ok := v.Interface().(*Map); ok {
-		//	v = reflect.ValueOf(obj.Items)
+		//	v = reflect.ValueOf(obj.DecoratedItems)
 		//} else if obj, ok := v.Interface().(String); ok {
 		//	v = reflect.ValueOf(string(obj))
 		//}

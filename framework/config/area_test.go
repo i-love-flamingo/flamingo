@@ -81,7 +81,7 @@ func TestMapMarshalTo(t *testing.T) {
 
 	m.Add(Map{
 		"key":    "value",
-		"number": "5",
+		"number": 5,
 		"flag":   true,
 	})
 	m.Add(Map{

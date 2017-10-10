@@ -20,7 +20,7 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
-ignored = ["flamingo/core","flamingo/framework","flamingo/om3"]
+ignored = ["go.aoe.com/flamingo/core","go.aoe.com/flamingo/framework","go.aoe.com/flamingo/om3"]
 
 [[constraint]]
   name = "github.com/boj/redistore"

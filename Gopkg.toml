@@ -77,3 +77,7 @@ ignored = ["go.aoe.com/flamingo/core","go.aoe.com/flamingo/framework","go.aoe.co
   branch = "master"
   name = "github.com/zemirco/memorystore"
 
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.3"

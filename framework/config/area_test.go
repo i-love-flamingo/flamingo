@@ -6,6 +6,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func SubTestMapDeepmerge(t *testing.T) {
+	m := make(Map)
+
+	m.Add(Map{
+		"foo.bar": "bar",
+	})
+
+	m.Add(Map{
+		"foo": Map{
+			"bar": "bar3",
+		},
+		"foo.bar": "bar2",
+	})
+
+	assert.Equal(t, Map{
+		"foo": Map{
+			"bar": "bar2",
+		},
+	}, m)
+}
+
+func TestMapDeepmerge(t *testing.T) {
+	t.Run("run 1", SubTestMapDeepmerge)
+	t.Run("run 2", SubTestMapDeepmerge)
+	t.Run("run 3", SubTestMapDeepmerge)
+	t.Run("run 4", SubTestMapDeepmerge)
+	t.Run("run 5", SubTestMapDeepmerge)
+}
+
 func TestMap(t *testing.T) {
 	m := make(Map)
 

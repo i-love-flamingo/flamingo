@@ -20,14 +20,14 @@ type (
 		Name    string
 		BaseURL string
 
-		Parent   *Area `json:"-"`
+		Parent   *Area
 		Childs   []*Area
 		Modules  []dingo.Module
-		Injector *dingo.Injector `json:"-"`
+		Injector *dingo.Injector
 
-		Routes        []Route `yaml:"routes"`
-		Configuration Map     `yaml:"-" json:"-"`
-		LoadedConfig  Map     `yaml:"config" json:"config"`
+		Routes        []Route
+		Configuration Map
+		LoadedConfig  Map
 	}
 
 	// Map contains configuration

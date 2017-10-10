@@ -92,7 +92,7 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 		case http.Handler:
 		case func(web.Context) web.Response:
 		case func(web.Context) interface{}:
-		case GETController, POSTController, HEADController, PUTController, DELETEController:
+		case GETController, POSTController, HEADController, PUTController, DELETEController, DataController:
 			c = router.Injector.GetInstance(reflect.TypeOf(c))
 		default:
 			var rv = reflect.ValueOf(c)

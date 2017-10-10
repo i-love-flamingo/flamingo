@@ -20,6 +20,14 @@ Configuration can be used (either by the `config()` helper, or via dependency in
 Asking for either a concrete value via e.g. `foo.bar` is possible, as well as getting a whole `config.Map` instance by a partially-selector, e.g. `foo`.
 This would be a Map with element `bar` set to `x`.
 
+Deeply nested config maps can be marshaled into structs for convenience.
+
+The result struct must match exactly the structure and types of the config map and all fields must be exported.
+
+```go
+err := m.MarshalTo(&result)
+```
+
 There is a root configuration "context.yml".
 
 You can set different CONTEXT with the environment variable *CONTEXT* and this will cause flamingo to load another configuration file.

@@ -2,12 +2,14 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
 	"go.aoe.com/flamingo/framework/dingo"
 )
 
@@ -135,6 +137,22 @@ func (m Map) Flat() Map {
 	}
 
 	return res
+}
+
+// MapInto tries to map the configuration map into a given interface
+func (m Map) MapInto(out interface{}) error {
+	jsonBytes, err := json.Marshal(m)
+
+	if err != nil {
+		return errors.Wrap(err, "Problem with marshaling map")
+	}
+
+	err = json.Unmarshal(jsonBytes, &out)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
+	}
+
+	return nil
 }
 
 // GetInitializedInjector returns initialized container based on the configuration

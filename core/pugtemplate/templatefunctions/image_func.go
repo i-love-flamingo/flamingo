@@ -24,10 +24,6 @@ func (imgf ImageFunc) Name() string {
 }
 
 // Func as implementation of imageservice helper method
-// pim
-// 100x100
-// catalog/0/0/0/0/00003b92d2702b3513749e53aacfdd699675cc13_product_image_595fab5992ced.png
-// create for hmac tool : go run main.go "S5mSh5zMhZ7Rq0vRe9RC4g" "100x100/catalog/0/0/0/0/00003b92d2702b3513749e53aacfdd699675cc13_product_image_595fab5992ced.png"
 func (imgf *ImageFunc) Func() interface{} {
 	return func(source, options, image pugjs.String) template.URL {
 		validSources := map[string]bool{

@@ -14,9 +14,6 @@ func SubTestMapDeepmerge(t *testing.T) {
 	})
 
 	m.Add(Map{
-		"foo": Map{
-			"bar": "bar3",
-		},
 		"foo.bar": "bar2",
 	})
 

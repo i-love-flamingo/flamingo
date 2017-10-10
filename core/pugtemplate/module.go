@@ -72,6 +72,12 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"pug_template.basedir": "frontend/dist",
 		"pug_template.debug":   true,
+		"accounting": config.Map{
+			"decimal":    ",",
+			"thousand":   ".",
+			"formatZero": "%s -,-",
+			"format":     "%s %v",
+		},
 	}
 }
 

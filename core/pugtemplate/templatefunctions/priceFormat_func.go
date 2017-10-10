@@ -43,13 +43,3 @@ func (f PriceFormatFunc) Func() interface{} {
 		return ac.FormatMoney(float64(value))
 	}
 }
-
-// DefaultConfig
-func (m *PriceFormatFunc) DefaultConfig() config.Map {
-	return config.Map{
-		"accounting.decimal":    ",",
-		"accounting.thousand":   ".",
-		"accounting.formatZero": "%s -,-",
-		"accounting.format":     "%s %v",
-	}
-}

@@ -62,7 +62,7 @@ func TestMap(t *testing.T) {
 	assert.Equal(t, Map{"z": "a"}, m["x"].(Map)["y"])
 }
 
-func TestMapMarshalTo(t *testing.T) {
+func TestMapMapInto(t *testing.T) {
 	type resultType struct {
 		Key    string
 		Number int
@@ -98,10 +98,9 @@ func TestMapMarshalTo(t *testing.T) {
 		"map.f":   "f",
 	})
 
-
 	var result resultType
 
-	err := m.MarshalTo(&result)
+	err := m.MapInto(&result)
 	assert.Nil(t, err)
 
 	assert.Equal(
@@ -132,5 +131,4 @@ func TestMapMarshalTo(t *testing.T) {
 		result,
 		"result of marshalling is wrong",
 	)
-
 }

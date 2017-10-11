@@ -1,11 +1,11 @@
 package templatefunctions
 
 import (
-	"html/template"
-
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"html/template"
+	"strings"
 
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
@@ -26,19 +26,19 @@ func (imgf ImageFunc) Name() string {
 // Func as implementation of imageservice helper method
 func (imgf *ImageFunc) Func() interface{} {
 	return func(source, options, image pugjs.String) template.URL {
-		validSources := map[string]bool{
-			"pim": true,
-			"mdp": true,
-			"cms": true,
+		validSources := map[string]struct{}{
+			"pim": {},
+			"mdp": {},
+			"cms": {},
 		}
-		if !validSources[source.String()] {
+		if _, ok := validSources[source.String()]; !ok {
 			return ""
 		}
 
 		resource := options.String() + "/" + image.String()
 		signature := createSignature(resource, imgf.Secret)
 
-		return template.URL(imgf.BaseUrl + "/" + source.String() + "/" + signature + "/" + resource)
+		return template.URL(strings.TrimSuffix(imgf.BaseUrl, "/") + "/" + source.String() + "/" + signature + "/" + resource)
 	}
 }
 

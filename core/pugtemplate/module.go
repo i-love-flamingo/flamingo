@@ -52,6 +52,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.AssetFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ImageFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsMath{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsObject{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DebugFunc{})
@@ -72,6 +73,12 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"pug_template.basedir": "frontend/dist",
 		"pug_template.debug":   true,
+		"accounting": config.Map{
+			"decimal":    ",",
+			"thousand":   ".",
+			"formatZero": "%s -,-",
+			"format":     "%s %v",
+		},
 	}
 }
 

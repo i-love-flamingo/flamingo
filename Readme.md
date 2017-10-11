@@ -4,6 +4,13 @@
 
 Flamingo is a go based, opinionated framework for pluggable web projects.
 
+## Setup
+
+In order to work properly, Flamingo needs to be checked out at the following location: `$GOPATH/src/go.aoe.com/flamingo`
+```sh
+git clone git@gitlab.aoe.com:project/om3/akl/flamingo.git $GOPATH/src/go.aoe.com/flamingo
+```
+
 ## Necessary tooling
 
 ### dep

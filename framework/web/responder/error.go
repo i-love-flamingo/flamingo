@@ -49,6 +49,11 @@ func (de DebugError) Error() string {
 }
 
 // Error implements error interface
+func (de DebugError) String() string {
+	return fmt.Sprintf("%+v", de.Err)
+}
+
+// Error implements error interface
 func (ee EmptyError) Error() string {
 	return ""
 }

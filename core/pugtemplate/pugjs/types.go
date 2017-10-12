@@ -122,6 +122,12 @@ func convert(in interface{}) Object {
 			for i := 0; i < val.NumMethod(); i++ {
 				newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
 			}
+
+			if m, ok := convert(val.Interface()).(*Map); ok {
+				for k, v := range m.Items {
+					newval.Items[k] = v
+				}
+			}
 		}
 
 		return newval
@@ -143,7 +149,13 @@ func convert(in interface{}) Object {
 
 	case reflect.Ptr:
 		if val.IsValid() && val.Elem().IsValid() {
-			return convert(val.Elem())
+			newVal := convert(val.Elem())
+			if m, ok := newVal.(*Map); ok {
+				for i := 0; i < val.NumMethod(); i++ {
+					m.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+				}
+			}
+			return newVal
 		}
 		return Nil{}
 

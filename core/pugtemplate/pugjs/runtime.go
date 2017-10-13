@@ -47,7 +47,7 @@ var funcmap = FuncMap{
 		}
 
 		if obj, ok := obj.(Object); ok {
-			return obj.Field(convert(key).String())
+			return obj.Member(convert(key).String())
 		}
 
 		vo, _ := indirect(reflect.ValueOf(obj))
@@ -63,15 +63,15 @@ var funcmap = FuncMap{
 	"json":      runtimeJSON,
 	"unescaped": runtimeUnescaped,
 	"null":      func() interface{} { return Nil{} },
-	"__Range": func(args ...int) Object {
+	"__Range": func(args ...Number) Object {
 		var res []int
 		var m, o int
 		if len(args) == 1 {
-			m = args[0]
+			m = int(args[0])
 			o = 0
 		} else {
-			m = args[1]
-			o = args[0]
+			m = int(args[1])
+			o = int(args[0])
 		}
 
 		for i := o; i < m; i++ {

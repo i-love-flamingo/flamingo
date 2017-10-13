@@ -8,32 +8,17 @@ import (
 	"strings"
 )
 
-const (
-	STRING = "string"
-	NUMBER = "number"
-	ARRAY  = "array"
-	MAP    = "map"
-	FUNC   = "func"
-	BOOL   = "bool"
-	NIL    = "nil"
-)
-
 type (
 	// Object describes a pugjs JavaScript object
 	Object interface {
-		Type() ObjectType
-		Field(name string) Object
+		Member(name string) Object
 		String() string
 		copy() Object
 	}
 
-	// Truther for true check
-	Truther interface {
+	truer interface {
 		True() bool
 	}
-
-	// ObjectType identifier
-	ObjectType string
 )
 
 // Convert an object
@@ -42,7 +27,6 @@ func Convert(in interface{}) Object {
 }
 
 func convert(in interface{}) Object {
-	//log.Printf("Converting %#v", in)
 	if in == nil {
 		return Nil{}
 	}
@@ -52,60 +36,59 @@ func convert(in interface{}) Object {
 	}
 
 	val, ok := in.(reflect.Value)
-
 	if !ok {
 		val = reflect.ValueOf(in)
-	}
-
-	if in, ok := val.Interface().(Object); ok {
-		return in
 	}
 
 	if !val.IsValid() {
 		return Nil{}
 	}
 
+	if in, ok := val.Interface().(Object); ok {
+		return in
+	}
+
 	if err, ok := in.(error); ok && err != nil {
-		return String(fmt.Sprintf("%+v", err))
+		return String(fmt.Sprintf("Error: %+v", err))
 	}
 
 	switch val.Kind() {
 	case reflect.Slice:
-		newval := &Array{
+		array := &Array{
 			items: make([]Object, val.Len()),
 		}
 		for i := 0; i < val.Len(); i++ {
-			newval.items[i] = convert(val.Index(i))
+			array.items[i] = convert(val.Index(i))
 		}
-		return newval
+		return array
 
 	case reflect.Map:
-		newval := &Map{
+		newMap := &Map{
 			Items: make(map[Object]Object, val.Len()),
 			o:     val.Interface(),
 		}
 		for _, k := range val.MapKeys() {
-			newval.Items[convert(k)] = convert(val.MapIndex(k))
+			newMap.Items[convert(k)] = convert(val.MapIndex(k))
 		}
-		return newval
+		return newMap
 
 	case reflect.Struct:
-		newval := &Map{
+		newMap := &Map{
 			Items: make(map[Object]Object, val.Type().NumField()+val.Type().NumMethod()),
 			o:     val.Interface(),
 		}
 
 		for i := 0; i < val.NumField(); i++ {
 			if val.Field(i).CanInterface() {
-				newval.Items[String(val.Type().Field(i).Name)] = convert(val.Field(i))
+				newMap.Items[String(val.Type().Field(i).Name)] = convert(val.Field(i))
 			}
 		}
 
 		for i := 0; i < val.NumMethod(); i++ {
-			newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+			newMap.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
 		}
 
-		return newval
+		return newMap
 
 	case reflect.String:
 		return String(val.String())
@@ -114,23 +97,23 @@ func convert(in interface{}) Object {
 		if val.Type().NumMethod() == 0 {
 			return convert(val.Interface())
 		}
-		newval := &Map{
+		newMap := &Map{
 			Items: make(map[Object]Object, val.Type().NumMethod()),
 			o:     val.Interface(),
 		}
 		if !val.IsNil() {
 			for i := 0; i < val.NumMethod(); i++ {
-				newval.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+				newMap.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
 			}
 
 			if m, ok := convert(val.Interface()).(*Map); ok {
 				for k, v := range m.Items {
-					newval.Items[k] = v
+					newMap.Items[k] = v
 				}
 			}
 		}
 
-		return newval
+		return newMap
 
 	case reflect.Float32, reflect.Float64:
 		return Number(val.Float())
@@ -142,7 +125,7 @@ func convert(in interface{}) Object {
 		return Number(float64(val.Uint()))
 
 	case reflect.Complex128:
-		return Number(-1)
+		return Nil{}
 
 	case reflect.Func:
 		return &Func{fnc: val}
@@ -174,11 +157,8 @@ type Func struct {
 	fnc reflect.Value
 }
 
-// Type getter
-func (f *Func) Type() ObjectType { return FUNC }
-
-// Field getter
-func (f *Func) Field(name string) Object { return Nil{} }
+// Member getter
+func (f *Func) Member(name string) Object { return Nil{} }
 
 // String formatter
 func (f *Func) String() string { return f.fnc.String() }
@@ -203,9 +183,6 @@ type Array struct {
 	items []Object
 }
 
-// Type getter
-func (a *Array) Type() ObjectType { return ARRAY }
-
 // String formatter
 func (a *Array) String() string {
 	tmp := make([]string, len(a.items))
@@ -215,8 +192,8 @@ func (a *Array) String() string {
 	return strings.Join(tmp, " ")
 }
 
-// Field getter
-func (a *Array) Field(name string) Object {
+// Member getter
+func (a *Array) Member(name string) Object {
 	switch name {
 	case "length":
 		return &Func{fnc: reflect.ValueOf(a.Length)}
@@ -316,9 +293,6 @@ type Map struct {
 	o     interface{}
 }
 
-// Type getter
-func (m *Map) Type() ObjectType { return MAP }
-
 // String formatter
 func (m *Map) String() string {
 	if m == nil {
@@ -334,8 +308,8 @@ func (m *Map) String() string {
 	return string(b)
 }
 
-// Field getter
-func (m *Map) Field(field string) Object {
+// Member getter
+func (m *Map) Member(field string) Object {
 	if field == "__assign" {
 		return &Func{fnc: reflect.ValueOf(func(k, v interface{}) Object {
 			m.Items[convert(k)] = convert(v)
@@ -391,14 +365,11 @@ func (m *Map) copy() Object {
 // String type
 type String string
 
-// Type getter
-func (s String) Type() ObjectType { return STRING }
-
 // String formatter
 func (s String) String() string { return string(s) }
 
-// Field getter
-func (s String) Field(field string) Object {
+// Member getter
+func (s String) Member(field string) Object {
 	switch field {
 	case "charAt":
 		return &Func{fnc: reflect.ValueOf(s.CharAt)}
@@ -442,11 +413,8 @@ func (s String) copy() Object {
 // Number type
 type Number float64
 
-// Type getter
-func (n Number) Type() ObjectType { return NUMBER }
-
-// Field getter
-func (n Number) Field(string) Object { return Nil{} }
+// Member getter
+func (n Number) Member(string) Object { return Nil{} }
 
 // String formatter
 func (n Number) String() string { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
@@ -458,11 +426,8 @@ func (n Number) copy() Object {
 // Bool type
 type Bool bool
 
-// Type getter
-func (b Bool) Type() ObjectType { return BOOL }
-
-// Field getter
-func (b Bool) Field(string) Object { return Nil{} }
+// Member getter
+func (b Bool) Member(string) Object { return Nil{} }
 
 // String formatter
 func (b Bool) String() string { return fmt.Sprintf("%v", bool(b)) }
@@ -477,11 +442,8 @@ func (b Bool) copy() Object {
 // Nil type
 type Nil struct{}
 
-// Type getter
-func (n Nil) Type() ObjectType { return NIL }
-
-// Field is always nil
-func (n Nil) Field(string) Object { return Nil{} }
+// Member is always nil
+func (n Nil) Member(string) Object { return Nil{} }
 
 // String is always empty
 func (n Nil) String() string { return "" }

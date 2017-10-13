@@ -81,3 +81,20 @@ Product Controller (executes on a predefined route)       ┌──────�
                                               Product View (Pug-template)
 
 ```
+
+
+## Flamingo-Frontend Shared packages
+
+There are shared dependencies.
+
+If you work on them use:
+```
+npm version <major|minor|patch> && git push --follow-tags
+```
+to publish changes on this modules
+
+And you can use `yarn link` to work locally on multiple packages:
+
+1. Check out the shared package "packagename" and run the package build (`yarn`)
+2. In the folder type "yarn link"
+3. Go to your main flamingo frontend folder and type "yarn link packagename". As a result the node_modules folder should have a symlink to the local package checked out under 1. 

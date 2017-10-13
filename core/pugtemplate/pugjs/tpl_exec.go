@@ -356,7 +356,7 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		truth = val.Uint() != 0
 	case reflect.Struct:
-		if o, ok := val.Interface().(Truther); ok {
+		if o, ok := val.Interface().(truer); ok {
 			return o.True(), true
 		}
 		truth = true // Struct values are always true.
@@ -590,13 +590,13 @@ func (s *state) evalChainNode(dot reflect.Value, chain *parse.ChainNode, args []
 	if chain.Node.Type() == parse.NodeNil {
 		s.errorf("indirection through explicit nil in %s", chain)
 	}
-	// (pipe).Field1.Field2 has pipe as .Node, fields as .Field. Eval the pipeline, then the fields.
+	// (pipe).Field1.Field2 has pipe as .Node, fields as .Member. Eval the pipeline, then the fields.
 	pipe := s.evalArg(dot, nil, chain.Node)
 	return s.evalFieldChain(dot, pipe, chain, chain.Field, args, final)
 }
 
 func (s *state) evalVariableNode(dot reflect.Value, variable *parse.VariableNode, args []parse.Node, final reflect.Value) reflect.Value {
-	// $x.Field has $x as the first ident, Field as the second. Eval the var, then the fields.
+	// $x.Member has $x as the first ident, Member as the second. Eval the var, then the fields.
 	s.at(variable)
 	value := s.varValue(variable.Ident[0])
 	if len(variable.Ident) == 1 {
@@ -628,7 +628,7 @@ func (s *state) evalFunction(dot reflect.Value, node *parse.IdentifierNode, cmd 
 	return s.evalCall(dot, function, cmd, name, args, final)
 }
 
-// evalField evaluates an expression like (.Field) or (.Field arg1 arg2).
+// evalField evaluates an expression like (.Member) or (.Member arg1 arg2).
 // The 'final' argument represents the return value from the preceding
 // value of the pipeline, if any.
 func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, args []parse.Node, final, receiver reflect.Value) reflect.Value {
@@ -642,7 +642,7 @@ func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, 
 	//log.Println("evalField", "\n\tdot", dot, "\n\tfieldName", fieldName, "\n\tnode", fmt.Sprintf("%#v", node), "\n\targs", args, "\n\tfinal", final, "\n\treceiver", fmt.Sprintf("%#v", receiver))
 
 	if obj, ok := receiver.Interface().(Object); ok {
-		res := reflect.ValueOf(obj.Field(fieldName))
+		res := reflect.ValueOf(obj.Member(fieldName))
 		if fnc, ok := res.Interface().(*Func); ok {
 			return s.evalCall(dot, fnc.fnc, node, fieldName, args, final)
 		}

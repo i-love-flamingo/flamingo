@@ -27,3 +27,5 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Route("/api/flight/saveFlight", "flight.api.saveFlight")
 	m.RouterRegistry.Route("/api/flight/getSessionFlight", "flight.api.getSessionFlight")
 }
+
+

@@ -30,6 +30,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/go-playground/form"
+  packages = ["."]
+  revision = "7b3f7e7430f0f1b8a744c80bb7ce6a629c65b396"
+  version = "v3.0.1"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
@@ -207,6 +213,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5ef65ec1c3d6f997830abb2b4dacd84c77242e380865b83346791ff8ef00dcf6"
+  inputs-digest = "c67904bffac2a408c3c39ddf6f8407dfaf0e54f99e34ecd399359c0cf2f5065f"
   solver-name = "gps-cdcl"
   solver-version = 1

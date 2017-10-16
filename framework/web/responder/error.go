@@ -18,8 +18,10 @@ type (
 
 	// FlamingoErrorAware responder can return errors
 	FlamingoErrorAware struct {
-		DebugMode   bool `inject:"config:debug.mode"`
 		RenderAware `inject:""`
+		DebugMode   bool   `inject:"config:debug.mode"`
+		Tpl404      string `inject:"config:flamingo.template.err404"`
+		Tpl503      string `inject:"config:flamingo.template.err503"`
 	}
 
 	// ErrorViewData for template rendering
@@ -65,13 +67,13 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
-			"error/404",
+			r.Tpl404,
 			ErrorViewData{Error: EmptyError{}, Code: 404},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
-			"error/404",
+			r.Tpl404,
 			ErrorViewData{Error: DebugError{error}, Code: 404},
 		)
 	}
@@ -88,13 +90,13 @@ func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response 
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
-			"error/503",
+			r.Tpl503,
 			ErrorViewData{Error: EmptyError{}, Code: 500},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
-			"error/503",
+			r.Tpl503,
 			ErrorViewData{Error: DebugError{err}, Code: 500},
 		)
 	}

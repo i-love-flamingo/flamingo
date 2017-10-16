@@ -28,8 +28,8 @@ backend does not provide enough space for jwt tokens.
 
 ```go
 import (
-    "flamingo/core/auth/application"
-    "flamingo/core/auth/domain"
+    "go.aoe.com/flamingo/core/auth/application"
+    "go.aoe.com/flamingo/core/auth/domain"
 )
 
 type Controller struct {

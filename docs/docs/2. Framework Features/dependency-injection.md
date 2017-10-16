@@ -89,7 +89,7 @@ the injector is created and used in the following way:
 ```go
 package main
 
-import "flamingo/framework/dingo"
+import "go.aoe.com/flamingo/framework/dingo"
 
 func main() {
   var injector = dingo.NewInjector()

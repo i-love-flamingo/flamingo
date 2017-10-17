@@ -26,8 +26,10 @@ func Load(root *Area, basedir string) error {
 func load(area *Area, basedir, curdir string) error {
 	loadConfig(area, path.Join(basedir, curdir, "config.yml"))
 	loadRoutes(area, path.Join(basedir, curdir, "routes.yml"))
-	loadConfig(area, path.Join(basedir, curdir, "config_"+os.Getenv("CONTEXT")+".yml"))
-	loadRoutes(area, path.Join(basedir, curdir, "routes_"+os.Getenv("CONTEXT")+".yml"))
+	if os.Getenv("CONTEXT") != "" {
+		loadConfig(area, path.Join(basedir, curdir, "config_"+os.Getenv("CONTEXT")+".yml"))
+		loadRoutes(area, path.Join(basedir, curdir, "routes_"+os.Getenv("CONTEXT")+".yml"))
+	}
 	loadConfig(area, path.Join(basedir, curdir, "config_local.yml"))
 	loadRoutes(area, path.Join(basedir, curdir, "routes_local.yml"))
 

@@ -114,7 +114,7 @@ type Module struct {
 }
 
 func (m *Module) Configure(injector *dingo.Inject) {
-    m.RouterRegistry.Register(new(SomethingRegisterable))
+    m.RouterRegistry.Route("/home", "home()")
 }
 ```
 
@@ -370,7 +370,7 @@ passing the resulting instance thru the injection to finalize uninjected fields.
 Every instance that is created through the container can use injection. 
 To get instances injected you just have to use the "inject" annotation inside of structs like this:
 
-```
+```go
 type RenderAware struct {
 	Router *router.Router  `inject:""`
 	Engine template.Engine `inject:""`

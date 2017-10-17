@@ -247,6 +247,24 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 	case "MixinBlock":
 		return new(MixinBlock)
 
+	case "InterpolatedTag":
+		interpolatedTag := new(InterpolatedTag)
+		interpolatedTag.IsInline = t.IsInline
+		interpolatedTag.Expr = JavaScriptExpression(t.Expr)
+		interpolatedTag.SelfClosing = t.SelfClosing
+		for _, a := range t.AttributeBlocks {
+			interpolatedTag.AttributeBlocks = append(interpolatedTag.AttributeBlocks, JavaScriptExpression(a.Val))
+		}
+		interpolatedTag.Block = Block{Nodes: p.build(t.Block)}
+		for _, a := range t.Attrs {
+			interpolatedTag.Attrs = append(interpolatedTag.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(fmt.Sprintf("%v", a.Val)), MustEscape: a.MustEscape})
+		}
+
+		// todo how?
+		// interpolatedTag.SelfClosing = selfclosing[interpolatedTag.Name]
+
+		return interpolatedTag
+
 	default:
 		log.Printf("%#v\n", t)
 		panic(errors.Errorf("Cannot parse Pug block %#v", t))

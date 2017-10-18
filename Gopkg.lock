@@ -36,6 +36,18 @@
   version = "v3.0.1"
 
 [[projects]]
+  name = "github.com/go-playground/locales"
+  packages = [".","currency"]
+  revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
+  version = "v0.11.2"
+
+[[projects]]
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
@@ -194,6 +206,12 @@
   revision = "170382fa85b10b94728989dfcf6cc818b335c952"
 
 [[projects]]
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  revision = "a021b2ec9a8a8bb970f3f15bc42617cb520e8a64"
+  version = "v9.7.0"
+
+[[projects]]
   name = "gopkg.in/sourcemap.v1"
   packages = [".","base64vlq"]
   revision = "6e83acea0053641eff084973fee085f0c193c61a"
@@ -213,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c67904bffac2a408c3c39ddf6f8407dfaf0e54f99e34ecd399359c0cf2f5065f"
+  inputs-digest = "5aa0a1d39f22593aafbdb65bc46eb81ddf1a7a7c1ec57fbabaca2a4666646690"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -18,6 +18,12 @@
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/etgryphon/stringUp"
+  packages = ["."]
+  revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
+
+[[projects]]
   name = "github.com/garyburd/redigo"
   packages = ["internal","redis"]
   revision = "433969511232c397de61b1442f9fd49ec06ae9ba"
@@ -87,6 +93,12 @@
   packages = ["color"]
   revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
   version = "v0.2.1"
+
+[[projects]]
+  name = "github.com/leebenson/conform"
+  packages = ["."]
+  revision = "bdfc728cafe576ce87010707d3ed365c75e854cd"
+  version = "1.2.0"
 
 [[projects]]
   name = "github.com/leekchan/accounting"
@@ -231,6 +243,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5aa0a1d39f22593aafbdb65bc46eb81ddf1a7a7c1ec57fbabaca2a4666646690"
+  inputs-digest = "5e374ba083775ceaf69dc7b6f8a82c0447a3a317a0ee1c51feffdaa3728820af"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -12,9 +12,8 @@ src/sass/.includes
 coverage
 junit.xml
 /vendor
-/akl/integration-test/shared
+/integration-test/shared
 context_local.yml
-/demo/*
 
 # pact
 **/logs/pact.log

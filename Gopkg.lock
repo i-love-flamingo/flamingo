@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/boj/redistore"
-  packages = ["."]
-  revision = "fc113767cd6b051980f260d6dbe84b2740c46ab0"
-  version = "v1.2"
-
-[[projects]]
   name = "github.com/coreos/go-oidc"
   packages = ["."]
   revision = "5157aa730c25a7531d4b99483e6a440d4ab735a0"
@@ -22,12 +16,6 @@
   name = "github.com/etgryphon/stringUp"
   packages = ["."]
   revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
-
-[[projects]]
-  name = "github.com/garyburd/redigo"
-  packages = ["internal","redis"]
-  revision = "433969511232c397de61b1442f9fd49ec06ae9ba"
-  version = "v1.1.0"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -243,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5e374ba083775ceaf69dc7b6f8a82c0447a3a317a0ee1c51feffdaa3728820af"
+  inputs-digest = "8672b949ea56446c5fa8d7998eb76b01f1001d36e8c6924f05785824852ca8b0"
   solver-name = "gps-cdcl"
   solver-version = 1

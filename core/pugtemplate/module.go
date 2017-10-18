@@ -79,6 +79,8 @@ func (m *Module) DefaultConfig() config.Map {
 			"formatZero": "%s -,-",
 			"format":     "%s %v",
 		},
+        "imageservice.base_url": "-",
+        "imageservice.secret": "-",
 	}
 }
 

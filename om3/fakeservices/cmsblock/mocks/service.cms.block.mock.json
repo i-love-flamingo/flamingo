@@ -1,9 +1,0 @@
-{
-  "id": 1,
-  "identifier": "homepagecontent",
-  "title": "Test CMS block title",
-  "content": "Test CMS block <strong>content</strong>",
-  "creationTime": "string",
-  "updateTime": "string",
-  "isActive": true
-}

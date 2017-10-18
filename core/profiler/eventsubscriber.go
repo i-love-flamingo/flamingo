@@ -77,7 +77,7 @@ function __profile(key, message) {
 }
 
 window.addEventListener("error", function (e) {
-    __profileStatic("browser.error", e.error.stack, Date.now() - __start);
+    __profileStatic("browser.error", e.error ? e.error.stack : e.message, Date.now() - __start);
 });
 
 window.addEventListener("load", function load(e) {

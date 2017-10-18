@@ -36,8 +36,8 @@ func (a *appmodule) Configure(injector *dingo.Injector) {
 
 func (a *appmodule) OverrideConfig(config.Map) config.Map {
 	return config.Map{
-		"flamingo.template.err404": "404.html",
-		"flamingo.template.err503": "503.html",
+		"flamingo.template.err404": "404",
+		"flamingo.template.err503": "503",
 	}
 }
 

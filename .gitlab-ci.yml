@@ -1,0 +1,19 @@
+stages:
+- test
+
+cache:
+  paths:
+  - vendor/
+  key: "$CI_COMMIT_REF_NAME"
+
+test flamingo:
+  stage: test
+  image: thebod/goenv:0.0.1
+  script:
+  - mkdir -p "${GOPATH}/src/go.aoe.com/"
+  - export GODIR="${GOPATH}/src/go.aoe.com/flamingo"
+  - ln -sfv "$(pwd -P)" "${GODIR}"
+  - /pact/pact-go_linux_amd64 daemon &
+  - cd "${GODIR}"
+  - dep ensure -vendor-only
+  - go test ./...

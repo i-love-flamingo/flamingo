@@ -15,5 +15,5 @@ test flamingo:
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - /pact/pact-go_linux_amd64 daemon &
   - cd "${GODIR}"
-  - dep ensure -vendor-only
+  - dep ensure
   - go test ./...

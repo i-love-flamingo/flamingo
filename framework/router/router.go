@@ -277,7 +277,7 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 
 	// reformat data to map[string]string, just as in normal request vars would look like
 	// dataController might be called via Ajax (instead of right via template) so this should be unified
-	vars := reformatParams(params...)
+	vars := reformatParams(ctx, params...)
 	getCtx := ctx.WithVars(vars)
 
 	if c, ok := router.RouterRegistry.handler[handler]; ok {
@@ -292,8 +292,12 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 	panic(errors.Errorf("data controller %q not found", handler))
 }
 
-func reformatParams(params ...map[interface{}]interface{}) map[string]string {
+func reformatParams(ctx web.Context, params ...map[interface{}]interface{}) map[string]string {
 	vars := make(map[string]string)
+	for k, v := range ctx.ParamAll() {
+		vars[k] = v
+	}
+
 	if len(params) == 1 {
 		for k, v := range params[0] {
 			if k, ok := k.(string); ok {

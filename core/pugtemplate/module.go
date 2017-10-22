@@ -52,7 +52,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	)
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.AssetFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ImageFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsMath{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsObject{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DebugFunc{})

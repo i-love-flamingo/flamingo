@@ -245,7 +245,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 				res = res.Elem()
 			}
 
-			if res.Kind() == reflect.Slice {
+			if res.Elem().Kind() == reflect.Slice {
 				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
 			}
 			// set to actual value

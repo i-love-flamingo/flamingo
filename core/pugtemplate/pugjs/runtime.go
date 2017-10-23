@@ -164,6 +164,7 @@ var funcmap = FuncMap{
 		a := make(map[string][]tmpattr)
 		var order []string
 		for _, list := range attrs {
+		attrloop:
 			for _, attr := range list.items {
 				if attr == nil {
 					continue
@@ -186,6 +187,12 @@ var funcmap = FuncMap{
 				att.val = val
 				if _, ok := a[name]; ok {
 					if name == "class" {
+						for _, s := range a[name] {
+							if s == att {
+								// we already now this attribute value for class, continue
+								continue attrloop
+							}
+						}
 						a[name] = append(a[name], att)
 					} else {
 						a[name] = []tmpattr{att}

@@ -18,6 +18,7 @@ import (
 	"go.aoe.com/flamingo/framework/web"
 
 	"github.com/pkg/errors"
+	"runtime"
 )
 
 type (
@@ -191,6 +192,9 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 	}
 	templateInstance.Funcs(funcs)
 
+	// force GC to lower risk of runtime bugs in reflect.Value
+	// should be fixed in go1.9.2
+	runtime.GC()
 	err = templateInstance.ExecuteTemplate(result, templateName, convert(data))
 	if err != nil {
 		errstr := err.Error() + "\n"

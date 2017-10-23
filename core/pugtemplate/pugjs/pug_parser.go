@@ -230,6 +230,9 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 	case "Comment":
 		return nil
 
+	case "BlockComment":
+		return nil
+
 	case "Case":
 		cas := new(Case)
 		cas.Expr = JavaScriptExpression(t.Expr)

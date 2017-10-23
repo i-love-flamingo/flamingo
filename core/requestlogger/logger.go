@@ -3,19 +3,20 @@ package requestlogger
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"go.aoe.com/flamingo/framework/event"
 	"go.aoe.com/flamingo/framework/router"
-
 	"github.com/labstack/gommon/color"
+	"go.aoe.com/flamingo/framework/flamingo"
 )
 
 type (
 	contextKey string
-	logger     struct{}
+	logger     struct{
+		Logger flamingo.Logger `inject:""`
+	}
 )
 
 const contextTime contextKey = "time"
@@ -73,7 +74,7 @@ func (r *logger) onFinish(event *router.OnFinishEvent) {
 		extra += strings.Split(fmt.Sprintf(` | Error: %s`, event.Error), "\n")[0]
 	}
 
-	log.Printf(
+	r.Logger.Printf(
 		cp("%03d | %-8s | % 15s | % 6d byte | %s%s"),
 		response.Status,
 		event.Request.Method,

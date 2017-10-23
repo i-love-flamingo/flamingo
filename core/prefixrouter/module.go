@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 
 	"go.aoe.com/flamingo/framework/config"
@@ -46,7 +45,6 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, port *int) func(cmd 
 		frontRouter.Default(defaultRouter)
 
 		for _, area := range root.GetFlatContexts() {
-			area.Injector.Bind(new(log.Logger)).ToInstance(log.New(os.Stdout, "["+area.Name+"] ", 0))
 			log.Println(area.Name, "at", area.BaseURL)
 			frontRouter.Add(area.BaseURL, area.Injector.GetInstance(router.Router{}).(*router.Router).Init(area))
 		}

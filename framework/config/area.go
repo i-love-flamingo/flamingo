@@ -173,6 +173,7 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 		}
 	}
 
+	area.Configuration.Add(Map{"area": area.Name})
 	area.Configuration.Add(area.LoadedConfig)
 
 	for _, module := range area.Modules {

@@ -369,6 +369,9 @@ func (m *Map) MarshalJSON() ([]byte, error) {
 
 // True getter
 func (m *Map) True() bool {
+	if m.o != nil && reflect.DeepEqual(reflect.Zero(reflect.TypeOf(m.o)).Interface(), m.o) {
+		return false
+	}
 	return len(m.Items) > 0
 }
 

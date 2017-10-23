@@ -856,6 +856,9 @@ func (s *state) validateType(value reflect.Value, typ reflect.Type) reflect.Valu
 		case reflect.PtrTo(value.Type()).AssignableTo(typ) && value.CanAddr():
 			value = value.Addr()
 		default:
+			if m, ok := value.Interface().(*Map); ok {
+				return s.validateType(reflect.ValueOf(m.o), typ)
+			}
 			if o, ok := value.Interface().(Object); ok {
 				switch typ.Kind() {
 				case reflect.String:

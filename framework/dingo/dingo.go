@@ -257,12 +257,20 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 
 	// This is the injection request for multibindings
 	if t.Kind() == reflect.Slice {
-		if bindings, ok := injector.multibindings[t.Elem()]; ok {
+		targetType := t.Elem()
+		if targetType.Kind() == reflect.Ptr {
+			targetType = targetType.Elem()
+		}
+		if bindings, ok := injector.multibindings[targetType]; ok {
 			n := reflect.MakeSlice(t, 0, len(bindings))
 			for _, binding := range bindings {
 				if binding.annotatedWith == annotation {
 					//n = reflect.Append(n, injector.getInstance(binding.to))
-					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), t.Elem()))
+					if binding.instance != nil {
+						n = reflect.Append(n, binding.instance.ivalue)
+					} else {
+						n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+					}
 				}
 			}
 			return n
@@ -377,7 +385,7 @@ func (injector *Injector) requestInjection(object interface{}) {
 
 	defer func() {
 		if e := recover(); e != nil {
-			log.Printf("%s: %s\n%s\n", current.Type().PkgPath(), current.Type().Name(), current.String())
+			log.Printf("%s: %s: injecting into %s", current.Type().PkgPath(), current.Type().Name(), current.String())
 			panic(e)
 		}
 	}()

@@ -11,7 +11,6 @@ import (
 
 // FuncMap is the default runtime funcmap for pugast templates
 var funcmap = FuncMap{
-	"__": func(s ...string) string { return strings.Join(s, "::") },
 
 	"__op__add":   runtimeAdd,
 	"__op__inc":   runtimeInc,

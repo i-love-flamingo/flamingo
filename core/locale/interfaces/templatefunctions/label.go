@@ -1,7 +1,8 @@
 package templatefunctions
 
 import (
-	"strings"
+	"log"
+
 	"github.com/nicksnyder/go-i18n/i18n"
 )
 
@@ -17,9 +18,16 @@ func (tf Label) Name() string {
 }
 
 func (tf Label) Func() interface{} {
-	i18n.MustLoadTranslationFile("translations/en_US.all.json")
 
-	return func(s ...string) string {
-		return strings.Join(s, "::")
+	return func(key string, defaultLabel string, args interface{}) string {
+		log.Printf("called with key %v", key)
+		i18n.LoadTranslationFile("translations/en-US.all.json")
+		T, _ := i18n.Tfunc("en-US")
+		log.Printf("Some testlabel: %#v", T("formerror_email_required"))
+		label := T(key)
+		if label == key && defaultLabel != "" {
+			label = defaultLabel
 		}
+		return label
+	}
 }

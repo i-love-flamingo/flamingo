@@ -23,6 +23,11 @@ func Load(root *Area, basedir string) error {
 	return nil
 }
 
+// LoadConfigFile loads a config
+func LoadConfigFile(area *Area, file string) error {
+	return loadConfig(area, file)
+}
+
 func load(area *Area, basedir, curdir string) error {
 	loadConfig(area, path.Join(basedir, curdir, "config.yml"))
 	loadRoutes(area, path.Join(basedir, curdir, "routes.yml"))

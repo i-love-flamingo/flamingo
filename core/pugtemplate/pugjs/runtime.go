@@ -215,7 +215,7 @@ var funcmap = FuncMap{
 				}
 				if val.mustEscape {
 					tmp += template.HTMLEscapeString(val.val)
-				} else {
+				} else if val.val[0] == '"' {
 					tmp += val.val[1 : len(val.val)-1]
 				}
 			}

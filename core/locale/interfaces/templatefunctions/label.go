@@ -2,7 +2,7 @@ package templatefunctions
 
 import (
 	"strings"
-	//"github.com/nicksnyder/go-i18n"
+	"github.com/nicksnyder/go-i18n/i18n"
 )
 
 type (
@@ -17,5 +17,9 @@ func (tf Label) Name() string {
 }
 
 func (tf Label) Func() interface{} {
-	return func(s ...string) string { return strings.Join(s, "::") }
+	i18n.MustLoadTranslationFile("translations/en_US.all.json")
+
+	return func(s ...string) string {
+		return strings.Join(s, "::")
+		}
 }

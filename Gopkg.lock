@@ -12,34 +12,10 @@
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/etgryphon/stringUp"
-  packages = ["."]
-  revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
-
-[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/go-playground/form"
-  packages = ["."]
-  revision = "7b3f7e7430f0f1b8a744c80bb7ce6a629c65b396"
-  version = "v3.0.1"
-
-[[projects]]
-  name = "github.com/go-playground/locales"
-  packages = [".","currency"]
-  revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
-  version = "v0.11.2"
-
-[[projects]]
-  name = "github.com/go-playground/universal-translator"
-  packages = ["."]
-  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
-  version = "v0.16.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -81,12 +57,6 @@
   packages = ["color"]
   revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
   version = "v0.2.1"
-
-[[projects]]
-  name = "github.com/leebenson/conform"
-  packages = ["."]
-  revision = "bdfc728cafe576ce87010707d3ed365c75e854cd"
-  version = "1.2.0"
 
 [[projects]]
   name = "github.com/leekchan/accounting"
@@ -218,12 +188,6 @@
   revision = "170382fa85b10b94728989dfcf6cc818b335c952"
 
 [[projects]]
-  name = "gopkg.in/go-playground/validator.v9"
-  packages = ["."]
-  revision = "a021b2ec9a8a8bb970f3f15bc42617cb520e8a64"
-  version = "v9.7.0"
-
-[[projects]]
   name = "gopkg.in/sourcemap.v1"
   packages = [".","base64vlq"]
   revision = "6e83acea0053641eff084973fee085f0c193c61a"
@@ -243,6 +207,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a4808474cc50c646fe71f8c30a372506da285f22481c37cc28502053844781c1"
+  inputs-digest = "8075274f25bdbbbef6a85929db45c1bff58f522e4c2c0a6d2c611c07b4b8f5f1"
   solver-name = "gps-cdcl"
   solver-version = 1

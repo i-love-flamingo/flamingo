@@ -19,6 +19,7 @@ type (
 	Injector struct {
 		bindings      map[reflect.Type][]*Binding
 		multibindings map[reflect.Type][]*Binding
+		mapbindings   map[reflect.Type]map[string]*Binding
 		interceptor   map[reflect.Type][]reflect.Type
 		overrides     []*override
 		parent        *Injector
@@ -44,6 +45,7 @@ func NewInjector(modules ...Module) *Injector {
 	injector := &Injector{
 		bindings:      make(map[reflect.Type][]*Binding),
 		multibindings: make(map[reflect.Type][]*Binding),
+		mapbindings:   make(map[reflect.Type]map[string]*Binding),
 		interceptor:   make(map[reflect.Type][]reflect.Type),
 		scopes:        make(map[reflect.Type]Scope),
 		stage:         DEFAULT,
@@ -156,6 +158,10 @@ func (injector *Injector) findBinding(t reflect.Type, annotation string) *Bindin
 		}
 	}
 
+	if len(annotation) > 4 && annotation[:4] == "map:" {
+		return injector.mapbindings[t][annotation[4:]]
+	}
+
 	if injector.parent != nil {
 		return injector.parent.findBinding(t, annotation)
 	}
@@ -248,6 +254,11 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 			if res.Elem().Kind() == reflect.Slice {
 				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
 			}
+
+			if res.Elem().Kind() == reflect.Map && res.Elem().Type().Key().Kind() == reflect.String {
+				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
+			}
+
 			// set to actual value
 			res.Set(injector.getInstance(t.Out(0), annotation))
 			// return
@@ -277,12 +288,34 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 		}
 	}
 
-	if t.Kind() == reflect.Interface && !optional {
-		panic("Can not instantiate interface " + t.String())
+	// Map Binding injection
+	if t.Kind() == reflect.Map && t.Key().Kind() == reflect.String {
+		targetType := t.Elem()
+		if targetType.Kind() == reflect.Ptr {
+			targetType = targetType.Elem()
+		}
+		if bindings, ok := injector.mapbindings[targetType]; ok {
+			n := reflect.MakeMapWithSize(t, len(bindings))
+			for key, binding := range bindings {
+				if binding.annotatedWith == annotation {
+					//n = reflect.Append(n, injector.getInstance(binding.to))
+					if binding.instance != nil {
+						n.SetMapIndex(reflect.ValueOf(key), binding.instance.ivalue)
+					} else {
+						n.SetMapIndex(reflect.ValueOf(key), injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+					}
+				}
+			}
+			return n
+		}
 	}
 
 	if annotation != "" && !optional {
 		panic("Can not automatically create an annotated injection " + t.String() + " with annotation " + annotation)
+	}
+
+	if t.Kind() == reflect.Interface && !optional {
+		panic("Can not instantiate interface " + t.String())
 	}
 
 	n := reflect.New(t)
@@ -312,6 +345,24 @@ func (injector *Injector) BindMulti(what interface{}) *Binding {
 	imb := injector.multibindings[bindtype]
 	imb = append(imb, binding)
 	injector.multibindings[bindtype] = imb
+	return binding
+}
+
+// BindMap does a registry-like map-based binding, like BindMulti
+func (injector *Injector) BindMap(key string, what interface{}) *Binding {
+	bindtype := reflect.TypeOf(what)
+	if bindtype.Kind() == reflect.Ptr {
+		bindtype = bindtype.Elem()
+	}
+	binding := new(Binding)
+	binding.typeof = bindtype
+	bindingMap := injector.mapbindings[bindtype]
+	if bindingMap == nil {
+		bindingMap = make(map[string]*Binding)
+	}
+	bindingMap[key] = binding
+	injector.mapbindings[bindtype] = bindingMap
+
 	return binding
 }
 

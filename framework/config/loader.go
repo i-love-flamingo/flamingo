@@ -25,7 +25,9 @@ func Load(root *Area, basedir string) error {
 
 // LoadConfigFile loads a config
 func LoadConfigFile(area *Area, file string) error {
-	return loadConfig(area, file)
+	err := loadConfig(area, file)
+	area.GetFlatContexts()
+	return err
 }
 
 func load(area *Area, basedir, curdir string) error {

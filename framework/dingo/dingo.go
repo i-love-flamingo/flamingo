@@ -242,72 +242,18 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 	}
 
 	// This for an injection request on a provider, such as `func() MyInstance`
-	if t.Kind() == reflect.Func && t.NumOut() == 1 {
-		return reflect.MakeFunc(t, func(args []reflect.Value) (results []reflect.Value) {
-			// create a new type
-			res := reflect.New(t.Out(0))
-			// dereference possible interface pointer
-			if res.Kind() == reflect.Ptr && (res.Elem().Kind() == reflect.Interface || res.Elem().Kind() == reflect.Ptr) {
-				res = res.Elem()
-			}
-
-			if res.Elem().Kind() == reflect.Slice {
-				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
-			}
-
-			if res.Elem().Kind() == reflect.Map && res.Elem().Type().Key().Kind() == reflect.String {
-				return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
-			}
-
-			// set to actual value
-			res.Set(injector.getInstance(t.Out(0), annotation))
-			// return
-			return []reflect.Value{res}
-		})
+	if t.Kind() == reflect.Func && t.NumOut() == 1 && strings.HasSuffix(t.Name(), "Provider") {
+		return injector.createProvider(t, annotation, optional)
 	}
 
 	// This is the injection request for multibindings
 	if t.Kind() == reflect.Slice {
-		targetType := t.Elem()
-		if targetType.Kind() == reflect.Ptr {
-			targetType = targetType.Elem()
-		}
-		if bindings, ok := injector.multibindings[targetType]; ok {
-			n := reflect.MakeSlice(t, 0, len(bindings))
-			for _, binding := range bindings {
-				if binding.annotatedWith == annotation {
-					//n = reflect.Append(n, injector.getInstance(binding.to))
-					if binding.instance != nil {
-						n = reflect.Append(n, binding.instance.ivalue)
-					} else {
-						n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), targetType))
-					}
-				}
-			}
-			return n
-		}
+		return injector.resolveMultibinding(t, annotation, optional)
 	}
 
 	// Map Binding injection
 	if t.Kind() == reflect.Map && t.Key().Kind() == reflect.String {
-		targetType := t.Elem()
-		if targetType.Kind() == reflect.Ptr {
-			targetType = targetType.Elem()
-		}
-		if bindings, ok := injector.mapbindings[targetType]; ok {
-			n := reflect.MakeMapWithSize(t, len(bindings))
-			for key, binding := range bindings {
-				if binding.annotatedWith == annotation {
-					//n = reflect.Append(n, injector.getInstance(binding.to))
-					if binding.instance != nil {
-						n.SetMapIndex(reflect.ValueOf(key), binding.instance.ivalue)
-					} else {
-						n.SetMapIndex(reflect.ValueOf(key), injector.intercept(injector.getInstance(binding.to, annotation), targetType))
-					}
-				}
-			}
-			return n
-		}
+		return injector.resolveMapbinding(t, annotation, optional)
 	}
 
 	if annotation != "" && !optional {
@@ -318,9 +264,156 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 		panic("Can not instantiate interface " + t.String())
 	}
 
+	if t.Kind() == reflect.Func {
+		panic("Can not create a new function " + t.String() + " (Do you want a provider? Then suffix type with Provider)")
+	}
+
 	n := reflect.New(t)
 	injector.requestInjection(n.Interface())
 	return n
+}
+
+func (injector *Injector) createProvider(t reflect.Type, annotation string, optional bool) reflect.Value {
+	return reflect.MakeFunc(t, func(args []reflect.Value) (results []reflect.Value) {
+		// create a new type
+		res := reflect.New(t.Out(0))
+		// dereference possible interface pointer
+		if res.Kind() == reflect.Ptr && (res.Elem().Kind() == reflect.Interface || res.Elem().Kind() == reflect.Ptr) {
+			res = res.Elem()
+		}
+
+		// multibindings
+		if res.Elem().Kind() == reflect.Slice {
+			return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
+		}
+
+		// mapbindings
+		if res.Elem().Kind() == reflect.Map && res.Elem().Type().Key().Kind() == reflect.String {
+			return []reflect.Value{injector.internalResolveType(t.Out(0), annotation, optional)}
+		}
+
+		// set to actual value
+		res.Set(injector.getInstance(t.Out(0), annotation))
+		// return
+		return []reflect.Value{res}
+	})
+}
+
+func (injector *Injector) createProviderForBinding(t reflect.Type, binding *Binding, annotation string, optional bool) reflect.Value {
+	return reflect.MakeFunc(t, func(args []reflect.Value) (results []reflect.Value) {
+		// create a new type
+		res := reflect.New(binding.typeof)
+		// dereference possible interface pointer
+		if res.Kind() == reflect.Ptr && (res.Elem().Kind() == reflect.Interface || res.Elem().Kind() == reflect.Ptr) {
+			res = res.Elem()
+		}
+
+		if binding.instance != nil {
+			res.Set(binding.instance.ivalue)
+			return []reflect.Value{res}
+		}
+
+		if binding.provider != nil {
+			result := binding.provider.Create(injector)
+			if result.Kind() == reflect.Slice {
+				result = injector.internalResolveType(result.Type(), "", optional)
+			} else {
+				injector.requestInjection(result.Interface())
+			}
+			return []reflect.Value{result}
+		}
+
+		if binding.to != nil {
+			if binding.to == t {
+				panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
+			}
+			return []reflect.Value{injector.resolveType(binding.to, "", optional)}
+		}
+
+		// set to actual value
+		res.Set(injector.getInstance(binding.typeof, annotation))
+		// return
+		return []reflect.Value{res}
+	})
+}
+
+func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string, optional bool) reflect.Value {
+	targetType := t.Elem()
+	if targetType.Kind() == reflect.Ptr {
+		targetType = targetType.Elem()
+	}
+
+	providerType := targetType
+	provider := strings.HasSuffix(targetType.Name(), "Provider") && targetType.Kind() == reflect.Func
+
+	if provider {
+		targetType = targetType.Out(0)
+	}
+
+	if bindings, ok := injector.multibindings[targetType]; ok {
+		n := reflect.MakeSlice(t, 0, len(bindings))
+		for _, binding := range bindings {
+			if provider {
+				n = reflect.Append(n, injector.createProviderForBinding(providerType, binding, annotation, false))
+				continue
+			}
+
+			if binding.annotatedWith == annotation {
+				//n = reflect.Append(n, injector.getInstance(binding.to))
+				if binding.instance != nil {
+					n = reflect.Append(n, binding.instance.ivalue)
+				} else {
+					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+				}
+			}
+		}
+		return n
+	}
+	if !optional {
+		panic(fmt.Sprintf("Can not resolve multibinding for %s, provider: %v, target: %s", t, provider, targetType))
+	}
+
+	return reflect.MakeSlice(t, 0, 0)
+}
+
+func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, optional bool) reflect.Value {
+	targetType := t.Elem()
+	if targetType.Kind() == reflect.Ptr {
+		targetType = targetType.Elem()
+	}
+
+	providerType := targetType
+	provider := strings.HasSuffix(targetType.Name(), "Provider") && targetType.Kind() == reflect.Func
+
+	if provider {
+		targetType = targetType.Out(0)
+	}
+
+	if bindings, ok := injector.mapbindings[targetType]; ok {
+		n := reflect.MakeMapWithSize(t, len(bindings))
+		for key, binding := range bindings {
+			if provider {
+				n.SetMapIndex(reflect.ValueOf(key), injector.createProviderForBinding(providerType, binding, annotation, false))
+				continue
+			}
+
+			if binding.annotatedWith == annotation {
+				//n = reflect.Append(n, injector.getInstance(binding.to))
+				if binding.instance != nil {
+					n.SetMapIndex(reflect.ValueOf(key), binding.instance.ivalue)
+				} else {
+					n.SetMapIndex(reflect.ValueOf(key), injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+				}
+			}
+		}
+		return n
+	}
+	//return reflect.New(targetType).Elem()
+	if !optional {
+		panic(fmt.Sprintf("Can not resolve mapbinding for %s, provider: %v, target: %s", t, provider, targetType))
+	}
+
+	return reflect.MakeMap(t)
 }
 
 // lookupBinding search a binding with the corresponding annotation

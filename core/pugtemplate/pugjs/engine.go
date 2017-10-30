@@ -36,6 +36,8 @@ type (
 		debug        bool
 	}
 
+	TemplateFunctionRegistryProvider func() *template.FunctionRegistry
+
 	// Engine is the one and only javascript template engine for go ;)
 	Engine struct {
 		*sync.Mutex
@@ -46,7 +48,7 @@ type (
 		TemplateCode              map[string]string
 		Webpackserver             bool
 		TemplateFunctions         *template.FunctionRegistry
-		TemplateFunctionsProvider func() *template.FunctionRegistry `inject:""`
+		TemplateFunctionsProvider TemplateFunctionRegistryProvider `inject:""`
 	}
 )
 

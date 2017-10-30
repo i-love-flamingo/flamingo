@@ -320,14 +320,16 @@ func (injector *Injector) createProviderForBinding(t reflect.Type, binding *Bind
 			} else {
 				injector.requestInjection(result.Interface())
 			}
-			return []reflect.Value{result}
+			res.Set(result)
+			return []reflect.Value{res}
 		}
 
 		if binding.to != nil {
 			if binding.to == t {
 				panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
 			}
-			return []reflect.Value{injector.resolveType(binding.to, "", optional)}
+			res.Set(injector.resolveType(binding.to, "", optional))
+			return []reflect.Value{res}
 		}
 
 		// set to actual value

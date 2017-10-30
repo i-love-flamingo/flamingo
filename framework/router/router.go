@@ -31,6 +31,9 @@ const (
 )
 
 type (
+	ProfilerProvider func() profiler.Profiler
+	EventRouterProvider func() event.Router
+
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
@@ -39,8 +42,8 @@ type (
 		Sessions            sessions.Store           `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
 		SessionName         string                   `inject:"config:session.name"`
 		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
-		ProfilerProvider    func() profiler.Profiler `inject:""`
-		EventRouterProvider func() event.Router      `inject:""`
+		ProfilerProvider    ProfilerProvider         `inject:""`
+		EventRouterProvider EventRouterProvider      `inject:""`
 		eventrouter         event.Router
 		Injector            *dingo.Injector `inject:""`
 		RouterRegistry      *Registry       `inject:""`

@@ -1,11 +1,9 @@
 package dingo
 
-//import (
-//	"testing"
-//
-//	. "github.com/onsi/ginkgo"
-//	. "github.com/onsi/gomega"
-//)
+import (
+	"testing"
+	"github.com/stretchr/testify/assert"
+)
 
 type (
 	Interface interface {
@@ -23,11 +21,12 @@ type (
 		i int
 	}
 
+	IfaceProvider func() Interface
 	DepTest struct {
 		Iface  Interface `inject:""`
 		Iface2 Interface `inject:"test"`
 
-		IfaceProvider func() Interface `inject:""`
+		IfaceProvider IfaceProvider `inject:""`
 		IfaceProvided Interface        `inject:"provider"`
 		IfaceInstance Interface        `inject:"instance"`
 	}
@@ -109,55 +108,52 @@ func (a *AopInterceptor1) Test() string {
 func (a *AopInterceptor2) Test() string {
 	return a.AopInterface.Test() + " 2"
 }
-//
-//var _ = Describe("Dingo Test", func() {
-//	Context("Simple resolve", func() {
-//		It("Should resolve dependencies on request", func() {
-//			injector := NewInjector(new(PreTestModule), new(TestModule))
-//
-//			var iface Interface
-//			iface = injector.GetInstance(new(Interface)).(Interface)
-//
-//			Expect(iface.Test()).To(Equal(1))
-//
-//			var dt DepTest = *injector.GetInstance(new(DepTest)).(*DepTest)
-//
-//			Expect(dt.Iface.Test()).To(Equal(1))
-//			Expect(dt.Iface2.Test()).To(Equal(2))
-//
-//			var dt2 DepTest
-//			injector.requestInjection(&dt2)
-//
-//			Expect(dt2.Iface.Test()).To(Equal(1))
-//			Expect(dt2.Iface2.Test()).To(Equal(2))
-//
-//			Expect(dt.IfaceProvided.Test()).To(Equal(1))
-//			Expect(dt.IfaceInstance.Test()).To(Equal(2))
-//
-//			Expect(dt.IfaceProvider().Test()).To(Equal(1))
-//			Expect(dt.IfaceProvided.(*InterfaceImpl1).foo).To(Equal("Hello World"))
-//		})
-//
-//		It("Should resolve scopes", func() {
-//			injector := NewInjector(new(TestModule))
-//
-//			Expect(injector.GetInstance(TestSingleton{})).To(Equal(injector.GetInstance(TestSingleton{})))
-//		})
-//	})
-//
-//	Context("AOP", func() {
-//		It("Should intercept interfaces", func() {
-//			injector := NewInjector(new(AopModule))
-//
-//			var dep AopDep
-//			injector.requestInjection(&dep)
-//
-//			Expect(dep.A.Test()).To(Equal("Test 1 2"))
-//		})
-//	})
-//})
-//
-//func TestServiceContainer(t *testing.T) {
-//	RegisterFailHandler(Fail)
-//	RunSpecs(t, "Dingo Suite")
-//}
+
+func TestDingo(t *testing.T) {
+	t.Run("Dingo Test", func(t *testing.T) {
+		t.Run("Simple resolve", func(t *testing.T) {
+			t.Run("Should resolve dependencies on request", func(t *testing.T) {
+				injector := NewInjector(new(PreTestModule), new(TestModule))
+
+				var iface Interface
+				iface = injector.GetInstance(new(Interface)).(Interface)
+
+				assert.Equal(t, 1, iface.Test())
+
+				dt := *injector.GetInstance(new(DepTest)).(*DepTest)
+
+				assert.Equal(t, 1, dt.Iface.Test())
+				assert.Equal(t, 2, dt.Iface2.Test())
+
+				var dt2 DepTest
+				injector.requestInjection(&dt2)
+
+				assert.Equal(t, 1, dt2.Iface.Test())
+				assert.Equal(t, 2, dt2.Iface2.Test())
+
+				assert.Equal(t, 1, dt.IfaceProvided.Test())
+				assert.Equal(t, 2, dt.IfaceInstance.Test())
+
+				assert.Equal(t, 1, dt.IfaceProvider().Test())
+				assert.Equal(t, "Hello World", dt.IfaceProvided.(*InterfaceImpl1).foo)
+			})
+
+			t.Run("Should resolve scopes", func(t *testing.T) {
+				injector := NewInjector(new(TestModule))
+
+				assert.Equal(t, injector.GetInstance(TestSingleton{}), injector.GetInstance(TestSingleton{}))
+			})
+		})
+
+		t.Run("AOP", func(t *testing.T) {
+			t.Run("Should intercept interfaces", func(t *testing.T) {
+				injector := NewInjector(new(AopModule))
+
+				var dep AopDep
+				injector.requestInjection(&dep)
+
+				assert.Equal(t, "Test 1 2", dep.A.Test())
+			})
+		})
+	})
+}

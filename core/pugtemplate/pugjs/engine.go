@@ -188,7 +188,6 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 	}
 
 	funcs := make(FuncMap)
-	funcs["__"] = fmt.Sprintf // todo translate
 	for k, f := range e.TemplateFunctions.ContextAware {
 		funcs[k] = f(ctx)
 	}

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/nicksnyder/go-i18n/i18n"
+	"fmt"
 )
 
 type (
@@ -18,6 +19,8 @@ func (tf Label) Name() string {
 }
 
 func (tf Label) Func() interface{} {
+
+	return fmt.Sprintf
 
 	return func(key string, defaultLabel string, args interface{}) string {
 		log.Printf("called with key %v", key)

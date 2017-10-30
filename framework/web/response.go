@@ -13,10 +13,22 @@ type (
 		Apply(Context, http.ResponseWriter)
 	}
 
+	// OnResponse hook
+	OnResponse interface {
+		OnResponse(Context, http.ResponseWriter)
+	}
+
+	// Redirect response with the ability to add data
+	Redirect interface {
+		Response
+		With(key string, data interface{}) Redirect
+	}
+
 	// RedirectResponse redirect
 	RedirectResponse struct {
 		Status   int
 		Location string
+		data map[string]interface{}
 	}
 
 	// ContentResponse contains a response with body
@@ -41,6 +53,23 @@ func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
 
 	rw.Header().Set("Location", rr.Location)
 	rw.WriteHeader(rr.Status)
+}
+
+// OnResponse Hook
+func (rr *RedirectResponse) OnResponse(c Context, rw http.ResponseWriter) {
+	for k, v := range rr.data {
+		c.Session().AddFlash(v, k)
+	}
+}
+
+// With adds data to the web response
+func (rr *RedirectResponse) With(key string, data interface{}) Redirect {
+	if rr.data == nil {
+		rr.data = make(map[string]interface{}, 1)
+	}
+	rr.data[key] = data
+
+	return rr
 }
 
 // Apply ContentResponse

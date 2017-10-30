@@ -11,15 +11,15 @@ type RedirectAware struct {
 }
 
 // Redirect provides a mock function with given fields: name, args
-func (_m *RedirectAware) Redirect(name string, args map[string]string) web.Response {
+func (_m *RedirectAware) Redirect(name string, args map[string]string) web.Redirect {
 	ret := _m.Called(name, args)
 
-	var r0 web.Response
-	if rf, ok := ret.Get(0).(func(string, map[string]string) web.Response); ok {
+	var r0 web.Redirect
+	if rf, ok := ret.Get(0).(func(string, map[string]string) web.Redirect); ok {
 		r0 = rf(name, args)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(web.Response)
+			r0 = ret.Get(0).(web.Redirect)
 		}
 	}
 
@@ -27,15 +27,15 @@ func (_m *RedirectAware) Redirect(name string, args map[string]string) web.Respo
 }
 
 // RedirectPermanent provides a mock function with given fields: name, args
-func (_m *RedirectAware) RedirectPermanent(name string, args map[string]string) web.Response {
+func (_m *RedirectAware) RedirectPermanent(name string, args map[string]string) web.Redirect {
 	ret := _m.Called(name, args)
 
-	var r0 web.Response
-	if rf, ok := ret.Get(0).(func(string, map[string]string) web.Response); ok {
+	var r0 web.Redirect
+	if rf, ok := ret.Get(0).(func(string, map[string]string) web.Redirect); ok {
 		r0 = rf(name, args)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(web.Response)
+			r0 = ret.Get(0).(web.Redirect)
 		}
 	}
 
@@ -43,15 +43,15 @@ func (_m *RedirectAware) RedirectPermanent(name string, args map[string]string) 
 }
 
 // RedirectPermanentURL provides a mock function with given fields: url
-func (_m *RedirectAware) RedirectPermanentURL(url string) web.Response {
+func (_m *RedirectAware) RedirectPermanentURL(url string) web.Redirect {
 	ret := _m.Called(url)
 
-	var r0 web.Response
-	if rf, ok := ret.Get(0).(func(string) web.Response); ok {
+	var r0 web.Redirect
+	if rf, ok := ret.Get(0).(func(string) web.Redirect); ok {
 		r0 = rf(url)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(web.Response)
+			r0 = ret.Get(0).(web.Redirect)
 		}
 	}
 
@@ -59,15 +59,15 @@ func (_m *RedirectAware) RedirectPermanentURL(url string) web.Response {
 }
 
 // RedirectURL provides a mock function with given fields: url
-func (_m *RedirectAware) RedirectURL(url string) web.Response {
+func (_m *RedirectAware) RedirectURL(url string) web.Redirect {
 	ret := _m.Called(url)
 
-	var r0 web.Response
-	if rf, ok := ret.Get(0).(func(string) web.Response); ok {
+	var r0 web.Redirect
+	if rf, ok := ret.Get(0).(func(string) web.Redirect); ok {
 		r0 = rf(url)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(web.Response)
+			r0 = ret.Get(0).(web.Redirect)
 		}
 	}
 

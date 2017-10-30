@@ -260,11 +260,17 @@ func (router *Router) handle(c Controller) http.Handler {
 			}
 		}
 
+		if response, ok := response.(web.OnResponse); ok {
+			response.OnResponse(ctx, w)
+		}
+
 		// fire response event
 		router.eventrouter.Dispatch(&OnResponseEvent{c, response, req, w, ctx})
 
 		if router.Sessions != nil {
-			router.Sessions.Save(req, w, ctx.Session())
+			if err := router.Sessions.Save(req, w, ctx.Session()); err != nil {
+				log.Println(err)
+			}
 		}
 
 		if response != nil {

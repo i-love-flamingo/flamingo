@@ -11,10 +11,10 @@ import (
 type (
 	// RedirectAware trait
 	RedirectAware interface {
-		Redirect(name string, args map[string]string) web.Response
-		RedirectURL(url string) web.Response
-		RedirectPermanent(name string, args map[string]string) web.Response
-		RedirectPermanentURL(url string) web.Response
+		Redirect(name string, args map[string]string) web.Redirect
+		RedirectURL(url string) web.Redirect
+		RedirectPermanent(name string, args map[string]string) web.Redirect
+		RedirectPermanentURL(url string) web.Redirect
 	}
 
 	// FlamingoRedirectAware flamingo's redirect aware
@@ -26,7 +26,7 @@ type (
 var _ RedirectAware = &FlamingoRedirectAware{}
 
 // Redirect returns a web.RedirectResponse with the proper URL
-func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) web.Response {
+func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) web.Redirect {
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
@@ -36,7 +36,7 @@ func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) we
 }
 
 // RedirectURL returns a web.RedirectResponse with the proper URL
-func (r *FlamingoRedirectAware) RedirectURL(url string) web.Response {
+func (r *FlamingoRedirectAware) RedirectURL(url string) web.Redirect {
 	return &web.RedirectResponse{
 		Status:   http.StatusFound,
 		Location: url,
@@ -44,7 +44,7 @@ func (r *FlamingoRedirectAware) RedirectURL(url string) web.Response {
 }
 
 // RedirectPermanent returns a web.RedirectPermanentResponse with the proper URL
-func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]string) web.Response {
+func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]string) web.Redirect {
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
@@ -54,7 +54,7 @@ func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]s
 }
 
 // RedirectPermanentURL returns a web.RedirectResponse with the proper URL
-func (r *FlamingoRedirectAware) RedirectPermanentURL(url string) web.Response {
+func (r *FlamingoRedirectAware) RedirectPermanentURL(url string) web.Redirect {
 	return &web.RedirectResponse{
 		Status:   http.StatusMovedPermanently,
 		Location: url,

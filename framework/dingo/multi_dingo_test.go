@@ -3,7 +3,6 @@ package dingo
 import (
 	"testing"
 	"github.com/stretchr/testify/assert"
-	"log"
 )
 
 type(
@@ -64,10 +63,43 @@ func TestMultiBindingProvider(t *testing.T) {
 
 	assert.Len(t, list, 3)
 
-	log.Println(list)
 	assert.Equal(t, "testkey instance", list[0]())
 	assert.Equal(t, "testkey2 instance", list[1]())
 	assert.Equal(t, "testkey3 instance", list[2]())
+}
+
+func TestMultiBindingComplex(t *testing.T) {
+	injector := NewInjector()
+
+	injector.BindMulti((*mapBindInterface)(nil)).ToInstance("testkey instance")
+	injector.BindMulti((*mapBindInterface)(nil)).To("testkey2 instance")
+	injector.BindMulti((*mapBindInterface)(nil)).ToProvider(func() mapBindInterface { return "provided" })
+
+	test := injector.GetInstance(&multiBindTest{}).(*multiBindTest)
+	list := test.Mb
+
+	assert.Len(t, list, 3)
+
+	assert.Equal(t, "testkey instance", list[0])
+	assert.NotNil(t, list[1])
+	assert.Equal(t, "provided", list[2])
+}
+
+func TestMultiBindingComplexProvider(t *testing.T) {
+	injector := NewInjector()
+
+	injector.BindMulti((*mapBindInterface)(nil)).ToInstance("testkey instance")
+	injector.BindMulti((*mapBindInterface)(nil)).To("testkey2 instance")
+	injector.BindMulti((*mapBindInterface)(nil)).ToProvider(func() mapBindInterface { return "provided" })
+
+	test := injector.GetInstance(&multiBindProviderTest{}).(*multiBindProviderTest)
+	list := test.Mbp()
+
+	assert.Len(t, list, 3)
+
+	assert.Equal(t, "testkey instance", list[0]())
+	assert.NotNil(t, list[1]())
+	assert.Equal(t, "provided", list[2]())
 }
 
 func TestMapBinding(t *testing.T) {

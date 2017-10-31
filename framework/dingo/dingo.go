@@ -216,28 +216,37 @@ func (injector *Injector) intercept(final reflect.Value, t reflect.Type) reflect
 	return final
 }
 
+func (injector *Injector) resolveBinding(binding *Binding, t reflect.Type, optional bool) (reflect.Value, error) {
+	if binding.instance != nil {
+		return binding.instance.ivalue, nil
+	}
+
+	if binding.provider != nil {
+		result := binding.provider.Create(injector)
+		if result.Kind() == reflect.Slice {
+			result = injector.internalResolveType(result.Type(), "", optional)
+		} else {
+			injector.requestInjection(result.Interface())
+		}
+		return result, nil
+	}
+
+	if binding.to != nil {
+		if binding.to == t {
+			panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
+		}
+		return injector.resolveType(binding.to, "", optional), nil
+	}
+
+	return reflect.Value{}, fmt.Errorf("binding is not bound: %v for %s", binding, t.String())
+}
+
 // internalResolveType resolves a type request with the current injector
 func (injector *Injector) internalResolveType(t reflect.Type, annotation string, optional bool) reflect.Value {
 	if binding := injector.findBinding(t, annotation); binding != nil {
-		if binding.instance != nil {
-			return binding.instance.ivalue
-		}
-
-		if binding.provider != nil {
-			result := binding.provider.Create(injector)
-			if result.Kind() == reflect.Slice {
-				result = injector.internalResolveType(result.Type(), "", optional)
-			} else {
-				injector.requestInjection(result.Interface())
-			}
-			return result
-		}
-
-		if binding.to != nil {
-			if binding.to == t {
-				panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
-			}
-			return injector.resolveType(binding.to, "", optional)
+		r, err := injector.resolveBinding(binding, t, optional)
+		if err == nil {
+			return r
 		}
 	}
 
@@ -308,27 +317,8 @@ func (injector *Injector) createProviderForBinding(t reflect.Type, binding *Bind
 			res = res.Elem()
 		}
 
-		if binding.instance != nil {
-			res.Set(binding.instance.ivalue)
-			return []reflect.Value{res}
-		}
-
-		if binding.provider != nil {
-			result := binding.provider.Create(injector)
-			if result.Kind() == reflect.Slice {
-				result = injector.internalResolveType(result.Type(), "", optional)
-			} else {
-				injector.requestInjection(result.Interface())
-			}
-			res.Set(result)
-			return []reflect.Value{res}
-		}
-
-		if binding.to != nil {
-			if binding.to == t {
-				panic("circular from " + t.String() + " to " + binding.to.String() + " (annotated with: " + binding.annotatedWith + ")")
-			}
-			res.Set(injector.resolveType(binding.to, "", optional))
+		if r, err := injector.resolveBinding(binding, t, optional); err == nil {
+			res.Set(r)
 			return []reflect.Value{res}
 		}
 
@@ -355,18 +345,17 @@ func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string,
 	if bindings, ok := injector.multibindings[targetType]; ok {
 		n := reflect.MakeSlice(t, 0, len(bindings))
 		for _, binding := range bindings {
-			if provider {
-				n = reflect.Append(n, injector.createProviderForBinding(providerType, binding, annotation, false))
-				continue
-			}
-
 			if binding.annotatedWith == annotation {
-				//n = reflect.Append(n, injector.getInstance(binding.to))
-				if binding.instance != nil {
-					n = reflect.Append(n, binding.instance.ivalue)
-				} else {
-					n = reflect.Append(n, injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+				if provider {
+					n = reflect.Append(n, injector.createProviderForBinding(providerType, binding, annotation, false))
+					continue
 				}
+
+				r, err := injector.resolveBinding(binding, t, optional)
+				if err != nil {
+					panic(err)
+				}
+				n = reflect.Append(n, r)
 			}
 		}
 		return n
@@ -394,18 +383,17 @@ func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, o
 	if bindings, ok := injector.mapbindings[targetType]; ok {
 		n := reflect.MakeMapWithSize(t, len(bindings))
 		for key, binding := range bindings {
-			if provider {
-				n.SetMapIndex(reflect.ValueOf(key), injector.createProviderForBinding(providerType, binding, annotation, false))
-				continue
-			}
-
 			if binding.annotatedWith == annotation {
-				//n = reflect.Append(n, injector.getInstance(binding.to))
-				if binding.instance != nil {
-					n.SetMapIndex(reflect.ValueOf(key), binding.instance.ivalue)
-				} else {
-					n.SetMapIndex(reflect.ValueOf(key), injector.intercept(injector.getInstance(binding.to, annotation), targetType))
+				if provider {
+					n.SetMapIndex(reflect.ValueOf(key), injector.createProviderForBinding(providerType, binding, annotation, false))
+					continue
 				}
+
+				r, err := injector.resolveBinding(binding, t, optional)
+				if err != nil {
+					panic(err)
+				}
+				n.SetMapIndex(reflect.ValueOf(key), r)
 			}
 		}
 		return n

@@ -43,6 +43,8 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 			result = url.String() + "/" + string(asset)
 		}
 
+		result = strings.Replace(result, "//", "/", -1)
+
 		ctx.Push(result, nil) // h2 server push
 		return template.URL(result)
 	}

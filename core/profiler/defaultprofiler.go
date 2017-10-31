@@ -15,8 +15,7 @@ import (
 )
 
 var (
-	profilestorage = make(map[string]*defaultProfiler)
-	profilelock    = new(sync.Mutex)
+	profilestorage = new(sync.Map)
 )
 
 type (

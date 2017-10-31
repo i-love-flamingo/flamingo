@@ -268,7 +268,14 @@ func (dc *profileController) Get(ctx web.Context) web.Response {
 	}
 	var body = new(bytes.Buffer)
 
-	t.ExecuteTemplate(body, "tpl", profilestorage[ctx.MustParam1("profile")])
+	profile, ok := profilestorage.Load(ctx.MustParam1("profile"))
+	if !ok {
+		return &web.ContentResponse{
+			ContentType: "text/html; charset=utf-8",
+			Status:      http.StatusNotFound,
+		}
+	}
+	t.ExecuteTemplate(body, "tpl", profile.(*defaultProfiler))
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
@@ -280,7 +287,16 @@ func (dc *profileController) Get(ctx web.Context) web.Response {
 // Post saves offline profiling events
 func (dc *profileController) Post(ctx web.Context) web.Response {
 	dur, _ := strconv.ParseFloat(ctx.MustForm1("duration"), 64)
-	profilestorage[ctx.MustParam1("profile")].ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
+
+	profile, ok := profilestorage.Load(ctx.MustParam1("profile"))
+	if !ok {
+		return &web.ContentResponse{
+			ContentType: "text/html; charset=utf-8",
+			Status:      http.StatusNotFound,
+		}
+	}
+
+	profile.(*defaultProfiler).ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
 
 	return &web.JSONResponse{}
 }

@@ -103,13 +103,11 @@ window.addEventListener("load", function load(e) {
 		)
 	}
 
-	profilelock.Lock()
-	defer profilelock.Unlock()
-	if existing, ok := profilestorage[context.ID()]; ok {
-		p.Childs = append(existing.Childs, p.Childs...)
+	if existing, ok := profilestorage.Load(context.ID()); ok {
+		p.Childs = append(existing.(*defaultProfiler).Childs, p.Childs...)
 	}
-	if existing, ok := profilestorage[context.Request().Header.Get("X-Correlation-Id")]; ok {
-		existing.ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
+	if existing, ok := profilestorage.Load(context.Request().Header.Get("X-Correlation-Id")); ok {
+		existing.(*defaultProfiler).ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
 	}
-	profilestorage[context.ID()] = p
+	profilestorage.Store(context.ID(), p)
 }

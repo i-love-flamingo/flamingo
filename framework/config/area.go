@@ -122,11 +122,17 @@ func (m Map) Add(cfg Map) {
 	}
 }
 
+var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
+
 // Flat map
 func (m Map) Flat() Map {
 	res := make(Map)
 
 	for k, v := range m {
+		if val, ok := v.(string); ok {
+			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
+		}
+
 		res[k] = v
 
 		if v, ok := v.(Map); ok {
@@ -182,11 +188,7 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 		}
 	}
 
-	regex := regexp.MustCompile(`%%ENV:([^%]+)%%`)
 	for k, v := range area.Configuration.Flat() {
-		if val, ok := v.(string); ok {
-			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
-		}
 		if v == nil {
 			log.Printf("Warning: %s has nil value Configured!", k)
 			continue

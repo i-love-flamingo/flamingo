@@ -7,6 +7,8 @@ import (
 
 	"net/url"
 
+	"log"
+
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 )
@@ -75,12 +77,15 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	oauth2Token, err := cc.AuthManager.OAuth2Config().Exchange(c, c.MustQuery1("code"))
 	finish()
 	if err != nil {
+		log.Printf("core.auth.callback Error OAuth2Config Exchange %v", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
 
 	c.Session().Values[application.KeyToken] = oauth2Token
 	c.Session().Values[application.KeyRawIDToken], err = cc.AuthManager.ExtractRawIDToken(oauth2Token)
+	log.Printf("KeyToken: %v", oauth2Token)
 	if err != nil {
+		log.Printf("core.auth.callback Error ExtractRawIDToken %v", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
 

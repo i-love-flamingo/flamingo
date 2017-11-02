@@ -15,6 +15,9 @@ junit.xml
 /integration-test/shared
 context_local.yml
 
+docs/docs/Packages_Readme
+docs/site
+
 # pact
 **/logs/pact.log
 **/pacts/*.json

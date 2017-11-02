@@ -28,6 +28,6 @@ docker-push: docker
 	docker push $(DOCKERREPO)/flamingo
 
 wiki:
-	COMMIT=$(shell git subtree split -P docs/docs/)
+	$(eval COMMIT=$(shell git subtree split -P docs/docs/))
 	@echo Subtree Commit: $(COMMIT)
 	git push -f -u wiki $(COMMIT):refs/heads/master

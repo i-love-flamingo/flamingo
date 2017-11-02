@@ -250,3 +250,16 @@ func (area *Area) Config(key string) interface{} {
 
 	return nil
 }
+
+// HasKey checks recursive if the config has a given key
+func (area *Area) HasKey(key string) bool {
+	if _, ok := area.Configuration.Flat()[key]; ok {
+		return true
+	}
+
+	if area.Parent != nil {
+		return area.Parent.HasKey(key)
+	}
+
+	return false
+}

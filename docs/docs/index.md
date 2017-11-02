@@ -4,7 +4,7 @@
 
 A blazing fast modern ecommerce frontend framework with useful packages.
 
-![logo](assets/flamingo-icon.png)
+![logo](assets/flamingo-icon-b.png)
 
 ## Getting started
 

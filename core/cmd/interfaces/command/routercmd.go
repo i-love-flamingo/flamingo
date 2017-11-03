@@ -46,26 +46,26 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("\nRoutes:")
 			fmt.Println()
-			RoutesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
-			RoutesHelper.PrintRoutes()
+			routesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
+			routesHelper.printRoutes()
 		},
 	}
 
-	// DataController to shows registered data controller information
+	// DataControllerCmd to shows registered data controller information
 	DataControllerCmd = &cobra.Command{
 		Use:   "datacontroller",
 		Short: "Print the datacontroller handlers registered. Datacontrollers can be called in Templates and also via Ajax",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Datacontroller:")
 			fmt.Println()
-			RoutesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
-			RoutesHelper.PrintDataHandlers()
+			routesHelper := ConfigArea.GetInitializedInjector().GetInstance(routesHelper{}).(*routesHelper)
+			routesHelper.printDataHandlers()
 		},
 	}
 )
 
-// PrintRoutes prints Registered Routes and Theire Handle
-func (r *routesHelper) PrintRoutes() {
+// printRoutes prints Registered Routes and Theire Handle
+func (r *routesHelper) printRoutes() {
 	routes := make(map[string]string)
 
 	for _, routeHandler := range r.RouterRegistry.GetRoutes() {
@@ -81,11 +81,11 @@ func (r *routesHelper) PrintRoutes() {
 	}
 }
 
-// PrintDataHandlers prints Registered Routes and Theire Handle
-func (r *routesHelper) PrintDataHandlers() {
+// printDataHandlers prints Registered Routes and Theire Handle
+func (r *routesHelper) printDataHandlers() {
 	fmt.Println("    Handler-Name:         Type        (Registered Handler)")
-	fmt.Println("----------------------------------------------------------")
 
+	fmt.Println("----------------------------------------------------------")
 	for k, v := range r.RouterRegistry.GetHandler() {
 		if c, ok := v.(router.DataController); ok {
 			fmt.Printf("    %s:\t\t> %s \t(%v)\n", k, "DataController", c)

@@ -192,8 +192,8 @@ func (b *BlockNode) Inline() bool {
 }
 
 // Inline for CommonTags
-func (c *CommonTag) Inline() bool {
-	return *c.IsInline
+func (ct *CommonTag) Inline() bool {
+	return *ct.IsInline
 }
 
 // Inline for Code

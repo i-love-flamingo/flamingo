@@ -3,13 +3,12 @@ package auth
 import (
 	"encoding/gob"
 
+	"github.com/coreos/go-oidc"
 	"go.aoe.com/flamingo/core/auth/application"
 	"go.aoe.com/flamingo/core/auth/interfaces"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/profiler/collector"
 	"go.aoe.com/flamingo/framework/router"
-
-	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 )
 

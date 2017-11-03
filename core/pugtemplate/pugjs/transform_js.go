@@ -271,15 +271,15 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// ConditionalExpression: if (something) { ... } or foo ? a : b
 	case *ast.ConditionalExpression:
-		_cons := p.renderExpression(expr.Consequent, false, true)
-		if _cons == "" {
-			_cons = "null"
+		cons := p.renderExpression(expr.Consequent, false, true)
+		if cons == "" {
+			cons = "null"
 		}
-		_else := p.renderExpression(expr.Alternate, false, true)
-		if _else == "" {
-			_else = "null"
+		alternate := p.renderExpression(expr.Alternate, false, true)
+		if alternate == "" {
+			alternate = "null"
 		}
-		result = `(__if (` + p.renderExpression(expr.Test, false, true) + `) (` + _cons + `) (` + _else + `) )`
+		result = `(__if (` + p.renderExpression(expr.Test, false, true) + `) (` + cons + `) (` + alternate + `) )`
 		if wrap {
 			result = `{{` + result + `}}`
 		}

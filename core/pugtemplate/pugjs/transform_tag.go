@@ -17,8 +17,8 @@ func (t *Tag) Render(p *renderState, wr *bytes.Buffer) error {
 }
 
 func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error {
-	var _subblock = new(bytes.Buffer)
-	if err := ct.Block.Render(p, _subblock); err != nil {
+	var subblock = new(bytes.Buffer)
+	if err := ct.Block.Render(p, subblock); err != nil {
 		return err
 	}
 
@@ -42,14 +42,14 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 	case ct.SelfClosing:
 		fmt.Fprintf(wr, `<%s%s>`, name, attrs)
 
-	case name == "script" && strings.Index(_subblock.String(), "\n") > -1:
-		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, _subblock.String(), name)
+	case name == "script" && strings.Index(subblock.String(), "\n") > -1:
+		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, subblock.String(), name)
 
 	case !ct.Block.Inline() && p.debug:
-		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", name, attrs, _subblock.String(), name)
+		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", name, attrs, subblock.String(), name)
 
 	default:
-		fmt.Fprintf(wr, `<%s%s>%s</%s>`, name, attrs, _subblock.String(), name)
+		fmt.Fprintf(wr, `<%s%s>%s</%s>`, name, attrs, subblock.String(), name)
 	}
 
 	if !ct.Inline() && p.debug {

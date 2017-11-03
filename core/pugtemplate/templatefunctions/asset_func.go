@@ -37,11 +37,13 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		assetSplitted := strings.Split(string(asset), "/")
 		assetName := assetSplitted[len(assetSplitted)-1]
 
+		af.Engine.Lock()
 		if af.Engine.Assetrewrites[assetName] != "" {
 			result = url.String() + "/" + af.Engine.Assetrewrites[assetName]
 		} else {
 			result = url.String() + "/" + string(asset)
 		}
+		af.Engine.Unlock()
 
 		result = strings.Replace(result, "//", "/", -1)
 

@@ -4,9 +4,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
-	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -17,8 +14,7 @@ type (
 	// Area defines a configuration area for multi-site setups
 	// it is initialized by project main package and partly loaded by config files
 	Area struct {
-		Name    string
-		BaseURL string
+		Name string
 
 		Parent   *Area
 		Childs   []*Area
@@ -52,12 +48,11 @@ type (
 )
 
 // NewArea creates a new Area with childs
-func NewArea(name string, modules []dingo.Module, baseURL string, childs ...*Area) *Area {
+func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 	ctx := &Area{
 		Name:    name,
 		Modules: modules,
 		Childs:  childs,
-		BaseURL: baseURL,
 	}
 
 	for _, c := range childs {
@@ -74,14 +69,11 @@ func (area *Area) GetFlatContexts() []*Area {
 	flat := area.Flat()
 
 	for relativeContextKey, context := range flat {
-		if context.BaseURL == "" {
-			continue
-		}
 		result = append(result, &Area{
-			Name:     relativeContextKey,
-			BaseURL:  context.BaseURL,
-			Routes:   context.Routes,
-			Injector: context.Injector,
+			Name:          relativeContextKey,
+			Routes:        context.Routes,
+			Injector:      context.Injector,
+			Configuration: context.Configuration,
 		})
 
 	}
@@ -122,19 +114,12 @@ func (m Map) Add(cfg Map) {
 	}
 }
 
-var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
-
 // Flat map
 func (m Map) Flat() Map {
 	res := make(Map)
 
 	for k, v := range m {
-		if val, ok := v.(string); ok {
-			v = regex.ReplaceAllStringFunc(val, func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) })
-		}
-
 		res[k] = v
-
 		if v, ok := v.(Map); ok {
 			for sk, sv := range v.Flat() {
 				res[k+"."+sk] = sv
@@ -159,6 +144,20 @@ func (m Map) MapInto(out interface{}) error {
 	}
 
 	return nil
+}
+
+// Get a value by it's path
+func (m Map) Get(key string) (interface{}, bool) {
+	keyParts := strings.SplitN(key, ".", 2)
+	val, ok := m[keyParts[0]]
+	if len(keyParts) == 2 {
+		mm, ok := val.(Map)
+		if ok {
+			return mm.Get(keyParts[1])
+		}
+		return mm, false
+	}
+	return val, ok
 }
 
 // GetInitializedInjector returns initialized container based on the configuration
@@ -189,10 +188,10 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	}
 
 	for k, v := range area.Configuration.Flat() {
-		if v == nil {
-			log.Printf("Warning: %s has nil value Configured!", k)
-			continue
-		}
+		//if v == nil {
+		//	log.Printf("Warning: %s has nil value Configured!", k)
+		//	continue
+		//}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
 
@@ -238,27 +237,27 @@ func MergeFrom(baseContext, incomingContext Area) *Area {
 	return &baseContext
 }
 
-// Config get a config value recursive
-func (area *Area) Config(key string) interface{} {
-	if config, ok := area.Configuration.Flat()[key]; ok {
-		return config
+// Config get a config value (recursive thru all parents if possible)
+func (area *Area) Config(key string) (interface{}, bool) {
+	if config, ok := area.Configuration.Get(key); ok {
+		return config, true
 	}
 
 	if area.Parent != nil {
 		return area.Parent.Config(key)
 	}
 
-	return nil
+	return nil, false
 }
 
-// HasKey checks recursive if the config has a given key
-func (area *Area) HasKey(key string) bool {
-	if _, ok := area.Configuration.Flat()[key]; ok {
+// HasConfigKey checks recursive if the config has a given key
+func (area *Area) HasConfigKey(key string) bool {
+	if _, ok := area.Configuration.Get(key); ok {
 		return true
 	}
 
 	if area.Parent != nil {
-		return area.Parent.HasKey(key)
+		return area.Parent.HasConfigKey(key)
 	}
 
 	return false

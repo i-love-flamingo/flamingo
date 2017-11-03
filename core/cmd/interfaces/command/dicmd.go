@@ -25,12 +25,14 @@ var (
 				if contextName != "" && contextName != routeConfig.Name {
 					continue
 				}
-				if baseURL != "" && baseURL != routeConfig.BaseURL {
+				bu, _ := routeConfig.Configuration.Get("prefixrouter.baseurl")
+				baseurl := bu.(string)
+				if baseURL != "" && baseURL != baseurl {
 					continue
 				}
 				fmt.Println()
 				fmt.Println("********************************************")
-				fmt.Println("Routed Context  - Baseurl:" + routeConfig.BaseURL + " Contextpath: [" + routeConfig.Name + "]")
+				fmt.Println("Routed Context  - Baseurl:" + baseurl + " Contextpath: [" + routeConfig.Name + "]")
 				routeConfig.Injector.Debug()
 				fmt.Println()
 			}

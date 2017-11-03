@@ -26,7 +26,8 @@ var (
 
 			if len(args) > 0 {
 				for _, c := range args {
-					x, _ := json.MarshalIndent(ConfigArea.Config(c), "", "  ")
+					cfg, _ := ConfigArea.Config(c)
+					x, _ := json.MarshalIndent(cfg, "", "  ")
 					fmt.Println(c)
 					fmt.Println(string(x))
 					fmt.Println()

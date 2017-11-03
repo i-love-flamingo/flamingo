@@ -58,7 +58,7 @@ func (e *engine) Render(context web.Context, name string, data interface{}) (io.
 
 	defer context.Profile("template engine", "render template "+name)()
 	buf := &bytes.Buffer{}
-	err := tpl.ExecuteTemplate(buf, name + ".html", data)
+	err := tpl.ExecuteTemplate(buf, name+".html", data)
 
 	return buf, err
 }

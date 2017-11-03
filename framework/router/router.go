@@ -31,7 +31,7 @@ const (
 )
 
 type (
-	ProfilerProvider func() profiler.Profiler
+	ProfilerProvider    func() profiler.Profiler
 	EventRouterProvider func() event.Router
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
@@ -39,11 +39,11 @@ type (
 	Router struct {
 		base *url.URL
 
-		Sessions            sessions.Store           `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
-		SessionName         string                   `inject:"config:session.name"`
-		ContextFactory      web.ContextFactory       `inject:""` // ContextFactory for new contexts
-		ProfilerProvider    ProfilerProvider         `inject:""`
-		EventRouterProvider EventRouterProvider      `inject:""`
+		Sessions            sessions.Store      `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
+		SessionName         string              `inject:"config:session.name"`
+		ContextFactory      web.ContextFactory  `inject:""` // ContextFactory for new contexts
+		ProfilerProvider    ProfilerProvider    `inject:""`
+		EventRouterProvider EventRouterProvider `inject:""`
 		eventrouter         event.Router
 		Injector            *dingo.Injector `inject:""`
 		RouterRegistry      *Registry       `inject:""`
@@ -70,8 +70,6 @@ func (router *Router) SetBase(u *url.URL) {
 
 // Init the router
 func (router *Router) Init(routingConfig *config.Area) *Router {
-	router.base, _ = url.Parse("scheme://" + routingConfig.BaseURL)
-
 	// Make sure to not taint the global router registry
 	var routes = NewRegistry()
 

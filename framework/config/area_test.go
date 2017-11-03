@@ -158,3 +158,24 @@ func TestMapMapInto(t *testing.T) {
 		"result of marshalling is wrong",
 	)
 }
+
+func TestMap_Get(t *testing.T) {
+	m := make(Map)
+	m.Add(Map{
+		"foo.bar.x.y.z": "test",
+	})
+
+	val, ok := m.Get("foo.bar.x.y.z")
+	assert.True(t, ok)
+	assert.Equal(t, "test", val)
+
+	val, ok = m.Get("foo.bar")
+	assert.True(t, ok)
+	assert.Equal(t, Map{"x": Map{"y": Map{"z": "test"}}}, val)
+
+	val, ok = m.Get("foo.bar.baz")
+	assert.False(t, ok)
+
+	val, ok = m.Get("unknown")
+	assert.False(t, ok)
+}

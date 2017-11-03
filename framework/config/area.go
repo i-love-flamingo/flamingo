@@ -188,10 +188,10 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	}
 
 	for k, v := range area.Configuration.Flat() {
-		//if v == nil {
-		//	log.Printf("Warning: %s has nil value Configured!", k)
-		//	continue
-		//}
+		if v == nil {
+			// log.Printf("Warning: %s has nil value Configured!", k)
+			continue
+		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
 

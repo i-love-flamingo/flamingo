@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/ghodss/yaml"
 )
@@ -47,12 +48,19 @@ func load(area *Area, basedir, curdir string) error {
 	return nil
 }
 
+var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
+
 func loadConfig(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
+
+	config = []byte(regex.ReplaceAllStringFunc(
+		string(config),
+		func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) },
+	))
 
 	cfg := make(Map)
 	err = yaml.Unmarshal(config, &cfg)

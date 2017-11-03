@@ -3,9 +3,10 @@ package command
 import (
 	"fmt"
 
+	"reflect"
+
 	"github.com/spf13/cobra"
 	"go.aoe.com/flamingo/framework/template"
-	"reflect"
 	"go.aoe.com/flamingo/framework/web"
 )
 
@@ -20,12 +21,14 @@ var (
 				if contextName != "" && contextName != routeConfig.Name {
 					continue
 				}
-				if baseURL != "" && baseURL != routeConfig.BaseURL {
+				bu, _ := routeConfig.Configuration.Get("prefixrouter.baseurl")
+				baseurl := bu.(string)
+				if baseURL != "" && baseURL != baseurl {
 					continue
 				}
 				fmt.Println()
 				fmt.Println("********************************************")
-				fmt.Println("Routed Context  - Baseurl:" + routeConfig.BaseURL + " Contextpath: [" + routeConfig.Name + "]")
+				fmt.Println("Routed Context  - Baseurl:" + baseurl + " Contextpath: [" + routeConfig.Name + "]")
 				tfr := routeConfig.Injector.GetInstance(template.FunctionRegistry{}).(*template.FunctionRegistry)
 				fmt.Println("Functions")
 				for _, f := range tfr.TemplateFunctions {

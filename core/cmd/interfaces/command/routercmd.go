@@ -29,7 +29,9 @@ var (
 			fmt.Println("\nContext with Routing Config:")
 			fmt.Println()
 			for _, routeConfig := range ConfigArea.GetFlatContexts() {
-				fmt.Println(routeConfig.BaseURL + " [" + routeConfig.Name + "]")
+				bu, _ := routeConfig.Configuration.Get("prefixrouter.baseurl")
+				baseurl := bu.(string)
+				fmt.Println(baseurl + " [" + routeConfig.Name + "]")
 				for _, route := range routeConfig.Routes {
 					fmt.Printf("  * %s > %s \n", route.Path, route.Controller)
 				}

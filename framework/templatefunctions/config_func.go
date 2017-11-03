@@ -17,6 +17,7 @@ func (c ConfigFunc) Name() string {
 // Func as implementation of url method
 func (c *ConfigFunc) Func() interface{} {
 	return func(what string) interface{} {
-		return c.Area.Config(what)
+		val, _ := c.Area.Config(what)
+		return val
 	}
 }

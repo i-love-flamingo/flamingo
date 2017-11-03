@@ -65,13 +65,13 @@ type (
 
 // Parse parses a filename into a Token-tree
 func (p *renderState) Parse(file string) (*Token, error) {
-	bytes, err := ioutil.ReadFile(path.Join(p.path, file) + ".ast.json")
+	b, err := ioutil.ReadFile(path.Join(p.path, file) + ".ast.json")
 
 	if err != nil {
 		return nil, errors.Errorf("Cannot read %q", file)
 	}
 
-	return p.ParseJSON(bytes, file)
+	return p.ParseJSON(b, file)
 }
 
 // ParseJSON parses a json into a Token-tree

@@ -1,12 +1,11 @@
 package router
 
 import (
-	"go.aoe.com/flamingo/framework/web"
-
 	"net/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 func testController(web.Context) web.Response {

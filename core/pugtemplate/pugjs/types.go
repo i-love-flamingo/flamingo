@@ -392,65 +392,37 @@ func (s String) CharAt(pos int) string {
 }
 
 // ToUpperCase converter
-func (s String) ToUpperCase() string {
-	return strings.ToUpper(string(s))
-}
+func (s String) ToUpperCase() string { return strings.ToUpper(string(s)) }
 
 // Slice a string
-func (s String) Slice(from int) string {
-	return string(s[from:])
-}
+func (s String) Slice(from int) string { return string(s[from:]) }
 
 // Replace string values
 func (s String) Replace(what, with String) String {
 	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
 
-func (s String) copy() Object {
-	return s
-}
+func (s String) copy() Object { return s }
 
 // Number type
 type Number float64
 
-// Member getter
-func (n Number) Member(string) Object { return Nil{} }
-
-// String formatter
-func (n Number) String() string { return strconv.FormatFloat(float64(n), 'f', -1, 64) }
-
-func (n Number) copy() Object {
-	return n
-}
+func (n Number) Member(string) Object { return Nil{} }                                        // Member getter
+func (n Number) String() string       { return strconv.FormatFloat(float64(n), 'f', -1, 64) } // String formatter
+func (n Number) copy() Object         { return n }
 
 // Bool type
 type Bool bool
 
-// Member getter
-func (b Bool) Member(string) Object { return Nil{} }
-
-// String formatter
-func (b Bool) String() string { return fmt.Sprintf("%v", bool(b)) }
-
-// True getter
-func (b Bool) True() bool { return bool(b) }
-
-func (b Bool) copy() Object {
-	return b
-}
+func (b Bool) Member(string) Object { return Nil{} }                      // Member getter
+func (b Bool) String() string       { return fmt.Sprintf("%v", bool(b)) } // String formatter
+func (b Bool) True() bool           { return bool(b) }                    // True getter
+func (b Bool) copy() Object         { return b }
 
 // Nil type
 type Nil struct{}
 
-// Member is always nil
-func (n Nil) Member(string) Object { return Nil{} }
-
-// String is always empty
-func (n Nil) String() string { return "" }
-
-// True is always false
-func (n Nil) True() bool { return false }
-
-func (n Nil) copy() Object {
-	return Nil{}
-}
+func (n Nil) Member(string) Object { return Nil{} } // Member is always nil
+func (n Nil) String() string       { return "" }    // String is always empty
+func (n Nil) True() bool           { return false } // True is always false
+func (n Nil) copy() Object         { return Nil{} }

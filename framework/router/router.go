@@ -31,8 +31,8 @@ const (
 )
 
 type (
-	ProfilerProvider    func() profiler.Profiler
-	EventRouterProvider func() event.Router
+	ProfilerProvider    func() profiler.Profiler // ProfilerProvider for profiler injection
+	EventRouterProvider func() event.Router      // EventRouterProvider for event injection
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
@@ -147,7 +147,7 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 	return resultURL
 }
 
-func (router *Router) _recover(ctx web.Context, rw http.ResponseWriter, err interface{}) {
+func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err interface{}) {
 	defer func() {
 		if err := recover(); err != nil {
 			// bad bad recover
@@ -205,7 +205,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// catch errors
 	defer func() {
 		if err := recover(); err != nil {
-			router._recover(ctx, rw, err)
+			router.recover(ctx, rw, err)
 		}
 		// fire finish event
 		router.eventrouter.Dispatch(&OnFinishEvent{rw, req, err, ctx})

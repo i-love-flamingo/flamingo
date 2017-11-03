@@ -10,6 +10,7 @@ import (
 
 // Name for the default command
 var Name = "flamingo"
+var _ dingo.Module = &Module{}
 
 // Module for core/cmd
 type Module struct {
@@ -21,7 +22,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	var rootCmd = &cobra.Command{
 		Use:   Name,
 		Short: Name + " Console",
-		Long:  "The" + Name + " command line interface.",
+		Long:  "The " + Name + " command line interface.",
 	}
 
 	command.ConfigArea = m.Root

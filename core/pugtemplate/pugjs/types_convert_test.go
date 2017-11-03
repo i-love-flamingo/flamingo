@@ -9,35 +9,35 @@ import (
 )
 
 type (
-	TestConvert_struct1 struct {
+	testConvertStruct1 struct {
 		Str string
 		Num int
 	}
 
-	TestConvert_interface_empty interface{}
+	testConvertInterfaceEmpty interface{}
 
-	TestConvert_interface1 interface {
+	testConvertInterface1 interface {
 		Method() string
 	}
 
-	TestConvert_primitive string
+	testConvertPrimitive string
 )
 
-func (tcs *TestConvert_struct1) PtrMethod() string {
+func (tcs *testConvertStruct1) PtrMethod() string {
 	return "PtrMethod String"
 }
 
-func (tcs TestConvert_struct1) Method() string {
+func (tcs testConvertStruct1) Method() string {
 	return "Method String"
 }
 
-func (tcp TestConvert_primitive) Method() string {
+func (tcp testConvertPrimitive) Method() string {
 	return "primitive implementation"
 }
 
 func TestConvert(t *testing.T) {
 	t.Run("Complex structs", func(t *testing.T) {
-		tcs1s := TestConvert_struct1{Str: "TestStr", Num: 1337}
+		tcs1s := testConvertStruct1{Str: "TestStr", Num: 1337}
 		tcs1 := convert(tcs1s).(*Map).Items
 
 		assert.Equal(t, tcs1[String("Str")], String("TestStr"))
@@ -47,7 +47,7 @@ func TestConvert(t *testing.T) {
 	})
 
 	t.Run("Pointer", func(t *testing.T) {
-		tcs2s := &TestConvert_struct1{Str: "TestStr", Num: 1337}
+		tcs2s := &testConvertStruct1{Str: "TestStr", Num: 1337}
 		tcs2 := convert(tcs2s).(*Map).Items
 
 		assert.Equal(t, tcs2[String("Str")], String("TestStr"))
@@ -55,26 +55,26 @@ func TestConvert(t *testing.T) {
 		assert.Equal(t, tcs2[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.Method))
 		assert.Equal(t, tcs2[String("PtrMethod")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.PtrMethod))
 
-		assert.Equal(t, Nil{}, convert((*TestConvert_struct1)(nil)))
+		assert.Equal(t, Nil{}, convert((*testConvertStruct1)(nil)))
 	})
 
 	t.Run("Pointer/Interfaces", func(t *testing.T) {
 		// explicit empty interface
-		tcs1s := TestConvert_interface_empty(TestConvert_struct1{Str: "TestStr", Num: 1337})
+		tcs1s := testConvertInterfaceEmpty(testConvertStruct1{Str: "TestStr", Num: 1337})
 		tcs1 := convert(tcs1s).(*Map).Items
 
 		assert.Equal(t, tcs1[String("Str")], String("TestStr"))
 		assert.Equal(t, tcs1[String("Num")], Number(1337))
-		assert.Equal(t, tcs1[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.(TestConvert_struct1).Method))
+		assert.Equal(t, tcs1[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.(testConvertStruct1).Method))
 		assert.NotContains(t, tcs1, String("PtrMethod"))
 
 		// interface on struct
-		tcs2s := TestConvert_interface1(TestConvert_struct1{Str: "TestStr", Num: 1337})
+		tcs2s := testConvertInterface1(testConvertStruct1{Str: "TestStr", Num: 1337})
 		tcs2 := convert(tcs2s).(*Map).Items
 
 		assert.Equal(t, tcs2[String("Str")], String("TestStr"))
 		assert.Equal(t, tcs2[String("Num")], Number(1337))
-		assert.Equal(t, tcs2[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.(TestConvert_struct1).Method))
+		assert.Equal(t, tcs2[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.(testConvertStruct1).Method))
 		assert.NotContains(t, tcs2, String("PtrMethod"))
 	})
 

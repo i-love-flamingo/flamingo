@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"go.aoe.com/flamingo/framework/web"
-
-	"github.com/pkg/errors"
 )
 
 type (
@@ -37,10 +35,6 @@ type (
 
 	// EmptyError in case we want to hide our error
 	EmptyError struct{}
-
-	st interface {
-		StackTrace() errors.StackTrace
-	}
 )
 
 var _ ErrorAware = &FlamingoErrorAware{}

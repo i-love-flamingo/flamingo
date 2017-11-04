@@ -107,6 +107,24 @@ func pactTeardown(pact *dsl.Pact) error {
 
 // PactEncodeLike helper to encode a struct as a pact like type
 func PactEncodeLike(model interface{}) string {
+	if reflect.TypeOf(model).Kind() == reflect.Slice {
+		sliceValue := reflect.ValueOf(model)
+		c := sliceValue.Len()
+		slice := make([]interface{}, c)
+		for i := 0; i < c; i++ {
+			slice[i] = sliceValue.Index(i).Interface()
+		}
+
+		if len(slice) == 0 {
+			panic("Pass at least one entry in the slice")
+		}
+		return dsl.EachLike(pactEncodeLikeStruct(slice[0]), 1)
+	}
+	return pactEncodeLikeStruct(model)
+}
+
+// pactEncodeLikeStruct helper to encode a struct as a pact like type
+func pactEncodeLikeStruct(model interface{}) string {
 	var data map[string]interface{}
 
 	var tmp, _ = json.Marshal(model)

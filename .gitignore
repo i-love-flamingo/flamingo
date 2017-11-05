@@ -15,7 +15,7 @@ junit.xml
 /integration-test/shared
 context_local.yml
 
-docs/docs/Packages_Readme
+docs/docs/3. Core Packages
 docs/site
 
 # pact

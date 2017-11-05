@@ -22,7 +22,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for this module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"locale.labelFolder": "labels",
-		"locale.locale":      "en_US",
+		//"locale.translationFile": "translations/en-US.all.json",
+		"locale.locale":          "en-US",
 	}
 }

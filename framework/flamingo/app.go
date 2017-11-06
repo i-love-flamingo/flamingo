@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/sessions"
 	"github.com/spf13/cobra"
-	"github.com/zemirco/memorystore"
 	"go.aoe.com/flamingo/framework/config"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/router"
@@ -21,10 +19,6 @@ type appmodule struct {
 
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
-	sessionStore := memorystore.NewMemoryStore([]byte("flamingosecret"))
-	sessionStore.MaxLength(1024 * 1024)
-	injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
-
 	a.Cmd.AddCommand(&cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {

@@ -71,7 +71,7 @@ func (router *Router) SetBase(u *url.URL) {
 // Init the router
 func (router *Router) Init(routingConfig *config.Area) *Router {
 	if router.base == nil {
-		router.base, _ = url.Parse("http://host/")
+		router.base, _ = url.Parse("http://host")
 	}
 
 	// Make sure to not taint the global router registry

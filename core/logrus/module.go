@@ -14,7 +14,7 @@ type (
 		JSON bool   `inject:"config:logrus.json,optional"`
 	}
 
-	logrusEntry struct {
+	LogrusEntry struct {
 		*logrus.Entry
 	}
 )
@@ -31,17 +31,17 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	} else {
 		l = logrus.New()
 	}
-	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&logrusEntry{l.WithField("area", m.Area)})
+	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&LogrusEntry{l.WithField("area", m.Area)})
 }
 
-func (e *logrusEntry) WithField(key string, value interface{}) flamingo.Logger {
-	return &logrusEntry{e.Entry.WithField(key, value)}
+func (e *LogrusEntry) WithField(key string, value interface{}) flamingo.Logger {
+	return &LogrusEntry{e.Entry.WithField(key, value)}
 }
 
-func (e *logrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger {
-	return &logrusEntry{e.Entry.WithFields(fields)}
+func (e *LogrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger {
+	return &LogrusEntry{e.Entry.WithFields(fields)}
 }
 
-func (e *logrusEntry) WithError(err error) flamingo.Logger {
-	return &logrusEntry{e.Entry.WithError(err)}
+func (e *LogrusEntry) WithError(err error) flamingo.Logger {
+	return &LogrusEntry{e.Entry.WithError(err)}
 }

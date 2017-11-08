@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/boj/redistore"
+  packages = ["."]
+  revision = "fc113767cd6b051980f260d6dbe84b2740c46ab0"
+  version = "v1.2"
+
+[[projects]]
   name = "github.com/coreos/go-oidc"
   packages = ["."]
   revision = "5157aa730c25a7531d4b99483e6a440d4ab735a0"
@@ -10,6 +16,12 @@
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
+
+[[projects]]
+  name = "github.com/garyburd/redigo"
+  packages = ["internal","redis"]
+  revision = "47dc60e71eed504e3ef8e77ee3c6fe720f3be57f"
+  version = "v1.3.0"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -77,9 +89,9 @@
 
 [[projects]]
   name = "github.com/nicksnyder/go-i18n"
-  packages = ["i18n","i18n/bundle","i18n/language","i18n/translation"]
-  revision = "ca33e78c8a430e2df435b02f63a3944fa8e9ea11"
-  version = "v1.9.0"
+  packages = ["i18n/bundle","i18n/language","i18n/translation"]
+  revision = "0dc1626d56435e9d605a29875701721c54bc9bbd"
+  version = "v1.10.0"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -219,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "455253664bdb41efbe0f92b0e82bf6821424230a497aac0711a420d63164798b"
+  inputs-digest = "fe21c94102c152dee6e613eb336ab327a6dad7bcbb3fa26505954dfdaaeb03fc"
   solver-name = "gps-cdcl"
   solver-version = 1

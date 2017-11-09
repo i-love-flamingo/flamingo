@@ -1,7 +1,6 @@
 package templatefunctions
 
 import (
-	"log"
 	"text/template"
 
 	"bytes"
@@ -64,7 +63,7 @@ func (tf Label) Func() interface{} {
 		}
 		T, _ := i18bundle.Tfunc(localeCode)
 
-		log.Printf("called with key %v param: %#v  default: %v  Code: %v translationArguments: %#v Count %v", key, params, defaultLabel, localeCode, translationArguments, count)
+		//log.Printf("called with key %v param: %#v  default: %v  Code: %v translationArguments: %#v Count %v", key, params, defaultLabel, localeCode, translationArguments, count)
 		label := T(key, count, translationArguments)
 
 		//Fallback if label was not translated

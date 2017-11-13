@@ -1,21 +1,16 @@
 package templatefunctions
 
 import (
-	"text/template"
-
-	"bytes"
-
 	"strconv"
 
-	"github.com/nicksnyder/go-i18n/i18n/bundle"
+	"go.aoe.com/flamingo/core/locale/domain"
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
 
 type (
 	// Label is exported as a template function
 	Label struct {
-		LocaleCode      string `inject:"config:locale.locale"`
-		TranslationFile string `inject:"config:locale.translationFile"`
+		TranslationService domain.TranslationService `inject:""`
 	}
 )
 
@@ -26,15 +21,12 @@ func (tf Label) Name() string {
 
 func (tf Label) Func() interface{} {
 
-	i18bundle := bundle.New()
-	i18bundle.LoadTranslationFile(tf.TranslationFile)
-
 	// Usage:  __("key")
 	// __("key","default")
 	// __("key","Hello Mr {{.userName}}",{UserName: "Max"})
 	// Force other than configured locale: __("switch_to_german","",{},"de-DE")
 	return func(key string, params ...interface{}) string {
-		localeCode := tf.LocaleCode
+		localeCode := ""
 		defaultLabel := key
 		translationArguments := make(map[string]interface{})
 		count := 1
@@ -61,24 +53,8 @@ func (tf Label) Func() interface{} {
 				localeCode = stringParam3
 			}
 		}
-		T, _ := i18bundle.Tfunc(localeCode)
 
-		//log.Printf("called with key %v param: %#v  default: %v  Code: %v translationArguments: %#v Count %v", key, params, defaultLabel, localeCode, translationArguments, count)
-		label := T(key, count, translationArguments)
+		return tf.TranslationService.Translate(key, defaultLabel, localeCode, count, translationArguments)
 
-		//Fallback if label was not translated
-		if label == key && defaultLabel != "" {
-			tmpl, err := template.New(key).Parse(defaultLabel)
-			if err != nil {
-				return defaultLabel
-			}
-			var doc bytes.Buffer
-			err = tmpl.Execute(&doc, translationArguments)
-			if err != nil {
-				return defaultLabel
-			}
-			return doc.String()
-		}
-		return label
 	}
 }

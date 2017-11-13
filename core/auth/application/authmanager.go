@@ -99,6 +99,9 @@ func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error
 
 // IDToken retrieves and validates the ID Token from the session
 func (authmanager *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
+	if c.Session() == nil {
+		return nil, errors.New("no session configured!")
+	}
 	if _, ok := c.Session().Values[KeyRawIDToken]; !ok {
 		return nil, errors.New("no id token")
 	}

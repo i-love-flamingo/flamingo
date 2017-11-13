@@ -49,6 +49,7 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, logger
 				continue
 			}
 			logger.Println("Routing", area.Name, "at", baseurl)
+			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(router.Router{}).(*router.Router)
 			areaRouter.Init(area)
 			bu, _ := url.Parse("scheme://" + baseurl.(string))

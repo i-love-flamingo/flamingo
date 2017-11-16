@@ -361,6 +361,10 @@ func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string,
 		return n
 	}
 	if !optional {
+		if injector.parent != nil {
+			return injector.parent.resolveMultibinding(t, annotation, optional)
+		}
+
 		panic(fmt.Sprintf("Can not resolve multibinding for %s, provider: %v, target: %s", t, provider, targetType))
 	}
 
@@ -400,6 +404,10 @@ func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, o
 	}
 	//return reflect.New(targetType).Elem()
 	if !optional {
+		if injector.parent != nil {
+			return injector.parent.resolveMapbinding(t, annotation, optional)
+		}
+
 		panic(fmt.Sprintf("Can not resolve mapbinding for %s, provider: %v, target: %s", t, provider, targetType))
 	}
 
@@ -599,6 +607,24 @@ func (injector *Injector) Debug() {
 	for vtype, bindings := range injector.multibindings {
 		fmt.Printf("\t%30s  >  ", vtype)
 		for _, binding := range bindings {
+			if binding.annotatedWith != "" {
+				fmt.Printf(" (%s)", binding.annotatedWith)
+			}
+			if binding.instance != nil {
+				fmt.Printf(" %s |", binding.instance.ivalue.String())
+			} else if binding.provider != nil {
+				fmt.Printf(" %s |", binding.provider.fnc.String())
+			} else if binding.to != nil {
+				fmt.Printf(" %s |", binding.to)
+			}
+		}
+		fmt.Println()
+	}
+
+	for vtype, bindings := range injector.mapbindings {
+		fmt.Printf("\t%30s  >  ", vtype)
+		for key, binding := range bindings {
+			fmt.Printf("%s:", key)
 			if binding.annotatedWith != "" {
 				fmt.Printf(" (%s)", binding.annotatedWith)
 			}

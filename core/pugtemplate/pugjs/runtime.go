@@ -452,6 +452,12 @@ func runtimeEql(x, y interface{}) bool {
 }
 
 func runtimeLss(x, y interface{}) bool {
+	if _, ok := x.(Nil); ok {
+		return true
+	}
+	if _, ok := y.(Nil); ok {
+		return true
+	}
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:

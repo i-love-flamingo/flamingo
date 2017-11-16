@@ -28,7 +28,7 @@ type (
 	RedirectResponse struct {
 		Status   int
 		Location string
-		data map[string]interface{}
+		data     map[string]interface{}
 	}
 
 	// ContentResponse contains a response with body

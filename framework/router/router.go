@@ -165,7 +165,6 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 	}()
 
 	if e, ok := err.(error); ok {
-		log.Printf("%+v", errors.WithStack(e))
 		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
 	} else if err, ok := err.(string); ok {
 		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)

@@ -312,6 +312,10 @@ func call(fn reflect.Value, args ...reflect.Value) (reflect.Value, error) {
 // Boolean logic.
 
 func truth(arg reflect.Value) bool {
+	if !arg.IsValid() {
+		return false
+	}
+
 	if t, ok := arg.Interface().(truer); ok {
 		return t.True()
 	}

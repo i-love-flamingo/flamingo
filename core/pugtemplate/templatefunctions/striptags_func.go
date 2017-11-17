@@ -37,8 +37,10 @@ func removeTags(n *html.Node) string {
 	if n.Type == html.TextNode {
 		res += n.Data
 	}
-	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		res += removeTags(n)
+	if n.FirstChild != nil {
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			res += removeTags(n)
+		}
 	}
 
 	return res

@@ -61,6 +61,10 @@ func (f Form) HasAnyFieldErrors() bool {
 	return len(f.ValidationInfo.FieldErrors) > 0
 }
 
+func (f Form) HasGeneralErrors() bool {
+	return len(f.ValidationInfo.GeneralErrors) > 0
+}
+
 func (f Form) GetErrorsForField(name string) []Error {
 	if v, ok := f.ValidationInfo.FieldErrors[name]; ok {
 		return v

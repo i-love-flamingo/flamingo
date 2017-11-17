@@ -3,8 +3,6 @@ package templatefunctions
 import (
 	"strconv"
 
-	"log"
-
 	"go.aoe.com/flamingo/core/locale/domain"
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
@@ -38,7 +36,6 @@ func (tf Label) Func() interface{} {
 				defaultLabel = string(stringParam1)
 			}
 		}
-		log.Printf("%#v  -- %v", params, defaultLabel)
 		if len(params) > 1 {
 			if mapParam2, ok := params[1].(*pugjs.Map); ok {
 				for k, v := range mapParam2.Items {

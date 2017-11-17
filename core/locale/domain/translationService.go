@@ -43,7 +43,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	if err != nil {
 		log.Printf("Error - locale.translationservice %v", err)
 	} else {
-		log.Printf("called with key %v  default: %v  Code: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
+		//log.Printf("called with key %v  default: %v  Code: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
 		label = T(key, count, translationArguments)
 	}
 

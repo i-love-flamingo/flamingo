@@ -1,7 +1,6 @@
 package templatefunctions
 
 import (
-	"bytes"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -13,34 +12,34 @@ type (
 
 // Name alias for use in template
 func (df StriptagsFunc) Name() string {
-	return "striptags"
+	return "stripTags"
 }
 
 // Func as implementation of debug method
 func (df StriptagsFunc) Func() interface{} {
 	return func(htmlString string) string {
-		doc, err := html.Parse(strings.NewReader(htmlString))
+		doc, err := html.ParseFragment(strings.NewReader(htmlString), nil)
 		if err != nil {
 			return ""
 		}
 
-		removeScript(doc)
-		buf := new(bytes.Buffer)
-		if err := html.Render(buf, doc); err != nil {
-			return ""
+		res := ""
+		for _, n := range doc {
+			res += removeTags(n)
 		}
-		return buf.String()
+		return res
 	}
 }
 
-func removeScript(n *html.Node) {
-	// if note is script tag
-	if n.Type == html.ElementNode && n.Data == "script" {
-		n.Parent.RemoveChild(n)
-		return // script tag is gone...
+func removeTags(n *html.Node) string {
+	res := ""
+
+	if n.Type == html.TextNode {
+		res += n.Data
 	}
-	// traverse DOM
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
-		removeScript(c)
+		res += removeTags(n)
 	}
+
+	return res
 }

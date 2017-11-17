@@ -59,6 +59,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.StriptagsFunc{})
 
 	m.loadmock("../src/component/*")
 	m.loadmock("../src/component/*/*")
@@ -78,8 +79,8 @@ func (m *Module) DefaultConfig() config.Map {
 			"formatZero": "%s -,-",
 			"format":     "%s %v",
 		},
-        "imageservice.base_url": "-",
-        "imageservice.secret": "-",
+		"imageservice.base_url": "-",
+		"imageservice.secret":   "-",
 	}
 }
 

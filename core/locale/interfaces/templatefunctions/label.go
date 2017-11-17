@@ -34,6 +34,8 @@ func (tf Label) Func() interface{} {
 		if len(params) > 0 {
 			if stringParam1, ok := params[0].(pugjs.String); ok {
 				defaultLabel = string(stringParam1)
+			} else if stringParam1, ok := params[0].(string); ok {
+				defaultLabel = string(stringParam1)
 			}
 		}
 		if len(params) > 1 {

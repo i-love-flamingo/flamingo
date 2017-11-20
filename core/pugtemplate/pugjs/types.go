@@ -240,6 +240,7 @@ func (a *Array) Length() Object {
 
 // IndexOf array element
 func (a *Array) IndexOf(what interface{}) Object {
+	what = convert(what)
 	for i, w := range a.items {
 		if reflect.DeepEqual(w, what) {
 			return Number(i)

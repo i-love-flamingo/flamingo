@@ -297,7 +297,8 @@ func runtimeSub(i ...interface{}) interface{} {
 	if len(i) > 1 {
 		x = i[1]
 	} else {
-		x = 0
+		x = y
+		y = 0
 	}
 	x, y = y, x
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
@@ -402,6 +403,17 @@ func runtimeRem(x, y interface{}) interface{} {
 }
 
 func runtimeEql(x, y interface{}) bool {
+	_, xnil := x.(Nil)
+	_, ynil := y.(Nil)
+	if xnil && ynil {
+		return true
+	}
+	if xnil {
+		x = 0
+	}
+	if ynil {
+		y = 0
+	}
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {
 	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
@@ -452,11 +464,16 @@ func runtimeEql(x, y interface{}) bool {
 }
 
 func runtimeLss(x, y interface{}) bool {
-	if _, ok := x.(Nil); ok {
-		return true
+	_, xnil := x.(Nil)
+	_, ynil := y.(Nil)
+	if xnil && ynil {
+		return false
 	}
-	if _, ok := y.(Nil); ok {
-		return true
+	if xnil {
+		x = 0
+	}
+	if ynil {
+		y = 0
 	}
 	vx, vy := reflect.ValueOf(x), reflect.ValueOf(y)
 	switch vx.Kind() {

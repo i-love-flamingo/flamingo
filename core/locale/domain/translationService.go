@@ -3,15 +3,16 @@ package domain
 import (
 	"bytes"
 	"html/template"
-	"log"
 
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
+	"go.aoe.com/flamingo/framework/flamingo"
 )
 
 type (
 	TranslationService struct {
-		DefaultLocaleCode string `inject:"config:locale.locale"`
-		TranslationFile   string `inject:"config:locale.translationFile"`
+		DefaultLocaleCode string          `inject:"config:locale.locale"`
+		TranslationFile   string          `inject:"config:locale.translationFile"`
+		Logger            flamingo.Logger `inject:""`
 	}
 )
 
@@ -41,7 +42,8 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	}
 	T, err := i18bundle.Tfunc(localeCode)
 	if err != nil {
-		log.Printf("Error - locale.translationservice %v", err)
+		ts.Logger.Warningf("Error - locale.translationservice %v", err)
+		label = defaultLabel
 	} else {
 		//log.Printf("called with key %v  default: %v  Code: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
 		label = T(key, count, translationArguments)

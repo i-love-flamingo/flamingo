@@ -22,7 +22,13 @@ type (
 		*logrus.Entry
 	}
 
-	ContextHook struct{}
+	LogrusLogger struct {
+		*logrus.Logger
+	}
+
+	ContextHook struct {
+		area string
+	}
 )
 
 func (hook ContextHook) Levels() []logrus.Level {
@@ -32,6 +38,8 @@ func (hook ContextHook) Levels() []logrus.Level {
 func (hook ContextHook) Fire(entry *logrus.Entry) error {
 	pc := make([]uintptr, 3, 3)
 	cnt := runtime.Callers(6, pc)
+
+	entry.Data["area"] = hook.area
 
 	for i := 0; i < cnt; i++ {
 		fu := runtime.FuncForPC(pc[i] - 1)
@@ -59,8 +67,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	} else {
 		l = logrus.New()
 	}
-	l.Hooks.Add(ContextHook{})
-	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&LogrusEntry{l.WithField("area", m.Area)})
+	l.Hooks.Add(ContextHook{area: m.Area})
+	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&LogrusLogger{l})
 }
 
 func (e *LogrusEntry) WithField(key string, value interface{}) flamingo.Logger {
@@ -73,4 +81,16 @@ func (e *LogrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger 
 
 func (e *LogrusEntry) WithError(err error) flamingo.Logger {
 	return &LogrusEntry{e.Entry.WithError(err)}
+}
+
+func (e *LogrusLogger) WithField(key string, value interface{}) flamingo.Logger {
+	return &LogrusEntry{e.Logger.WithField(key, value)}
+}
+
+func (e *LogrusLogger) WithFields(fields map[string]interface{}) flamingo.Logger {
+	return &LogrusEntry{e.Logger.WithFields(fields)}
+}
+
+func (e *LogrusLogger) WithError(err error) flamingo.Logger {
+	return &LogrusEntry{e.Logger.WithError(err)}
 }

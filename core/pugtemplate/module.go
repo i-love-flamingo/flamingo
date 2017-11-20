@@ -61,9 +61,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.StriptagsFunc{})
 
-	m.loadmock("../src/component/*")
-	m.loadmock("../src/component/*/*")
-	m.loadmock("../src/page/*")
+	m.loadmock("../src/layout/*")
+	m.loadmock("../src/layout/*/*")
+	m.loadmock("../src/layout/*/*/*")
+	m.loadmock("../src/atom/*")
+	m.loadmock("../src/molecule/*/*")
+	m.loadmock("../src/organism/*")
 	m.loadmock("../src/page/*/*")
 	m.loadmock("../src/mock")
 }

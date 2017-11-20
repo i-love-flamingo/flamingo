@@ -28,12 +28,18 @@ const maxExecDepth = 100000
 // template so that multiple executions of the same template
 // can execute in parallel.
 type state struct {
-	tmpl    *Template
-	wr      io.Writer
-	node    parse.Node // current node, for errors
-	vars    []variable // push-down stack of variable values.
-	depth   int        // the height of the stack of executing templates.
-	globals []variable
+	tmpl        *Template
+	wr          io.Writer
+	node        parse.Node // current node, for errors
+	vars        []variable // push-down stack of variable values.
+	depth       int        // the height of the stack of executing templates.
+	globals     []variable
+	boundBlocks []*boundBlock
+}
+
+type boundBlock struct {
+	name  string
+	scope *state
 }
 
 // variable holds the dynamic value of a variable such as $, $x etc.
@@ -447,8 +453,6 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 	}
 }
 
-var statemap = make(map[string]*state)
-
 func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	s.at(t)
 	name := t.Name
@@ -465,13 +469,23 @@ func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	// Variables declared by the pipeline persist.
 	dot = s.evalPipeline(dot, t.Pipe)
 
-	newState := *s
-	if os, ok := statemap[name]; ok {
-		newState = *os
-	} else {
+	var newState state
+	var found bool
+	for i := len(s.boundBlocks) - 1; i >= 0; i-- {
+		if s.boundBlocks[i].name == name {
+			newState = *s.boundBlocks[i].scope
+			s.boundBlocks = append(s.boundBlocks[:i], s.boundBlocks[i+1:]...)
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		newState = *s
 		newState.vars = make([]variable, len(s.globals))
 		copy(newState.vars, s.globals)
 	}
+
 	newState.depth++
 	newState.tmpl = tmpl
 	// No dynamic scoping: template invocations inherit no variables.
@@ -793,7 +807,7 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 	}
 
 	if name == "__freeze" {
-		statemap[argv[0].String()] = s
+		s.boundBlocks = append(s.boundBlocks, &boundBlock{name: argv[0].String(), scope: s})
 	}
 
 	result := fun.Call(argv)

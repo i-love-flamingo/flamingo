@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"sync"
+
 	"github.com/sirupsen/logrus"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/flamingo"
@@ -35,7 +37,12 @@ func (hook ContextHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
+var lock = new(sync.Mutex)
+
 func (hook ContextHook) Fire(entry *logrus.Entry) error {
+	lock.Lock()
+	defer lock.Unlock()
+
 	pc := make([]uintptr, 3, 3)
 	cnt := runtime.Callers(6, pc)
 

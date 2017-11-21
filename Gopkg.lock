@@ -18,6 +18,12 @@
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/etgryphon/stringUp"
+  packages = ["."]
+  revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
+
+[[projects]]
   name = "github.com/garyburd/redigo"
   packages = ["internal","redis"]
   revision = "47dc60e71eed504e3ef8e77ee3c6fe720f3be57f"
@@ -30,8 +36,26 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/go-playground/form"
+  packages = ["."]
+  revision = "7b3f7e7430f0f1b8a744c80bb7ce6a629c65b396"
+  version = "v3.0.1"
+
+[[projects]]
+  name = "github.com/go-playground/locales"
+  packages = [".","currency"]
+  revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
+  version = "v0.11.2"
+
+[[projects]]
+  name = "github.com/go-playground/universal-translator"
+  packages = ["."]
+  revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
+  version = "v0.16.0"
+
+[[projects]]
   name = "github.com/golang/protobuf"
-  packages = ["proto"]
+  packages = ["jsonpb","proto","ptypes","ptypes/any","ptypes/duration","ptypes/struct","ptypes/timestamp"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
 
 [[projects]]
@@ -69,6 +93,12 @@
   packages = ["color"]
   revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
   version = "v0.2.1"
+
+[[projects]]
+  name = "github.com/leebenson/conform"
+  packages = ["."]
+  revision = "bdfc728cafe576ce87010707d3ed365c75e854cd"
+  version = "1.2.0"
 
 [[projects]]
   name = "github.com/leekchan/accounting"
@@ -212,6 +242,12 @@
   revision = "170382fa85b10b94728989dfcf6cc818b335c952"
 
 [[projects]]
+  name = "gopkg.in/go-playground/validator.v9"
+  packages = ["."]
+  revision = "61caf9d3038e1af346dbf5c2e16f6678e1548364"
+  version = "v9.9.0"
+
+[[projects]]
   name = "gopkg.in/sourcemap.v1"
   packages = [".","base64vlq"]
   revision = "6e83acea0053641eff084973fee085f0c193c61a"
@@ -231,6 +267,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fe21c94102c152dee6e613eb336ab327a6dad7bcbb3fa26505954dfdaaeb03fc"
+  inputs-digest = "567780c1809b4eb491769631abb0df139445cf27d2d0398706b0e69a8516599e"
   solver-name = "gps-cdcl"
   solver-version = 1

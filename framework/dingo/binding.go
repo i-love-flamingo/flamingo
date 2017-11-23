@@ -66,8 +66,8 @@ func (b *Binding) ToProvider(p interface{}) *Binding {
 		binding: b,
 	}
 	provider.fnctype = provider.fnc.Type().Out(0)
-	if provider.fnctype != b.typeof && provider.fnctype != reflect.PtrTo(b.typeof) {
-		panic(fmt.Sprintf("wrong provider type %s for %s", provider.fnctype, b.typeof))
+	if !provider.fnctype.AssignableTo(b.typeof) {
+		panic(fmt.Sprintf("provder returns %q which is not assignable to %q", provider.fnctype, b.typeof))
 	}
 	b.provider = provider
 	return b

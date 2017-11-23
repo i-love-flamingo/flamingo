@@ -2,6 +2,7 @@ package dingo
 
 import (
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,13 +23,15 @@ type (
 	}
 
 	IfaceProvider func() Interface
+
 	DepTest struct {
 		Iface  Interface `inject:""`
 		Iface2 Interface `inject:"test"`
 
-		IfaceProvider IfaceProvider `inject:""`
-		IfaceProvided Interface        `inject:"provider"`
-		IfaceInstance Interface        `inject:"instance"`
+		IfaceProvider      IfaceProvider `inject:""`
+		IfaceProvided      Interface     `inject:"provider"`
+		IfaceImpl1Provided Interface     `inject:"providerimpl1"`
+		IfaceInstance      Interface     `inject:"instance"`
 	}
 
 	TestSingleton struct {
@@ -44,6 +47,10 @@ func InterfaceProvider(str string) Interface {
 	return &InterfaceImpl1{foo: str}
 }
 
+func InterfaceImpl1Provider(str string) *InterfaceImpl1 {
+	return &InterfaceImpl1{foo: str}
+}
+
 func (ptm *PreTestModule) Configure(injector *Injector) {
 	injector.Bind((*string)(nil)).ToInstance("Hello World")
 }
@@ -54,6 +61,7 @@ func (tm *TestModule) Configure(injector *Injector) {
 	injector.Bind((*Interface)(nil)).AnnotatedWith("test").To(InterfaceImpl2{})
 
 	injector.Bind((*Interface)(nil)).AnnotatedWith("provider").ToProvider(InterfaceProvider)
+	injector.Bind((*Interface)(nil)).AnnotatedWith("providerimpl1").ToProvider(InterfaceImpl1Provider)
 	injector.Bind((*Interface)(nil)).AnnotatedWith("instance").ToInstance(new(InterfaceImpl2))
 
 	injector.Bind(TestSingleton{}).AsEagerSingleton()
@@ -132,10 +140,12 @@ func TestDingo(t *testing.T) {
 				assert.Equal(t, 2, dt2.Iface2.Test())
 
 				assert.Equal(t, 1, dt.IfaceProvided.Test())
+				assert.Equal(t, 1, dt.IfaceImpl1Provided.Test())
 				assert.Equal(t, 2, dt.IfaceInstance.Test())
 
 				assert.Equal(t, 1, dt.IfaceProvider().Test())
 				assert.Equal(t, "Hello World", dt.IfaceProvided.(*InterfaceImpl1).foo)
+				assert.Equal(t, "Hello World", dt.IfaceImpl1Provided.(*InterfaceImpl1).foo)
 			})
 
 			t.Run("Should resolve scopes", func(t *testing.T) {

@@ -58,6 +58,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsJSON{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
+	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.DataFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.StriptagsFunc{})
 

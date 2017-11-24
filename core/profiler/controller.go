@@ -275,7 +275,7 @@ func (dc *profileController) Get(ctx web.Context) web.Response {
 			Status:      http.StatusNotFound,
 		}
 	}
-	t.ExecuteTemplate(body, "tpl", profile.(*defaultProfiler))
+	t.ExecuteTemplate(body, "tpl", profile)
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
@@ -296,7 +296,7 @@ func (dc *profileController) Post(ctx web.Context) web.Response {
 		}
 	}
 
-	profile.(*defaultProfiler).ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
+	profile.ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
 
 	return &web.JSONResponse{}
 }

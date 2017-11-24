@@ -25,9 +25,19 @@ type (
 	}
 
 	// getFunc allows templates to access the router's `get` method
+	dataFunc struct {
+		Router *router.Router `inject:""`
+	}
+
 	getFunc struct {
 		Router *router.Router `inject:""`
 	}
+)
+
+var (
+	_ flamingotemplate.Function        = new(urlFunc)
+	_ flamingotemplate.ContextFunction = new(getFunc)
+	_ flamingotemplate.ContextFunction = new(dataFunc)
 )
 
 func (e *engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
@@ -78,6 +88,24 @@ func (g *getFunc) Func(ctx web.Context) interface{} {
 			}
 		}
 		return g.Router.Get(what, ctx, p)
+	}
+}
+
+// Name alias for use in template
+func (d dataFunc) Name() string {
+	return "data"
+}
+
+// Func as implementation of get method
+func (d *dataFunc) Func(ctx web.Context) interface{} {
+	return func(what string, params ...map[string]interface{}) interface{} {
+		var p = make(map[interface{}]interface{})
+		if len(params) == 1 {
+			for k, v := range params[0] {
+				p[k] = fmt.Sprint(v)
+			}
+		}
+		return d.Router.Get(what, ctx, p)
 	}
 }
 

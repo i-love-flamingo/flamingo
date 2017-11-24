@@ -2,11 +2,12 @@ package dingo
 
 import (
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 
-type(
-	mapBindInterface interface {}
+type (
+	mapBindInterface interface{}
 
 	mapBindInterfaceProvider func() map[string]mapBindInterface
 
@@ -18,13 +19,13 @@ type(
 		Mb mapBindInterface `inject:"map:testkey"`
 	}
 
-	mapBindTest3Provider func() mapBindInterface
+	mapBindTest3Provider    func() mapBindInterface
 	mapBindTest3MapProvider func() map[string]mapBindTest3Provider
-	mapBindTest3 struct {
+	mapBindTest3            struct {
 		Mbp mapBindTest3MapProvider `inject:""`
 	}
 
-	multiBindProvider func() mapBindInterface
+	multiBindProvider     func() mapBindInterface
 	listmultiBindProvider func() []multiBindProvider
 	multiBindProviderTest struct {
 		Mbp listmultiBindProvider `inject:""`
@@ -105,9 +106,9 @@ func TestMultiBindingComplexProvider(t *testing.T) {
 func TestMapBinding(t *testing.T) {
 	injector := NewInjector()
 
-	injector.BindMap("testkey", (*mapBindInterface)(nil)).ToInstance("testkey instance")
-	injector.BindMap("testkey2", (*mapBindInterface)(nil)).ToInstance("testkey2 instance")
-	injector.BindMap("testkey3", (*mapBindInterface)(nil)).ToInstance("testkey3 instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey").ToInstance("testkey instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey2").ToInstance("testkey2 instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey3").ToInstance("testkey3 instance")
 
 	test1 := injector.GetInstance(&mapBindTest1{}).(*mapBindTest1)
 	test1map := test1.Mbp()
@@ -124,9 +125,9 @@ func TestMapBinding(t *testing.T) {
 func TestMapBindingProvider(t *testing.T) {
 	injector := NewInjector()
 
-	injector.BindMap("testkey", (*mapBindInterface)(nil)).ToInstance("testkey instance")
-	injector.BindMap("testkey2", (*mapBindInterface)(nil)).ToInstance("testkey2 instance")
-	injector.BindMap("testkey3", (*mapBindInterface)(nil)).ToInstance("testkey3 instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey").ToInstance("testkey instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey2").ToInstance("testkey2 instance")
+	injector.BindMap((*mapBindInterface)(nil), "testkey3").ToInstance("testkey3 instance")
 
 	test := injector.GetInstance(&mapBindTest3{}).(*mapBindTest3)
 	testmap := test.Mbp()

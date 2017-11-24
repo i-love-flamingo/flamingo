@@ -104,10 +104,10 @@ window.addEventListener("load", function load(e) {
 	}
 
 	if existing, ok := profilestorage.Load(context.ID()); ok {
-		p.Childs = append(existing.(*defaultProfiler).Childs, p.Childs...)
+		p.Childs = append(existing.Childs, p.Childs...)
 	}
 	if existing, ok := profilestorage.Load(context.Request().Header.Get("X-Correlation-Id")); ok {
-		existing.(*defaultProfiler).ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
+		existing.ProfileExternal(context.Request().RequestURI, context.ID(), p.Duration)
 	}
 	profilestorage.Store(context.ID(), p)
 }

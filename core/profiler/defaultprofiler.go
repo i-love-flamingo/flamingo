@@ -14,8 +14,27 @@ import (
 	"go.aoe.com/flamingo/framework/web"
 )
 
+type (
+	profilemap struct {
+		sync.Map
+	}
+)
+
+func (pm *profilemap) Load(key string) (*defaultProfiler, bool) {
+	p, ok := pm.Map.Load(key)
+	if !ok {
+		return nil, false
+	}
+	pp, ok := p.(*defaultProfiler)
+	return pp, ok
+}
+
+func (pm *profilemap) Store(key string, val *defaultProfiler) {
+	pm.Map.Store(key, val)
+}
+
 var (
-	profilestorage = new(sync.Map)
+	profilestorage = new(profilemap)
 )
 
 type (

@@ -451,7 +451,7 @@ func (injector *Injector) BindMulti(what interface{}) *Binding {
 }
 
 // BindMap does a registry-like map-based binding, like BindMulti
-func (injector *Injector) BindMap(key string, what interface{}) *Binding {
+func (injector *Injector) BindMap(what interface{}, key string) *Binding {
 	bindtype := reflect.TypeOf(what)
 	if bindtype.Kind() == reflect.Ptr {
 		bindtype = bindtype.Elem()

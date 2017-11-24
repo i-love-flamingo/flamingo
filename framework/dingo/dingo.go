@@ -16,16 +16,17 @@ const (
 
 type (
 	// Injector defines bindings and multibindings
+	// it is possible to have a parent-injector, which can be asked if no resolution is available
 	Injector struct {
-		bindings      map[reflect.Type][]*Binding
-		multibindings map[reflect.Type][]*Binding
-		mapbindings   map[reflect.Type]map[string]*Binding
-		interceptor   map[reflect.Type][]reflect.Type
-		overrides     []*override
-		parent        *Injector
-		scopes        map[reflect.Type]Scope
-		stage         uint
-		delayed       []interface{}
+		bindings      map[reflect.Type][]*Binding          // list of available bindings for a concrete type
+		multibindings map[reflect.Type][]*Binding          // list of multi-bindings for a concrete type
+		mapbindings   map[reflect.Type]map[string]*Binding // list of map-bindings for a concrete type
+		interceptor   map[reflect.Type][]reflect.Type      // list of interceptors for a type
+		overrides     []*override                          // list of overrides for a binding
+		parent        *Injector                            // parent injector reference
+		scopes        map[reflect.Type]Scope               // scope-bindings
+		stage         uint                                 // current stage
+		delayed       []interface{}                        // delayed bindings
 	}
 
 	// Module is provided by packages to generate the DI tree
@@ -33,6 +34,7 @@ type (
 		Configure(injector *Injector)
 	}
 
+	// overrides are evaluated lazy, so they are scheduled here
 	override struct {
 		typ           reflect.Type
 		annotatedWith string
@@ -51,11 +53,14 @@ func NewInjector(modules ...Module) *Injector {
 		stage:         DEFAULT,
 	}
 
+	// bind current injector
 	injector.Bind(Injector{}).ToInstance(injector)
 
+	// bind default scopes
 	injector.BindScope(Singleton)
 	injector.BindScope(ChildSingleton)
 
+	// init current modules
 	injector.InitModules(modules...)
 
 	return injector
@@ -63,11 +68,11 @@ func NewInjector(modules ...Module) *Injector {
 
 // Child derives a child injector with a new ChildSingletonScope
 func (injector *Injector) Child() *Injector {
-	var newInjector = NewInjector()
+	newInjector := NewInjector()
 	newInjector.parent = injector
 	newInjector.Bind(Injector{}).ToInstance(newInjector)
-	newInjector.BindScope(new(ChildSingletonScope))
-	newInjector.multibindings = injector.multibindings
+	newInjector.BindScope(new(ChildSingletonScope))    // bind a new child-singleton
+	newInjector.multibindings = injector.multibindings // todo is this good? what about mapbindings?
 
 	return newInjector
 }
@@ -76,11 +81,13 @@ func (injector *Injector) Child() *Injector {
 func (injector *Injector) InitModules(modules ...Module) {
 	injector.stage = INIT
 
+	// todo dependency resolution
 	for _, module := range modules {
 		injector.requestInjection(module)
 		module.Configure(injector)
 	}
 
+	// evaluate overrides when modules were loaded
 	for _, override := range injector.overrides {
 		bindtype := override.typ
 		if bindtype.Kind() == reflect.Ptr {
@@ -94,9 +101,10 @@ func (injector *Injector) InitModules(modules ...Module) {
 			}
 			continue
 		}
-		panic("cannot override unknown binding " + override.typ.String() + " (annotated with " + override.annotatedWith + ")")
+		panic("cannot override unknown binding " + override.typ.String() + " (annotated with " + override.annotatedWith + ")") // todo ok?
 	}
 
+	// make sure there are no duplicated bindings
 	for typ, bindings := range injector.bindings {
 		known := make(map[string]*Binding)
 		for _, binding := range bindings {
@@ -109,6 +117,7 @@ func (injector *Injector) InitModules(modules ...Module) {
 
 	injector.stage = DEFAULT
 
+	// continue with delayed injections
 	for _, object := range injector.delayed {
 		injector.requestInjection(object)
 	}
@@ -135,11 +144,11 @@ func (injector *Injector) GetAnnotatedInstance(of interface{}, annotatedWith str
 	return injector.getInstance(of, annotatedWith).Interface()
 }
 
-// getInstance creates the new instance of of, returns a reflect.value
-func (injector *Injector) getInstance(of interface{}, annotatedWith string) reflect.Value {
-	oftype := reflect.TypeOf(of)
+// getInstance creates the new instance of typ, returns a reflect.value
+func (injector *Injector) getInstance(typ interface{}, annotatedWith string) reflect.Value {
+	oftype := reflect.TypeOf(typ)
 
-	if oft, ok := of.(reflect.Type); ok {
+	if oft, ok := typ.(reflect.Type); ok {
 		oftype = oft
 	} else {
 		for oftype.Kind() == reflect.Ptr {
@@ -158,10 +167,12 @@ func (injector *Injector) findBinding(t reflect.Type, annotation string) *Bindin
 		}
 	}
 
+	// inject one key of a map-binding
 	if len(annotation) > 4 && annotation[:4] == "map:" {
 		return injector.mapbindings[t][annotation[4:]]
 	}
 
+	// ask parent
 	if injector.parent != nil {
 		return injector.parent.findBinding(t, annotation)
 	}

@@ -1,6 +1,9 @@
 package testutil
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 type teststruct struct {
 	Foo  string      `json:"foo"`
@@ -19,7 +22,8 @@ func TestPactEncodeLike(t *testing.T) {
 		},
 	}
 
-	var testencoded = PactEncodeLike(test)
+	b, _ := json.Marshal(test)
+	var testencoded = PactEncodeLike(b)
 
 	if testencoded != `` {
 		//t.Fatal("wrong encoding", testencoded)

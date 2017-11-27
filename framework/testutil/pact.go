@@ -8,16 +8,14 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"go.aoe.com/flamingo/framework"
-
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
+	"go.aoe.com/flamingo/framework"
 )
 
 // ErrNoPact error
@@ -105,65 +103,43 @@ func pactTeardown(pact *dsl.Pact) error {
 	return nil
 }
 
-// PactEncodeLike helper to encode a struct as a pact like type
-func PactEncodeLike(model interface{}) string {
-	if reflect.TypeOf(model).Kind() == reflect.Slice {
-		sliceValue := reflect.ValueOf(model)
-		c := sliceValue.Len()
-		slice := make([]interface{}, c)
-		for i := 0; i < c; i++ {
-			slice[i] = sliceValue.Index(i).Interface()
-		}
+// PactEncodeLike encodes a byte slice from json.Marshal or jsonpb into a pact type-like representation
+func PactEncodeLike(model []byte) string {
+	var data interface{}
+	json.Unmarshal(model, &data)
 
-		if len(slice) == 0 {
-			panic("Pass at least one entry in the slice")
-		}
-		return dsl.EachLike(pactEncodeLikeStruct(slice[0]), 1)
-	}
-	return pactEncodeLikeStruct(model)
+	return string(pactEncode(data))
 }
 
-// pactEncodeLikeStruct helper to encode a struct as a pact like type
-func pactEncodeLikeStruct(model interface{}) string {
-	var data map[string]interface{}
+func pactEncode(data interface{}) json.RawMessage {
+	switch data := data.(type) {
+	case string:
+		data = `"` + data + `"`
+		return json.RawMessage(dsl.Like(data))
 
-	var tmp, _ = json.Marshal(model)
-	json.Unmarshal(tmp, &data)
+	case int, float32, float64, bool, uint:
+		return json.RawMessage(dsl.Like(data))
 
-	var result = make(map[string]json.RawMessage)
-
-	for k, v := range data {
-		if reflect.TypeOf(v) != nil && reflect.TypeOf(v).Kind() == reflect.Map {
-			v = []byte(PactEncodeLike(v))
-		} else {
-			v, _ = json.Marshal(v)
+	case map[string]interface{}:
+		for k, v := range data {
+			data[k] = pactEncode(v)
 		}
+		b, _ := json.Marshal(data)
+		return json.RawMessage(dsl.Like(string(b)))
 
-		result[k] = json.RawMessage(dsl.Like(string(v.([]byte))))
+	case []interface{}:
+		if len(data) < 1 {
+			return json.RawMessage(dsl.EachLike(`null`, 0))
+		}
+		b, _ := json.Marshal(pactEncode(data[0]))
+		return json.RawMessage(dsl.EachLike(string(b), len(data)))
+
+	case json.RawMessage:
+		return data
+
+	case nil:
+		return json.RawMessage("null")
 	}
 
-	tmp, _ = json.MarshalIndent(result, "", "\t")
-
-	return string(tmp)
+	panic(fmt.Sprintf("can not encode %T", data))
 }
-
-// PactWithInteractions extends the pact's interactions
-//func PactWithInteractions(pact dsl.Pact, interactions []*dsl.Interaction) dsl.Pact {
-//	pact.Interactions = append(pact.Interactions, interactions...)
-//
-//	p := pact
-//	mockServer := &dsl.MockService{
-//		BaseURL:  fmt.Sprintf("http://%s:%d", p.Host, p.Server.Port),
-//		Consumer: p.Consumer,
-//		Provider: p.Provider,
-//	}
-//
-//	for _, interaction := range p.Interactions {
-//		err := mockServer.AddInteraction(interaction)
-//		if err != nil {
-//			panic(err)
-//		}
-//	}
-//
-//	return pact
-//}

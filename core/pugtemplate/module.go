@@ -2,6 +2,7 @@ package pugtemplate
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,6 +23,7 @@ type (
 	Module struct {
 		RouterRegistry *router.Registry `inject:""`
 		Basedir        string           `inject:"config:pug_template.basedir"`
+		DefaultMux     *http.ServeMux   `inject:",optional"`
 	}
 
 	// TemplateFunctionInterceptor to use fixtype
@@ -50,6 +52,25 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			return (template.Engine)(t)
 		},
 	)
+
+	if m.DefaultMux != nil {
+		m.DefaultMux.HandleFunc("/assets/", func(rw http.ResponseWriter, req *http.Request) {
+			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+				io.Copy(rw, r.Body)
+			} else {
+				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+			}
+		})
+	}
+
+	m.RouterRegistry.Route("/assets/*f", "_pugtemplate.assets")
+	m.RouterRegistry.Handle("_pugtemplate.assets", http.Handler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+			io.Copy(rw, r.Body)
+		} else {
+			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+		}
+	})))
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.AssetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsMath{})

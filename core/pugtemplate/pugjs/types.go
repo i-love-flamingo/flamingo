@@ -3,8 +3,8 @@ package pugjs
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -408,8 +408,8 @@ func (s String) copy() Object { return s }
 // Number type
 type Number float64
 
-func (n Number) Member(string) Object { return Nil{} }                                        // Member getter
-func (n Number) String() string       { return strconv.FormatFloat(float64(n), 'f', -1, 64) } // String formatter
+func (n Number) Member(string) Object { return Nil{} }                             // Member getter
+func (n Number) String() string       { return big.NewFloat(float64(n)).String() } // String formatter
 func (n Number) copy() Object         { return n }
 
 // Bool type

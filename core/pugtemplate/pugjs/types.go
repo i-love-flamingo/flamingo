@@ -146,6 +146,7 @@ func convert(in interface{}) Object {
 		return Bool(val.Bool())
 
 	case reflect.Chan:
+		// TODO iterable
 		return Nil{}
 	}
 
@@ -157,14 +158,10 @@ type Func struct {
 	fnc reflect.Value
 }
 
-// Member getter
-func (f *Func) Member(name string) Object { return Nil{} }
-
-// String formatter
-func (f *Func) String() string { return f.fnc.String() }
-
-// True getter
-func (f *Func) True() bool { return true }
+func (f *Func) Member(name string) Object { return Nil{} }          // Member getter
+func (f *Func) String() string            { return f.fnc.String() } // String formatter
+func (f *Func) True() bool                { return true }           // True getter
+func (f *Func) copy() Object              { return &(*f) }
 
 // MarshalJSON implementation
 func (f *Func) MarshalJSON() ([]byte, error) {
@@ -172,10 +169,6 @@ func (f *Func) MarshalJSON() ([]byte, error) {
 		return json.Marshal(convert(f.fnc.Call(nil)[0]))
 	}
 	return []byte(`"` + f.String() + `"`), nil
-}
-
-func (f *Func) copy() Object {
-	return &(*f)
 }
 
 // Array type
@@ -266,15 +259,8 @@ func (a *Array) Push(what Object) Object {
 	return Nil{}
 }
 
-// True getter
-func (a *Array) True() bool {
-	return len(a.items) > 0
-}
-
-// MarshalJSON implementation
-func (a *Array) MarshalJSON() ([]byte, error) {
-	return json.Marshal(a.items)
-}
+func (a *Array) True() bool                   { return len(a.items) > 0 }      // True getter
+func (a *Array) MarshalJSON() ([]byte, error) { return json.Marshal(a.items) } // MarshalJSON implementation
 
 func (a *Array) copy() Object {
 	c := &Array{

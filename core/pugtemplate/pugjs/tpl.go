@@ -13,8 +13,7 @@ import (
 
 // common holds the information shared by related templates.
 type common struct {
-	tmpl   map[string]*Template // Map from name to defined templates.
-	option option
+	tmpl map[string]*Template // Map from name to defined templates.
 	// We use two maps, one for parsing and one for execution.
 	// This separation makes the API cleaner since it doesn'e
 	// expose reflection to the client.

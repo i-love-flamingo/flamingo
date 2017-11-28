@@ -10,15 +10,14 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"go.aoe.com/flamingo/framework/template"
 	"go.aoe.com/flamingo/framework/web"
-
-	"github.com/pkg/errors"
-	"runtime"
 )
 
 type (

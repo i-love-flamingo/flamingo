@@ -6,7 +6,6 @@ package pugjs
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -30,26 +29,11 @@ import (
 type FuncMap map[string]interface{}
 
 var builtins = FuncMap{
-	"and":      and,
-	"call":     call,
-	"html":     HTMLEscaper,
-	"index":    index,
-	"js":       JSEscaper,
-	"len":      length,
-	"not":      not,
-	"or":       or,
-	"print":    fmt.Sprint,
-	"printf":   fmt.Sprintf,
-	"println":  fmt.Sprintln,
-	"urlquery": URLQueryEscaper,
-
-	// Comparisons
-	"eq": eq, // ==
-	"ge": ge, // >=
-	"gt": gt, // >
-	"le": le, // <=
-	"lt": lt, // <
-	"ne": ne, // !=
+	"__op__and":    and,
+	"__pug__html":  HTMLEscaper,
+	"__pug__index": index,
+	"__op__not":    not,
+	"__op__or":     or,
 }
 
 var builtinFuncs = createValueFuncs(builtins)
@@ -239,76 +223,6 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 	return v, nil
 }
 
-// Length
-
-// length returns the length of the item, with an error if it has no defined length.
-func length(item interface{}) (int, error) {
-	v := reflect.ValueOf(item)
-	if !v.IsValid() {
-		return 0, fmt.Errorf("len of untyped nil")
-	}
-	v, isNil := indirect(v)
-	if isNil {
-		return 0, fmt.Errorf("len of nil pointer")
-	}
-	switch v.Kind() {
-	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
-		return v.Len(), nil
-	}
-	return 0, fmt.Errorf("len of type %s", v.Type())
-}
-
-// Function invocation
-
-// call returns the result of evaluating the first argument as a function.
-// The function must return 1 result, or 2 results, the second of which is an error.
-func call(fn reflect.Value, args ...reflect.Value) (reflect.Value, error) {
-	v := indirectInterface(fn)
-	if !v.IsValid() {
-		return reflect.Value{}, fmt.Errorf("call of nil")
-	}
-	typ := v.Type()
-	if typ.Kind() != reflect.Func {
-		return reflect.Value{}, fmt.Errorf("non-function of type %s", typ)
-	}
-	if !goodFunc(typ) {
-		return reflect.Value{}, fmt.Errorf("function called with %d args; should be 1 or 2", typ.NumOut())
-	}
-	numIn := typ.NumIn()
-	var dddType reflect.Type
-	if typ.IsVariadic() {
-		if len(args) < numIn-1 {
-			return reflect.Value{}, fmt.Errorf("wrong number of args: got %d want at least %d", len(args), numIn-1)
-		}
-		dddType = typ.In(numIn - 1).Elem()
-	} else {
-		if len(args) != numIn {
-			return reflect.Value{}, fmt.Errorf("wrong number of args: got %d want %d", len(args), numIn)
-		}
-	}
-	argv := make([]reflect.Value, len(args))
-	for i, arg := range args {
-		value := indirectInterface(arg)
-		// Compute the expected type. Clumsy because of variadics.
-		var argType reflect.Type
-		if !typ.IsVariadic() || i < numIn-1 {
-			argType = typ.In(i)
-		} else {
-			argType = dddType
-		}
-
-		var err error
-		if argv[i], err = prepareArg(value, argType); err != nil {
-			return reflect.Value{}, fmt.Errorf("arg %d: %s", i, err)
-		}
-	}
-	result := v.Call(argv)
-	if len(result) == 2 && !result[1].IsNil() {
-		return result[0], result[1].Interface().(error)
-	}
-	return result[0], nil
-}
-
 // Boolean logic.
 
 func truth(arg reflect.Value) bool {
@@ -356,177 +270,6 @@ func or(arg0 reflect.Value, args ...reflect.Value) reflect.Value {
 // not returns the Boolean negation of its argument.
 func not(arg reflect.Value) bool {
 	return !truth(arg)
-}
-
-// Comparison.
-
-// TODO: Perhaps allow comparison between signed and unsigned integers.
-
-var (
-	errBadComparisonType = errors.New("invalid type for comparison")
-	errBadComparison     = errors.New("incompatible types for comparison")
-	errNoComparison      = errors.New("missing argument for comparison")
-)
-
-type kind int
-
-const (
-	invalidKind kind = iota
-	boolKind
-	complexKind
-	intKind
-	floatKind
-	stringKind
-	uintKind
-)
-
-func basicKind(v reflect.Value) (kind, error) {
-	switch v.Kind() {
-	case reflect.Bool:
-		return boolKind, nil
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return intKind, nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return uintKind, nil
-	case reflect.Float32, reflect.Float64:
-		return floatKind, nil
-	case reflect.Complex64, reflect.Complex128:
-		return complexKind, nil
-	case reflect.String:
-		return stringKind, nil
-	}
-	return invalidKind, errBadComparisonType
-}
-
-// eq evaluates the comparison a == b || a == c || ...
-func eq(arg1 reflect.Value, arg2 ...reflect.Value) (bool, error) {
-	v1 := indirectInterface(arg1)
-	k1, err := basicKind(v1)
-	if err != nil {
-		return false, err
-	}
-	if len(arg2) == 0 {
-		return false, errNoComparison
-	}
-	for _, arg := range arg2 {
-		v2 := indirectInterface(arg)
-		k2, err := basicKind(v2)
-		if err != nil {
-			return false, err
-		}
-		truth := false
-		if k1 != k2 {
-			// Special case: Can compare integer values regardless of type's sign.
-			switch {
-			case k1 == intKind && k2 == uintKind:
-				truth = v1.Int() >= 0 && uint64(v1.Int()) == v2.Uint()
-			case k1 == uintKind && k2 == intKind:
-				truth = v2.Int() >= 0 && v1.Uint() == uint64(v2.Int())
-			default:
-				return false, errBadComparison
-			}
-		} else {
-			switch k1 {
-			case boolKind:
-				truth = v1.Bool() == v2.Bool()
-			case complexKind:
-				truth = v1.Complex() == v2.Complex()
-			case floatKind:
-				truth = v1.Float() == v2.Float()
-			case intKind:
-				truth = v1.Int() == v2.Int()
-			case stringKind:
-				truth = v1.String() == v2.String()
-			case uintKind:
-				truth = v1.Uint() == v2.Uint()
-			default:
-				panic("invalid kind")
-			}
-		}
-		if truth {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-// ne evaluates the comparison a != b.
-func ne(arg1, arg2 reflect.Value) (bool, error) {
-	// != is the inverse of ==.
-	equal, err := eq(arg1, arg2)
-	return !equal, err
-}
-
-// lt evaluates the comparison a < b.
-func lt(arg1, arg2 reflect.Value) (bool, error) {
-	v1 := indirectInterface(arg1)
-	k1, err := basicKind(v1)
-	if err != nil {
-		return false, err
-	}
-	v2 := indirectInterface(arg2)
-	k2, err := basicKind(v2)
-	if err != nil {
-		return false, err
-	}
-	truth := false
-	if k1 != k2 {
-		// Special case: Can compare integer values regardless of type's sign.
-		switch {
-		case k1 == intKind && k2 == uintKind:
-			truth = v1.Int() < 0 || uint64(v1.Int()) < v2.Uint()
-		case k1 == uintKind && k2 == intKind:
-			truth = v2.Int() >= 0 && v1.Uint() < uint64(v2.Int())
-		default:
-			return false, errBadComparison
-		}
-	} else {
-		switch k1 {
-		case boolKind, complexKind:
-			return false, errBadComparisonType
-		case floatKind:
-			truth = v1.Float() < v2.Float()
-		case intKind:
-			truth = v1.Int() < v2.Int()
-		case stringKind:
-			truth = v1.String() < v2.String()
-		case uintKind:
-			truth = v1.Uint() < v2.Uint()
-		default:
-			panic("invalid kind")
-		}
-	}
-	return truth, nil
-}
-
-// le evaluates the comparison <= b.
-func le(arg1, arg2 reflect.Value) (bool, error) {
-	// <= is < or ==.
-	lessThan, err := lt(arg1, arg2)
-	if lessThan || err != nil {
-		return lessThan, err
-	}
-	return eq(arg1, arg2)
-}
-
-// gt evaluates the comparison a > b.
-func gt(arg1, arg2 reflect.Value) (bool, error) {
-	// > is the inverse of <=.
-	lessOrEqual, err := le(arg1, arg2)
-	if err != nil {
-		return false, err
-	}
-	return !lessOrEqual, nil
-}
-
-// ge evaluates the comparison a >= b.
-func ge(arg1, arg2 reflect.Value) (bool, error) {
-	// >= is the inverse of <.
-	lessThan, err := lt(arg1, arg2)
-	if err != nil {
-		return false, err
-	}
-	return !lessThan, nil
 }
 
 // HTML escaping.

@@ -59,10 +59,10 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Identifier", func() {
 			It("Should transpile it correctly if it is known", func() {
-				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | html}}`))
+				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | __pug__html}}`))
 			})
 			It("Should transpile it correctly if it is not known", func() {
-				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | html}}`))
+				Expect(s.JsExpr(`testknown`, true, true)).To(Equal(`{{$testknown | __pug__html}}`))
 			})
 			It("Should make it raw if rawmode is on", func() {
 				s.rawmode = true
@@ -143,7 +143,7 @@ var _ = Describe("JS Expression transpiling", func() {
 		Context("Transpile Call Expressions", func() {
 			It("Should transform js-call-syntax to go template call syntax", func() {
 				s.funcs = FuncMap{"foo": func(int, int) {}}
-				Expect(s.JsExpr(`foo(1+2)`, true, false)).To(Equal(`{{(foo (__op__add 1 2)) | html}}`))
+				Expect(s.JsExpr(`foo(1+2)`, true, false)).To(Equal(`{{(foo (__op__add 1 2)) | __pug__html}}`))
 			})
 		})
 
@@ -161,7 +161,7 @@ var _ = Describe("JS Expression transpiling", func() {
 
 		Context("Transpile Bracket Expression", func() {
 			It("Should use the index function to access the specified element", func() {
-				Expect(s.JsExpr(`a[0][b[1]]`, true, false)).To(Equal(`{{(index (index $a 0) (index $b 1)) | html}}`))
+				Expect(s.JsExpr(`a[0][b[1]]`, true, false)).To(Equal(`{{(index (index $a 0) (index $b 1)) | __pug__html}}`))
 			})
 		})
 	})

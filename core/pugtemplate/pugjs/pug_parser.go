@@ -90,8 +90,7 @@ func (p *renderState) ParseJSON(bytes []byte, file string) (*Token, error) {
 func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string, error) {
 	template := New(name).
 		Funcs(funcmap).
-		Funcs(p.funcs).
-		Option("missingkey=error")
+		Funcs(p.funcs)
 
 	nodes := p.build(t)
 	wr := new(bytes.Buffer)

@@ -11,6 +11,16 @@ import (
 
 // FuncMap is the default runtime funcmap for pugast templates
 var funcmap = FuncMap{
+	"json": runtimeJSON,
+	"null": func() interface{} { return Nil{} },
+	"parseInt": func(num Object, base Number) Number {
+		f, _ := strconv.ParseFloat(num.String(), 64)
+		n, err := strconv.ParseInt(strconv.Itoa(int(f)), int(base), 64)
+		if err != nil {
+			panic(err)
+		}
+		return Number(n)
+	},
 
 	"__op__add":   runtimeAdd,
 	"__op__inc":   runtimeInc,
@@ -21,21 +31,12 @@ var funcmap = FuncMap{
 	"__op__mod":   runtimeRem,
 	"__op__eql":   runtimeEql,
 
-	"__op__lt": runtimeLss,
-	"__op__gt": func(x, y interface{}) bool {
-		return !runtimeLss(x, y) && !runtimeEql(x, y)
-	},
-	"__op__gte": func(x, y interface{}) bool {
-		return !runtimeLss(x, y)
-	},
-	"__op__lte": func(x, y interface{}) bool {
-		return runtimeLss(x, y) || runtimeEql(x, y)
-	},
-	"__op__neq": func(x, y interface{}) bool {
-		return !runtimeEql(x, y)
-	},
+	"__op__lt":  runtimeLss,
+	"__op__gt":  func(x, y interface{}) bool { return !runtimeLss(x, y) && !runtimeEql(x, y) },
+	"__op__gte": func(x, y interface{}) bool { return !runtimeLss(x, y) },
+	"__op__lte": func(x, y interface{}) bool { return runtimeLss(x, y) || runtimeEql(x, y) },
+	"__op__neq": func(x, y interface{}) bool { return !runtimeEql(x, y) },
 
-	"neq": func(x, y interface{}) bool { return !runtimeEql(x, y) },
 	"__tryindex": func(obj, key interface{}) interface{} {
 		arr, ok := obj.(*Array)
 		idx, ok2 := key.(int)
@@ -60,9 +61,7 @@ var funcmap = FuncMap{
 		}
 		return nil
 	},
-	"json":      runtimeJSON,
-	"unescaped": runtimeUnescaped,
-	"null":      func() interface{} { return Nil{} },
+
 	"__Range": func(args ...Number) Object {
 		var res []int
 		var m, o int
@@ -104,7 +103,7 @@ var funcmap = FuncMap{
 		}
 		return res
 	},
-	"raw": func(s ...interface{}) template.HTML { return template.HTML(fmt.Sprint(s...)) },
+
 	"__str": func(l ...interface{}) string {
 		var res string
 		for _, s := range l {
@@ -238,15 +237,6 @@ var funcmap = FuncMap{
 			return left
 		}
 		return right
-	},
-
-	"parseInt": func(num Object, base Number) Number {
-		f, _ := strconv.ParseFloat(num.String(), 64)
-		n, err := strconv.ParseInt(strconv.Itoa(int(f)), int(base), 64)
-		if err != nil {
-			panic(err)
-		}
-		return Number(n)
 	},
 
 	"__freeze": func(name string) Nil {
@@ -519,8 +509,4 @@ func runtimeJSON(x interface{}) (res template.JS, err error) {
 	bres, err := json.Marshal(x)
 	res = template.JS(string(bres))
 	return
-}
-
-func runtimeUnescaped(x string) interface{} {
-	return template.HTML(x)
 }

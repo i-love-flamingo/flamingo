@@ -64,11 +64,6 @@ func (s *state) pop(mark int) {
 	//s.vars = s.vars[0:mark]
 }
 
-// setVar overwrites the top-nth variable on the stack. Used by range iterations.
-func (s *state) setVar(n int, value reflect.Value) {
-	s.vars[len(s.vars)-n].value = value
-}
-
 // varValue returns the value of the named variable.
 func (s *state) varValue(name string) reflect.Value {
 	for i := s.mark() - 1; i >= 0; i-- {
@@ -255,31 +250,6 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 	return
 }
 
-// DefinedTemplates returns a string listing the defined templates,
-// prefixed by the string "; defined templates are: ". If there are none,
-// it returns the empty string. For generating an error message here
-// and in html/template.
-func (t *Template) DefinedTemplates() string {
-	if t.common == nil {
-		return ""
-	}
-	var b bytes.Buffer
-	for name, tmpl := range t.tmpl {
-		if tmpl.Tree == nil || tmpl.Root == nil {
-			continue
-		}
-		if b.Len() > 0 {
-			b.WriteString(", ")
-		}
-		fmt.Fprintf(&b, "%q", name)
-	}
-	var s string
-	if b.Len() > 0 {
-		s = "; defined templates are: " + b.String()
-	}
-	return s
-}
-
 // Walk functions step through the major pieces of the template structure,
 // generating output as they go.
 func (s *state) walk(dot reflect.Value, node parse.Node) {
@@ -346,6 +316,9 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 		// Something like var x interface{}, never set. It's a form of nil.
 		return false, true
 	}
+	if o, ok := val.Interface().(truer); ok {
+		return o.True(), true
+	}
 	switch val.Kind() {
 	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
 		truth = val.Len() > 0
@@ -362,9 +335,6 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		truth = val.Uint() != 0
 	case reflect.Struct:
-		if o, ok := val.Interface().(truer); ok {
-			return o.True(), true
-		}
 		truth = true // Struct values are always true.
 	default:
 		return
@@ -647,9 +617,8 @@ func (s *state) evalFunction(dot reflect.Value, node *parse.IdentifierNode, cmd 
 // value of the pipeline, if any.
 func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, args []parse.Node, final, receiver reflect.Value) reflect.Value {
 	if !receiver.IsValid() {
-		if s.tmpl.option.missingKey == mapError { // Treat invalid value as missing map key.
-			s.errorf("nil data; no entry for key %q", fieldName)
-		}
+		s.errorf("nil data; no entry for key %q", fieldName)
+
 		return zero
 	}
 
@@ -728,14 +697,7 @@ func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, 
 				result = receiver.MapIndex(reflect.ValueOf(strings.Title(name)))
 			}
 			if !result.IsValid() {
-				switch s.tmpl.option.missingKey {
-				case mapInvalid:
-					// Just use the invalid value.
-				case mapZeroValue:
-					result = reflect.Zero(receiver.Type().Elem())
-				case mapError:
-					s.errorf("map has no entry for key %q", fieldName)
-				}
+				s.errorf("map has no entry for key %q", fieldName)
 			}
 			return result
 		}

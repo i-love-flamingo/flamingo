@@ -27,8 +27,8 @@ var (
 		token.UNSIGNED_SHIFT_RIGHT: "__op__b_usright", // >>>
 		token.AND_NOT:              "__op__b_andnot",  // &^
 
-		token.LOGICAL_AND: "and",       // &&
-		token.LOGICAL_OR:  "or",        // ||
+		token.LOGICAL_AND: "__op__and", // &&
+		token.LOGICAL_OR:  "__op__or",  // ||
 		token.INCREMENT:   "__op__inc", // ++
 		token.DECREMENT:   "__op__dec", // --
 
@@ -37,7 +37,7 @@ var (
 		token.LESS:         "__op__lt",  // <
 		token.GREATER:      "__op__gt",  // >
 		token.ASSIGN:       "=",         // =
-		token.NOT:          "not",       // !
+		token.NOT:          "__op__not", // !
 
 		token.BITWISE_NOT: "__op__bitnot", // ~
 
@@ -46,7 +46,7 @@ var (
 		token.LESS_OR_EQUAL:    "__op__lte", // <=
 		token.GREATER_OR_EQUAL: "__op__gte", // >=
 
-		token.DELETE: "delete",
+		token.DELETE: "__op__delete",
 	}
 )
 
@@ -196,7 +196,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		result += expr.Name
 		if wrap {
 			if !p.rawmode {
-				result += ` | html`
+				result += ` | __pug__html`
 			}
 			result = `{{` + result + `}}`
 		}
@@ -264,7 +264,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		result += identifier
 		if wrap {
 			if !p.rawmode {
-				result += ` | html`
+				result += ` | __pug__html`
 			}
 			result = `{{` + result + `}}`
 		}
@@ -304,7 +304,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 		result += `)`
 		if wrap {
 			if !p.rawmode {
-				result += ` | html`
+				result += ` | __pug__html`
 			}
 			result = `{{` + result + `}}`
 		}
@@ -360,10 +360,10 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// BracketExpression: access of array/object members, such ass something[1] or foo[bar]
 	case *ast.BracketExpression:
-		result += `(index ` + p.renderExpression(expr.Left, false, true) + ` ` + p.renderExpression(expr.Member, false, true) + `)`
+		result += `(__pug__index ` + p.renderExpression(expr.Left, false, true) + ` ` + p.renderExpression(expr.Member, false, true) + `)`
 		if wrap {
 			if !p.rawmode {
-				result += ` | html`
+				result += ` | __pug__html`
 			}
 			result = `{{` + result + `}}`
 		}

@@ -617,8 +617,6 @@ func (s *state) evalFunction(dot reflect.Value, node *parse.IdentifierNode, cmd 
 // value of the pipeline, if any.
 func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, args []parse.Node, final, receiver reflect.Value) reflect.Value {
 	if !receiver.IsValid() {
-		s.errorf("nil data; no entry for key %q", fieldName)
-
 		return zero
 	}
 
@@ -697,7 +695,8 @@ func (s *state) evalField(dot reflect.Value, fieldName string, node parse.Node, 
 				result = receiver.MapIndex(reflect.ValueOf(strings.Title(name)))
 			}
 			if !result.IsValid() {
-				s.errorf("map has no entry for key %q", fieldName)
+				//s.errorf("map has no entry for key %q", fieldName)
+				result = zero
 			}
 			return result
 		}

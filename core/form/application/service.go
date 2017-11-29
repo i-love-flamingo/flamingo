@@ -28,12 +28,12 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 
 	urlValues, err = getPostValues(ctx)
 	if err != nil {
-		form.ValidationInfo.LogAndAddGeneralUnknownError(err)
+		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
 	form.Data, err = parseFormData(urlValues, service, ctx)
 	if err != nil {
-		form.ValidationInfo.LogAndAddGeneralUnknownError(err)
+		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
 
@@ -41,6 +41,34 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 	if err != nil {
 		form.ValidationInfo = ValidationErrorsToValidationInfo(err)
 	}
+
+	return form, nil
+}
+
+//SimpleProcessFormRequest: Parses Post Values and returns a simple map - can be used if you dont need/want to implement a domain.FormService
+func SimpleProcessFormRequest(ctx web.Context) (domain.Form, error) {
+	var err error
+	var urlValues url.Values
+	form := domain.Form{}
+
+	if ctx.Request().Method != "POST" {
+		form.IsSubmitted = false
+		return form, nil
+	}
+
+	form.IsSubmitted = true
+
+	urlValues, err = getPostValues(ctx)
+	if err != nil {
+		form.ValidationInfo.AddGeneralUnknownError(err)
+		return form, err
+	}
+	dataMap := make(map[string]string)
+	for k, v := range urlValues {
+		dataMap[k] = strings.Join(v, " ")
+	}
+	form.ValidationInfo.IsValid = true
+	form.Data = dataMap
 
 	return form, nil
 }
@@ -57,7 +85,7 @@ func ValidationErrorsToValidationInfo(err error) domain.ValidationInfo {
 
 	if err1, ok := err.(*validator.InvalidValidationError); ok {
 		validationInfo.IsValid = false
-		validationInfo.LogAndAddGeneralUnknownError(err1)
+		validationInfo.AddGeneralUnknownError(err1)
 	}
 	if validationErrors, ok := err.(validator.ValidationErrors); ok {
 		for _, err := range validationErrors {

@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"log"
 	"net/url"
 
 	"go.aoe.com/flamingo/framework/web"
@@ -41,9 +40,8 @@ type (
 	}
 )
 
-func (vi *ValidationInfo) LogAndAddGeneralUnknownError(err error) {
-	log.Printf("customer.registercontroller Error: %v", err)
-	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: "unknown_error"})
+func (vi *ValidationInfo) AddGeneralUnknownError(err error) {
+	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: "unknown_error", DefaultLabel: "An error occured!"})
 }
 
 func (f Form) IsValidAndSubmitted() bool {

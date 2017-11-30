@@ -53,6 +53,7 @@ func SimpleProcessFormRequest(ctx web.Context) (domain.Form, error) {
 
 	if ctx.Request().Method != "POST" {
 		form.IsSubmitted = false
+		form.ValidationInfo.IsValid = true
 		return form, nil
 	}
 
@@ -63,6 +64,7 @@ func SimpleProcessFormRequest(ctx web.Context) (domain.Form, error) {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
+	form.ValidationInfo.IsValid = true
 	dataMap := make(map[string]string)
 	for k, v := range urlValues {
 		dataMap[k] = strings.Join(v, " ")

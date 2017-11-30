@@ -2,9 +2,9 @@
 
 !!! node
     This section explains mocking in flamingo backend.
-    
-    This section does not cover the templaing only mocks - please see [Tutorial Frontend Templating](../0.%20Introduction/3.%20TutorialvFrontend%20Templating.md)
-  
+
+    This section does not cover the templaing only mocks - please see [Tutorial Frontend Templating](../0. Introduction/3. Tutorial Frontend Templating.md)
+
 ## Introduction / Context
 An important role of Flamingo is to consume external services - often via REST APIs.
 
@@ -17,13 +17,13 @@ During development you usally want to fake or mock this external services. So le
 
 Faking is good for start. Mocking is the right way if you want more production like development setup.
 
-### Contract Testing 
+### Contract Testing
 If you use a Mock, then someone should verify that the Mock behaves like the real Service (or the other way around).
-This is what is called contract testing. 
+This is what is called contract testing.
 You should establish this.
 
 ### Consumer Based Contract Testing
-In case you have control over the provider you can use consumer based contract testing. 
+In case you have control over the provider you can use consumer based contract testing.
 That means that a contract test provided by flamingo is executed in the build pipeline of the provider.
 
 We support pact for this.
@@ -38,7 +38,7 @@ Adding the fake implementation:
 │---fakeservices
      |--- servicepackagename
      |     |---- service.go
-     |module.go  
+     |module.go
 ```
 
 In module.go register the fake implementation:
@@ -66,7 +66,3 @@ So you might need to have the Pact daemon running:
 2. Run `pact-go daemon`. Now you have the daemon running on default port 6666
 
 Checkout the example - e.g. in the package *"magento"*
-
-
-
-

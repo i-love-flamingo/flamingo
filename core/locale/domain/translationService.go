@@ -2,7 +2,7 @@ package domain
 
 import (
 	"bytes"
-	"html/template"
+	"text/template"
 
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
 	"go.aoe.com/flamingo/framework/flamingo"

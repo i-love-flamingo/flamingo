@@ -44,6 +44,10 @@ func (vi *ValidationInfo) AddGeneralUnknownError(err error) {
 	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: "unknown_error", DefaultLabel: "An error occured!"})
 }
 
+func (vi *ValidationInfo) AddError(key string, defaultLabel string) {
+	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: key, DefaultLabel: defaultLabel})
+}
+
 func (f Form) IsValidAndSubmitted() bool {
 	return f.ValidationInfo.IsValid && f.IsSubmitted
 }

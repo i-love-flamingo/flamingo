@@ -116,11 +116,16 @@ var funcmap = FuncMap{
 	},
 	"__op__array": func(a ...interface{}) Object { return convert(a) },
 	"__op__map": func(a ...interface{}) Object {
-		m := make(map[interface{}]interface{}, len(a)/2)
-		for i := 0; i < len(a); i += 2 {
-			m[a[i]] = a[i+1]
+		m := &Map{
+			Items: make(map[Object]Object, len(a)/2),
+			order: make([]Object, 0, len(a)/2),
 		}
-		return convert(m)
+
+		for i := 0; i < len(a); i += 2 {
+			m.Items[convert(a[i])] = convert(a[i+1])
+			m.order = append(m.order, convert(a[i]))
+		}
+		return m
 	},
 	"__op__map_params": func(a ...interface{}) Object {
 		m := make(map[interface{}]interface{}, len(a)/2)

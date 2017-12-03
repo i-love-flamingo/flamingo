@@ -178,7 +178,7 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 			mixin.AttributeBlocks = append(mixin.AttributeBlocks, JavaScriptExpression(a.Val))
 		}
 		mixin.Name = JavaScriptIdentifier(t.Name)
-		mixin.Args = t.Args
+		mixin.Args = JavaScriptExpression(`[` + t.Args + `]`)
 		for _, a := range t.Attrs {
 			mixin.Attrs = append(mixin.Attrs, Attribute{Name: a.Name, Val: JavaScriptExpression(fmt.Sprintf("%v", a.Val)), MustEscape: a.MustEscape})
 		}
@@ -188,6 +188,10 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 
 	case "Text":
 		text := new(Text)
+		t.Val = strings.Replace(t.Val, "{{", `--{{--`, -1)
+		t.Val = strings.Replace(t.Val, "}}", `--}}--`, -1)
+		t.Val = strings.Replace(t.Val, "--{{--", `{{"{{"}}`, -1)
+		t.Val = strings.Replace(t.Val, "--}}--", `{{"}}"}}`, -1)
 		text.Val = t.Val
 		return text
 

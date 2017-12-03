@@ -20,7 +20,7 @@ func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer) error {
 		return nil
 	}
 
-	callargs := strings.Split(m.Args, ",")
+	callargs := strings.Split(string(m.Args[1:len(m.Args)-1]), ",")
 	attrpart := ""
 
 	for ci, ca := range callargs {
@@ -53,7 +53,7 @@ func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer) error {
 func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer) error {
 	attributes := `__op__map_params `
 	for _, a := range m.Attrs {
-		attributes += ` "` + a.Name + `" ` + p.JsExpr(string(a.Val), false, false)
+		attributes += ` "` + a.Name + `" ` + p.JsExpr(a.Val, false, false)
 	}
 	var subblock = new(bytes.Buffer)
 	if err := m.Block.Render(p, subblock); err != nil {
@@ -67,9 +67,9 @@ func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer) error {
 %s
 {{- end -}}`, blockname, subblock.String())
 		p.mixinblocks = append(p.mixinblocks, mixinblock)
-		fmt.Fprintf(wr, `{{ __freeze "%s" }}{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, blockname, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes, blockname)
+		fmt.Fprintf(wr, `{{ __freeze "%s" }}{{ template "mixin_%s" (__op__array (%s) (%s) ("%s") ) }}`, blockname, m.Name, p.JsExpr(m.Args, false, false), attributes, blockname)
 	} else {
-		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(`[`+m.Args+`]`, false, false), attributes)
+		fmt.Fprintf(wr, `{{ template "mixin_%s" (__op__array (%s) (%s) (null) ) }}`, m.Name, p.JsExpr(m.Args, false, false), attributes)
 	}
 	return nil
 }

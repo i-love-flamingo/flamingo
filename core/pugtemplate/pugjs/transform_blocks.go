@@ -155,7 +155,7 @@ type (
 
 		Name JavaScriptIdentifier
 		Call bool
-		Args string
+		Args JavaScriptExpression
 	}
 
 	// MixinBlock renders the mixin block

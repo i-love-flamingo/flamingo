@@ -4,7 +4,7 @@ import "bytes"
 
 // Render renders a conditional via `if`
 func (c *Conditional) Render(p *renderState, wr *bytes.Buffer) error {
-	wr.WriteString(`{{ if ` + p.JsExpr(string(c.Test), false, false) + ` -}}`)
+	wr.WriteString(`{{ if ` + p.JsExpr(c.Test, false, false) + ` -}}`)
 	if err := c.Consequent.Render(p, wr); err != nil {
 		return err
 	}

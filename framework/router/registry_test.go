@@ -2,9 +2,9 @@ package router
 
 import (
 	"net/http"
+	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"go.aoe.com/flamingo/framework/web"
 )
 
@@ -12,78 +12,78 @@ func testController(web.Context) web.Response {
 	return &web.ContentResponse{}
 }
 
-var _ = Describe("Registry Test", func() {
-	Context("Utils", func() {
-		Context("parseHandler", func() {
-			It("should treat empty params properly", func() {
+func TestRegistry(t *testing.T) {
+	t.Run("Utils", func(t *testing.T) {
+		t.Run("parseHandler", func(t *testing.T) {
+			t.Run("should treat empty params properly", func(t *testing.T) {
 				var handler = parseHandler("foo.bar")
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(BeEmpty())
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Empty(t, handler.params)
 			})
 
-			It("should treat params properly", func() {
+			t.Run("should treat params properly", func(t *testing.T) {
 				var handler = parseHandler("foo.bar(foo, bar)")
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(2))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: false, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("bar", &param{optional: false, value: ""}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 2)
+				assert.Equal(t, &param{optional: false, value: ""}, handler.params["foo"])
+				assert.Equal(t, &param{optional: false, value: ""}, handler.params["bar"])
 			})
 
-			It("should treat optional params properly", func() {
+			t.Run("should treat optional params properly", func(t *testing.T) {
 				var handler = parseHandler("foo.bar(foo?, bar?)")
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(2))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: true, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("bar", &param{optional: true, value: ""}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 2)
+				assert.Equal(t, &param{optional: true, value: ""}, handler.params["foo"])
+				assert.Equal(t, &param{optional: true, value: ""}, handler.params["bar"])
 			})
 
-			It("should treat hardcoded params properly", func() {
+			t.Run("should treat hardcoded params properly", func(t *testing.T) {
 				var handler = parseHandler(`foo.bar(foo="bar", x="y")`)
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(2))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: false, value: "bar"}))
-				Expect(handler.params).To(HaveKeyWithValue("x", &param{optional: false, value: "y"}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 2)
+				assert.Equal(t, &param{optional: false, value: "bar"}, handler.params["foo"])
+				assert.Equal(t, &param{optional: false, value: "y"}, handler.params["x"])
 			})
 
-			It("should treat default value params properly", func() {
+			t.Run("should treat default value params properly", func(t *testing.T) {
 				var handler = parseHandler(`foo.bar(foo?="bar")`)
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(1))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: true, value: "bar"}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 1)
+				assert.Equal(t, &param{optional: true, value: "bar"}, handler.params["foo"])
 			})
 
-			It("should treat complexer params properly", func() {
+			t.Run("should treat complexer params properly", func(t *testing.T) {
 				var handler = parseHandler(`foo.bar(a, b?, x="a", y ,z, foo ?= "bar")`)
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(6))
-				Expect(handler.params).To(HaveKeyWithValue("a", &param{optional: false, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("b", &param{optional: true, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("x", &param{optional: false, value: "a"}))
-				Expect(handler.params).To(HaveKeyWithValue("y", &param{optional: false, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("z", &param{optional: false, value: ""}))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: true, value: "bar"}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 6)
+				assert.Equal(t, &param{optional: false, value: ""}, handler.params["a"])
+				assert.Equal(t, &param{optional: true, value: ""}, handler.params["b"])
+				assert.Equal(t, &param{optional: false, value: "a"}, handler.params["x"])
+				assert.Equal(t, &param{optional: false, value: ""}, handler.params["y"])
+				assert.Equal(t, &param{optional: false, value: ""}, handler.params["z"])
+				assert.Equal(t, &param{optional: true, value: "bar"}, handler.params["foo"])
 			})
 
-			It("should treat escaped values properly", func() {
+			t.Run("should treat escaped values properly", func(t *testing.T) {
 				var handler = parseHandler(`foo.bar(foo?="\"bar")`)
-				Expect(handler.handler).To(Equal("foo.bar"))
-				Expect(handler.params).To(HaveLen(1))
-				Expect(handler.params).To(HaveKeyWithValue("foo", &param{optional: true, value: `"bar`}))
+				assert.Equal(t, "foo.bar", handler.handler)
+				assert.Len(t, handler.params, 1)
+				assert.Equal(t, &param{optional: true, value: `"bar`}, handler.params["foo"])
 			})
 		})
 	})
 
-	Context("API", func() {
+	t.Run("API", func(t *testing.T) {
 		var registry = NewRegistry()
-		It("Should create a new router", func() {
-			Expect(registry).ToNot(BeNil())
+		t.Run("Should create a new router", func(t *testing.T) {
+			assert.NotNil(t, registry)
 		})
 
-		It("Should allow controller registration", func() {
+		t.Run("Should allow controller registration", func(t *testing.T) {
 			registry.Handle("page.view", testController)
 		})
 
-		It("Should make path registration easy", func() {
+		t.Run("Should make path registration easy", func(t *testing.T) {
 			registry.Route("/", `page.view(page="home")`)                 // hardcoded
 			registry.Route("/page/:page", `page.view(page)`)              // extract via param
 			registry.Route("/homepage/:page", `page.view(page?="home2")`) // extract via param, default value
@@ -92,68 +92,68 @@ var _ = Describe("Registry Test", func() {
 			registry.Route("/mustget", `page.view(page)`)                 // extract from GET
 		})
 
-		It("Should reverse routes properly", func() {
-			Expect(registry.Reverse("page.view", map[string]string{"page": "home"})).To(Equal("/"))
-			Expect(registry.Reverse("page.view", map[string]string{})).To(Equal("/homepage/home2"))
-			Expect(registry.Reverse("page.view", map[string]string{"page": "foo"})).To(Equal("/page/foo"))
+		t.Run("Should reverse routes properly", func(t *testing.T) {
+			p, err := registry.Reverse("page.view", map[string]string{"page": "home"})
+			assert.Equal(t, "/", p)
+			assert.NoError(t, err)
+
+			p, err = registry.Reverse("page.view", map[string]string{})
+			assert.Equal(t, "/homepage/home2", p)
+			assert.NoError(t, err)
+
+			p, err = registry.Reverse("page.view", map[string]string{"page": "foo"})
+			assert.Equal(t, "/page/foo", p)
+			assert.NoError(t, err)
 		})
 
-		It("Should match paths", func() {
-			By("route parameters")
+		t.Run("Should match paths", func(t *testing.T) {
 			controller, params := registry.Match("/homepage/home2")
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "home2"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "home2", params["page"])
 
-			By("hardcoded")
 			controller, params = registry.Match("/")
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "home"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "home", params["page"])
 
-			By("optional")
 			controller, params = registry.Match("/page2")
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "page2"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "page2", params["page"])
 
-			By("optional")
 			controller, params = registry.Match("/page")
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "page"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "page", params["page"])
 		})
 
-		It("Should match HTTP Requests", func() {
-			By("Default")
+		t.Run("Should match HTTP Requests", func(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/page2", nil)
 			controller, params, _ := registry.MatchRequest(request)
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "page2"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "page2", params["page"])
 
-			By("GET Parameter")
 			request, _ = http.NewRequest("GET", "/page2?page=foo", nil)
 			controller, params, _ = registry.MatchRequest(request)
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "foo"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "foo", params["page"])
 
-			By("Missing GET Parameter")
 			request, _ = http.NewRequest("GET", "/mustget", nil)
 			controller, params, _ = registry.MatchRequest(request)
-			Expect(controller).To(BeNil())
-			Expect(params).To(BeNil())
+			assert.Nil(t, controller)
+			assert.Nil(t, params)
 
-			By("Mandatory GET Parameter")
 			request, _ = http.NewRequest("GET", "/mustget?page=foo", nil)
 			controller, params, _ = registry.MatchRequest(request)
-			Expect(controller).ToNot(BeNil())
-			Expect(params).To(HaveLen(1))
-			Expect(params).To(HaveKeyWithValue("page", "foo"))
+			assert.NotNil(t, controller)
+			assert.Len(t, params, 1)
+			assert.Equal(t, "foo", params["page"])
 		})
 
-		It("should render get requests if possible", func() {
+		t.Run("should render get requests if possible", func(t *testing.T) {
 			registry.Handle("page.get", testController)
 			registry.Route("/path_mustget", `page.get(page)`)
 
@@ -161,16 +161,16 @@ var _ = Describe("Registry Test", func() {
 			registry.Route("/path_mustget2", `page.get2(page?="test")`)
 
 			path, err := registry.Reverse("page.get", map[string]string{"page": "test"})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(path).To(Equal("/path_mustget?page=test"))
+			assert.NoError(t, err)
+			assert.Equal(t, "/path_mustget?page=test", path)
 
 			path, err = registry.Reverse("page.get2", map[string]string{"page": "test"})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(path).To(Equal("/path_mustget2"))
+			assert.NoError(t, err)
+			assert.Equal(t, "/path_mustget2", path)
 
 			path, err = registry.Reverse("page.get2", map[string]string{"page": "nottest"})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(path).To(Equal("/path_mustget2?page=nottest"))
+			assert.NoError(t, err)
+			assert.Equal(t, "/path_mustget2?page=nottest", path)
 		})
 	})
-})
+}

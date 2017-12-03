@@ -3,6 +3,8 @@ package pugjs
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 const casedefault = "default"
@@ -11,6 +13,10 @@ const casedefault = "default"
 func (c *Case) Render(s *renderState, wr *bytes.Buffer) error {
 	var doElse string
 	var elseBranch *When
+
+	if len(c.Block.Nodes) < 1 {
+		return errors.New("can not render a case with zero cases")
+	}
 
 	for _, node := range c.Block.Nodes {
 		if node.(*When).Expr == casedefault {

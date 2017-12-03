@@ -16,7 +16,7 @@ func (c *Case) Render(s *renderState, wr *bytes.Buffer) error {
 		if node.(*When).Expr == casedefault {
 			elseBranch = node.(*When)
 		} else {
-			fmt.Fprintf(wr, `{{- %sif __op__eql %s %s }}`, doElse, s.JsExpr(string(c.Expr), false, false), s.JsExpr(string(node.(*When).Expr), false, false))
+			fmt.Fprintf(wr, `{{- %sif __op__eql %s %s }}`, doElse, s.JsExpr(c.Expr, false, false), s.JsExpr(node.(*When).Expr, false, false))
 			doElse = "else "
 			if err := node.Render(s, wr); err != nil {
 				return err

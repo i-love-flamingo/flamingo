@@ -8,7 +8,7 @@ import (
 
 // Render an interpolated tag
 func (it *InterpolatedTag) Render(p *renderState, wr *bytes.Buffer) error {
-	return it.CommonTag.render(p.JsExpr(string(it.Expr), true, false), p, wr)
+	return it.CommonTag.render(p.JsExpr(it.Expr, true, false), p, wr)
 }
 
 // Render a tag
@@ -27,9 +27,9 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 		attrs = `{{ __attrs `
 		for _, attr := range ct.Attrs {
 			if attr.MustEscape {
-				attrs += fmt.Sprintf(`(__attr %q %s %t) `, attr.Name, p.JsExpr(string(attr.Val), false, false), attr.MustEscape)
+				attrs += fmt.Sprintf(`(__attr %q %s %t) `, attr.Name, p.JsExpr(attr.Val, false, false), attr.MustEscape)
 			} else {
-				attrs += fmt.Sprintf(`(__attr %q %q %t) `, attr.Name, p.JsExpr(string(attr.Val), false, false), attr.MustEscape)
+				attrs += fmt.Sprintf(`(__attr %q %q %t) `, attr.Name, p.JsExpr(attr.Val, false, false), attr.MustEscape)
 			}
 		}
 		for _, ab := range ct.AttributeBlocks {

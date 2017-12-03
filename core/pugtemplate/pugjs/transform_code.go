@@ -5,6 +5,6 @@ import "bytes"
 // Render renders a code block
 func (c *Code) Render(p *renderState, wr *bytes.Buffer) error {
 	p.rawmode = !c.MustEscape
-	wr.WriteString(p.JsExpr(c.Val, true, true))
-	return nil
+	_, err := wr.WriteString(p.JsExpr(JavaScriptExpression(c.Val), true, true))
+	return err
 }

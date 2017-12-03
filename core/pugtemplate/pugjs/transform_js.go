@@ -51,25 +51,25 @@ var (
 )
 
 // StrToStatements reads Javascript Statements and returns an AST representation
-func StrToStatements(expr string) []ast.Statement {
-	p, err := ottoparser.ParseFile(nil, "", expr, 0)
+func StrToStatements(expr JavaScriptExpression) []ast.Statement {
+	p, err := ottoparser.ParseFile(nil, "", string(expr), 0)
 	if err != nil {
-		panic(errors.Wrap(err, expr))
+		panic(errors.Wrap(err, string(expr)))
 	}
 	return p.Body
 }
 
 // FuncToStatements reads Javascript Statements and evaluates them as the return of a function
-func FuncToStatements(expr string) []ast.Statement {
-	p, err := ottoparser.ParseFunction("", "return "+expr)
+func FuncToStatements(expr JavaScriptExpression) []ast.Statement {
+	p, err := ottoparser.ParseFunction("", "return "+string(expr))
 	if err != nil {
-		panic(errors.Wrap(err, expr))
+		panic(errors.Wrap(err, string(expr)))
 	}
 	return p.Body.(*ast.BlockStatement).List
 }
 
 // JsExpr transforms a javascript expression to go code
-func (p *renderState) JsExpr(expr string, wrap, rawcode bool) string {
+func (p *renderState) JsExpr(expr JavaScriptExpression, wrap, rawcode bool) string {
 	var finalexpr string
 	var stmtlist []ast.Statement
 
@@ -94,7 +94,7 @@ func (p *renderState) JsExpr(expr string, wrap, rawcode bool) string {
 
 // interpolate a string, in the format of `something something ${arbitrary js code resuting in a string} blah`
 // we use a helper function called `s` to merge them later
-func (p *renderState) interpolate(input string) string {
+func (p *renderState) interpolate(input JavaScriptExpression) JavaScriptExpression {
 	index := 1
 	start := 0
 
@@ -107,7 +107,7 @@ func (p *renderState) interpolate(input string) string {
 			start = index + 1
 
 		case input[index] == '}' && start != 0:
-			substring := p.JsExpr(input[start:index], false, false)
+			substring := JavaScriptExpression(p.JsExpr(input[start:index], false, false))
 			input = input[:start-2] + `" ` + substring + ` "` + input[index+1:]
 			index = start + len(substring)
 			start = 0
@@ -204,7 +204,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	// StringLiteral: "test" or 'test' or `test`
 	case *ast.StringLiteral:
 		if strings.Index(expr.Value, "${") >= 0 {
-			result = `(__str "` + p.interpolate(expr.Value) + `")`
+			result = `(__str "` + string(p.interpolate(JavaScriptExpression(expr.Value))) + `")`
 			result = strings.Replace(result, `""`, ``, -1)
 			if wrap {
 				result = `{{` + result + `}}`

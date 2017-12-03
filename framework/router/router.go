@@ -145,8 +145,10 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 	if err != nil {
 		panic(err)
 	}
-
-	resultURL.Path = router.base.Path + p
+	resultURL, err = url.Parse(router.base.Path + p)
+	if err != nil {
+		panic(err)
+	}
 
 	return resultURL
 }

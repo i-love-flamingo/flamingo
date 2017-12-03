@@ -173,4 +173,25 @@ func TestRegistry(t *testing.T) {
 			assert.Equal(t, "/path_mustget2?page=nottest", path)
 		})
 	})
+
+	t.Run("Catchall", func(t *testing.T) {
+		registry := NewRegistry()
+		assert.NotNil(t, registry)
+		registry.Handle("page.view", testController)
+		registry.Route("/page/:page", `page.view(page)`)
+		registry.Route("/page2/:page", `page.view(page, *")`)
+		registry.Route("/page3/:page", `page.view`)
+
+		path, err := registry.Reverse("page.view", map[string]string{"page": "test"})
+		assert.NoError(t, err)
+		assert.Equal(t, "/page/test", path)
+
+		path, err = registry.Reverse("page.view", map[string]string{"page": "test", "foo": "bar"})
+		assert.NoError(t, err)
+		assert.Equal(t, "/page2/test?foo=bar", path)
+
+		path, err = registry.Reverse("page.view", map[string]string{"page": "test", "foo": "bar", "x": "y"})
+		assert.NoError(t, err)
+		assert.Equal(t, "/page2/test?foo=bar&x=y", path)
+	})
 }

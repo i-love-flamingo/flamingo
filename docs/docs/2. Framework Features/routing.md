@@ -104,6 +104,16 @@ If no parameters are specified and not brackets are used every route parameter i
 
 If specified parameters don't have a value or optional value and are not part of the path, then they are taken from GET parameters.
 
+## Catchall
+
+It is possible to specify a catchall address, which gets all parameters and applies all "leftover" as GET parameters, use `*` to indicate a catchall.
+
+Example:
+
+`controller.view(param1, *)`
+
+This is quite helpful for reverse-routing.
+
 # Registering routes and controllers
 
 Routes and controllers are registered at the `router.Registry`.

@@ -1,127 +1,132 @@
 package router
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("Path Test", func() {
-	Context("Path Handling", func() {
-		Context("Incoming Request", func() {
+func TestPathHandling(t *testing.T) {
+	t.Run("Path Handling", func(t *testing.T) {
+		t.Run("Incoming Request", func(t *testing.T) {
 			var path = NewPath(`/path/to/:something/$id<[0-9]+>/*foo`)
 
-			It("Should properly parse request path's", func() {
-				Expect(path).ToNot(BeNil())
+			t.Run("Should properly parse request path's", func(t *testing.T) {
+				assert.NotNil(t, path)
 				var match = path.Match(`/path/to/something123/445566/foo/bar`)
-				Expect(match).ToNot(BeNil())
-				Expect(match.Values).To(HaveKeyWithValue("something", "something123"))
-				Expect(match.Values).To(HaveKeyWithValue("id", "445566"))
-				Expect(match.Values).To(HaveKeyWithValue("foo", "foo/bar"))
+				assert.NotNil(t, match)
+				assert.Equal(t, "something123", match.Values["something"])
+				assert.Equal(t, "445566", match.Values["id"])
+				assert.Equal(t, "foo/bar", match.Values["foo"])
 			})
 
-			It("Should properly render the path", func() {
-				Expect(path.Render(map[string]string{
+			t.Run("Should properly render the path", func(t *testing.T) {
+				p, err := path.Render(map[string]string{
 					"something": "something123",
 					"id":        "445566",
 					"foo":       "foo/bar",
-				}, map[string]struct{}{})).To(Equal(`/path/to/something123/445566/foo/bar`))
+				}, map[string]struct{}{})
 
-				_, err := path.Render(map[string]string{
+				assert.NoError(t, err)
+				assert.Equal(t, `/path/to/something123/445566/foo/bar`, p)
+
+				_, err = path.Render(map[string]string{
 					"something": "something123",
 					"id":        "aaa",
 					"foo":       "foo/bar",
 				}, map[string]struct{}{})
-				Expect(err).To(MatchError(`param id in wrong format`))
+				assert.EqualError(t, err, `param id in wrong format`)
 			})
 		})
 
-		Context("Fixed part matching", func() {
-			It("Should match the whole part", func() {
+		t.Run("Fixed part matching", func(t *testing.T) {
+			t.Run("Should match the whole part", func(t *testing.T) {
 				var path = NewPath(`/path/to/something`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something`).Values).To(BeEmpty())
-				Expect(path.Match(`/pat/to/something`)).To(BeNil())
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/something`))
+				assert.Empty(t, path.Match(`/path/to/something`).Values)
+				assert.Nil(t, path.Match(`/pat/to/something`))
 			})
 		})
 
-		Context("Param part matching", func() {
-			It("Should match the different parameters", func() {
+		t.Run("Param part matching", func(t *testing.T) {
+			t.Run("Should match the different parameters", func(t *testing.T) {
 				var path = NewPath(`/path/to/:something/:else/end`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something/else/end`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something/else/end`).Values).To(HaveKeyWithValue("something", "something"))
-				Expect(path.Match(`/path/to/something/else/end`).Values).To(HaveKeyWithValue("else", "else"))
-				Expect(path.Match(`/path/to/foo/bar/end`).Values).To(HaveKeyWithValue("something", "foo"))
-				Expect(path.Match(`/path/to/foo/bar/end`).Values).To(HaveKeyWithValue("else", "bar"))
-				Expect(path.Match(`/path/to/foo/bar`)).To(BeNil())
-				Expect(path.Match(`/path/to///end`).Values).To(HaveKeyWithValue("something", ""))
-				Expect(path.Match(`/path/to///end`).Values).To(HaveKeyWithValue("else", ""))
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/something/else/end`))
+				assert.Equal(t, "something", path.Match(`/path/to/something/else/end`).Values["something"])
+				assert.Equal(t, "else", path.Match(`/path/to/something/else/end`).Values["else"])
+				assert.Equal(t, "foo", path.Match(`/path/to/foo/bar/end`).Values["something"])
+				assert.Equal(t, "bar", path.Match(`/path/to/foo/bar/end`).Values["else"])
+
+				assert.Nil(t, path.Match(`/path/to/foo/bar`))
+				assert.Equal(t, "", path.Match(`/path/to///end`).Values["something"])
+				assert.Equal(t, "", path.Match(`/path/to///end`).Values["else"])
 			})
 
-			It("Edge-case at the end", func() {
+			t.Run("Edge-case at the end", func(t *testing.T) {
 				var path = NewPath(`/path/to/:something`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/something`).Values).To(HaveKeyWithValue("something", "something"))
-				Expect(path.Match(`/path/to/foo`).Values).To(HaveKeyWithValue("something", "foo"))
-				Expect(path.Match(`/path/to`)).To(BeNil())
-				Expect(path.Match(`/path/to/`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/`).Values).To(HaveKeyWithValue("something", ""))
-				Expect(path.Match(`/path/to//`).Values).To(HaveKeyWithValue("something", ""))
-				Expect(path.Match(`/path/to///`)).To(BeNil())
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/something`))
+				assert.Equal(t, "something", path.Match(`/path/to/something`).Values["something"])
+				assert.Equal(t, "foo", path.Match(`/path/to/foo`).Values["something"])
+				assert.Nil(t, path.Match(`/path/to`))
+				assert.NotNil(t, path.Match(`/path/to/`))
+				assert.Equal(t, "", path.Match(`/path/to/`).Values["something"])
+				assert.Equal(t, "", path.Match(`/path/to//`).Values["something"])
+				assert.Nil(t, path.Match(`/path/to///`))
 			})
 		})
 
-		Context("Wildcard part matching", func() {
-			It("Should match the wildcard", func() {
+		t.Run("Wildcard part matching", func(t *testing.T) {
+			t.Run("Should match the wildcard", func(t *testing.T) {
 				var path = NewPath(`/path/to/*something`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/foo/bar`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/foo/bar`).Values).To(HaveKeyWithValue("something", "foo/bar"))
-				Expect(path.Match(`/path/to/`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/`).Values).To(HaveKeyWithValue("something", ""))
-				Expect(path.Match(`/path/to/foo/bar/`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/foo/bar/`).Values).To(HaveKeyWithValue("something", "foo/bar/"))
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/foo/bar`))
+				assert.Equal(t, "foo/bar", path.Match(`/path/to/foo/bar`).Values["something"])
+				assert.NotNil(t, path.Match(`/path/to/`))
+				assert.Equal(t, "", path.Match(`/path/to/`).Values["something"])
+				assert.NotNil(t, path.Match(`/path/to/foo/bar/`))
+				assert.Equal(t, "foo/bar/", path.Match(`/path/to/foo/bar/`).Values["something"])
 			})
 		})
 
-		Context("Regex part matching", func() {
-			It("Should find the regexp's", func() {
+		t.Run("Regex part matching", func(t *testing.T) {
+			t.Run("Should find the regexp's", func(t *testing.T) {
 				var path = NewPath(`/path/to/$<[0-9]+>/$id<[0-9]+>`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveKeyWithValue("id", "20"))
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveLen(1))
-				Expect(path.Match(`/path/to/10/`)).To(BeNil())
-				Expect(path.Match(`/path/to//`)).To(BeNil())
-				Expect(path.Match(`/path/to//20`)).To(BeNil())
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/10/20`))
+				assert.Equal(t, "20", path.Match(`/path/to/10/20`).Values["id"])
+				assert.Len(t, path.Match(`/path/to/10/20`).Values, 1)
+				assert.Nil(t, path.Match(`/path/to/10/`))
+				assert.Nil(t, path.Match(`/path/to//`))
+				assert.Nil(t, path.Match(`/path/to//20`))
 
 				path = NewPath(`/path/to/$id<[0-9]+>/$id2<[0-9]+>`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveKeyWithValue("id", "10"))
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveKeyWithValue("id2", "20"))
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveLen(2))
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/10/20`))
+				assert.Equal(t, "10", path.Match(`/path/to/10/20`).Values["id"])
+				assert.Equal(t, "20", path.Match(`/path/to/10/20`).Values["id2"])
+				assert.Len(t, path.Match(`/path/to/10/20`).Values, 2)
 			})
 
-			It("Should match fullpath regex", func() {
+			t.Run("Should match fullpath regex", func(t *testing.T) {
 				var path = NewPath(`/path/to/$foo<.*>`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`)).ToNot(BeNil())
-				Expect(path.Match(`/path/to/10/20`).Values).To(HaveKeyWithValue("foo", "10/20"))
-				Expect(path.Match(`/path/to/bla`).Values).To(HaveKeyWithValue("foo", "bla"))
-				Expect(path.Match(`/path/to/`).Values).To(HaveKeyWithValue("foo", ""))
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/path/to/10/20`))
+				assert.Equal(t, "10/20", path.Match(`/path/to/10/20`).Values["foo"])
+				assert.Equal(t, "bla", path.Match(`/path/to/bla`).Values["foo"])
+				assert.Equal(t, "", path.Match(`/path/to/`).Values["foo"])
 			})
 		})
 
-		Context("Edge cases", func() {
-			It("Should match /", func() {
+		t.Run("Edge cases", func(t *testing.T) {
+			t.Run("Should match /", func(t *testing.T) {
 				var path = NewPath(`/`)
-				Expect(path).ToNot(BeNil())
-				Expect(path.Match(`/`)).ToNot(BeNil())
-				Expect(path.Match(`/`).Values).To(BeEmpty())
+				assert.NotNil(t, path)
+				assert.NotNil(t, path.Match(`/`))
+				assert.Empty(t, path.Match(`/`).Values)
 			})
 		})
 	})
-})
+}

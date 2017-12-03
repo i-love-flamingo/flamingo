@@ -372,6 +372,17 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 			case *Map:
 				val = reflect.ValueOf(obj.Items)
 
+				// ordered map?
+				if len(obj.order) > 0 {
+					for _, index := range obj.order {
+						if val, ok := obj.Items[index]; ok {
+							oneIteration(reflect.ValueOf(index), reflect.ValueOf(val))
+						}
+					}
+
+					return
+				}
+
 			case Nil:
 				val = reflect.ValueOf(nil)
 			}

@@ -278,6 +278,7 @@ func (a *Array) copy() Object {
 type Map struct {
 	Items map[Object]Object
 	o     interface{}
+	order []Object
 }
 
 // String formatter
@@ -299,7 +300,14 @@ func (m *Map) String() string {
 func (m *Map) Member(field string) Object {
 	if field == "__assign" {
 		return &Func{fnc: reflect.ValueOf(func(k, v interface{}) Object {
-			m.Items[convert(k)] = convert(v)
+			// if we have a ordered map we need to append to not lose it
+			// this is only allowed to happen if we have an ordered list, otherwise we would
+			// bring partial order into an unordered list.
+			key := convert(k)
+			if _, ok := m.Items[key]; len(m.order) > 0 && !ok {
+				m.order = append(m.order, key)
+			}
+			m.Items[key] = convert(v)
 			return Nil{}
 		})}
 	}

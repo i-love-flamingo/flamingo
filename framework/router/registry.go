@@ -25,9 +25,10 @@ type (
 
 	// Handler defines a concrete controller
 	Handler struct {
-		path    *Path
-		handler string
-		params  map[string]*param
+		path     *Path
+		handler  string
+		params   map[string]*param
+		catchall bool
 	}
 
 	param struct {
@@ -71,7 +72,7 @@ func (registry *Registry) Route(path, handler string) {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
 	if len(h.params) == 0 {
-		h.params = parseParams(strings.Join(h.path.params, ", "))
+		h.params, h.catchall = parseParams(strings.Join(h.path.params, ", "))
 	}
 	registry.routes = append(registry.routes, h)
 }
@@ -101,15 +102,16 @@ func parseHandler(h string) *Handler {
 	}
 
 	if len(tmp) == 2 {
-		newHandler.params = parseParams(tmp[1][:len(tmp[1])-1])
+		newHandler.params, newHandler.catchall = parseParams(tmp[1][:len(tmp[1])-1])
 	}
 
 	return newHandler
 }
 
 // list: foo, bar, x ?= "y", z = "a"
-func parseParams(list string) map[string]*param {
-	var params = make(map[string]*param)
+func parseParams(list string) (params map[string]*param, catchall bool) {
+	// try to get enough space for the list
+	params = make(map[string]*param, strings.Count(list, ","))
 
 	var name, val string
 	var optional bool
@@ -157,6 +159,9 @@ func parseParams(list string) map[string]*param {
 		case '=':
 			continue
 
+		case '*':
+			catchall = true
+
 		default:
 			*readto += string(list[i])
 		}
@@ -170,7 +175,7 @@ func parseParams(list string) map[string]*param {
 		}
 	}
 
-	return params
+	return params, catchall
 }
 
 // Reverse builds the path from a named route with params
@@ -232,6 +237,43 @@ routeloop:
 			return handler.path.Render(renderparams, usedValues)
 		}
 	}
+
+catchallrouteloop:
+	for _, handler := range registry.routes {
+		if handler.handler == name && handler.catchall {
+			var renderparams = make(map[string]string)
+			var usedValues = make(map[string]struct{})
+
+			// set handler default parameters
+			for key, param := range handler.params {
+				v, ok := params[key]
+
+				// unset not-optional param
+				if !param.optional && !ok {
+					continue catchallrouteloop
+				}
+
+				// not-optional param set with wrong value
+				if !param.optional && ok && param.value != "" && param.value != v {
+					continue catchallrouteloop
+				}
+				renderparams[key] = param.value
+				usedValues[key] = struct{}{}
+			}
+
+			// add Reverse parameters
+			for k, v := range params {
+				if v != renderparams[k] {
+					delete(usedValues, k)
+				}
+
+				renderparams[k] = v
+			}
+
+			return handler.path.Render(renderparams, usedValues)
+		}
+	}
+
 	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)
 }
 

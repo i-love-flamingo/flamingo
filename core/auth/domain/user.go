@@ -20,7 +20,7 @@ const (
 	GUEST UserType = "guest"
 
 	// USER is an authenticated user
-	USER = "user"
+	USER UserType = "user"
 )
 
 // Guest is our default guest user

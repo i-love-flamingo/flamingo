@@ -301,6 +301,9 @@ func (registry *Registry) Match(path string) (controller Controller, params map[
 // MatchRequest matches a http Request (with GET and path parameters)
 func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string, *Handler) {
 	var path = req.URL.Path
+	if req.URL.RawPath != "" {
+		path = req.URL.RawPath
+	}
 
 matchloop:
 	for _, handler := range registry.routes {

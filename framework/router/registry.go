@@ -197,81 +197,84 @@ func (registry *Registry) Reverse(name string, params map[string]string) (string
 
 routeloop:
 	for _, handler := range registry.routes {
-		if handler.handler == name {
-			var renderparams = make(map[string]string)
-			var usedValues = make(map[string]struct{})
-
-			// set handler default parameters
-			for key, param := range handler.params {
-				v, ok := params[key]
-
-				// unset not-optional param
-				if !param.optional && !ok {
-					continue routeloop
-				}
-
-				// not-optional param set with wrong value
-				if !param.optional && ok && param.value != "" && param.value != v {
-					continue routeloop
-				}
-				renderparams[key] = param.value
-				usedValues[key] = struct{}{}
-			}
-
-			// add Reverse parameters
-			for k, v := range params {
-				if v != renderparams[k] {
-					delete(usedValues, k)
-				}
-
-				renderparams[k] = v
-			}
-
-			// validate if all parameters have been used
-			for key := range params {
-				if _, ok := handler.params[key]; !ok {
-					continue routeloop
-				}
-			}
-
-			return handler.path.Render(renderparams, usedValues)
+		if handler.handler != name {
+			continue
 		}
+		var renderparams = make(map[string]string, len(handler.params)+len(params))
+		var usedValues = make(map[string]struct{}, len(handler.params))
+
+		// set handler default parameters
+		for key, param := range handler.params {
+			v, ok := params[key]
+
+			// unset not-optional param
+			if !param.optional && !ok {
+				continue routeloop
+			}
+
+			// not-optional param set with wrong value
+			if !param.optional && ok && param.value != "" && param.value != v {
+				continue routeloop
+			}
+			renderparams[key] = param.value
+			usedValues[key] = struct{}{}
+		}
+
+		// add Reverse parameters
+		for k, v := range params {
+			if v != renderparams[k] {
+				delete(usedValues, k)
+			}
+
+			renderparams[k] = v
+		}
+
+		// validate if all parameters have been used
+		for key := range params {
+			if _, ok := handler.params[key]; !ok {
+				continue routeloop
+			}
+		}
+
+		return handler.path.Render(renderparams, usedValues)
+
 	}
 
 catchallrouteloop:
 	for _, handler := range registry.routes {
-		if handler.handler == name && handler.catchall {
-			var renderparams = make(map[string]string)
-			var usedValues = make(map[string]struct{})
-
-			// set handler default parameters
-			for key, param := range handler.params {
-				v, ok := params[key]
-
-				// unset not-optional param
-				if !param.optional && !ok {
-					continue catchallrouteloop
-				}
-
-				// not-optional param set with wrong value
-				if !param.optional && ok && param.value != "" && param.value != v {
-					continue catchallrouteloop
-				}
-				renderparams[key] = param.value
-				usedValues[key] = struct{}{}
-			}
-
-			// add Reverse parameters
-			for k, v := range params {
-				if v != renderparams[k] {
-					delete(usedValues, k)
-				}
-
-				renderparams[k] = v
-			}
-
-			return handler.path.Render(renderparams, usedValues)
+		if handler.handler != name || !handler.catchall {
+			continue
 		}
+		var renderparams = make(map[string]string, len(handler.params)+len(params))
+		var usedValues = make(map[string]struct{}, len(handler.params))
+
+		// set handler default parameters
+		for key, param := range handler.params {
+			v, ok := params[key]
+
+			// unset not-optional param
+			if !param.optional && !ok {
+				continue catchallrouteloop
+			}
+
+			// not-optional param set with wrong value
+			if !param.optional && ok && param.value != "" && param.value != v {
+				continue catchallrouteloop
+			}
+			renderparams[key] = param.value
+			usedValues[key] = struct{}{}
+		}
+
+		// add Reverse parameters
+		for k, v := range params {
+			if v != renderparams[k] {
+				delete(usedValues, k)
+			}
+
+			renderparams[k] = v
+		}
+
+		return handler.path.Render(renderparams, usedValues)
 	}
 
 	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)

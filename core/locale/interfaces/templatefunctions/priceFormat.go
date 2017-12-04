@@ -2,6 +2,7 @@ package templatefunctions
 
 import (
 	"github.com/leekchan/accounting"
+	"go.aoe.com/flamingo/core/locale/application"
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 	"go.aoe.com/flamingo/framework/config"
 )
@@ -9,7 +10,8 @@ import (
 type (
 	// PriceFormatFunc for formatting prices
 	PriceFormatFunc struct {
-		Config config.Map `inject:"config:locale.accounting"`
+		Config             config.Map                     `inject:"config:locale.accounting"`
+		TranslationService application.TranslationService `inject:""`
 	}
 )
 
@@ -21,6 +23,7 @@ func (pff PriceFormatFunc) Name() string {
 // Func as implementation of debug method
 func (pff PriceFormatFunc) Func() interface{} {
 	return func(value pugjs.Number, currency string) string {
+		currency = pff.TranslationService.Translate(currency, "", "", 1, nil)
 		ac := accounting.Accounting{
 			Symbol:    currency,
 			Precision: 2,

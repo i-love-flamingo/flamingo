@@ -3,14 +3,14 @@ package templatefunctions
 import (
 	"strconv"
 
-	"go.aoe.com/flamingo/core/locale/domain"
+	"go.aoe.com/flamingo/core/locale/application"
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
 
 type (
 	// Label is exported as a template function
 	Label struct {
-		TranslationService domain.TranslationService `inject:""`
+		TranslationService application.TranslationService `inject:""`
 	}
 )
 

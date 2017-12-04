@@ -1,8 +1,9 @@
 ## Locale Package
 
-This package provides the template func `__()`  
-
-Uses: https://github.com/nicksnyder/go-i18n
+This package provides localization features:
+ * the template func `__()`  which uses https://github.com/nicksnyder/go-i18n
+ * templatefuncs to format DateTime ISO Strings 
+ * templatefunc to format prices
 
 ### Configuration
 
@@ -10,6 +11,15 @@ Uses: https://github.com/nicksnyder/go-i18n
 locale:
   locale: en_GB
   translationFile: translations/en_GB.all.json
+  accounting:
+    thousand: ','
+    decimal: '.'
+    formatZero: '%s -.-'
+    format: "%v %s"
+  dateTime:
+    dateFormat:  02 Jan 2006
+    timeFormat: 15:04:05
+    dateTimeFormat: 02 Jan 2006 15:04:05
 ```
 
 Planned for later:

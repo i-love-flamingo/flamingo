@@ -80,7 +80,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.URLFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.GetFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.DataFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.StriptagsFunc{})
 
 	m.loadmock("../src/layout/*")
@@ -96,14 +95,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for setting pug-related config options
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"pug_template.basedir": "frontend/dist",
-		"pug_template.debug":   true,
-		"accounting": config.Map{
-			"decimal":    ",",
-			"thousand":   ".",
-			"formatZero": "%s -,-",
-			"format":     "%s %v",
-		},
+		"pug_template.basedir":  "frontend/dist",
+		"pug_template.debug":    true,
 		"imageservice.base_url": "-",
 		"imageservice.secret":   "-",
 	}

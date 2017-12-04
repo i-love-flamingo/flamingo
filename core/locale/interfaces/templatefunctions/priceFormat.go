@@ -9,7 +9,7 @@ import (
 type (
 	// PriceFormatFunc for formatting prices
 	PriceFormatFunc struct {
-		Config config.Map `inject:"config:accounting"`
+		Config config.Map `inject:"config:locale.accounting"`
 	}
 )
 

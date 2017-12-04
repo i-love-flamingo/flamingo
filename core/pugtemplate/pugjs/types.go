@@ -142,6 +142,9 @@ func convert(in interface{}) Object {
 		}
 		return Nil{}
 
+	case reflect.Uintptr:
+		return Nil{}
+
 	case reflect.Bool:
 		return Bool(val.Bool())
 

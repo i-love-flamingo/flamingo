@@ -16,7 +16,7 @@ locale:
     decimal: '.'
     formatZero: '%s -.-'
     format: "%v %s"
-  dateTime:
+  date:
     dateFormat:  02 Jan 2006
     timeFormat: 15:04:05
     dateTimeFormat: 02 Jan 2006 15:04:05

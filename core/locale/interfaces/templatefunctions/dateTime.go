@@ -21,14 +21,14 @@ func (tf DateTime) Name() string {
 func (tf DateTime) Func() interface{} {
 	// Usage
 	// dateTimeFormat(dateTimeString).formatDate()
-	return func(dateTimeString string) domain.DateTime {
+	return func(dateTimeString string) *domain.DateTimeFormatter {
 
 		dateTime, e := tf.DateTimeService.GetDateTimeFromIsoString(dateTimeString)
 		if e != nil {
 			tf.Logger.Errorf("Error Parsing dateTime %v / %v", dateTimeString, e)
-			return domain.DateTime{}
+			return &domain.DateTimeFormatter{}
 		}
 		tf.Logger.Errorf(" Parsing dateTime %v / %#v", dateTimeString, *dateTime)
-		return *dateTime
+		return dateTime
 	}
 }

@@ -32,7 +32,7 @@ func (m *Module) DefaultConfig() config.Map {
 			"formatZero": "%s -,-",
 			"format":     "%s %v",
 		},
-		"locale.dateTime": config.Map{
+		"locale.date": config.Map{
 			"dateFormat":     "02 Jan 2006",
 			"timeFormat":     "15:04:05",
 			"dateTimeFormat": "02 Jan 2006 15:04:05",

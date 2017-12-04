@@ -154,8 +154,11 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 	for i, v := range p {
 		p[i] = strings.Title(v)
 	}
-	//ctx.WithValue("page.template", "page"+strings.Join(p, ""))
-	ctx.WithValue("page.template", "page"+p[len(p)-1])
+	page := p[len(p)-1]
+	if len(p) >= 2 && p[len(p)-2] != page {
+		page = p[len(p)-2] + p[len(p)-1]
+	}
+	ctx.WithValue("page.template", "page"+page)
 
 	// recompile
 	if e.templates == nil {

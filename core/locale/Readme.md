@@ -27,6 +27,8 @@ Planned for later:
 
 ### Usage in Templates:
 
+#### Localisation of Labels:
+
 ```
   __("key")
 	__("key","default")
@@ -42,3 +44,10 @@ Planned for later:
 	__("switch_to_german","",{},"de-DE")
 	
 ```
+#### Formatting of prices:
+
+```
+dateTimeFormat(flight.scheduledDateTime).formatDate()
+```
+Other functions are formalLocalDate() or formatTime() etc..
+

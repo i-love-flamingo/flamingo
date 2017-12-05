@@ -29,9 +29,9 @@ func (dts *DateTimeService) GetDateTimeFromIsoString(dateTimeString string) (*do
 	loc, err := time.LoadLocation(dts.Location)
 	if err != nil {
 		if dts.Logger != nil {
-			dts.Logger.Errorf("dateTime Parsing error - could not load location %v", dts.Location)
+			dts.Logger.Warnf("dateTime Parsing error - could not load location %v  - use UTC as fallback", dts.Location)
 		}
-		return nil, err
+		loc = time.UTC
 	}
 
 	dateTime := domain.DateTimeFormatter{

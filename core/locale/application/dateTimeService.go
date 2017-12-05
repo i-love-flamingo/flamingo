@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// DateTimeService is a basic support service for date/time parsing
 	DateTimeService struct {
 		DateFormat     string          `inject:"config:locale.date.dateFormat"`
 		TimeFormat     string          `inject:"config:locale.date.timeFormat"`
@@ -20,15 +21,17 @@ type (
 
 //GetDateTimeFromString Need string in format ISO: "2017-11-25T06:30:00Z"
 func (dts *DateTimeService) GetDateTimeFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
-	timeResult, e := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
-	if e != nil {
-		return nil, errors.Errorf("could not parse date in defined format: %v / Error: %v", dateTimeString, e)
+	timeResult, err := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
+	if err != nil {
+		return nil, errors.Errorf("could not parse date in defined format: %v / Error: %v", dateTimeString, err)
 	}
-	loc, e := time.LoadLocation(dts.Location)
-	if e != nil {
+
+	loc, err := time.LoadLocation(dts.Location)
+	if err != nil {
 		if dts.Logger != nil {
 			dts.Logger.Errorf("dateTime Parsing error - could not load location %v", dts.Location)
 		}
+		return nil, err
 	}
 
 	dateTime := domain.DateTimeFormatter{
@@ -37,5 +40,6 @@ func (dts *DateTimeService) GetDateTimeFromIsoString(dateTimeString string) (*do
 		DateTimeFormat: dts.DateTimeFormat,
 	}
 	dateTime.SetDateTime(timeResult, timeResult.In(loc))
+
 	return &dateTime, nil
 }

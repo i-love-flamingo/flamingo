@@ -7,6 +7,7 @@ import (
 )
 
 type (
+	// DateTime template helper function
 	DateTime struct {
 		DateTimeService application.DateTimeService `inject:""`
 		Logger          flamingo.Logger             `inject:""`
@@ -18,11 +19,11 @@ func (tf DateTime) Name() string {
 	return "dateTimeFormat"
 }
 
+// Func template function factory
 func (tf DateTime) Func() interface{} {
 	// Usage
 	// dateTimeFormat(dateTimeString).formatDate()
 	return func(dateTimeString string) *domain.DateTimeFormatter {
-
 		dateTime, e := tf.DateTimeService.GetDateTimeFromIsoString(dateTimeString)
 		if e != nil {
 			tf.Logger.Errorf("Error Parsing dateTime %v / %v", dateTimeString, e)

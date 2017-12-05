@@ -9,13 +9,11 @@ import (
 
 type (
 	// Module registers our profiler
-	Module struct {
-	}
+	Module struct{}
 )
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
-
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTime{})
@@ -24,19 +22,21 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for this module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"locale.translationFile": "translations/en-US.all.json",
-		"locale.locale":          "en-US",
-		"locale.accounting": config.Map{
-			"decimal":    ",",
-			"thousand":   ".",
-			"formatZero": "%s -,-",
-			"format":     "%s %v",
-		},
-		"locale.date": config.Map{
-			"dateFormat":     "02 Jan 2006",
-			"timeFormat":     "15:04:05",
-			"dateTimeFormat": "02 Jan 2006 15:04:05",
-			"location":       "Europe/London",
+		"locale": config.Map{
+			"translationFile": "translations/en-US.all.json",
+			"locale":          "en-US",
+			"accounting": config.Map{
+				"decimal":    ",",
+				"thousand":   ".",
+				"formatZero": "%s -,-",
+				"format":     "%s %v",
+			},
+			"date": config.Map{
+				"dateFormat":     "02 Jan 2006",
+				"timeFormat":     "15:04:05",
+				"dateTimeFormat": "02 Jan 2006 15:04:05",
+				"location":       "Europe/London",
+			},
 		},
 	}
 }

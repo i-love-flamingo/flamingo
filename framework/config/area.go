@@ -4,6 +4,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -193,6 +194,17 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 			continue
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+	}
+
+	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
+		for _, disabled := range config.([]interface{}) {
+			for i, module := range area.Modules {
+				tm := reflect.TypeOf(module).Elem()
+				if tm.PkgPath()+"."+tm.Name() == disabled.(string) {
+					area.Modules = append(area.Modules[:i], area.Modules[i+1:]...)
+				}
+			}
+		}
 	}
 
 	injector.InitModules(area.Modules...)

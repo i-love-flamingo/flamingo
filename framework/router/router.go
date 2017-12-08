@@ -33,6 +33,7 @@ const (
 type (
 	ProfilerProvider    func() profiler.Profiler // ProfilerProvider for profiler injection
 	EventRouterProvider func() event.Router      // EventRouterProvider for event injection
+	FilterProvider      func() []Filter
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
@@ -49,6 +50,8 @@ type (
 		RouterRegistry      *Registry       `inject:""`
 		NotFoundHandler     string          `inject:"config:flamingo.router.notfound"`
 		ErrorHandler        string          `inject:"config:flamingo.router.error"`
+		FilterProvider      FilterProvider  `inject:",optional"`
+		filters             []Filter
 	}
 
 	// P is a shorthand for parameter
@@ -56,7 +59,27 @@ type (
 
 	// ErrorKey for context errors
 	ErrorKey uint
+
+	Filter interface {
+		Filter(web.Context, *FilterChain) web.Response
+	}
+
+	FilterChain struct {
+		filters []Filter
+	}
+
+	lastFilter func(web.Context) web.Response
 )
+
+func (fnc lastFilter) Filter(ctx web.Context, chain *FilterChain) web.Response {
+	return fnc(ctx)
+}
+
+func (fc *FilterChain) Next(ctx web.Context) web.Response {
+	next := fc.filters[0]
+	fc.filters = fc.filters[1:]
+	return next.Filter(ctx, fc)
+}
 
 // NewRouter creates a new Router instance
 func NewRouter() *Router {
@@ -125,6 +148,7 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 	router.RouterRegistry = routes
 
 	router.eventrouter = router.EventRouterProvider()
+	router.filters = router.FilterProvider()
 
 	return router
 }
@@ -232,49 +256,60 @@ func (router *Router) handle(c Controller) http.Handler {
 
 		defer ctx.Profile("request", req.RequestURI)()
 
-		var response web.Response
+		lastFilterFunc := func(ctx web.Context) web.Response {
+			var response web.Response
 
-		if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
-			response = cc.Get(ctx)
-		} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
-			response = cc.Post(ctx)
-		} else if cc, ok := c.(PUTController); ok && req.Method == http.MethodPut {
-			response = cc.Put(ctx)
-		} else if cc, ok := c.(DELETEController); ok && req.Method == http.MethodDelete {
-			response = cc.Delete(ctx)
-		} else if cc, ok := c.(HEADController); ok && req.Method == http.MethodHead {
-			response = cc.Head(ctx)
-		} else {
-			switch c := c.(type) {
-			case DataController:
-				response = &web.JSONResponse{Data: c.Data(ctx)}
+			if cc, ok := c.(GETController); ok && req.Method == http.MethodGet {
+				response = cc.Get(ctx)
+			} else if cc, ok := c.(POSTController); ok && req.Method == http.MethodPost {
+				response = cc.Post(ctx)
+			} else if cc, ok := c.(PUTController); ok && req.Method == http.MethodPut {
+				response = cc.Put(ctx)
+			} else if cc, ok := c.(DELETEController); ok && req.Method == http.MethodDelete {
+				response = cc.Delete(ctx)
+			} else if cc, ok := c.(HEADController); ok && req.Method == http.MethodHead {
+				response = cc.Head(ctx)
+			} else {
+				switch c := c.(type) {
+				case DataController:
+					response = &web.JSONResponse{Data: c.Data(ctx)}
 
-			case func(web.Context) web.Response:
-				response = c(ctx)
+				case func(web.Context) web.Response:
+					response = c(ctx)
 
-			case func(web.Context) interface{}:
-				response = &web.JSONResponse{Data: c(ctx)}
+				case func(web.Context) interface{}:
+					response = &web.JSONResponse{Data: c(ctx)}
 
-			case http.Handler:
-				c.ServeHTTP(w, req)
+				case http.Handler:
+					c.ServeHTTP(w, req)
 
-			default:
-				response = router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx)
+				default:
+					response = router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx)
+				}
 			}
-		}
 
-		if response, ok := response.(web.OnResponse); ok {
-			response.OnResponse(ctx, w)
-		}
-
-		// fire response event
-		router.eventrouter.Dispatch(&OnResponseEvent{c, response, req, w, ctx})
-
-		if router.Sessions != nil {
-			if err := router.Sessions.Save(req, w, ctx.Session()); err != nil {
-				log.Println(err)
+			if response, ok := response.(web.OnResponse); ok {
+				response.OnResponse(ctx, w)
 			}
+
+			// fire response event
+			router.eventrouter.Dispatch(&OnResponseEvent{c, response, req, w, ctx})
+
+			if router.Sessions != nil {
+				if err := router.Sessions.Save(req, w, ctx.Session()); err != nil {
+					log.Println(err)
+				}
+			}
+
+			return response
 		}
+
+		chain := &FilterChain{
+			filters: make([]Filter, len(router.filters)),
+		}
+		copy(chain.filters, router.filters)
+		chain.filters = append(chain.filters, lastFilter(lastFilterFunc))
+		response := chain.Next(ctx)
 
 		if response != nil {
 			response.Apply(ctx, w)

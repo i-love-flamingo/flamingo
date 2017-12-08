@@ -19,6 +19,10 @@ type (
 	truer interface {
 		True() bool
 	}
+
+	sortable interface {
+		Order() []string
+	}
 )
 
 // Convert an object
@@ -70,6 +74,15 @@ func convert(in interface{}) Object {
 		for _, k := range val.MapKeys() {
 			newMap.Items[convert(k)] = convert(val.MapIndex(k))
 		}
+
+		if sortable, ok := val.Interface().(sortable); ok {
+			order := sortable.Order()
+			newMap.order = make([]Object, len(order))
+			for i, o := range order {
+				newMap.order[i] = String(o)
+			}
+		}
+
 		return newMap
 
 	case reflect.Struct:
@@ -86,6 +99,14 @@ func convert(in interface{}) Object {
 
 		for i := 0; i < val.NumMethod(); i++ {
 			newMap.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+		}
+
+		if sortable, ok := val.Interface().(sortable); ok {
+			order := sortable.Order()
+			newMap.order = make([]Object, len(order))
+			for i, o := range order {
+				newMap.order[i] = String(o)
+			}
 		}
 
 		return newMap
@@ -110,6 +131,14 @@ func convert(in interface{}) Object {
 				for k, v := range m.Items {
 					newMap.Items[k] = v
 				}
+			}
+		}
+
+		if sortable, ok := val.Interface().(sortable); ok {
+			order := sortable.Order()
+			newMap.order = make([]Object, len(order))
+			for i, o := range order {
+				newMap.order[i] = String(o)
 			}
 		}
 

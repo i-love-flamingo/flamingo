@@ -3,6 +3,7 @@ package flamingo
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -65,6 +66,10 @@ func (hc *HttpCache) Get(ctx context.Context, key string, loader func() (*http.R
 		resp, err := loader()
 		if err != nil {
 			return nil, err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, errors.New("not http 200")
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)

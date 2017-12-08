@@ -54,6 +54,12 @@
   version = "v0.16.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/golang/groupcache"
+  packages = ["singleflight"]
+  revision = "84a468cf14b4376def5d68c722b139b881c450a4"
+
+[[projects]]
   name = "github.com/golang/protobuf"
   packages = ["jsonpb","proto","ptypes","ptypes/any","ptypes/duration","ptypes/struct","ptypes/timestamp"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
@@ -75,6 +81,12 @@
   packages = ["."]
   revision = "ca9ada44574153444b00d3fd9c8559e4cc95f896"
   version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [".","simplelru"]
+  revision = "0a025b7e63adc15a622f29b0b2c4c3848243bbf6"
 
 [[projects]]
   branch = "master"
@@ -118,10 +130,10 @@
   version = "v0.0.2"
 
 [[projects]]
+  branch = "master"
   name = "github.com/nicksnyder/go-i18n"
   packages = ["i18n/bundle","i18n/language","i18n/translation"]
-  revision = "0dc1626d56435e9d605a29875701721c54bc9bbd"
-  version = "v1.10.0"
+  revision = "aa0ce51472e0a9982717fd19cf02cb08b1e433aa"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
@@ -267,6 +279,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "181a83372854b2e87454c4a2995541ecd3ea5b59c6e2b22eeb5ccce1754764ad"
+  inputs-digest = "0aaee3b389cadc5e83a41e8bfb8aaf38332e5908fc6159cf113ee61701112c50"
   solver-name = "gps-cdcl"
   solver-version = 1

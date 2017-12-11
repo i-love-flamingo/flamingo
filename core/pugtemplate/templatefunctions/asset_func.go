@@ -40,6 +40,8 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		af.Engine.Lock()
 		if af.Engine.Assetrewrites[assetName] != "" {
 			result = url.String() + "/" + af.Engine.Assetrewrites[assetName]
+		} else if af.Engine.Assetrewrites[strings.TrimSpace(string(asset))] != "" {
+			result = url.String() + "/" + af.Engine.Assetrewrites[strings.TrimSpace(string(asset))]
 		} else {
 			result = url.String() + "/" + string(asset)
 		}

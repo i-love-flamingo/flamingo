@@ -153,6 +153,10 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 	return router
 }
 
+func (router *Router) Base() *url.URL {
+	return router.base
+}
+
 // URL helps resolving URL's by it's name.
 func (router *Router) URL(name string, params map[string]string) *url.URL {
 	var resultURL = new(url.URL)

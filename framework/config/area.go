@@ -30,6 +30,8 @@ type (
 	// Map contains configuration
 	Map map[string]interface{}
 
+	Slice []interface{}
+
 	// DefaultConfigModule is used to get a module's default configuration
 	DefaultConfigModule interface {
 		DefaultConfig() Map
@@ -86,6 +88,8 @@ func (m Map) Add(cfg Map) {
 	for k, v := range cfg {
 		if vv, ok := v.(map[string]interface{}); ok {
 			v = Map(vv)
+		} else if vv, ok := v.([]interface{}); ok {
+			v = Slice(vv)
 		}
 
 		if strings.Index(k, ".") > -1 {
@@ -134,6 +138,22 @@ func (m Map) Flat() Map {
 // MapInto tries to map the configuration map into a given interface
 func (m Map) MapInto(out interface{}) error {
 	jsonBytes, err := json.Marshal(m)
+
+	if err != nil {
+		return errors.Wrap(err, "Problem with marshaling map")
+	}
+
+	err = json.Unmarshal(jsonBytes, &out)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
+	}
+
+	return nil
+}
+
+// MapInto tries to map the configuration map into a given interface
+func (s Slice) MapInto(out interface{}) error {
+	jsonBytes, err := json.Marshal(s)
 
 	if err != nil {
 		return errors.Wrap(err, "Problem with marshaling map")

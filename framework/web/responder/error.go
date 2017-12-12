@@ -74,11 +74,11 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 
 	response.(*web.ContentResponse).Status = http.StatusNotFound
 
-	return response
+	return web.ErrorResponse{Response: response, Error: error}
 }
 
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
-func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response {
+func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Response {
 	var response web.Response
 
 	if !r.DebugMode {
@@ -91,7 +91,7 @@ func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response 
 		response = r.RenderAware.Render(
 			context,
 			r.Tpl503,
-			ErrorViewData{Error: DebugError{err}, Code: 500},
+			ErrorViewData{Error: DebugError{error}, Code: 500},
 		)
 	}
 
@@ -99,5 +99,5 @@ func (r *FlamingoErrorAware) Error(context web.Context, err error) web.Response 
 		r.Status = http.StatusInternalServerError
 	}
 
-	return response
+	return web.ErrorResponse{Response: response, Error: error}
 }

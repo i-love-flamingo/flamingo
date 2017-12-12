@@ -11,6 +11,7 @@ type (
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
 		Apply(Context, http.ResponseWriter)
+		GetStatus() int
 	}
 
 	// OnResponse hook
@@ -45,11 +46,16 @@ type (
 	}
 )
 
-// Apply Response
-func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
+func (rr *RedirectResponse) GetStatus() int {
 	if rr.Status == 0 {
 		rr.Status = http.StatusTemporaryRedirect
 	}
+	return rr.Status
+}
+
+// Apply Response
+func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
+	rr.GetStatus()
 
 	rw.Header().Set("Location", rr.Location)
 	rw.WriteHeader(rr.Status)
@@ -72,25 +78,35 @@ func (rr *RedirectResponse) With(key string, data interface{}) Redirect {
 	return rr
 }
 
+func (cr *ContentResponse) GetStatus() int {
+	if cr.Status == 0 {
+		cr.Status = http.StatusOK
+	}
+	return cr.Status
+}
+
 // Apply ContentResponse
 func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain; charset=utf-8"
 	}
-	if cr.Status == 0 {
-		cr.Status = http.StatusOK
-	}
+	cr.GetStatus()
 
 	rw.Header().Set("Content-Type", cr.ContentType)
 	rw.WriteHeader(cr.Status)
 	io.Copy(rw, cr.Body)
 }
 
-// Apply JSONResponse
-func (js *JSONResponse) Apply(c Context, rw http.ResponseWriter) {
+func (js *JSONResponse) GetStatus() int {
 	if js.Status == 0 {
 		js.Status = http.StatusOK
 	}
+	return js.Status
+}
+
+// Apply JSONResponse
+func (js *JSONResponse) Apply(c Context, rw http.ResponseWriter) {
+	js.GetStatus()
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(js.Status)

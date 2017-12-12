@@ -1,64 +1,36 @@
 package requestlogger
 
 import (
-	"context"
-	"fmt"
-	"strings"
 	"time"
 
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/router"
 	"github.com/labstack/gommon/color"
 	"go.aoe.com/flamingo/framework/flamingo"
+	"go.aoe.com/flamingo/framework/router"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (
-	contextKey string
-	logger     struct{
+	logger struct {
 		Logger flamingo.Logger `inject:""`
 	}
 )
 
-const contextTime contextKey = "time"
+func (r *logger) Filter(ctx web.Context, chain *router.FilterChain) web.Response {
+	start := time.Now()
+	webResponse := chain.Next(ctx)
 
-// Notify is called on events
-func (r *logger) Notify(e event.Event) {
-	switch e := e.(type) {
-	case *router.OnRequestEvent:
-		r.onRequest(e)
-
-	case *router.OnFinishEvent:
-		r.onFinish(e)
-	}
-}
-
-// onRequest assigns the current time to the request-context
-func (r *logger) onRequest(event *router.OnRequestEvent) {
-	event.Request = event.Request.WithContext(context.WithValue(event.Request.Context(), contextTime, time.Now()))
-}
-
-// onFinish logs the request to stdout via log.Printf
-func (r *logger) onFinish(event *router.OnFinishEvent) {
-	var duration time.Duration
-
-	response, ok := event.ResponseWriter.(*router.VerboseResponseWriter)
-	if !ok {
-		return
-	}
-
-	if start := event.Request.Context().Value(contextTime); start != nil {
-		duration = time.Since(start.(time.Time))
-	}
+	duration := time.Since(start)
+	webResponse.GetStatus()
 
 	var cp func(msg interface{}, styles ...string) string
 	switch {
-	case response.Status >= 200 && response.Status < 300:
+	case webResponse.GetStatus() >= 200 && webResponse.GetStatus() < 300:
 		cp = color.Green
-	case response.Status >= 300 && response.Status < 400:
+	case webResponse.GetStatus() >= 300 && webResponse.GetStatus() < 400:
 		cp = color.Blue
-	case response.Status >= 400 && response.Status < 500:
+	case webResponse.GetStatus() >= 400 && webResponse.GetStatus() < 500:
 		cp = color.Yellow
-	case response.Status >= 500 && response.Status < 600:
+	case webResponse.GetStatus() >= 500 && webResponse.GetStatus() < 600:
 		cp = color.Red
 	default:
 		cp = color.Grey
@@ -66,21 +38,24 @@ func (r *logger) onFinish(event *router.OnFinishEvent) {
 
 	var extra string
 
-	if response.Header().Get("Location") != "" {
-		extra += " -> " + response.Header().Get("Location")
+	if rr, ok := webResponse.(*web.RedirectResponse); ok {
+		extra += " -> " + rr.Location
 	}
 
+	/*TODO error handling
 	if event.Error != nil {
 		extra += strings.Split(fmt.Sprintf(` | Error: %s`, event.Error), "\n")[0]
-	}
+	}*/
 
 	r.Logger.Printf(
 		cp("%03d | %-8s | % 15s | % 6d byte | %s%s"),
-		response.Status,
-		event.Request.Method,
+		webResponse.GetStatus(),
+		ctx.Request().Method,
 		duration,
-		response.Size,
-		event.Request.RequestURI,
+		0, //response.Size,
+		ctx.Request().RequestURI,
 		extra,
 	)
+
+	return webResponse
 }

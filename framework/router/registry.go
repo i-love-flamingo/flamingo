@@ -47,6 +47,9 @@ func NewRegistry() *Registry {
 
 // Handle assigns a controller to a name
 func (registry *Registry) Handle(name string, controller Controller) {
+	if hf, ok := controller.(http.HandlerFunc); ok {
+		controller = http.Handler(hf)
+	}
 	registry.handler[name] = controller
 }
 

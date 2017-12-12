@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.aoe.com/flamingo/framework/event"
 	"go.aoe.com/flamingo/framework/template"
 	"go.aoe.com/flamingo/framework/web"
 )
@@ -33,6 +34,7 @@ type (
 		rawmode      bool
 		doctype      string
 		debug        bool
+		eventRouter  event.Router
 	}
 
 	TemplateFunctionRegistryProvider func() *template.FunctionRegistry
@@ -48,6 +50,7 @@ type (
 		Webpackserver             bool
 		TemplateFunctions         *template.FunctionRegistry
 		TemplateFunctionsProvider TemplateFunctionRegistryProvider `inject:""`
+		EventRouter               event.Router                     `inject:""`
 	}
 )
 
@@ -59,11 +62,12 @@ func NewEngine() *Engine {
 	}
 }
 
-func newRenderState(path string, debug bool) *renderState {
+func newRenderState(path string, debug bool, eventRouter event.Router) *renderState {
 	return &renderState{
-		path:  path,
-		mixin: make(map[string]string),
-		debug: debug,
+		path:        path,
+		mixin:       make(map[string]string),
+		debug:       debug,
+		eventRouter: eventRouter,
 	}
 }
 
@@ -129,7 +133,7 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 					continue
 				}
 
-				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug)
+				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug, e.EventRouter)
 				renderState.funcs = FuncMap(e.TemplateFunctions.Populate())
 				token, err := renderState.Parse(name)
 				if err != nil {

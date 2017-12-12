@@ -327,8 +327,14 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 				n,
 				r,
 				right)
-		} else {
+		} else if ops[expr.Operator] == "=" {
 			result = fmt.Sprintf(`$%s :%s %s`,
+				n,
+				ops[expr.Operator],
+				right)
+		} else {
+			result = fmt.Sprintf(`$%s := $%s %s %s`,
+				n,
 				n,
 				ops[expr.Operator],
 				right)

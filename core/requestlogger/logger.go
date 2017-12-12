@@ -25,7 +25,9 @@ type (
 )
 
 func (l *loggedResponse) Apply(ctx web.Context, rw http.ResponseWriter) {
-	l.Response.Apply(ctx, rw)
+	if l.Response != nil {
+		l.Response.Apply(ctx, rw)
+	}
 
 	l.logCallback()
 }

@@ -36,25 +36,44 @@ func (f *csrfFilter) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 
 		// compare request nonce to session nonce
 		if !contains(list, nonce) {
-			log.Println("CSRF ERROR: not same nonce")
+			log.Println("CSRF ERROR: session doesn't contain the nonce of the request")
 			return f.Error(ctx, errors.New("session doesn't contain the csrf-nonce of the request"))
 		}
-		log.Printf("It woooooorks :D", nonce)
+		deleteNonceInSession(nonce, ctx)
+		log.Println("CSRF token pass", nonce)
 	}
 
 	return chain.Next(ctx, w)
 }
 
 func getNonceList(ctx web.Context) ([]string, error) {
-	if ns, ok := ctx.Session().Values["nonces"]; ok {
+	if ns, ok := ctx.Session().Values[nonces]; ok {
 		if list, ok := ns.([]string); ok {
 			return list, nil
 		} else {
-			return nil, errors.New("CSRF token has no list of nonces")
+			return nil, errors.New(`the session key "nonces" isn't a list'"`)
 		}
 	} else {
-		return nil, errors.New("CSRF token doesn't exist")
+		return nil, errors.New(`session hasn't the key "nonces"`)
 	}
+}
+
+func deleteNonceInSession(nonce string, ctx web.Context) error {
+	list, err := getNonceList(ctx)
+	if err != nil {
+		return err
+	}
+	if !contains(list, nonce) {
+		return errors.New("couldn't delete nonce of list because it doesn't exist in the list")
+	}
+	for i, e := range list {
+		if e == nonce {
+			list = append(list[:i], list[i+1:]...)
+			break
+		}
+	}
+	ctx.Session().Values[nonces] = list
+	return nil
 }
 
 func contains(s []string, e string) bool {

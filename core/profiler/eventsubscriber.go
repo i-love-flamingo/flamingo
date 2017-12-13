@@ -94,7 +94,7 @@ window.addEventListener("load", function load(e) {
 				1,
 			),
 			[]byte("</body>"),
-			[]byte(`<div style='position:absolute;right:0;bottom:0;background-color:#ccc;border:1px solid #888;z-index:10000;padding:3px 2px 0;'>
+			[]byte(`<div style='position:fixed;right:0;bottom:0;background-color:#ccc;border:1px solid #888;z-index:10000;padding:3px 2px 0;'>
 	<a href='`+p.Router.URL("_profiler.view", router.P{"profile": context.ID()}).String()+`' style='text-decoration:none;'>⚙</a>
 </div>
 </body>`),

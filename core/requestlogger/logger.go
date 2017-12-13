@@ -1,6 +1,7 @@
 package requestlogger
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -25,7 +26,9 @@ type (
 )
 
 func (l *loggedResponse) Apply(ctx web.Context, rw http.ResponseWriter) {
-	l.Response.Apply(ctx, rw)
+	if l.Response != nil {
+		l.Response.Apply(ctx, rw)
+	}
 
 	l.logCallback()
 }
@@ -34,6 +37,10 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 	start := time.Now()
 
 	webResponse := chain.Next(ctx, w)
+
+	if webResponse == nil {
+		webResponse = &web.ErrorResponse{Error: errors.New("nil response"), Response: &web.BasicResponse{}}
+	}
 
 	return &loggedResponse{
 		webResponse,

@@ -13,7 +13,6 @@ import (
 	"go.aoe.com/flamingo/framework/controller"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/flamingo"
 	"go.aoe.com/flamingo/framework/profiler"
 	"go.aoe.com/flamingo/framework/profiler/collector"
 	"go.aoe.com/flamingo/framework/router"
@@ -73,8 +72,6 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*responder.RenderAware)(nil)).To(responder.FlamingoRenderAware{})
 	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})
 	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
-
-	injector.Bind((*flamingo.Cache)(nil)).AsEagerSingleton().ToProvider(flamingo.NewInMemoryCache)
 }
 
 // DefaultConfig for this module

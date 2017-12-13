@@ -11,6 +11,13 @@ type (
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
 		Apply(Context, http.ResponseWriter)
+		GetStatus() int
+		GetContentLength() int
+	}
+
+	BasicResponse struct {
+		Status      int
+		ContentSize int
 	}
 
 	// OnResponse hook
@@ -26,6 +33,7 @@ type (
 
 	// RedirectResponse redirect
 	RedirectResponse struct {
+		BasicResponse
 		Status   int
 		Location string
 		data     map[string]interface{}
@@ -33,6 +41,7 @@ type (
 
 	// ContentResponse contains a response with body
 	ContentResponse struct {
+		BasicResponse
 		Status      int
 		Body        io.Reader
 		ContentType string
@@ -40,10 +49,61 @@ type (
 
 	// JSONResponse returns Data encoded as JSON
 	JSONResponse struct {
+		BasicResponse
 		Data   interface{}
 		Status int
 	}
+
+	ErrorResponse struct {
+		Response
+		Error error
+	}
+
+	// VerboseResponseWriter shadows http.ResponseWriter and tracks written bytes and result Status for logging.
+	VerboseResponseWriter struct {
+		http.ResponseWriter
+		Status int
+		Size   int
+	}
+
+	ServeHTTPResponse struct {
+		*VerboseResponseWriter
+		BasicResponse
+	}
 )
+
+// Write calls http.ResponseWriter.Write and records the written bytes.
+func (response *VerboseResponseWriter) Write(data []byte) (int, error) {
+	l, e := response.ResponseWriter.Write(data)
+	response.Size += l
+	return l, e
+}
+
+// WriteHeader calls http.ResponseWriter.WriteHeader and records the Status code.
+func (response *VerboseResponseWriter) WriteHeader(h int) {
+	response.Status = h
+	response.ResponseWriter.WriteHeader(h)
+}
+
+// Apply Response (empty, it has already been applied)
+func (shr *ServeHTTPResponse) Apply(c Context, rw http.ResponseWriter) {
+	shr.BasicResponse.Apply(c, rw)
+}
+
+func (br *BasicResponse) GetStatus() int {
+	return br.Status
+}
+
+func (br *BasicResponse) GetContentLength() int {
+	return br.ContentSize
+}
+
+func (br *BasicResponse) Apply(c Context, rw http.ResponseWriter) {
+	if vrb, ok := rw.(*VerboseResponseWriter); ok {
+		br.Status = vrb.Status
+		br.ContentSize = vrb.Size
+	}
+}
 
 // Apply Response
 func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
@@ -53,6 +113,8 @@ func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
 
 	rw.Header().Set("Location", rr.Location)
 	rw.WriteHeader(rr.Status)
+
+	rr.BasicResponse.Apply(c, rw)
 }
 
 // OnResponse Hook
@@ -77,6 +139,7 @@ func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain; charset=utf-8"
 	}
+
 	if cr.Status == 0 {
 		cr.Status = http.StatusOK
 	}
@@ -84,6 +147,8 @@ func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 	rw.Header().Set("Content-Type", cr.ContentType)
 	rw.WriteHeader(cr.Status)
 	io.Copy(rw, cr.Body)
+
+	cr.BasicResponse.Apply(c, rw)
 }
 
 // Apply JSONResponse
@@ -100,4 +165,6 @@ func (js *JSONResponse) Apply(c Context, rw http.ResponseWriter) {
 		panic(err)
 	}
 	rw.Write(p)
+
+	js.BasicResponse.Apply(c, rw)
 }

@@ -64,13 +64,13 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 
 	m.RouterRegistry.Route("/assets/*f", "_pugtemplate.assets")
-	m.RouterRegistry.Handle("_pugtemplate.assets", http.Handler(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	m.RouterRegistry.Handle("_pugtemplate.assets", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 			io.Copy(rw, r.Body)
 		} else {
 			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 		}
-	})))
+	}))
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.AssetFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsMath{})

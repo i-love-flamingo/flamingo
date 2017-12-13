@@ -100,7 +100,6 @@ func (injector *Injector) InitModules(modules ...Module) {
 		if _, ok := known[reflect.TypeOf(module)]; ok {
 			continue
 		}
-		log.Println("Loading", reflect.TypeOf(module))
 		injector.requestInjection(module)
 		module.Configure(injector)
 		known[reflect.TypeOf(module)] = struct{}{}

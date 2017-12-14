@@ -277,6 +277,10 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 		if err == nil {
 			return r
 		}
+
+		if annotation != "" {
+			return injector.resolveType(binding.typeof, "", false)
+		}
 	}
 
 	// This for an injection request on a provider, such as `func() MyInstance`

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"reflect"
-	"runtime"
 	"sort"
 	"strings"
 	"unicode"
@@ -95,10 +94,7 @@ func (s *state) at(node parse.Node) {
 // doublePercent returns the string with %'s replaced by %%, if necessary,
 // so it can be used safely inside a Printf format string.
 func doublePercent(str string) string {
-	if strings.Contains(str, "%") {
-		str = strings.Replace(str, "%", "%%", -1)
-	}
-	return str
+	return strings.Replace(str, "%", "%%", -1)
 }
 
 // TODO: It would be nice if ExecError was more broken down, but
@@ -146,24 +142,6 @@ func (s *state) writeError(err error) {
 	})
 }
 
-// errRecover is the handler that turns panics into returns from the top
-// level of Parse.
-func errRecover(errp *error) {
-	e := recover()
-	if e != nil {
-		switch err := e.(type) {
-		case runtime.Error:
-			panic(e)
-		case writeError:
-			*errp = err.Err // Strip the wrapper.
-		case ExecError:
-			*errp = err // Keep the wrapper.
-		default:
-			panic(e)
-		}
-	}
-}
-
 // ExecuteTemplate applies the template associated with e that has the given name
 // to the specified data object and writes the output to wr.
 // If an error occurs executing the template or writing its output,
@@ -203,7 +181,6 @@ func lowerFirst(s string) string {
 }
 
 func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
-	defer errRecover(&err)
 	value, ok := data.(reflect.Value)
 	if !ok {
 		value = reflect.ValueOf(data)
@@ -726,6 +703,10 @@ var (
 // it looks just like a function call. The arg list, if non-nil, includes (in the manner of the shell), arg[0]
 // as the function itself.
 func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, args []parse.Node, final reflect.Value) reflect.Value {
+	if name == "null" {
+		return reflect.ValueOf(Nil{})
+	}
+
 	if args != nil {
 		args = args[1:] // Zeroth arg is function name/node; not passed to function.
 	}
@@ -780,6 +761,7 @@ func (s *state) evalCall(dot, fun reflect.Value, node parse.Node, name string, a
 
 	if name == "__freeze" {
 		s.boundBlocks = append(s.boundBlocks, &boundBlock{name: argv[0].String(), scope: s})
+		return reflect.ValueOf(Nil{})
 	}
 
 	result := fun.Call(argv)

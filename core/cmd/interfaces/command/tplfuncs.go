@@ -22,7 +22,10 @@ var (
 					continue
 				}
 				bu, _ := routeConfig.Configuration.Get("prefixrouter.baseurl")
-				baseurl := bu.(string)
+				baseurl, ok := bu.(string)
+				if !ok {
+					continue
+				}
 				if baseURL != "" && baseURL != baseurl {
 					continue
 				}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang/groupcache/singleflight"
+	"go.aoe.com/flamingo/framework/flamingo"
 )
 
 type (
@@ -17,7 +18,8 @@ type (
 	// HTTPFrontend stores and caches http responses
 	HTTPFrontend struct {
 		singleflight.Group
-		Backend Backend `inject:""`
+		Backend Backend         `inject:""`
+		Logger  flamingo.Logger `inject:""`
 	}
 
 	nopCloser struct {
@@ -73,21 +75,25 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 				Gracetime: 10 * time.Minute,
 			}
 		}
-		return loaderResponse{data, meta}, err
+
+		response := data
+		body, _ := ioutil.ReadAll(response.Body)
+		response.Body.Close()
+
+		cached := cachedResponse{
+			orig: response,
+			body: body,
+		}
+
+		return loaderResponse{cached, meta}, err
 	})
 
 	if err != nil {
+		hf.Logger.Error("cache load failed: ", err)
 		return cachedResponse{}, err
 	}
 
-	response := data.(loaderResponse).data.(*http.Response)
-	body, _ := ioutil.ReadAll(response.Body)
-	response.Body.Close()
-
-	cached := cachedResponse{
-		orig: response,
-		body: body,
-	}
+	cached := data.(loaderResponse).data.(cachedResponse)
 
 	hf.Backend.Set(key, &Entry{
 		Data: cached,

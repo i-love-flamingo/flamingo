@@ -232,6 +232,9 @@ func (a *Array) Member(name string) Object {
 	case "push":
 		return &Func{fnc: reflect.ValueOf(a.Push)}
 
+	case "pop":
+		return &Func{fnc: reflect.ValueOf(a.Pop)}
+
 	case "splice":
 		return &Func{fnc: reflect.ValueOf(a.Splice)}
 
@@ -289,6 +292,13 @@ func (a *Array) Join(sep string) Object {
 func (a *Array) Push(what Object) Object {
 	a.items = append(a.items, what)
 	return Nil{}
+}
+
+// Pop from array
+func (a *Array) Pop() Object {
+	last := a.items[len(a.items)-1]
+	a.items = a.items[:len(a.items)-1]
+	return last
 }
 
 func (a *Array) True() bool                   { return len(a.items) > 0 }      // True getter
@@ -402,6 +412,8 @@ func (s String) Member(field string) Object {
 		return &Func{fnc: reflect.ValueOf(s.CharAt)}
 	case "toUpperCase":
 		return &Func{fnc: reflect.ValueOf(s.ToUpperCase)}
+	case "split":
+		return &Func{fnc: reflect.ValueOf(s.Split)}
 	case "slice":
 		return &Func{fnc: reflect.ValueOf(s.Slice)}
 	case "replace":
@@ -420,6 +432,9 @@ func (s String) CharAt(pos int) string {
 
 // ToUpperCase converter
 func (s String) ToUpperCase() string { return strings.ToUpper(string(s)) }
+
+// Split splitter
+func (s String) Split(delim string) []string { return strings.Split(string(s), delim) }
 
 // Slice a string
 func (s String) Slice(from int) string { return string(s[from:]) }

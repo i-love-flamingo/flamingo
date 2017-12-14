@@ -7,42 +7,52 @@ import (
 )
 
 type (
-	StringLoader   func() (string, error)
+	StringLoader   func() (string, *Meta, error)
 	StringFrontend struct {
 		singleflight.Group
-		Backend Backend
+		Backend Backend `inject:""`
 	}
 )
 
-func (sf *StringFrontend) Get(key string, lifetime, gracetime time.Duration, loader StringLoader, tags ...string) (string, error) {
+// Get string cache
+func (sf *StringFrontend) Get(key string, loader StringLoader) (string, error) {
 	if entry, ok := sf.Backend.Get(key); ok {
-		if entry.Lifetime.After(time.Now()) {
+		if entry.Meta.lifetime.After(time.Now()) {
 			return entry.Data.(string), nil
 		}
 
-		if entry.Lifetime.Add(gracetime).After(time.Now()) {
-			go sf.load(key, lifetime, gracetime, loader, tags...)
+		if entry.Meta.gracetime.After(time.Now()) {
+			go sf.load(key, loader)
 			return entry.Data.(string), nil
 		}
 	}
 
-	return sf.load(key, lifetime, gracetime, loader, tags...)
+	return sf.load(key, loader)
 }
 
-func (sf *StringFrontend) load(key string, lifetime, gracetime time.Duration, loader StringLoader, tags ...string) (string, error) {
+func (sf *StringFrontend) load(key string, loader StringLoader) (string, error) {
 	data, err := sf.Do(key, func() (interface{}, error) {
-		return loader()
+		data, meta, err := loader()
+		if meta == nil {
+			meta = &Meta{
+				Lifetime:  30 * time.Second,
+				Gracetime: 10 * time.Minute,
+			}
+		}
+		return loaderResponse{data, meta}, err
 	})
 
 	if err != nil {
 		return "", err
 	}
 
-	sf.Backend.Set(key, &CacheEntry{
-		Data:      data,
-		Lifetime:  time.Now().Add(lifetime),
-		Gracetime: time.Now().Add(lifetime + gracetime),
-		Tags:      tags,
+	sf.Backend.Set(key, &Entry{
+		Data: data.(loaderResponse).data,
+		Meta: Meta{
+			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
+			gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
+			Tags:      data.(loaderResponse).meta.Tags,
+		},
 	})
 
 	return data.(string), nil

@@ -30,18 +30,18 @@ func NewInMemoryCache() *inMemoryCache {
 	return m
 }
 
-func (m *inMemoryCache) Get(key string) (*CacheEntry, bool) {
+func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	entry, ok := m.pool.Get(key)
 	if !ok {
 		return nil, ok
 	}
-	return entry.(inMemoryCacheEntry).data.(*CacheEntry), ok
+	return entry.(inMemoryCacheEntry).data.(*Entry), ok
 }
 
-func (m *inMemoryCache) Set(key string, entry *CacheEntry) {
+func (m *inMemoryCache) Set(key string, entry *Entry) {
 	m.pool.Add(key, inMemoryCacheEntry{
 		data:  entry,
-		valid: entry.Gracetime,
+		valid: entry.Meta.gracetime,
 	})
 }
 

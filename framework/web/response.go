@@ -146,7 +146,9 @@ func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 
 	rw.Header().Set("Content-Type", cr.ContentType)
 	rw.WriteHeader(cr.Status)
-	io.Copy(rw, cr.Body)
+	if cr.Body != nil {
+		io.Copy(rw, cr.Body)
+	}
 
 	cr.BasicResponse.Apply(c, rw)
 }

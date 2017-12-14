@@ -34,6 +34,10 @@ type (
 		Configure(injector *Injector)
 	}
 
+	Depender interface {
+		Depends() []Module
+	}
+
 	// overrides are evaluated lazy, so they are scheduled here
 	override struct {
 		typ           reflect.Type
@@ -81,10 +85,24 @@ func (injector *Injector) Child() *Injector {
 func (injector *Injector) InitModules(modules ...Module) {
 	injector.stage = INIT
 
-	// todo dependency resolution
+	// todo better dependency resolution
+	newModules := make([]Module, 0, len(modules))
 	for _, module := range modules {
+		if d, ok := module.(Depender); ok {
+			newModules = append(newModules, d.Depends()...)
+		}
+		newModules = append(newModules, module)
+	}
+	modules = newModules
+
+	known := make(map[reflect.Type]struct{}, len(modules))
+	for _, module := range modules {
+		if _, ok := known[reflect.TypeOf(module)]; ok {
+			continue
+		}
 		injector.requestInjection(module)
 		module.Configure(injector)
+		known[reflect.TypeOf(module)] = struct{}{}
 	}
 
 	// evaluate overrides when modules were loaded
@@ -258,6 +276,10 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 		r, err := injector.resolveBinding(binding, t, optional)
 		if err == nil {
 			return r
+		}
+
+		if annotation != "" {
+			return injector.resolveType(binding.typeof, "", false)
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -13,12 +12,12 @@ import (
 
 type (
 	// HTTPLoader returns a response. it will be cached unless there is an error. this means 400/500 responses are cached too!
-	HTTPLoader func() (*http.Response, error)
+	HTTPLoader func() (*http.Response, *Meta, error)
 
 	// HTTPFrontend stores and caches http responses
 	HTTPFrontend struct {
 		singleflight.Group
-		Backend Backend
+		Backend Backend `inject:""`
 	}
 
 	nopCloser struct {
@@ -50,35 +49,38 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 
 // Get a http response, with tags and a loader
 // the tags will be used when the entry is stored
-func (hf *HTTPFrontend) Get(key string, lifetime, gracetime time.Duration, loader HTTPLoader, tags ...string) (*http.Response, error) {
-	log.Println("Trying to cache")
-
+func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, error) {
 	if entry, ok := hf.Backend.Get(key); ok {
-		if entry.Lifetime.After(time.Now()) {
+		if entry.Meta.lifetime.After(time.Now()) {
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 
-		if entry.Lifetime.Add(gracetime).After(time.Now()) {
-			go hf.load(key, lifetime, gracetime, loader, tags...)
+		if entry.Meta.gracetime.After(time.Now()) {
+			go hf.load(key, loader)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
 
-	return copyResponse(hf.load(key, lifetime, gracetime, loader, tags...))
+	return copyResponse(hf.load(key, loader))
 }
 
-func (hf *HTTPFrontend) load(key string, lifetime, gracetime time.Duration, loader HTTPLoader, tags ...string) (cachedResponse, error) {
+func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, error) {
 	data, err := hf.Do(key, func() (interface{}, error) {
-		return loader()
+		data, meta, err := loader()
+		if meta == nil {
+			meta = &Meta{
+				Lifetime:  30 * time.Second,
+				Gracetime: 10 * time.Minute,
+			}
+		}
+		return loaderResponse{data, meta}, err
 	})
-
-	log.Println("loaded cache", data, err)
 
 	if err != nil {
 		return cachedResponse{}, err
 	}
 
-	response := data.(*http.Response)
+	response := data.(loaderResponse).data.(*http.Response)
 	body, _ := ioutil.ReadAll(response.Body)
 	response.Body.Close()
 
@@ -87,11 +89,13 @@ func (hf *HTTPFrontend) load(key string, lifetime, gracetime time.Duration, load
 		body: body,
 	}
 
-	hf.Backend.Set(key, &CacheEntry{
-		Data:      cached,
-		Lifetime:  time.Now().Add(lifetime),
-		Gracetime: time.Now().Add(lifetime + gracetime),
-		Tags:      tags,
+	hf.Backend.Set(key, &Entry{
+		Data: cached,
+		Meta: Meta{
+			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
+			gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
+			Tags:      data.(loaderResponse).meta.Tags,
+		},
 	})
 
 	return cached, nil

@@ -15,6 +15,7 @@ type (
 		GetContentLength() int
 	}
 
+	// BasicResponse defines a response with basic attributes
 	BasicResponse struct {
 		Status      int
 		ContentSize int
@@ -54,6 +55,7 @@ type (
 		Status int
 	}
 
+	// ErrorResponse wraps a response with an error
 	ErrorResponse struct {
 		Response
 		Error error
@@ -90,14 +92,17 @@ func (shr *ServeHTTPResponse) Apply(c Context, rw http.ResponseWriter) {
 	shr.BasicResponse.Apply(c, rw)
 }
 
+// GetStatus returns the status of the response
 func (br *BasicResponse) GetStatus() int {
 	return br.Status
 }
 
+// GetContentLength returns the content size of the response
 func (br *BasicResponse) GetContentLength() int {
 	return br.ContentSize
 }
 
+// Apply sets status and content size of the response
 func (br *BasicResponse) Apply(c Context, rw http.ResponseWriter) {
 	if vrb, ok := rw.(*VerboseResponseWriter); ok {
 		br.Status = vrb.Status

@@ -7,7 +7,7 @@ import (
 )
 
 func TestJsExpr(t *testing.T) {
-	var s = newRenderState("/", true)
+	var s = newRenderState("/", true, nil)
 
 	t.Run("JsExpr modes", func(t *testing.T) {
 		t.Run("With raw, wrap", func(t *testing.T) {

@@ -16,14 +16,14 @@ type (
 	//
 	// path: url-pattern -> key+params
 	//
-	// Handler: key -> controller
+	// Handler: key -> Controller
 	Registry struct {
 		handler map[string]Controller
 		routes  []*Handler
 		alias   map[string]*Handler
 	}
 
-	// Handler defines a concrete controller
+	// Handler defines a concrete Controller
 	Handler struct {
 		path     *Path
 		handler  string
@@ -45,7 +45,7 @@ func NewRegistry() *Registry {
 	}
 }
 
-// Handle assigns a controller to a name
+// Handle assigns a Controller to a name
 func (registry *Registry) Handle(name string, controller Controller) {
 	if hf, ok := controller.(http.HandlerFunc); ok {
 		controller = http.Handler(hf)
@@ -53,7 +53,7 @@ func (registry *Registry) Handle(name string, controller Controller) {
 	registry.handler[name] = controller
 }
 
-// HandleIfNotSet assigns a controller to a name if not already set
+// HandleIfNotSet assigns a Controller to a name if not already set
 func (registry *Registry) HandleIfNotSet(name string, controller Controller) bool {
 	if _, ok := registry.handler[name]; ok {
 		return false

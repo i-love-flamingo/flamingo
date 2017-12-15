@@ -3,10 +3,18 @@ package router
 import "go.aoe.com/flamingo/framework/web"
 
 type (
-	// Controller defines a web controller
+	// Controller defines a web Controller
 	// it is an interface{} as it can be served by multiple possible controllers,
-	// such as generic GET/POST controller, http.Handler, Handler-functions, etc.
+	// such as generic GET/POST Controller, http.Handler, Handler-functions, etc.
 	Controller interface{}
+
+	// ControllerOption defines a type for Controller options
+	ControllerOption string
+
+	// ControllerOptionAware is an interface for Controller which want to interact with filter
+	ControllerOptionAware interface {
+		CheckOption(option ControllerOption) bool
+	}
 
 	// GETController is implemented by controllers which have a Get method
 	GETController interface {
@@ -38,7 +46,7 @@ type (
 		Head(web.Context) web.Response
 	}
 
-	// DataController is a controller used to retrieve data, such as user-information, basket
+	// DataController is a Controller used to retrieve data, such as user-information, basket
 	// etc.
 	// By default this will be handled by templates, but there is an out-of-the-box support
 	// for JSON requests via /_flamingo/json/{name}, as well as their own route if defined.

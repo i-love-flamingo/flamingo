@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"go.aoe.com/flamingo/core/csrfPreventionFilter"
+	"go.aoe.com/flamingo/framework/router"
 	"go.aoe.com/flamingo/framework/web"
 )
 
@@ -299,4 +301,8 @@ func (dc *profileController) Post(ctx web.Context) web.Response {
 	profile.ProfileOffline(ctx.MustForm1("key"), ctx.MustForm1("message"), time.Duration(dur*1000*1000))
 
 	return &web.JSONResponse{}
+}
+
+func (dc *profileController) CheckOption(option router.ControllerOption) bool {
+	return option == csrfPreventionFilter.Ignore
 }

@@ -7,6 +7,7 @@ import (
 )
 
 type (
+	// OnRenderHTMLBlockEvent is an event which is called when a new block is going to be rendered
 	OnRenderHTMLBlockEvent struct {
 		BlockName string
 		Buffer    *bytes.Buffer
@@ -53,7 +54,7 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 		fmt.Fprintf(wr, `<%s%s>`, name, attrs)
 
 	case name == "script" && strings.Index(subblock.String(), "\n") > -1:
-		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, subblock.String(), name)
+		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, additional.String()+subblock.String(), name)
 
 	case !ct.Block.Inline() && p.debug:
 		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", name, attrs, additional.String()+subblock.String(), name)

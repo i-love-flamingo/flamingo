@@ -69,6 +69,9 @@ func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, erro
 func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, error) {
 	data, err := hf.Do(key, func() (interface{}, error) {
 		data, meta, err := loader()
+		if err != nil {
+			return nil, err
+		}
 		if meta == nil {
 			meta = &Meta{
 				Lifetime:  30 * time.Second,

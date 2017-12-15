@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"fmt"
+
 	"github.com/golang/groupcache/singleflight"
 	"go.aoe.com/flamingo/framework/flamingo"
 )
@@ -67,7 +69,13 @@ func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, erro
 }
 
 func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, error) {
-	data, err := hf.Do(key, func() (interface{}, error) {
+	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
+		defer func() {
+			if err := recover(); err != nil {
+				resultErr = fmt.Errorf("%#v", err)
+			}
+		}()
+
 		data, meta, err := loader()
 		if err != nil {
 			return nil, err

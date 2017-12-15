@@ -1,4 +1,4 @@
-package CsrfPreventionFilter
+package csrfPreventionFilter
 
 import (
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
@@ -6,8 +6,7 @@ import (
 )
 
 type (
-	hiddenCsrfTagCreator struct {
-	}
+	hiddenCsrfTagCreator struct{}
 )
 
 // Notify is called on events

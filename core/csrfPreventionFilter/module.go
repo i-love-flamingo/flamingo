@@ -1,4 +1,4 @@
-package CsrfPreventionFilter
+package csrfPreventionFilter
 
 import (
 	"go.aoe.com/flamingo/framework/dingo"
@@ -7,7 +7,7 @@ import (
 	"go.aoe.com/flamingo/framework/template"
 )
 
-// Module for core/requestlogger
+// Module for core/csrfPreventionFilter
 type (
 	Module struct{}
 )
@@ -17,4 +17,5 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*router.Filter)(nil)).To(csrfFilter{})
 	injector.BindMulti((*event.Subscriber)(nil)).To(hiddenCsrfTagCreator{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(CsrfFunc{})
+	injector.Bind((*NonceGenerator)(nil)).To(uuidGenerator{})
 }

@@ -1,7 +1,6 @@
 package csrfPreventionFilter
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -54,7 +53,6 @@ func (f *csrfFilter) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 			return f.Error(ctx, errors.New("session doesn't contain the csrf-nonce of the request"))
 		}
 		deleteNonceInSession(nonce, ctx)
-		log.Println("CSRF token pass", nonce)
 	}
 
 	return chain.Next(ctx, w)

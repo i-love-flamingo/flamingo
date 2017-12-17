@@ -1,6 +1,8 @@
 package templatefunctions
 
 import (
+	"strconv"
+
 	"github.com/leekchan/accounting"
 	"go.aoe.com/flamingo/core/locale/application"
 	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
@@ -22,7 +24,7 @@ func (pff PriceFormatFunc) Name() string {
 
 // Func as implementation of debug method
 func (pff PriceFormatFunc) Func() interface{} {
-	return func(value pugjs.Number, currency string) string {
+	return func(value interface{}, currency string) string {
 		currency = pff.TranslationService.Translate(currency, "", "", 1, nil)
 		ac := accounting.Accounting{
 			Symbol:    currency,
@@ -44,6 +46,16 @@ func (pff PriceFormatFunc) Func() interface{} {
 		if ok {
 			ac.Format = format
 		}
-		return ac.FormatMoney(float64(value))
+		if valueNumber, ok := value.(pugjs.Number); ok {
+			return ac.FormatMoney(float64(valueNumber))
+		} else if valueString, ok := value.(pugjs.String); ok {
+			float, err := strconv.ParseFloat(string(valueString), 64)
+			if err != nil {
+				float = 0.0
+			}
+			return ac.FormatMoney(float)
+		} else {
+			return ac.FormatMoney(0)
+		}
 	}
 }

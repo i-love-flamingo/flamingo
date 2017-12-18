@@ -2,7 +2,7 @@ package flamingo
 
 //go:generate mockery -name "Logger"
 
-// Logger defines a standard Flamingo logger interface
+// Logger defines a standard Flamingo logger interfaces
 type Logger interface {
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})

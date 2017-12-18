@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	// FlamingoError is the controller name for errors
+	// FlamingoError is the Controller name for errors
 	FlamingoError = "flamingo.error"
-	// FlamingoNotfound is the controller name for 404 notfound
+	// FlamingoNotfound is the Controller name for 404 notfound
 	FlamingoNotfound = "flamingo.notfound"
 
 	// ERROR is used to bind errors to contexts
@@ -30,9 +30,12 @@ const (
 )
 
 type (
-	ProfilerProvider    func() profiler.Profiler // ProfilerProvider for profiler injection
-	EventRouterProvider func() event.Router      // EventRouterProvider for event injection
-	FilterProvider      func() []Filter
+	// ProfilerProvider for profiler injection
+	ProfilerProvider func() profiler.Profiler
+	// EventRouterProvider for event injection
+	EventRouterProvider func() event.Router
+	// FilterProvider for filter injection
+	FilterProvider func() []Filter
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
@@ -228,11 +231,12 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	defer ctx.Profile("request", req.RequestURI)()
 
 	chain := &FilterChain{
-		filters: make([]Filter, len(router.filters)),
+		Filters:    make([]Filter, len(router.filters)),
+		Controller: controller,
 	}
-	copy(chain.filters, router.filters)
+	copy(chain.Filters, router.filters)
 
-	chain.filters = append(chain.filters, lastFilter(func(ctx web.Context, rw http.ResponseWriter) web.Response {
+	chain.Filters = append(chain.Filters, lastFilter(func(ctx web.Context, rw http.ResponseWriter) web.Response {
 		// catch errors
 		defer func() {
 			if err := recover(); err != nil {
@@ -314,9 +318,9 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		if c, ok := c.(func(web.Context) interface{}); ok {
 			return c(getCtx)
 		}
-		panic(errors.Errorf("%q is not a data controller", handler))
+		panic(errors.Errorf("%q is not a data Controller", handler))
 	}
-	panic(errors.Errorf("data controller %q not found", handler))
+	panic(errors.Errorf("data Controller %q not found", handler))
 }
 
 func reformatParams(ctx web.Context, params ...map[interface{}]interface{}) map[string]string {

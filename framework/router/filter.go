@@ -7,12 +7,15 @@ import (
 )
 
 type (
+	// Filter is an interface which can filter requests
 	Filter interface {
 		Filter(ctx web.Context, w http.ResponseWriter, fc *FilterChain) web.Response
 	}
 
+	// FilterChain defines the chain which contains all filters which will be worked off
 	FilterChain struct {
-		filters []Filter
+		Filters    []Filter
+		Controller Controller
 	}
 
 	lastFilter func(ctx web.Context, w http.ResponseWriter) web.Response
@@ -22,8 +25,9 @@ func (fnc lastFilter) Filter(ctx web.Context, w http.ResponseWriter, chain *Filt
 	return fnc(ctx, w)
 }
 
+// Next calls the next filter and deletes it of the chain
 func (fc *FilterChain) Next(ctx web.Context, w http.ResponseWriter) web.Response {
-	next := fc.filters[0]
-	fc.filters = fc.filters[1:]
+	next := fc.Filters[0]
+	fc.Filters = fc.Filters[1:]
 	return next.Filter(ctx, w, fc)
 }

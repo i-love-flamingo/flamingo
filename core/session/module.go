@@ -21,6 +21,7 @@ type Module struct {
 	MaxAge           int    `inject:"config:session.redis.max.age"`
 }
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	switch m.Backend {
 	case "redis":

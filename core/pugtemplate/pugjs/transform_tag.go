@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+type (
+	// OnRenderHTMLBlockEvent is an event which is called when a new block is going to be rendered
+	OnRenderHTMLBlockEvent struct {
+		BlockName string
+		Buffer    *bytes.Buffer
+	}
+)
+
 // Render an interpolated tag
 func (it *InterpolatedTag) Render(p *renderState, wr *bytes.Buffer) error {
 	return it.CommonTag.render(p.JsExpr(it.Expr, true, false), p, wr)
@@ -21,6 +29,9 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 	if err := ct.Block.Render(p, subblock); err != nil {
 		return err
 	}
+
+	additional := new(bytes.Buffer)
+	p.eventRouter.Dispatch(&OnRenderHTMLBlockEvent{name, additional})
 
 	var attrs string
 	if len(ct.AttributeBlocks) > 0 || len(ct.Attrs) > 0 {
@@ -43,13 +54,13 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 		fmt.Fprintf(wr, `<%s%s>`, name, attrs)
 
 	case name == "script" && strings.Index(subblock.String(), "\n") > -1:
-		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, subblock.String(), name)
+		fmt.Fprintf(wr, "<%s%s>\n%s\n</%s>", name, attrs, additional.String()+subblock.String(), name)
 
 	case !ct.Block.Inline() && p.debug:
-		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", name, attrs, subblock.String(), name)
+		fmt.Fprintf(wr, "<%s%s>     {{- \"\" -}}\n%s     {{- \"\" -}}\n</%s>", name, attrs, additional.String()+subblock.String(), name)
 
 	default:
-		fmt.Fprintf(wr, `<%s%s>%s</%s>`, name, attrs, subblock.String(), name)
+		fmt.Fprintf(wr, `<%s%s>%s</%s>`, name, attrs, additional.String()+subblock.String(), name)
 	}
 
 	if !ct.Inline() && p.debug {

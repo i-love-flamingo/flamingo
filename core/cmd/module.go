@@ -22,7 +22,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	var rootCmd = &cobra.Command{
 		Use:   Name,
 		Short: Name + " Console",
-		Long:  "The " + Name + " command line interface.",
+		Long:  "The " + Name + " command line interfaces.",
 	}
 
 	command.ConfigArea = m.Root

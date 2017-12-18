@@ -11,6 +11,9 @@ This package provides localization features:
 locale:
   locale: en_GB
   translationFile: translations/en_GB.all.json
+  translationFiles:
+  - translations/en_GB.1.json
+  - translations/en_GB.2.json
   accounting:
     thousand: ','
     decimal: '.'

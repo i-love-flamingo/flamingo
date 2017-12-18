@@ -100,7 +100,9 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 	})
 
 	if err != nil {
-		hf.Logger.Error("cache load failed: ", err)
+		if hf.Logger != nil {
+			hf.Logger.Error("cache load failed: ", err)
+		}
 		return cachedResponse{}, err
 	}
 

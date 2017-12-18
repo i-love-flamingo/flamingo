@@ -5,6 +5,7 @@ import (
 	"text/template"
 
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
+	"go.aoe.com/flamingo/framework/config"
 	"go.aoe.com/flamingo/framework/flamingo"
 )
 
@@ -12,6 +13,7 @@ type (
 	TranslationService struct {
 		DefaultLocaleCode string          `inject:"config:locale.locale"`
 		TranslationFile   string          `inject:"config:locale.translationFile"`
+		TranslationFiles  config.Slice    `inject:"config:locale.translationFiles,optional"`
 		Logger            flamingo.Logger `inject:""`
 	}
 )
@@ -32,7 +34,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 		translationArguments = make(map[string]interface{})
 	}
 	if !filesLoaded {
-		i18bundle.LoadTranslationFile(ts.TranslationFile)
+		ts.loadFiles()
 		filesLoaded = true
 	}
 	label := ""
@@ -64,4 +66,16 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	}
 	return label
 
+}
+func (ts *TranslationService) loadFiles() {
+	if ts.TranslationFile != "" {
+		i18bundle.LoadTranslationFile(ts.TranslationFile)
+	}
+	if len(ts.TranslationFiles) > 0 {
+		for _, file := range ts.TranslationFiles {
+			if fileName, ok := file.(string); ok {
+				i18bundle.LoadTranslationFile(fileName)
+			}
+		}
+	}
 }

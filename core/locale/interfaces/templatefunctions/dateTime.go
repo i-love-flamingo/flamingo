@@ -29,7 +29,6 @@ func (tf DateTime) Func() interface{} {
 			tf.Logger.Errorf("Error Parsing dateTime %v / %v", dateTimeString, e)
 			return &domain.DateTimeFormatter{}
 		}
-		tf.Logger.Errorf(" Parsing dateTime %v / %#v", dateTimeString, *dateTime)
 		return dateTime
 	}
 }

@@ -1,6 +1,7 @@
 package csrfPreventionFilter
 
 import (
+	"go.aoe.com/flamingo/framework/config"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/event"
 	"go.aoe.com/flamingo/framework/router"
@@ -18,4 +19,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*event.Subscriber)(nil)).To(hiddenCsrfTagCreator{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(CsrfFunc{})
 	injector.Bind((*NonceGenerator)(nil)).To(uuidGenerator{})
+}
+
+// DefaultConfig for this module
+func (m *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"csrfPreventionFilter.tokenLimit": 10,
+	}
 }

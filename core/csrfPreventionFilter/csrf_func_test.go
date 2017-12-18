@@ -52,6 +52,7 @@ func TestCsrfFuncFunc(t *testing.T) {
 
 			csrfFunc := new(CsrfFunc)
 			csrfFunc.Generator = mockNonceGenerator
+			csrfFunc.TokenLimit = 10
 			result := csrfFunc.Func(ctx).(func() interface{})()
 
 			assert.Equal(t, nonce, result)

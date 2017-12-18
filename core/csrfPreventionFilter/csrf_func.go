@@ -8,7 +8,8 @@ import (
 type (
 	// CsrfFunc is exported as a template function
 	CsrfFunc struct {
-		Generator NonceGenerator `inject:""`
+		Generator  NonceGenerator `inject:""`
+		TokenLimit int            `inject:"config:csrfPreventionFilter.tokenLimit"`
 	}
 	// NonceGenerator is an interface to generate a nonce
 	NonceGenerator interface {
@@ -19,7 +20,6 @@ type (
 )
 
 const (
-	maxNonces  = 10
 	csrfNonces = "csrf_nonces"
 )
 
@@ -35,7 +35,7 @@ func (c *CsrfFunc) Func(ctx web.Context) interface{} {
 
 		if ns, ok := ctx.Session().Values[csrfNonces]; ok {
 			if list, ok := ns.([]string); ok {
-				ctx.Session().Values[csrfNonces] = appendNonceToList(list, nonce)
+				ctx.Session().Values[csrfNonces] = appendNonceToList(list, nonce, c.TokenLimit)
 			} else {
 				ctx.Session().Values[csrfNonces] = []string{nonce}
 			}
@@ -47,15 +47,15 @@ func (c *CsrfFunc) Func(ctx web.Context) interface{} {
 	}
 }
 
-func appendNonceToList(list []string, nonce string) []string {
-	if len(list) > maxNonces-1 {
-		diff := len(list) - maxNonces
+func appendNonceToList(list []string, nonce string, tokenLimit int) []string {
+	if len(list) > tokenLimit-1 {
+		diff := len(list) - tokenLimit
 		list = list[diff+1:]
 	}
 	return append(list, nonce)
 }
 
 // generateNonce generates a nonce
-func (*uuidGenerator) generateNonce() string {
+func (*uuidGenerator) GenerateNonce() string {
 	return uuid.NewV4().String()
 }

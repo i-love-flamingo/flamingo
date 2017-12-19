@@ -28,9 +28,12 @@ func (u *URLFunc) Func(ctx web.Context) interface{} {
 			q := ctx.Request().URL.Query()
 			if len(params) == 1 {
 				for k, v := range params[0].Items {
-					if v.String() == "" {
-						q.Del(k.String())
-					} else {
+					q.Del(k.String())
+					if arr, ok := v.(*pugjs.Array); ok {
+						for _, i := range arr.Items() {
+							q.Add(k.String(), i.String())
+						}
+					} else if v.String() != "" {
 						q.Set(k.String(), v.String())
 					}
 				}

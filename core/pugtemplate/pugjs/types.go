@@ -208,6 +208,10 @@ type Array struct {
 	items []Object
 }
 
+func (a *Array) Items() []Object {
+	return a.items
+}
+
 // String formatter
 func (a *Array) String() string {
 	tmp := make([]string, len(a.items))

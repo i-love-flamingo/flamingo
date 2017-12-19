@@ -256,7 +256,7 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// DotExpression: left.right
 	case *ast.DotExpression:
-		result += p.renderExpression(expr.Left, false, true) + "."
+		result = p.renderExpression(expr.Left, false, true) + "."
 		identifier := p.renderExpression(expr.Identifier, false, true)
 		if identifier[0] == '.' || identifier[0] == '$' {
 			identifier = identifier[1:]
@@ -311,33 +311,41 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// AssignExpression: assigns something to a variable: foo = ...
 	case *ast.AssignExpression:
-		n := p.renderExpression(expr.Left, false, false)
-		n = strings.TrimLeft(n, "$")
-		right := p.renderExpression(expr.Right, false, true)
-		if len(right) == 0 {
-			right = "null"
-		}
-
-		// special case: assign into object
-		if strings.Index(n, ".") > 0 {
-			ns := strings.Split(n, ".")
-			n = strings.Join(ns[:len(ns)-1], ".")
-			r := ns[len(ns)-1]
-			result = fmt.Sprintf(`($%s.__assign "%s" %s)`,
-				n,
-				r,
-				right)
-		} else if ops[expr.Operator] == "=" {
-			result = fmt.Sprintf(`$%s :%s %s`,
-				n,
-				ops[expr.Operator],
-				right)
+		if brackets, ok := expr.Left.(*ast.BracketExpression); ok {
+			result = fmt.Sprintf(`($%s.__assign %s %s)`,
+				p.renderExpression(brackets.Left, false, false),
+				p.renderExpression(brackets.Member, false, true),
+				p.renderExpression(expr.Right, false, false),
+			)
 		} else {
-			result = fmt.Sprintf(`$%s := $%s %s %s`,
-				n,
-				n,
-				ops[expr.Operator],
-				right)
+			n := p.renderExpression(expr.Left, false, false)
+			n = strings.TrimLeft(n, "$")
+			right := p.renderExpression(expr.Right, false, true)
+			if len(right) == 0 {
+				right = "null"
+			}
+
+			// special case: assign into object
+			if strings.Index(n, ".") > 0 {
+				ns := strings.Split(n, ".")
+				n = strings.Join(ns[:len(ns)-1], ".")
+				r := ns[len(ns)-1]
+				result = fmt.Sprintf(`($%s.__assign "%s" %s)`,
+					n,
+					r,
+					right)
+			} else if ops[expr.Operator] == "=" {
+				result = fmt.Sprintf(`$%s :%s %s`,
+					n,
+					ops[expr.Operator],
+					right)
+			} else {
+				result = fmt.Sprintf(`$%s := $%s %s %s`,
+					n,
+					n,
+					ops[expr.Operator],
+					right)
+			}
 		}
 		if wrap {
 			result = `{{ ` + result + ` -}}`

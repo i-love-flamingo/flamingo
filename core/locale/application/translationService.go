@@ -69,11 +69,13 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 }
 func (ts *TranslationService) loadFiles() {
 	if ts.TranslationFile != "" {
+		ts.Logger.Infof("Load translationfile %v", ts.TranslationFile)
 		i18bundle.LoadTranslationFile(ts.TranslationFile)
 	}
 	if len(ts.TranslationFiles) > 0 {
 		for _, file := range ts.TranslationFiles {
 			if fileName, ok := file.(string); ok {
+				ts.Logger.Infof("Load translationfile %v", fileName)
 				i18bundle.LoadTranslationFile(fileName)
 			}
 		}

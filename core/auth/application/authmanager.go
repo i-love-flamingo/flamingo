@@ -72,7 +72,7 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		Endpoint: authmanager.OpenIDProvider().Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes: []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "profile", "email"},
 	}
 
 	return authmanager.oauth2Config
@@ -100,27 +100,50 @@ func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error
 // IDToken retrieves and validates the ID Token from the session
 func (authmanager *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
 	if c.Session() == nil {
-		return nil, errors.New("no session configured!")
-	}
-	if _, ok := c.Session().Values[KeyRawIDToken]; !ok {
-		return nil, errors.New("no id token")
+		return nil, errors.New("no session configured")
 	}
 
-	rawIDToken, ok := c.Session().Values[KeyRawIDToken].(string)
-	if !ok {
-		return nil, errors.Errorf("invalid id token %T %v", c.Session().Values[KeyRawIDToken], c.Session().Values[KeyRawIDToken])
+	if token, ok := c.Session().Values[KeyRawIDToken]; ok {
+		idtoken, err := authmanager.Verifier().Verify(c, token.(string))
+		if err == nil {
+			return idtoken, nil
+		}
 	}
 
-	// Parse and verify ID Token payload.
-	idToken, err := authmanager.Verifier().Verify(c, rawIDToken)
+	token, raw, err := authmanager.getIDToken(c)
 	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	if !authmanager.NotBefore.IsZero() && idToken.IssuedAt.Before(authmanager.NotBefore) {
-		return nil, errors.New("issued before allowed")
+		return nil, err
 	}
 
-	return idToken, nil
+	c.Session().Values[KeyRawIDToken] = raw
+
+	return token, nil
+}
+
+// IDToken retrieves and validates the ID Token from the session
+func (authmanager *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
+	tokenSource, err := authmanager.TokenSource(c)
+	if err != nil {
+		return nil, "", errors.WithStack(err)
+	}
+
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, "", errors.WithStack(err)
+	}
+
+	raw, err := authmanager.ExtractRawIDToken(token)
+	if err != nil {
+		return nil, "", errors.WithStack(err)
+	}
+
+	idtoken, err := authmanager.Verifier().Verify(c, raw)
+
+	if idtoken == nil {
+		return nil, "", errors.New("idtoken nil")
+	}
+
+	return idtoken, raw, err
 }
 
 // ExtractRawIDToken from the provided (fresh) oatuh2token

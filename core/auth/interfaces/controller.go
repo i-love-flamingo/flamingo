@@ -46,7 +46,6 @@ func (l *LoginController) Get(c web.Context) web.Response {
 // Get handler for logout
 func (l *LogoutController) Get(c web.Context) web.Response {
 	delete(c.Session().Values, application.KeyAuthstate)
-	delete(c.Session().Values, application.KeyRawIDToken)
 	delete(c.Session().Values, application.KeyToken)
 
 	var claims struct {

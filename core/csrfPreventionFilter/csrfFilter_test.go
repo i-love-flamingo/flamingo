@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.aoe.com/flamingo/core/csrfPreventionFilter/mocks"
 	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/router/mocks"
 	webmocks "go.aoe.com/flamingo/framework/web/mocks"
 	respondermocks "go.aoe.com/flamingo/framework/web/responder/mocks"
 )

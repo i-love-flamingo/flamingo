@@ -122,6 +122,11 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 		routes.handler[name] = c
 	}
 
+	for _, handler := range routes.routes {
+		if _, ok := routes.handler[handler.handler]; !ok {
+			panic(errors.Errorf("The handler %q has no controller, registered for path %q", handler.handler, handler.path.path))
+		}
+	}
 	router.RouterRegistry = routes
 
 	router.eventrouter = router.EventRouterProvider()

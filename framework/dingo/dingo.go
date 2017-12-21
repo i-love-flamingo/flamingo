@@ -306,7 +306,7 @@ func (injector *Injector) internalResolveType(t reflect.Type, annotation string,
 		panic("Can not instantiate interface " + t.String())
 	}
 
-	if t.Kind() == reflect.Func {
+	if t.Kind() == reflect.Func && !optional {
 		panic("Can not create a new function " + t.String() + " (Do you want a provider? Then suffix type with Provider)")
 	}
 

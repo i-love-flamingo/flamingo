@@ -22,8 +22,12 @@ import (
 var ErrNoPact = errors.New("no pact setup")
 
 // WithPact runs a test with a pact
-func WithPact(t *testing.T, target string, fs ...func(*testing.T, *dsl.Pact)) {
-	pact, err := pactSetup("flamingo", target)
+func WithPact(t *testing.T, from, to string, fs ...func(*testing.T, *dsl.Pact)) {
+	if from == "" {
+		from = "flamingo"
+	}
+
+	pact, err := pactSetup(from, to)
 
 	if err != nil {
 		t.Skip(err)

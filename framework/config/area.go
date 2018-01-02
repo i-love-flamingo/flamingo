@@ -105,7 +105,10 @@ func (m Map) Add(cfg Map) {
 		} else {
 			_, mapleft := m[k].(Map)
 			_, mapright := v.(Map)
-			if mapleft && mapright {
+			// if left side already is a map and will be assigned to nil in config_dev
+			if mapleft && v == nil {
+				m[k] = nil
+			} else if mapleft && mapright {
 				m[k].(Map).Add(v.(Map))
 			} else if mapleft && !mapright {
 				panic(fmt.Sprintf("Config conflict! %q:%v into %v", k, v, m[k]))

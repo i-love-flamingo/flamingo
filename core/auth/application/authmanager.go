@@ -11,6 +11,7 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
+	"go.aoe.com/flamingo/core/auth/domain"
 	"golang.org/x/oauth2"
 )
 
@@ -40,6 +41,17 @@ type (
 		oauth2Config   *oauth2.Config
 	}
 )
+
+// Auth tries to retrieve the authentication context for a active session
+func (cs *AuthManager) Auth(c web.Context) domain.Auth {
+	ts, _ := cs.TokenSource(c)
+	idToken, _ := cs.IDToken(c)
+
+	return domain.Auth{
+		TokenSource: ts,
+		IDToken:     idToken,
+	}
+}
 
 // OpenIDProvider is a lazy initialized OID provider
 func (authmanager *AuthManager) OpenIDProvider() *oidc.Provider {

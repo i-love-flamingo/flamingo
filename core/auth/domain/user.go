@@ -1,6 +1,9 @@
 package domain
 
-import "github.com/coreos/go-oidc"
+import (
+	oidc "github.com/coreos/go-oidc"
+	"golang.org/x/oauth2"
+)
 
 type (
 	// UserType such as guest or user
@@ -12,6 +15,11 @@ type (
 		Name  string
 		Email string
 		Type  UserType
+	}
+
+	Auth struct {
+		TokenSource oauth2.TokenSource
+		IDToken     *oidc.IDToken
 	}
 )
 

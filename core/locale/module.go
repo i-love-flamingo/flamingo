@@ -23,8 +23,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"locale": config.Map{
-			"translationFile": "translations/en-US.all.json",
-			"locale":          "en-US",
+			"locale": "en-US",
 			"accounting": config.Map{
 				"decimal":    ",",
 				"thousand":   ".",

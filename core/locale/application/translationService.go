@@ -12,7 +12,7 @@ import (
 type (
 	TranslationService struct {
 		DefaultLocaleCode string          `inject:"config:locale.locale"`
-		TranslationFile   string          `inject:"config:locale.translationFile"`
+		TranslationFile   string          `inject:"config:locale.translationFile,optional"`
 		TranslationFiles  config.Slice    `inject:"config:locale.translationFiles,optional"`
 		Logger            flamingo.Logger `inject:""`
 	}

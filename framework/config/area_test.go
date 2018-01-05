@@ -1,8 +1,11 @@
 package config
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 
+	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,6 +25,32 @@ func SubTestMapDeepmerge(t *testing.T) {
 			"bar": "bar2",
 		},
 	}, m)
+}
+
+func TestNilValuesRemoveData(t *testing.T) {
+	config := make(Map)
+
+	cfg := readConfig(t, "test/config.yml")
+	config.Add(cfg)
+	cfg = readConfig(t, "test/config_dev.yml")
+	config.Add(cfg)
+
+	assert.Equal(t, Map{"foo": nil}, config)
+}
+
+func readConfig(t *testing.T, configName string) Map {
+	config, err := ioutil.ReadFile(configName)
+	assert.NoError(t, err)
+
+	config = []byte(regex.ReplaceAllStringFunc(
+		string(config),
+		func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) },
+	))
+
+	cfg := make(Map)
+	err = yaml.Unmarshal(config, &cfg)
+	assert.NoError(t, err)
+	return cfg
 }
 
 func TestMapDeepmerge(t *testing.T) {

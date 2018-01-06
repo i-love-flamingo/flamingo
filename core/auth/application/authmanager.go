@@ -43,14 +43,20 @@ type (
 )
 
 // Auth tries to retrieve the authentication context for a active session
-func (cs *AuthManager) Auth(c web.Context) domain.Auth {
-	ts, _ := cs.TokenSource(c)
-	idToken, _ := cs.IDToken(c)
+func (cs *AuthManager) Auth(c web.Context) (domain.Auth, error) {
+	ts, err := cs.TokenSource(c)
+	if err != nil {
+		return domain.Auth{}, err
+	}
+	idToken, err := cs.IDToken(c)
+	if err != nil {
+		return domain.Auth{}, err
+	}
 
 	return domain.Auth{
 		TokenSource: ts,
 		IDToken:     idToken,
-	}
+	}, nil
 }
 
 // OpenIDProvider is a lazy initialized OID provider

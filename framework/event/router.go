@@ -3,7 +3,7 @@ package event
 type (
 	// DefaultRouter is a default event routing implementation
 	DefaultRouter struct {
-		Subscriber []Subscriber `inject:""`
+		Subscriber []Subscriber `inject:",optional"`
 	}
 )
 

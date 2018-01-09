@@ -24,6 +24,7 @@ var funcmap = FuncMap{
 
 	"__op__add":   runtimeAdd,
 	"__op__inc":   runtimeInc,
+	"__op__dec":   runtimeDec,
 	"__op__sub":   runtimeSub,
 	"__op__mul":   runtimeMul,
 	"__op__quo":   runtimeQuo,
@@ -280,6 +281,22 @@ func runtimeInc(x interface{}) int {
 	case reflect.Float32, reflect.Float64:
 		{
 			return int(vx.Float() + 1)
+		}
+	}
+
+	return 0
+}
+
+func runtimeDec(x interface{}) int {
+	vx := reflect.ValueOf(x)
+	switch vx.Kind() {
+	case reflect.Int, reflect.Int32, reflect.Int64, reflect.Int16, reflect.Int8:
+		{
+			return int(vx.Int() - 1)
+		}
+	case reflect.Float32, reflect.Float64:
+		{
+			return int(vx.Float() - 1)
 		}
 	}
 

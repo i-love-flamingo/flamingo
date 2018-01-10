@@ -468,7 +468,8 @@ func (b Bool) copy() Object         { return b }
 // Nil type
 type Nil struct{}
 
-func (n Nil) Member(string) Object { return Nil{} } // Member is always nil
-func (n Nil) String() string       { return "" }    // String is always empty
-func (n Nil) True() bool           { return false } // True is always false
-func (n Nil) copy() Object         { return Nil{} }
+func (n Nil) Member(string) Object         { return Nil{} }               // Member is always nil
+func (n Nil) String() string               { return "" }                  // String is always empty
+func (n Nil) MarshalJSON() ([]byte, error) { return []byte("null"), nil } // MarshalJSON
+func (n Nil) True() bool                   { return false }               // True is always false
+func (n Nil) copy() Object                 { return Nil{} }

@@ -7,10 +7,9 @@ import (
 
 	"net/url"
 
-	"log"
-
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"go.aoe.com/flamingo/framework/flamingo"
 )
 
 type (
@@ -31,6 +30,7 @@ type (
 		responder.RedirectAware `inject:""`
 		responder.ErrorAware    `inject:""`
 		AuthManager             *application.AuthManager `inject:""`
+		Logger                  flamingo.Logger          `inject:""`
 	}
 )
 
@@ -70,6 +70,7 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	defer delete(c.Session().Values, application.KeyAuthstate)
 
 	if c.Session().Values[application.KeyAuthstate] != c.MustQuery1("state") {
+		cc.Logger.Errorf("Invalid State %v vs %v", c.Session().Values[application.KeyAuthstate], c.MustQuery1("state"))
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
@@ -77,18 +78,17 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	oauth2Token, err := cc.AuthManager.OAuth2Config().Exchange(c, c.MustQuery1("code"))
 	finish()
 	if err != nil {
-		log.Printf("core.auth.callback Error OAuth2Config Exchange %v", err)
+		cc.Logger.Errorf("core.auth.callback Error OAuth2Config Exchange %v", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
 
 	c.Session().Values[application.KeyToken] = oauth2Token
 	c.Session().Values[application.KeyRawIDToken], err = cc.AuthManager.ExtractRawIDToken(oauth2Token)
-	log.Printf("KeyToken: %v", oauth2Token)
 	if err != nil {
-		log.Printf("core.auth.callback Error ExtractRawIDToken %v", err)
+		cc.Logger.Errorf("core.auth.callback Error ExtractRawIDToken %v", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
-
+	cc.Logger.Debugf("successful logged in and saved tokens: %v", oauth2Token)
 	c.Session().AddFlash("successful logged in", "info")
 
 	if redirect, ok := c.Session().Values["auth.redirect"]; ok {

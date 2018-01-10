@@ -47,6 +47,7 @@ func (l *LoginController) Get(c web.Context) web.Response {
 func (l *LogoutController) Get(c web.Context) web.Response {
 	delete(c.Session().Values, application.KeyAuthstate)
 	delete(c.Session().Values, application.KeyToken)
+	delete(c.Session().Values, application.KeyRawIDToken)
 
 	var claims struct {
 		EndSessionEndpoint string `json:"end_session_endpoint"`

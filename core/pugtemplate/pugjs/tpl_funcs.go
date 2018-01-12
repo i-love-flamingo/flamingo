@@ -196,7 +196,8 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 				}
 			}
 			if x < 0 || x >= int64(v.Len()) {
-				return reflect.Value{}, fmt.Errorf("index out of range: %d", x)
+				//return reflect.Value{}, fmt.Errorf("index out of range: %d", x)
+				return reflect.ValueOf(Nil{}), nil
 			}
 			v = v.Index(int(x))
 		case reflect.Map:

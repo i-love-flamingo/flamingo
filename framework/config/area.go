@@ -220,7 +220,7 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	}
 
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
-		for _, disabled := range config.([]interface{}) {
+		for _, disabled := range config.(Slice) {
 			for i, module := range area.Modules {
 				tm := reflect.TypeOf(module).Elem()
 				if tm.PkgPath()+"."+tm.Name() == disabled.(string) {

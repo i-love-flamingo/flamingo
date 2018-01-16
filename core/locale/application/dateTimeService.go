@@ -20,11 +20,17 @@ type (
 )
 
 //GetDateTimeFromString Need string in format ISO: "2017-11-25T06:30:00Z"
-func (dts *DateTimeService) GetDateTimeFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
+func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
 	timeResult, err := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
 	if err != nil {
 		return nil, errors.Errorf("could not parse date in defined format: %v / Error: %v", dateTimeString, err)
 	}
+
+	return dts.GetDateTimeFormatter(timeResult)
+}
+
+//GetDateTimeFormatter from time
+func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.DateTimeFormatter, error) {
 
 	loc, err := time.LoadLocation(dts.Location)
 	if err != nil {
@@ -39,7 +45,7 @@ func (dts *DateTimeService) GetDateTimeFromIsoString(dateTimeString string) (*do
 		TimeFormat:     dts.TimeFormat,
 		DateTimeFormat: dts.DateTimeFormat,
 	}
-	dateTime.SetDateTime(timeResult, timeResult.In(loc))
+	dateTime.SetDateTime(timeValue, timeValue.In(loc))
 
 	return &dateTime, nil
 }

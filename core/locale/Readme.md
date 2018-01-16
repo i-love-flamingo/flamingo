@@ -23,6 +23,7 @@ locale:
     dateFormat:  02 Jan 2006
     timeFormat: 15:04:05
     dateTimeFormat: 02 Jan 2006 15:04:05
+    location: LOCATIONCODE (for formatLocaleTime)
 ```
 
 Planned for later:
@@ -49,8 +50,16 @@ Planned for later:
 ```
 #### Formatting of prices:
 
+Two tenplatefunctions are provided:
+ * dateTimeFormatFromIso - can get an ISO date format and returns the formatter object
+ * dateTimeFormat - need to get a go time.Time object as input and returns the formatter
+
+The formatter can format a date in the configured format - either in the format passed - or converted to the local timezone 
+
+E.g.:
 ```
-dateTimeFormat(flight.scheduledDateTime).formatDate()
+dateTimeFormatFromIso(flight.scheduledDateTimeStringInIsoFormat).formatDate()
+dateTimeFormat(flight.scheduledDateTime).formalLocalDate()
 ```
 Other functions are formalLocalDate() or formatTime() etc..
 

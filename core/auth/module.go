@@ -24,7 +24,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 
-	m.RouterRegistry.Route("/auth/login", "auth.login")
+	m.RouterRegistry.Route("/auth/login", `auth.login(redirecturl?="")`)
 	m.RouterRegistry.Handle("auth.login", new(interfaces.LoginController))
 	m.RouterRegistry.Route("/auth/callback", "auth.callback")
 	m.RouterRegistry.Handle("auth.callback", new(interfaces.CallbackController))

@@ -108,6 +108,8 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 		return nil, err
 	}
 
+	defer dir.Close()
+
 	filenames, err := dir.Readdir(-1)
 	if err != nil {
 		return nil, err

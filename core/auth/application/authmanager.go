@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -76,6 +77,8 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 	if authmanager.oauth2Config != nil {
 		return authmanager.oauth2Config
 	}
+
+	log.Printf("%#v", authmanager)
 
 	callbackURL := authmanager.Router.URL("auth.callback", nil)
 	myhost, _ := url.Parse(authmanager.MyHost)

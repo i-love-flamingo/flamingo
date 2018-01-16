@@ -7,7 +7,7 @@ import (
 
 type (
 	UserService struct {
-		AuthManager AuthManager `inject:""`
+		AuthManager *AuthManager `inject:""`
 	}
 )
 

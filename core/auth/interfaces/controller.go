@@ -37,7 +37,7 @@ type (
 // Get handler for logins (redirect)
 func (l *LoginController) Get(c web.Context) web.Response {
 	redirecturl, err := c.Param1("redirecturl")
-	if err != nil {
+	if err != nil || redirecturl == "" {
 		redirecturl = c.Request().Referer()
 	}
 

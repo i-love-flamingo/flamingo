@@ -123,6 +123,12 @@ func prepareArg(value reflect.Value, argType reflect.Type) (reflect.Value, error
 		}
 		value = reflect.Zero(argType)
 	}
+	if obj, ok := value.Interface().(Object); argType.Kind() == reflect.String && ok {
+		return reflect.ValueOf(obj.String()), nil
+	}
+	if argType == reflect.TypeOf((*Object)(nil)).Elem() {
+		return reflect.ValueOf(convert(value)), nil
+	}
 	if !value.Type().AssignableTo(argType) {
 		return reflect.Value{}, fmt.Errorf("value has type %s; should be %s", value.Type(), argType)
 	}

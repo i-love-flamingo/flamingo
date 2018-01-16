@@ -146,6 +146,8 @@ func index(item reflect.Value, indices ...reflect.Value) (reflect.Value, error) 
 		v = reflect.ValueOf(obj.Items)
 	} else if obj, ok := item.Interface().(String); ok {
 		v = reflect.ValueOf(string(obj))
+	} else if _, ok := item.Interface().(Nil); ok {
+		return item, nil
 	}
 
 	for _, i := range indices {

@@ -36,9 +36,14 @@ type (
 
 // Get handler for logins (redirect)
 func (l *LoginController) Get(c web.Context) web.Response {
+	redirecturl, err := c.Param1("redirecturl")
+	if err != nil {
+		redirecturl = c.Request().Referer()
+	}
+
 	state := uuid.NewV4().String()
 	c.Session().Values["auth.state"] = state
-	c.Session().Values["auth.redirect"] = c.Request().Referer()
+	c.Session().Values["auth.redirect"] = redirecturl
 
 	return l.RedirectURL(l.AuthManager.OAuth2Config().AuthCodeURL(state))
 }

@@ -48,7 +48,7 @@ Planned for later:
 	__("switch_to_german","",{},"de-DE")
 	
 ```
-#### Formatting of prices:
+#### Formatting of dates:
 
 Two tenplatefunctions are provided:
  * dateTimeFormatFromIso - can get an ISO date format and returns the formatter object
@@ -63,3 +63,8 @@ dateTimeFormat(flight.scheduledDateTime).formalLocalDate()
 ```
 Other functions are formalLocalDate() or formatTime() etc..
 
+#### Formatting of prices:
+
+```
+priceFormat(90,"GBP")
+```

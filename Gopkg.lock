@@ -55,6 +55,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gojuno/minimock"
+  packages = ["."]
+  revision = "a59b65f9f28df1a7bc958c5ff63c28d714010132"
+
+[[projects]]
+  branch = "master"
   name = "github.com/golang/groupcache"
   packages = ["singleflight"]
   revision = "84a468cf14b4376def5d68c722b139b881c450a4"
@@ -279,6 +285,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0aaee3b389cadc5e83a41e8bfb8aaf38332e5908fc6159cf113ee61701112c50"
+  inputs-digest = "dcf5360ef8fe0059f5a4b7dcd431f776ccafc3de4a1d4bdb8e0c188397500d8b"
   solver-name = "gps-cdcl"
   solver-version = 1

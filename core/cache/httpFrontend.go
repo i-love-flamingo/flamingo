@@ -34,6 +34,14 @@ type (
 	}
 )
 
+func GetHTTPFrontendCacheWithNullBackend() HTTPFrontend {
+	cache := HTTPFrontend{
+		Backend: &NullBackend{},
+		Logger:  flamingo.NullLogger{},
+	}
+	return cache
+}
+
 // Close the nopCloser to implement io.Closer
 func (nopCloser) Close() error { return nil }
 

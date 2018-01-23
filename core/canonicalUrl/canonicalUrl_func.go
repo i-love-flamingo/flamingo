@@ -19,7 +19,7 @@ func (c *CanonicalUrlFunc) Name() string {
 	return "canonicalUrl"
 }
 
-// Func returns the canonical URL
+// Func returns the CSRF NONCE
 func (c *CanonicalUrlFunc) Func(ctx web.Context) interface{} {
 	baseUrl := strings.TrimRight(c.BaseUrl, "/")
 

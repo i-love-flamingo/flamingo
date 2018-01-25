@@ -419,7 +419,8 @@ func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 	}
 	tmpl := s.tmpl.tmpl[name]
 	if tmpl == nil {
-		s.errorf("template %q not defined", name)
+		//s.errorf("template %q not defined", name)
+		return
 	}
 	if s.depth == maxExecDepth {
 		s.errorf("exceeded maximum template depth (%v)", maxExecDepth)

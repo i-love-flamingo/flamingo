@@ -230,6 +230,9 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if controller == nil {
 		controller = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
+	if handler != nil {
+		ctx.WithValue("HandlerName", handler.GetHandlerName())
+	}
 	ctx.WithValue("Handler", handlerdata{params, handler})
 	done()
 

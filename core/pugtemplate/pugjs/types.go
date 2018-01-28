@@ -60,6 +60,7 @@ func convert(in interface{}) Object {
 	case reflect.Slice:
 		array := &Array{
 			items: make([]Object, val.Len()),
+			o:     val.Interface(),
 		}
 		for i := 0; i < val.Len(); i++ {
 			array.items[i] = convert(val.Index(i))
@@ -206,6 +207,7 @@ func (f *Func) MarshalJSON() ([]byte, error) {
 // Array type
 type Array struct {
 	items []Object
+	o     interface{}
 }
 
 func (a *Array) Items() []Object {

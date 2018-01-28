@@ -123,8 +123,8 @@ func TestConvert(t *testing.T) {
 			{false, Bool(false)},
 
 			// Arrays
-			{[]string{"foo", "bar"}, &Array{items: []Object{String("foo"), String("bar")}}},
-			{[]interface{}{1, "bar", nil}, &Array{items: []Object{Number(1), String("bar"), Nil{}}}},
+			{[]string{"foo", "bar"}, &Array{items: []Object{String("foo"), String("bar")}, o: []string{"foo", "bar"}}},
+			{[]interface{}{1, "bar", nil}, &Array{items: []Object{Number(1), String("bar"), Nil{}}, o: []interface{}{1, "bar", nil}}},
 
 			// Maps
 			{testmaps[0], &Map{Items: map[Object]Object{String("foo"): String("bar"), String("xxx"): Number(1)}, o: testmaps[0]}},

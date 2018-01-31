@@ -111,6 +111,19 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 	//	return cachedResponse{}, err
 	//}
 
+	if data == nil {
+		data = loaderResponse{
+			cachedResponse{
+				orig: new(http.Response),
+				body: []byte{},
+			},
+			&Meta{
+				Lifetime:  30 * time.Second,
+				Gracetime: 10 * time.Minute,
+			},
+		}
+	}
+
 	cached := data.(loaderResponse).data.(cachedResponse)
 
 	hf.Backend.Set(key, &Entry{

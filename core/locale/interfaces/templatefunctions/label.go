@@ -52,7 +52,9 @@ func (tf Label) Func() interface{} {
 			}
 		}
 		if len(params) > 2 {
-			if stringParam3, ok := params[2].(string); ok {
+			if stringParam3, ok := params[2].(pugjs.String); ok {
+				localeCode = string(stringParam3)
+			} else if stringParam3, ok := params[2].(string); ok {
 				localeCode = stringParam3
 			}
 		}

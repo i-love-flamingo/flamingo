@@ -84,9 +84,7 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		}()
 
 		data, meta, err := loader()
-		if err != nil {
-			return nil, err
-		}
+
 		if meta == nil {
 			meta = &Meta{
 				Lifetime:  30 * time.Second,
@@ -106,12 +104,12 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		return loaderResponse{cached, meta}, err
 	})
 
-	if err != nil {
-		if hf.Logger != nil {
-			hf.Logger.Error("cache load failed: ", err)
-		}
-		return cachedResponse{}, err
-	}
+	//if err != nil {
+	//	if hf.Logger != nil {
+	//		hf.Logger.Error("cache load failed: ", err)
+	//	}
+	//	return cachedResponse{}, err
+	//}
 
 	cached := data.(loaderResponse).data.(cachedResponse)
 
@@ -124,5 +122,5 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		},
 	})
 
-	return cached, nil
+	return cached, err
 }

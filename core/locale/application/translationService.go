@@ -47,7 +47,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 		ts.Logger.Warningf("Error - locale.translationservice %v", err)
 		label = defaultLabel
 	} else {
-		//log.Printf("called with key %v  default: %v  Code: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
+		//ts.Logger.Debugf("called with key %v  default: %v  localeCode: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
 		label = T(key, count, translationArguments)
 	}
 

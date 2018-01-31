@@ -586,6 +586,11 @@ func (injector *Injector) requestInjection(object interface{}) {
 			for fieldIndex := 0; fieldIndex < ctype.NumField(); fieldIndex++ {
 				if tag, ok := ctype.Field(fieldIndex).Tag.Lookup("inject"); ok {
 					field := current.Field(fieldIndex)
+
+					if field.Kind() == reflect.Struct {
+						panic(fmt.Sprintf("Can not inject into struct %#v of %#v", field, current))
+					}
+
 					var optional bool
 					if strings.HasSuffix(tag, ",optional") {
 						optional = true

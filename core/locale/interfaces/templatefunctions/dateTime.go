@@ -11,14 +11,14 @@ import (
 type (
 	// DateTime template helper function
 	DateTimeFormatFromIso struct {
-		DateTimeService application.DateTimeService `inject:""`
-		Logger          flamingo.Logger             `inject:""`
+		DateTimeService *application.DateTimeService `inject:""`
+		Logger          flamingo.Logger              `inject:""`
 	}
 
 	// DateTime template helper function
 	DateTimeFormatFromTime struct {
-		DateTimeService application.DateTimeService `inject:""`
-		Logger          flamingo.Logger             `inject:""`
+		DateTimeService *application.DateTimeService `inject:""`
+		Logger          flamingo.Logger              `inject:""`
 	}
 )
 

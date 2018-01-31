@@ -8,7 +8,7 @@ import (
 type (
 	// CanonicalUrlFunc is exported as a template function
 	CanonicalUrlFunc struct {
-		Service application.Service `inject:""`
+		Service *application.Service `inject:""`
 	}
 )
 

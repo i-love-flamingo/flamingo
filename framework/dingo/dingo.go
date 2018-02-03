@@ -127,7 +127,7 @@ func (injector *Injector) InitModules(modules ...Module) {
 		known := make(map[string]*Binding)
 		for _, binding := range bindings {
 			if known, ok := known[binding.annotatedWith]; ok && !known.equal(binding) {
-				panic(fmt.Sprintf("already known binding for %s with annotation '%s'", typ, binding.annotatedWith))
+				panic(fmt.Sprintf("already known binding for %s with annotation '%s' | Known binding: %#v%#v Try %#v%#v", typ, binding.annotatedWith, known.to.PkgPath(), known.to.Name(), binding.to.PkgPath(), binding.to.Name()))
 			}
 			known[binding.annotatedWith] = binding
 		}

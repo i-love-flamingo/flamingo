@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"go.aoe.com/flamingo/core/auth/domain"
 	"go.aoe.com/flamingo/framework/flamingo"
 )
 
@@ -22,15 +23,17 @@ type (
 	// LogoutController handles the logout
 	LogoutController struct {
 		responder.RedirectAware `inject:""`
-		AuthManager             *application.AuthManager `inject:""`
+		AuthManager             *application.AuthManager    `inject:""`
+		EventPublisher          *application.EventPublisher `inject:""`
 	}
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
 		responder.RedirectAware `inject:""`
 		responder.ErrorAware    `inject:""`
-		AuthManager             *application.AuthManager `inject:""`
-		Logger                  flamingo.Logger          `inject:""`
+		AuthManager             *application.AuthManager    `inject:""`
+		Logger                  flamingo.Logger             `inject:""`
+		EventPublisher          *application.EventPublisher `inject:""`
 	}
 )
 
@@ -65,6 +68,7 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	endurl.RawQuery = query.Encode()
 
 	c.Session().AddFlash("successful logged out", "warning")
+	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{})
 
 	return l.RedirectURL(endurl.String())
 }
@@ -93,6 +97,7 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 		cc.Logger.Errorf("core.auth.callback Error ExtractRawIDToken %v", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
+	cc.EventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Context: c})
 	cc.Logger.Debugf("successful logged in and saved tokens: %v", oauth2Token)
 	c.Session().AddFlash("successful logged in", "info")
 

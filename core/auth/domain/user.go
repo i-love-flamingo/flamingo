@@ -2,6 +2,7 @@ package domain
 
 import (
 	oidc "github.com/coreos/go-oidc"
+	"go.aoe.com/flamingo/framework/web"
 	"golang.org/x/oauth2"
 )
 
@@ -15,6 +16,15 @@ type (
 		Name  string
 		Email string
 		Type  UserType
+	}
+
+	// LoginEvent
+	LoginEvent struct {
+		Context web.Context
+	}
+
+	// LogoutEvent
+	LogoutEvent struct {
 	}
 
 	Auth struct {

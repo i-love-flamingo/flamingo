@@ -424,6 +424,8 @@ func (s String) Member(field string) Object {
 		return &Func{fnc: reflect.ValueOf(s.Slice)}
 	case "replace":
 		return &Func{fnc: reflect.ValueOf(s.Replace)}
+	case "indexOf":
+		return &Func{fnc: reflect.ValueOf(s.IndexOf)}
 	}
 	return Nil{}
 }
@@ -435,6 +437,9 @@ func (s String) CharAt(pos int) string {
 	}
 	return string(s[pos])
 }
+
+// IndexOf Js func
+func (s String) IndexOf(delim string) int { return strings.Index(string(s), delim) }
 
 // ToUpperCase converter
 func (s String) ToUpperCase() string { return strings.ToUpper(string(s)) }

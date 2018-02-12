@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/golang/groupcache/singleflight"
+	"github.com/pkg/errors"
 	"go.aoe.com/flamingo/framework/flamingo"
 )
 
@@ -61,6 +62,9 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 // Get a http response, with tags and a loader
 // the tags will be used when the entry is stored
 func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, error) {
+	if hf.Backend == nil {
+		return nil, errors.New("NO Backend in Cache")
+	}
 	if entry, ok := hf.Backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
 			return copyResponse(entry.Data.(cachedResponse), nil)

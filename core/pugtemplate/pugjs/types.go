@@ -248,7 +248,7 @@ func (a *Array) Member(name string) Object {
 		return &Func{fnc: reflect.ValueOf(a.Slice)}
 	}
 
-	panic("field not found")
+	panic("field " + name + " not found")
 }
 
 // Splice an array

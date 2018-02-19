@@ -27,12 +27,14 @@ func init() {
 	redirectData = infrastructure.GetRedirectData()
 }
 
-func (r *redirect0r) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) {
+func (r *redirect0r) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
 	for i := range redirectData {
 		if redirectData[i].OriginalPath == ctx.Request().URL.RawPath {
 			r.redirectFlow(ctx.Request(), w, redirectData[i])
 		}
 	}
+	
+	return nil
 }
 
 func (r *redirect0r) redirectFlow(req *http.Request, w http.ResponseWriter, redirectInfo infrastructure.CsvContent) {

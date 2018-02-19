@@ -13,7 +13,7 @@ import (
 )
 
 type (
-	redirect0r struct {
+	redirector struct {
 		responder.RedirectAware `inject:""`
 		responder.ErrorAware    `inject:""`
 		Logger flamingo.Logger  `inject:""`
@@ -32,7 +32,7 @@ func init() {
 	}
 }
 
-func (r *redirect0r) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
+func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
 	contextPath := ctx.Request().RequestURI
 
 	if currentRedirect, ok := redirectDataMap[contextPath]; ok {

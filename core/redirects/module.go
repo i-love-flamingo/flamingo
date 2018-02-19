@@ -13,5 +13,5 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*router.Filter)(nil)).To(redirect0r{})
+	injector.BindMulti((*router.Filter)(nil)).To(redirector{})
 }

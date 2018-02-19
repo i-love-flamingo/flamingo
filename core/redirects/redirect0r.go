@@ -33,8 +33,8 @@ func (r *redirect0r) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 			r.redirectFlow(ctx.Request(), w, redirectData[i])
 		}
 	}
-	
-	return nil
+
+	return chain.Next(ctx, w)
 }
 
 func (r *redirect0r) redirectFlow(req *http.Request, w http.ResponseWriter, redirectInfo infrastructure.CsvContent) {

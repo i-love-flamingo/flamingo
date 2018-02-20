@@ -48,10 +48,10 @@ func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 		case http.StatusFound:
 			return r.RedirectURL(fmt.Sprintf("%s", redirectTarget))
 		case http.StatusGone:
-			return r.ErrorAware.ErrorGone(ctx, errors.New("page not found"))
+			return r.ErrorAware.ErrorWithCode(ctx, errors.New("page is gone"), http.StatusGone)
 		}
 
-		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page is gone"))
+		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page not found"))
 	}
 
 	return chain.Next(ctx, w)

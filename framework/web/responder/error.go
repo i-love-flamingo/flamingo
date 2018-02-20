@@ -12,22 +12,23 @@ type (
 	ErrorAware interface {
 		Error(context web.Context, err error) web.Response
 		ErrorNotFound(context web.Context, err error) web.Response
-		ErrorGone(context web.Context, error error) web.Response
+		ErrorWithCode(context web.Context, error error, httpStatus int) web.Response
 	}
 
 	// FlamingoErrorAware responder can return errors
 	FlamingoErrorAware struct {
-		RenderAware `inject:""`
-		DebugMode   bool   `inject:"config:debug.mode"`
-		Tpl404      string `inject:"config:flamingo.template.err404"`
-		Tpl410      string `inject:"config:flamingo.template.err410"`
-		Tpl503      string `inject:"config:flamingo.template.err503"`
+		RenderAware             `inject:""`
+		DebugMode        bool   `inject:"config:debug.mode"`
+		Tpl404           string `inject:"config:flamingo.template.err404"`
+		TplErrorWithCode string `inject:"config:flamingo.template.errWithCode"`
+		Tpl503           string `inject:"config:flamingo.template.err503"`
 	}
 
 	// ErrorViewData for template rendering
 	ErrorViewData struct {
-		Code  int   `json:"code"`
-		Error error `json:"error"`
+		Code      int    `json:"code"`
+		Error     error  `json:"error"`
+		Errortext string `json:"errortex"`
 	}
 
 	// DebugError holds additional information
@@ -80,24 +81,24 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 }
 
 // ErrorGone returns a web.ContentResponse with status 410 and ContentType text/html
-func (r *FlamingoErrorAware) ErrorGone(context web.Context, error error) web.Response {
+func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, httpStatus int) web.Response {
 	var response web.Response
 
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
-			r.Tpl410,
-			ErrorViewData{Error: EmptyError{}, Code: 410},
+			r.TplErrorWithCode,
+			ErrorViewData{Error: EmptyError{}, Code: httpStatus, Errortext: http.StatusText(httpStatus)},
 		)
 	} else {
 		response = r.RenderAware.Render(
 			context,
-			r.Tpl410,
-			ErrorViewData{Error: DebugError{error}, Code: 410},
+			r.TplErrorWithCode,
+			ErrorViewData{Error: DebugError{error}, Code: httpStatus, Errortext: http.StatusText(httpStatus)},
 		)
 	}
 
-	response.(*web.ContentResponse).Status = http.StatusGone
+	response.(*web.ContentResponse).Status = httpStatus
 
 	return web.ErrorResponse{Response: response, Error: error}
 }

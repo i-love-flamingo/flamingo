@@ -81,6 +81,7 @@ func (module *Module) DefaultConfig() config.Map {
 		"flamingo.router.notfound": router.FlamingoNotfound,
 		"flamingo.router.error":    router.FlamingoError,
 		"flamingo.template.err404": "error/404",
+		"flamingo.template.err410": "error/404",
 		"flamingo.template.err503": "error/503",
 		"session.name":             "flamingo",
 	}

@@ -44,9 +44,11 @@ func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 
 		switch code := httpCode; code {
 		case http.StatusMovedPermanently:
-			return r.RedirectPermanentURL(fmt.Sprintf("%s", redirectTarget))
+			return r.RedirectPermanentURL(redirectTarget)
 		case http.StatusFound:
 			return r.RedirectURL(fmt.Sprintf("%s", redirectTarget))
+		case http.StatusGone:
+			return r.ErrorAware.ErrorGone(ctx, errors.New("page not found"))
 		}
 
 		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page not found"))

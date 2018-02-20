@@ -51,7 +51,7 @@ func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 			return r.ErrorAware.ErrorGone(ctx, errors.New("page not found"))
 		}
 
-		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page not found"))
+		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page is gone"))
 	}
 
 	return chain.Next(ctx, w)

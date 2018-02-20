@@ -77,12 +77,12 @@ func (module *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for this module
 func (module *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"debug.mode":               true,
-		"flamingo.router.notfound": router.FlamingoNotfound,
-		"flamingo.router.error":    router.FlamingoError,
-		"flamingo.template.err404": "error/404",
-		"flamingo.template.err410": "error/404",
-		"flamingo.template.err503": "error/503",
-		"session.name":             "flamingo",
+		"debug.mode":                    true,
+		"flamingo.router.notfound":      router.FlamingoNotfound,
+		"flamingo.router.error":         router.FlamingoError,
+		"flamingo.template.err404":      "error/404",
+		"flamingo.template.errWithCode": "error/withCode",
+		"flamingo.template.err503":      "error/503",
+		"session.name":                  "flamingo",
 	}
 }

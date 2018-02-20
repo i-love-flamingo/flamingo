@@ -42,7 +42,7 @@ func (_m *ErrorAware) ErrorNotFound(context web.Context, err error) web.Response
 }
 
 // ErrorNotFound provides a mock function with given fields: context, err
-func (_m *ErrorAware) ErrorGone(context web.Context, err error) web.Response {
+func (_m *ErrorAware) ErrorWithCode(context web.Context, err error, httpStatus int) web.Response {
 	ret := _m.Called(context, err)
 
 	var r0 web.Response

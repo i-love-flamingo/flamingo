@@ -40,3 +40,19 @@ func (_m *ErrorAware) ErrorNotFound(context web.Context, err error) web.Response
 
 	return r0
 }
+
+// ErrorNotFound provides a mock function with given fields: context, err
+func (_m *ErrorAware) ErrorGone(context web.Context, err error) web.Response {
+	ret := _m.Called(context, err)
+
+	var r0 web.Response
+	if rf, ok := ret.Get(0).(func(web.Context, error) web.Response); ok {
+		r0 = rf(context, err)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(web.Response)
+		}
+	}
+
+	return r0
+}

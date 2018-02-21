@@ -146,7 +146,7 @@ func (m Map) MapInto(out interface{}) error {
 		return errors.Wrap(err, "Problem with marshaling map")
 	}
 
-	err = json.Unmarshal(jsonBytes, &out)
+	err = json.Unmarshal(jsonBytes, out)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
 	}

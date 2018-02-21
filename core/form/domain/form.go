@@ -48,6 +48,16 @@ func (vi *ValidationInfo) AddError(key string, defaultLabel string) {
 	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: key, DefaultLabel: defaultLabel})
 }
 
+func (vi *ValidationInfo) AddFieldError(fieldName string, key string, defaultLabel string) {
+	if vi.FieldErrors == nil {
+		vi.FieldErrors = make(map[string][]Error)
+	}
+	if _, ok := vi.FieldErrors[fieldName]; !ok {
+		vi.FieldErrors[fieldName] = make([]Error, 0)
+	}
+	vi.FieldErrors[fieldName] = append(vi.FieldErrors[fieldName], Error{MessageKey: key, DefaultLabel: defaultLabel})
+}
+
 func (f Form) IsValidAndSubmitted() bool {
 	return f.ValidationInfo.IsValid && f.IsSubmitted
 }

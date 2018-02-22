@@ -58,6 +58,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 				io.Copy(rw, r.Body)
 			} else {
+				rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 			}
 		})
@@ -68,6 +69,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 			io.Copy(rw, r.Body)
 		} else {
+			rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 		}
 	}))

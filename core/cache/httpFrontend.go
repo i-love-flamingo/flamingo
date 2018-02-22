@@ -86,22 +86,25 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 				if err2, ok := err.(error); ok {
 					resultErr = errors.WithStack(err2) //fmt.Errorf("%#v", err)
 				} else {
-					resultErr = errors.WithStack(fmt.Errorf("%#v", err))
+					resultErr = errors.WithStack(fmt.Errorf("HTTPFrontend.load exception: %#v", err))
 				}
 			}
 		}()
 
 		data, meta, err := loader()
-
 		if meta == nil {
 			meta = &Meta{
 				Lifetime:  30 * time.Second,
 				Gracetime: 10 * time.Minute,
 			}
 		}
+		if err != nil {
+			return loaderResponse{nil, meta}, err
+		}
 
 		response := data
 		body, _ := ioutil.ReadAll(response.Body)
+
 		response.Body.Close()
 
 		cached := cachedResponse{

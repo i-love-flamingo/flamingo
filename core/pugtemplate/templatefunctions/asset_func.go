@@ -12,8 +12,9 @@ import (
 type (
 	// AssetFunc returns the proper URL for the asset, either local or via CDN
 	AssetFunc struct {
-		Router *router.Router `inject:""`
-		Engine *pugjs.Engine  `inject:""`
+		Router  *router.Router `inject:""`
+		Engine  *pugjs.Engine  `inject:""`
+		BaseUrl string         `inject:"config:cdn.base_url,optional"`
 	}
 )
 
@@ -48,6 +49,11 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 		af.Engine.Unlock()
 
 		result = strings.Replace(result, "//", "/", -1)
+
+		baseUrl := strings.TrimRight(af.BaseUrl, "/")
+		if baseUrl != "" {
+			result = baseUrl + result
+		}
 
 		ctx.Push(result, nil) // h2 server push
 		return template.URL(result)

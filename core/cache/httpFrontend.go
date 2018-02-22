@@ -2,12 +2,11 @@ package cache
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"fmt"
 
 	"github.com/golang/groupcache/singleflight"
 	"github.com/pkg/errors"
@@ -83,7 +82,12 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
 		defer func() {
 			if err := recover(); err != nil {
-				resultErr = fmt.Errorf("%#v", err)
+				//resultErr = errors.WithStack(fmt.Errorf("%#v", err))
+				if err2, ok := err.(error); ok {
+					resultErr = errors.WithStack(err2) //fmt.Errorf("%#v", err)
+				} else {
+					resultErr = errors.WithStack(fmt.Errorf("%#v", err))
+				}
 			}
 		}()
 

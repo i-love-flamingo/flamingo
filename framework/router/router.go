@@ -221,7 +221,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// dispatch OnRequest event, the request might be changed
 	e := &OnRequestEvent{rw, req, ctx}
-	router.eventrouter.Dispatch(e)
+	router.eventrouter.Dispatch(ctx, e)
 	req = e.Request
 
 	done := ctx.Profile("matchRequest", req.RequestURI)
@@ -251,7 +251,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 				router.recover(ctx, rw, err)
 			}
 			// fire finish event
-			router.eventrouter.Dispatch(&OnFinishEvent{rw, req, err, ctx})
+			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err, ctx})
 		}()
 
 		var response web.Response
@@ -291,7 +291,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		// fire response event
-		router.eventrouter.Dispatch(&OnResponseEvent{controller, response, req, rw, ctx})
+		router.eventrouter.Dispatch(ctx, &OnResponseEvent{controller, response, req, rw, ctx})
 
 		if router.Sessions != nil {
 			if err := router.Sessions.Save(req, rw, ctx.Session()); err != nil {

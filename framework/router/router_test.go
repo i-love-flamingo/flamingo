@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -71,7 +72,7 @@ func TestRouterTestify(t *testing.T) {
 		return contextMock
 	}
 	eventRouter := new(eventMocks.Router)
-	eventRouter.On("Dispatch", mock.Anything)
+	eventRouter.On("Dispatch", mock.Anything, mock.Anything)
 	router.eventrouter = eventRouter
 
 	server := httptest.NewServer(router)
@@ -119,7 +120,7 @@ func TestRouterMiniMocks(t *testing.T) {
 	}
 
 	eventRouter := NewRouterMock(t)
-	eventRouter.DispatchFunc = func(p event.Event) {}
+	eventRouter.DispatchFunc = func(ctx context.Context, p event.Event) {}
 	routerVar.eventrouter = eventRouter
 
 	server := httptest.NewServer(routerVar)

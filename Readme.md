@@ -42,3 +42,10 @@ This will start building and previewing the mkdocs based documentation in a Dock
 To view the docs open  [Docs](http://localhost:8000)
 
 -----------------
+
+# Mockery (to create Mocks)
+
+https://github.com/vektra/mockery
+
+Usage:
+mockery -name <Name of Interface>

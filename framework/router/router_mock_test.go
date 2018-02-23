@@ -6,6 +6,7 @@ This code was generated automatically using github.com/gojuno/minimock v1.8
 The original interface "Router" can be found in go.aoe.com/flamingo/framework/event
 */
 import (
+	"context"
 	"sync/atomic"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 type RouterMock struct {
 	t minimock.Tester
 
-	DispatchFunc       func(p event.Event)
+	DispatchFunc       func(ctx context.Context, p event.Event)
 	DispatchCounter    uint64
 	DispatchPreCounter uint64
 	DispatchMock       mRouterMockDispatch
@@ -56,20 +57,20 @@ func (m *mRouterMockDispatch) Expect(p event.Event) *mRouterMockDispatch {
 
 //Return sets up a mock for Router.Dispatch to return Return's arguments
 func (m *mRouterMockDispatch) Return() *RouterMock {
-	m.mock.DispatchFunc = func(p event.Event) {
+	m.mock.DispatchFunc = func(ctx context.Context, p event.Event) {
 		return
 	}
 	return m.mock
 }
 
 //Set uses given function f as a mock of Router.Dispatch method
-func (m *mRouterMockDispatch) Set(f func(p event.Event)) *RouterMock {
+func (m *mRouterMockDispatch) Set(f func(ctx context.Context, p event.Event)) *RouterMock {
 	m.mock.DispatchFunc = f
 	return m.mock
 }
 
 //Dispatch implements go.aoe.com/flamingo/framework/event.Router interface
-func (m *RouterMock) Dispatch(p event.Event) {
+func (m *RouterMock) Dispatch(ctx context.Context, p event.Event) {
 	atomic.AddUint64(&m.DispatchPreCounter, 1)
 	defer atomic.AddUint64(&m.DispatchCounter, 1)
 
@@ -90,7 +91,7 @@ func (m *RouterMock) Dispatch(p event.Event) {
 		return
 	}
 
-	m.DispatchFunc(p)
+	m.DispatchFunc(ctx, p)
 }
 
 //DispatchMinimockCounter returns a count of RouterMock.DispatchFunc invocations

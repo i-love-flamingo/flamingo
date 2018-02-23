@@ -13,10 +13,10 @@ type (
 
 func (e *EventPublisher) PublishLoginEvent(ctx web.Context, event *domain.LoginEvent) {
 	//publish to Flamingo default Event Router
-	ctx.EventRouter().Dispatch(event)
+	ctx.EventRouter().Dispatch(ctx, event)
 }
 
 func (e *EventPublisher) PublishLogoutEvent(ctx web.Context, event *domain.LogoutEvent) {
 	//publish to Flamingo default Event Router
-	ctx.EventRouter().Dispatch(event)
+	ctx.EventRouter().Dispatch(ctx, event)
 }

@@ -2,6 +2,7 @@ package pugjs
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 )
@@ -31,7 +32,7 @@ func (ct *CommonTag) render(name string, p *renderState, wr *bytes.Buffer) error
 	}
 
 	additional := new(bytes.Buffer)
-	p.eventRouter.Dispatch(&OnRenderHTMLBlockEvent{name, additional})
+	p.eventRouter.Dispatch(context.Background(), &OnRenderHTMLBlockEvent{name, additional})
 
 	var attrs string
 	if len(ct.AttributeBlocks) > 0 || len(ct.Attrs) > 0 {

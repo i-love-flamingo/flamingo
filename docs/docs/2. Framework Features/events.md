@@ -19,7 +19,7 @@ LoginSucessEvent struct {
 
 ### On the Context
 
-An Event is fired on the request via `context.EventRouter().Dispatch(event)`.
+An Event is fired on the request via `context.EventRouter().Dispatch(ctx, event)`.
 
 ```go
 type (
@@ -31,7 +31,7 @@ type (
 )
 
 func (controller *IndexController) Get(ctx web.Context) web.Response {
-    ctx.EventRouter().Dispatch(&MyEvent{Data: "Hello"})
+    ctx.EventRouter().Dispatch(ctx, &MyEvent{Data: "Hello"})
 }
 ```
 

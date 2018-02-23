@@ -1,14 +1,12 @@
 package logrus
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"runtime"
 	"strings"
-
 	"sync"
-
-	"fmt"
 
 	"github.com/sirupsen/logrus"
 	"go.aoe.com/flamingo/framework/dingo"
@@ -78,12 +76,20 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	var l *logrus.Logger
 	if m.JSON {
 		l = &logrus.Logger{
-			Out:       os.Stderr,
-			Formatter: new(logrus.JSONFormatter),
-			Hooks:     make(logrus.LevelHooks),
+			Out: os.Stderr,
+			Formatter: &logrus.JSONFormatter{
+				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
+			},
+			Hooks: make(logrus.LevelHooks),
 		}
 	} else {
-		l = logrus.New()
+		l = &logrus.Logger{
+			Out: os.Stderr,
+			Formatter: &logrus.TextFormatter{
+				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
+			},
+			Hooks: make(logrus.LevelHooks),
+		}
 	}
 	l.Level = logrus.ErrorLevel
 	if m.LogLevel == "Info" {

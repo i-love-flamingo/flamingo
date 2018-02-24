@@ -31,10 +31,7 @@
 
 [[projects]]
   name = "github.com/garyburd/redigo"
-  packages = [
-    "internal",
-    "redis"
-  ]
+  packages = ["internal","redis"]
   revision = "47dc60e71eed504e3ef8e77ee3c6fe720f3be57f"
   version = "v1.3.0"
 
@@ -52,10 +49,7 @@
 
 [[projects]]
   name = "github.com/go-playground/locales"
-  packages = [
-    ".",
-    "currency"
-  ]
+  packages = [".","currency"]
   revision = "e4cbcb5d0652150d40ad0646651076b6bd2be4f6"
   version = "v0.11.2"
 
@@ -79,15 +73,7 @@
 
 [[projects]]
   name = "github.com/golang/protobuf"
-  packages = [
-    "jsonpb",
-    "proto",
-    "ptypes",
-    "ptypes/any",
-    "ptypes/duration",
-    "ptypes/struct",
-    "ptypes/timestamp"
-  ]
+  packages = ["jsonpb","proto","ptypes","ptypes/any","ptypes/duration","ptypes/struct","ptypes/timestamp"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
 
 [[projects]]
@@ -111,10 +97,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/golang-lru"
-  packages = [
-    ".",
-    "simplelru"
-  ]
+  packages = [".","simplelru"]
   revision = "0a025b7e63adc15a622f29b0b2c4c3848243bbf6"
 
 [[projects]]
@@ -162,64 +145,24 @@
 [[projects]]
   branch = "master"
   name = "github.com/nicksnyder/go-i18n"
-  packages = [
-    "i18n/bundle",
-    "i18n/language",
-    "i18n/translation"
-  ]
+  packages = ["i18n/bundle","i18n/language","i18n/translation"]
   revision = "aa0ce51472e0a9982717fd19cf02cb08b1e433aa"
 
 [[projects]]
   name = "github.com/onsi/ginkgo"
-  packages = [
-    ".",
-    "config",
-    "internal/codelocation",
-    "internal/containernode",
-    "internal/failer",
-    "internal/leafnodes",
-    "internal/remote",
-    "internal/spec",
-    "internal/spec_iterator",
-    "internal/specrunner",
-    "internal/suite",
-    "internal/testingtproxy",
-    "internal/writer",
-    "reporters",
-    "reporters/stenographer",
-    "reporters/stenographer/support/go-colorable",
-    "reporters/stenographer/support/go-isatty",
-    "types"
-  ]
+  packages = [".","config","internal/codelocation","internal/containernode","internal/failer","internal/leafnodes","internal/remote","internal/spec","internal/spec_iterator","internal/specrunner","internal/suite","internal/testingtproxy","internal/writer","reporters","reporters/stenographer","reporters/stenographer/support/go-colorable","reporters/stenographer/support/go-isatty","types"]
   revision = "9eda700730cba42af70d53180f9dcce9266bc2bc"
   version = "v1.4.0"
 
 [[projects]]
   name = "github.com/onsi/gomega"
-  packages = [
-    ".",
-    "format",
-    "internal/assertion",
-    "internal/asyncassertion",
-    "internal/oraclematcher",
-    "internal/testingtsupport",
-    "matchers",
-    "matchers/support/goraph/bipartitegraph",
-    "matchers/support/goraph/edge",
-    "matchers/support/goraph/node",
-    "matchers/support/goraph/util",
-    "types"
-  ]
+  packages = [".","format","internal/assertion","internal/asyncassertion","internal/oraclematcher","internal/testingtsupport","matchers","matchers/support/goraph/bipartitegraph","matchers/support/goraph/edge","matchers/support/goraph/node","matchers/support/goraph/util","types"]
   revision = "c893efa28eb45626cdaa76c9f653b62488858837"
   version = "v1.2.0"
 
 [[projects]]
   name = "github.com/pact-foundation/pact-go"
-  packages = [
-    "dsl",
-    "types",
-    "utils"
-  ]
+  packages = ["dsl","types","utils"]
   revision = "35dc3023bd4df1520d893268fc8e8d84e745b2d6"
   version = "v0.0.12"
 
@@ -242,22 +185,13 @@
 
 [[projects]]
   name = "github.com/pquerna/cachecontrol"
-  packages = [
-    ".",
-    "cacheobject"
-  ]
+  packages = [".","cacheobject"]
   revision = "9299cc36e57c32f83e47ffb3c25d8a3dec10ea0b"
 
 [[projects]]
   branch = "master"
   name = "github.com/robertkrimen/otto"
-  packages = [
-    "ast",
-    "dbg",
-    "file",
-    "parser",
-    "token"
-  ]
+  packages = ["ast","dbg","file","parser","token"]
   revision = "83d297c4b64aeb2de4268d9a54c9a503ae2d8139"
   source = "https://github.com/thebod/otto.git"
 
@@ -269,9 +203,15 @@
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
-  packages = ["."]
+  packages = [".","hooks/test"]
   revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
   version = "v1.0.3"
+
+[[projects]]
+  name = "github.com/sony/gobreaker"
+  packages = ["."]
+  revision = "e9556a45379ef1da12e54847edb2fb3d7d566f36"
+  version = "0.3.0"
 
 [[projects]]
   name = "github.com/spf13/cobra"
@@ -292,11 +232,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/stretchr/testify"
-  packages = [
-    "assert",
-    "mock",
-    "require"
-  ]
+  packages = ["assert","mock","require"]
   revision = "890a5c3458b43e6104ff5da8dfa139d013d77544"
 
 [[projects]]
@@ -313,13 +249,7 @@
 
 [[projects]]
   name = "golang.org/x/net"
-  packages = [
-    "context",
-    "context/ctxhttp",
-    "html",
-    "html/atom",
-    "html/charset"
-  ]
+  packages = ["context","context/ctxhttp","html","html/atom","html/charset"]
   revision = "feeb485667d1fdabe727840fe00adc22431bc86e"
 
 [[projects]]
@@ -333,46 +263,17 @@
 
 [[projects]]
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows"
-  ]
+  packages = ["unix","windows"]
   revision = "9ccfe848b9db8435a24c424abbc07a921adf1df5"
 
 [[projects]]
   name = "golang.org/x/text"
-  packages = [
-    "encoding",
-    "encoding/charmap",
-    "encoding/htmlindex",
-    "encoding/internal",
-    "encoding/internal/identifier",
-    "encoding/japanese",
-    "encoding/korean",
-    "encoding/simplifiedchinese",
-    "encoding/traditionalchinese",
-    "encoding/unicode",
-    "internal/gen",
-    "internal/tag",
-    "internal/utf8internal",
-    "language",
-    "runes",
-    "transform",
-    "unicode/cldr"
-  ]
+  packages = ["encoding","encoding/charmap","encoding/htmlindex","encoding/internal","encoding/internal/identifier","encoding/japanese","encoding/korean","encoding/simplifiedchinese","encoding/traditionalchinese","encoding/unicode","internal/gen","internal/tag","internal/utf8internal","language","runes","transform","unicode/cldr"]
   revision = "2910a502d2bf9e43193af9d68ca516529614eed3"
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = [
-    "internal",
-    "internal/base",
-    "internal/datastore",
-    "internal/log",
-    "internal/remote_api",
-    "internal/urlfetch",
-    "urlfetch"
-  ]
+  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "170382fa85b10b94728989dfcf6cc818b335c952"
 
 [[projects]]
@@ -383,20 +284,13 @@
 
 [[projects]]
   name = "gopkg.in/sourcemap.v1"
-  packages = [
-    ".",
-    "base64vlq"
-  ]
+  packages = [".","base64vlq"]
   revision = "6e83acea0053641eff084973fee085f0c193c61a"
   version = "v1.0.5"
 
 [[projects]]
   name = "gopkg.in/square/go-jose.v2"
-  packages = [
-    ".",
-    "cipher",
-    "json"
-  ]
+  packages = [".","cipher","json"]
   revision = "af13e1fbc7ac2df7f7eab54e5177104d546d0e9c"
   version = "v2.1.1"
 

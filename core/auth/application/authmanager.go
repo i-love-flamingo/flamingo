@@ -2,11 +2,11 @@ package application
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
 
+	"go.aoe.com/flamingo/framework/flamingo"
 	"go.aoe.com/flamingo/framework/router"
 	"go.aoe.com/flamingo/framework/web"
 
@@ -30,10 +30,12 @@ const (
 type (
 	// AuthManager handles authentication related operations
 	AuthManager struct {
-		Server    string `inject:"config:auth.server"`
-		Secret    string `inject:"config:auth.secret"`
-		ClientID  string `inject:"config:auth.clientid"`
-		MyHost    string `inject:"config:auth.myhost"`
+		Server   string          `inject:"config:auth.server"`
+		Secret   string          `inject:"config:auth.secret"`
+		ClientID string          `inject:"config:auth.clientid"`
+		MyHost   string          `inject:"config:auth.myhost"`
+		Logger   flamingo.Logger `inject:""`
+
 		NotBefore time.Time
 
 		Router *router.Router `inject:""`
@@ -78,10 +80,14 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		return authmanager.oauth2Config
 	}
 
-	log.Printf("%#v", authmanager)
-
 	callbackURL := authmanager.Router.URL("auth.callback", nil)
-	myhost, _ := url.Parse(authmanager.MyHost)
+
+	authmanager.Logger.WithField("category", "auth").Debugf("authmanager %#v  Callback", authmanager, callbackURL)
+
+	myhost, err := url.Parse(authmanager.MyHost)
+	if err != nil {
+		authmanager.Logger.WithField("category", "auth").Errorf("Url parse failed %v %v", authmanager.MyHost, err)
+	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
 	authmanager.oauth2Config = &oauth2.Config{
@@ -90,12 +96,13 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		RedirectURL:  callbackURL.String(),
 
 		// Discovery returns the OAuth2 endpoints.
+		// It might panic here if Endpoint cannot be discovered
 		Endpoint: authmanager.OpenIDProvider().Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "profile", "email"},
 	}
-
+	authmanager.Logger.WithField("category", "auth").Debugf("authmanager.oauth2Config %#v ", authmanager.oauth2Config)
 	return authmanager.oauth2Config
 }
 

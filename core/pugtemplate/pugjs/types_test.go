@@ -82,3 +82,15 @@ func TestArray_Slice(t *testing.T) {
 	assert.Contains(t, leftover.items, Number(4))
 	assert.Contains(t, leftover.items, Number(5))
 }
+
+func TestString_Slice(t *testing.T) {
+	s := String("test123")
+
+	assert.Equal(t, s.Slice(1), "est123")
+	assert.Equal(t, s.Slice(-1), "3")
+
+	assert.Equal(t, s.Slice(1, 3), "es")
+	assert.Equal(t, s.Slice(1, -2), "est1")
+	assert.Equal(t, s.Slice(-4, 4), "t")
+	assert.Equal(t, s.Slice(-4, -2), "t1")
+}

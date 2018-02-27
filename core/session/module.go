@@ -13,14 +13,14 @@ import (
 // Module for session management
 type Module struct {
 	// session config is optional to allow usage of the DefaultConfig
-	Backend  string `inject:"config:session.backend,optional"`
-	Secret   string `inject:"config:session.secret,optional"`
-	FileName string `inject:"config:session.file,optional"`
+	Backend  string `inject:"config:session.backend"`
+	Secret   string `inject:"config:session.secret"`
+	FileName string `inject:"config:session.file"`
 	// float64 is used due to the injection as config from json - int is not possible on this
-	StoreLength          float64 `inject:"config:session.store.length,optional"`
-	MaxAge               float64 `inject:"config:session.max.age,optional"`
-	RedisHost            string  `inject:"config:session.redis.host,optional"`
-	RedisIdleConnections float64 `inject:"config:session.redis.idle.connections,optional"`
+	StoreLength          float64 `inject:"config:session.store.length"`
+	MaxAge               float64 `inject:"config:session.max.age"`
+	RedisHost            string  `inject:"config:session.redis.host"`
+	RedisIdleConnections float64 `inject:"config:session.redis.idle.connections"`
 }
 
 // Configure DI
@@ -54,9 +54,9 @@ func (m *Module) DefaultConfig() config.Map {
 		"session.backend":                "memory",
 		"session.secret":                 "flamingosecret",
 		"session.file":                   "/sessions",
-		"session.store.length":           1024 * 1024,
-		"session.max.age":                60 * 60 * 24 * 30,
+		"session.store.length":           float64(1024 * 1024),
+		"session.max.age":                float64(60 * 60 * 24 * 30),
 		"session.redis.host":             "redis",
-		"session.redis.idle.connections": 10,
+		"session.redis.idle.connections": float64(10),
 	}
 }

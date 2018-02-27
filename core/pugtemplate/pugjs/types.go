@@ -448,7 +448,28 @@ func (s String) ToUpperCase() string { return strings.ToUpper(string(s)) }
 func (s String) Split(delim string) []string { return strings.Split(string(s), delim) }
 
 // Slice a string
-func (s String) Slice(from int) string { return string(s[from:]) }
+func (s String) Slice(from int, toList ...int) string {
+	strLength := len(s)
+
+	if from > strLength {
+		return ""
+	}
+
+	if from < 0 {
+		from = strLength + from
+	}
+
+	to := len(s)
+	if len(toList) > 0 {
+		to = toList[0]
+	}
+
+	if to < 0 {
+		to = strLength + to
+	}
+
+	return string(s[from:to])
+}
 
 // Replace string values
 func (s String) Replace(what, with String) String {

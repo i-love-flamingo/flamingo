@@ -86,8 +86,8 @@ func TestArray_Slice(t *testing.T) {
 func TestString_Slice(t *testing.T) {
 	s := String("test123")
 
-	assert.Equal(t, s.Slice(1), "est123")
-	assert.Equal(t, s.Slice(-1), "3")
+	assert.Equal(t, s.Slice(Number(1)), "est123")
+	assert.Equal(t, s.Slice(Number(-1)), "3")
 
 	assert.Equal(t, s.Slice(1, 3), "es")
 	assert.Equal(t, s.Slice(1, -2), "est1")

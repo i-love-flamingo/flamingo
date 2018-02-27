@@ -450,8 +450,9 @@ func (s String) ToUpperCase() string { return strings.ToUpper(string(s)) }
 func (s String) Split(delim string) []string { return strings.Split(string(s), delim) }
 
 // Slice a string
-func (s String) Slice(from int, toList ...int) string {
+func (s String) Slice(nfrom Number, toList ...Number) string {
 	strLength := len(s)
+	from := int(nfrom)
 
 	if from > strLength {
 		return ""
@@ -463,7 +464,7 @@ func (s String) Slice(from int, toList ...int) string {
 
 	to := len(s)
 	if len(toList) > 0 {
-		to = toList[0]
+		to = int(toList[0])
 	}
 
 	if to < 0 {

@@ -12,8 +12,7 @@ import (
 
 // eventSubscriber for the profiler
 type eventSubscriber struct {
-	Router    *router.Router `inject:""`
-	DebugMode bool           `inject:"config:debug.mode"`
+	Router *router.Router `inject:""`
 }
 
 // Notify on events
@@ -26,9 +25,7 @@ func (e *eventSubscriber) Notify(ev event.Event) {
 
 // onResponse injects the little helper into the response, and saves the profile in memory
 func (e *eventSubscriber) onResponse(event *router.OnResponseEvent) {
-	if e.DebugMode == false {
-		return
-	}
+
 	// ensure we are not profiling ourself
 	if _, ok := event.Controller.(*profileController); ok {
 		return

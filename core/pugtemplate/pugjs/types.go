@@ -424,6 +424,8 @@ func (s String) Member(field string) Object {
 		return &Func{fnc: reflect.ValueOf(s.Slice)}
 	case "replace":
 		return &Func{fnc: reflect.ValueOf(s.Replace)}
+	case "length":
+		return &Func{fnc: reflect.ValueOf(s.Length)}
 	case "indexOf":
 		return &Func{fnc: reflect.ValueOf(s.IndexOf)}
 	}
@@ -475,6 +477,9 @@ func (s String) Slice(from int, toList ...int) string {
 func (s String) Replace(what, with String) String {
 	return String(strings.Replace(string(s), string(what), string(with), -1))
 }
+
+// Return string length
+func (s String) Length() int { return len(s) }
 
 func (s String) copy() Object { return s }
 

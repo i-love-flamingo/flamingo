@@ -15,6 +15,8 @@ type (
 	// Module registers our profiler
 	Module struct {
 		RouterRegistry *router.Registry `inject:""`
+		DebugMode      bool             `inject:"config:debug.mode"`
+
 	}
 
 	roundTripper struct {
@@ -43,10 +45,12 @@ func init() {
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	m.RouterRegistry.Route("/_profiler/view/:profile", "_profiler.view")
-	m.RouterRegistry.Handle("_profiler.view", new(profileController))
+	if (m.DebugMode) {
+		m.RouterRegistry.Route("/_profiler/view/:profile", "_profiler.view")
+		m.RouterRegistry.Handle("_profiler.view", new(profileController))
 
-	injector.Override((*profiler.Profiler)(nil), "").To(defaultProfiler{})
+		injector.Override((*profiler.Profiler)(nil), "").To(defaultProfiler{})
 
-	injector.BindMulti((*event.Subscriber)(nil)).To(eventSubscriber{})
+		injector.BindMulti((*event.Subscriber)(nil)).To(eventSubscriber{})
+	}
 }

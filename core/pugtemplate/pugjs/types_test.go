@@ -94,3 +94,8 @@ func TestString_Slice(t *testing.T) {
 	assert.Equal(t, s.Slice(-4, 4), "t")
 	assert.Equal(t, s.Slice(-4, -2), "t1")
 }
+
+func TestString_Length(t *testing.T) {
+	assert.Equal(t, String("").Length(), 0)
+	assert.Equal(t, String("test123").Length(), 7)
+}

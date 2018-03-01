@@ -19,6 +19,10 @@ locale:
     decimal: '.'
     formatZero: '%s -.-'
     format: "%v %s"
+  numbers:
+    thousand: ','
+    decimal: '.'
+    precision: 2
   date:
     dateFormat:  02 Jan 2006
     timeFormat: 15:04:05
@@ -67,4 +71,17 @@ Other functions are formalLocalDate() or formatTime() etc..
 
 ```
 priceFormat(90,"GBP")
+```
+
+#### Formatting of numbers:
+
+Formatting of numbers can be configured like described above. The delimiter for thousand and
+decimal can be configured. The precision for the decimal places can be configured with a default
+value, but can also be overwritten.
+
+```
+// with defaul precision
+numberFormat(12300)
+// with overwritten precision
+numberFormat(12300, 2)
 ```

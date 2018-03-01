@@ -35,6 +35,7 @@ func (m *Module) DefaultConfig() config.Map {
 			"numbers": config.Map{
 				"decimal": ",",
 				"thousand": ".",
+				"precision": 2,
 			},
 			"date": config.Map{
 				"dateFormat":     "02 Jan 2006",

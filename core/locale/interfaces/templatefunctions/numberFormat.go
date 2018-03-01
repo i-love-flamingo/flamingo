@@ -21,26 +21,26 @@ type NumberConf struct {
 }
 
 // Name alias for use in template
-func (pff NumberFormatFunc) Name() string {
+func (nff NumberFormatFunc) Name() string {
 	return "numberFormat"
 }
 
 // Func as implementation of debug method
-func (pff NumberFormatFunc) Func() interface{} {
+func (nff NumberFormatFunc) Func() interface{} {
 	return func(value interface{}) string {
 
 		numberConfig := NumberConf {}
 
 		// read values from config if they are set
-		precision, ok := pff.Config["precision"].(int)
+		precision, ok := nff.Config["precision"].(int)
 		if ok {
 			numberConfig.Precision = precision
 		}
-		thousand, ok := pff.Config["thousand"].(string)
+		thousand, ok := nff.Config["thousand"].(string)
 		if ok {
 			numberConfig.Thousand = thousand
 		}
-		decimal, ok := pff.Config["decimal"].(string)
+		decimal, ok := nff.Config["decimal"].(string)
 		if ok {
 			numberConfig.Decimal = decimal
 		}

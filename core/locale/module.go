@@ -16,6 +16,7 @@ type (
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.NumberFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromIso{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromTime{})
 }
@@ -30,6 +31,10 @@ func (m *Module) DefaultConfig() config.Map {
 				"thousand":   ".",
 				"formatZero": "%s -,-",
 				"format":     "%s %v",
+			},
+			"numbers": config.Map{
+				"decimal": ",",
+				"thousand": ".",
 			},
 			"date": config.Map{
 				"dateFormat":     "02 Jan 2006",

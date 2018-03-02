@@ -329,6 +329,15 @@ type Map struct {
 	order []Object
 }
 
+// AsStringMap helper
+func (m *Map) AsStringMap() map[string]string {
+	stringMap := make(map[string]string)
+	for key, value := range m.Items {
+		stringMap[key.String()] = value.String()
+	}
+	return stringMap
+}
+
 // String formatter
 func (m *Map) String() string {
 	if m == nil {

@@ -34,6 +34,7 @@ type (
 	}
 )
 
+// Levels returns all available logrus log levels
 func (hook ContextHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
@@ -72,6 +73,7 @@ func lastPathAndFileName(completePath string) string {
 	return fileName
 }
 
+// Configure the logrus logger as flamingo.Logger (in JSON mode kibana compatible)
 func (m *Module) Configure(injector *dingo.Injector) {
 	var l *logrus.Logger
 	if m.JSON {
@@ -79,6 +81,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			Out: os.Stderr,
 			Formatter: &logrus.JSONFormatter{
 				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
+				FieldMap: logrus.FieldMap{
+					logrus.FieldKeyTime:  "@timestamp",
+					logrus.FieldKeyLevel: "level",
+					logrus.FieldKeyMsg:   "message",
+				},
 			},
 			Hooks: make(logrus.LevelHooks),
 		}
@@ -101,26 +108,34 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&LogrusLogger{l})
 }
 
+// WithField adds a single field to the Entry.
 func (e *LogrusEntry) WithField(key string, value interface{}) flamingo.Logger {
 	return &LogrusEntry{e.Entry.WithField(key, value)}
 }
 
+// WithFields adds a map of fields to the Entry.
 func (e *LogrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger {
 	return &LogrusEntry{e.Entry.WithFields(fields)}
 }
 
+// WithError adds an error as single field (using the key defined in ErrorKey) to the Entry.
 func (e *LogrusEntry) WithError(err error) flamingo.Logger {
 	return &LogrusEntry{e.Entry.WithError(err)}
 }
 
+// WithField adds a field to the log entry, note that it doesn't log until you call
+// Debug, Print, Info, Warn, Fatal or Panic. It only creates a log entry.
+// If you want multiple fields, use `WithFields`.
 func (e *LogrusLogger) WithField(key string, value interface{}) flamingo.Logger {
 	return &LogrusEntry{e.Logger.WithField(key, value)}
 }
 
+// WithFields adds a struct of fields to the log entry. All it does is call `WithField` for each `Field`.
 func (e *LogrusLogger) WithFields(fields map[string]interface{}) flamingo.Logger {
 	return &LogrusEntry{e.Logger.WithFields(fields)}
 }
 
+// WithError add an error as single field to the log entry.  All it does is call `WithError` for the given `error`.
 func (e *LogrusLogger) WithError(err error) flamingo.Logger {
 	return &LogrusEntry{e.Logger.WithError(err)}
 }

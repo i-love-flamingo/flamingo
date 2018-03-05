@@ -1,6 +1,7 @@
 package router
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -127,6 +128,19 @@ func TestPathHandling(t *testing.T) {
 				assert.NotNil(t, path.Match(`/`))
 				assert.Empty(t, path.Match(`/`).Values)
 			})
+		})
+
+		t.Run("Xml Sitemap Case", func(t *testing.T) {
+			var path = NewPath(`/sitemap/$id<product-(\d+).xml>`)
+			assert.NotNil(t, path)
+			assert.NotNil(t, path.Match(`/sitemap/product-1.xml`))
+			assert.NotNil(t, path.Match(`/sitemap/product-2.xml`))
+			assert.NotNil(t, path.Match(`/sitemap/product-100.xml`))
+			assert.Nil(t, path.Match(`/sitemap/product-test.xml`))
+			assert.NotEmpty(t, path.Match(`/sitemap/product-1.xml`).Values)
+			values := path.Match(`/sitemap/product-1.xml`).Values
+			id := strings.TrimPrefix(strings.TrimSuffix(values["id"], ".xml"), "product-")
+			assert.Equal(t, id, "1")
 		})
 	})
 }

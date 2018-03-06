@@ -1,6 +1,10 @@
 package templatefunctions
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+)
 
 type (
 	// JsJSON is exported as a template function
@@ -29,4 +33,14 @@ func (j JSON) Stringify(x interface{}) string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// Stringify rounds a value up to the next biggest integer
+func (j JSON) Parse(x pugjs.String) pugjs.Object {
+	m := make(map[string]interface{})
+	err := json.Unmarshal([]byte(x), &m)
+	if err != nil {
+		panic(err)
+	}
+	return pugjs.Convert(m)
 }

@@ -48,8 +48,10 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	newResponse := *response.orig
+	var newResponse http.Response
+	if response.orig != nil {
+		newResponse = *response.orig
+	}
 
 	buf := make([]byte, len(response.body))
 	copy(buf, response.body)
@@ -135,7 +137,11 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		}
 	}
 
-	cached := data.(loaderResponse).data.(cachedResponse)
+	loadedData := data.(loaderResponse).data
+	var cached cachedResponse
+	if loadedData != nil {
+		cached = loadedData.(cachedResponse)
+	}
 
 	hf.Backend.Set(key, &Entry{
 		Data: cached,

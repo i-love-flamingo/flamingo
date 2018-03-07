@@ -180,6 +180,14 @@ func lowerFirst(s string) string {
 	return string(unicode.ToLower(r)) + s[n:]
 }
 
+func upperFirst(s string) string {
+	if s == "" {
+		return ""
+	}
+	r, n := utf8.DecodeRuneInString(s)
+	return string(unicode.ToUpper(r)) + s[n:]
+}
+
 func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 	value, ok := data.(reflect.Value)
 	if !ok {

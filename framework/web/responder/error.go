@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.aoe.com/flamingo/framework/flamingo"
 	"go.aoe.com/flamingo/framework/web"
 )
 
@@ -17,11 +18,12 @@ type (
 
 	// FlamingoErrorAware responder can return errors
 	FlamingoErrorAware struct {
-		RenderAware             `inject:""`
-		DebugMode        bool   `inject:"config:debug.mode"`
-		Tpl404           string `inject:"config:flamingo.template.err404"`
-		TplErrorWithCode string `inject:"config:flamingo.template.errWithCode"`
-		Tpl503           string `inject:"config:flamingo.template.err503"`
+		RenderAware      `inject:""`
+		DebugMode        bool            `inject:"config:debug.mode"`
+		Tpl404           string          `inject:"config:flamingo.template.err404"`
+		TplErrorWithCode string          `inject:"config:flamingo.template.errWithCode"`
+		Tpl503           string          `inject:"config:flamingo.template.err503"`
+		Logger           flamingo.Logger `inject:""`
 	}
 
 	// ErrorViewData for template rendering
@@ -68,6 +70,7 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 			ErrorViewData{Error: EmptyError{}, Code: 404},
 		)
 	} else {
+
 		response = r.RenderAware.Render(
 			context,
 			r.Tpl404,
@@ -83,7 +86,7 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 // ErrorGone returns a web.ContentResponse with status 410 and ContentType text/html
 func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, httpStatus int) web.Response {
 	var response web.Response
-
+	r.Logger.WithField("category", "error_aware").Errorf("Error with code %v %v", httpStatus, error)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
@@ -106,7 +109,7 @@ func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, htt
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
 func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Response {
 	var response web.Response
-
+	r.Logger.WithField("category", "error_aware").Errorf("Error %v", error)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,

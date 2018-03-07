@@ -125,7 +125,7 @@ func convert(in interface{}) Object {
 		}
 		if !val.IsNil() {
 			for i := 0; i < val.NumMethod(); i++ {
-				newMap.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+				newMap.Items[String(lowerFirst(val.Type().Method(i).Name))] = convert(val.Method(i))
 			}
 
 			if m, ok := convert(val.Interface()).(*Map); ok {
@@ -165,7 +165,7 @@ func convert(in interface{}) Object {
 			newVal := convert(val.Elem())
 			if m, ok := newVal.(*Map); ok {
 				for i := 0; i < val.NumMethod(); i++ {
-					m.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+					m.Items[String(lowerFirst(val.Type().Method(i).Name))] = convert(val.Method(i))
 				}
 			}
 			return newVal

@@ -94,12 +94,12 @@ func convert(in interface{}) Object {
 
 		for i := 0; i < val.NumField(); i++ {
 			if val.Field(i).CanInterface() {
-				newMap.Items[String(val.Type().Field(i).Name)] = convert(val.Field(i))
+				newMap.Items[String(lowerFirst(val.Type().Field(i).Name))] = convert(val.Field(i))
 			}
 		}
 
 		for i := 0; i < val.NumMethod(); i++ {
-			newMap.Items[String(val.Type().Method(i).Name)] = convert(val.Method(i))
+			newMap.Items[String(lowerFirst(val.Type().Method(i).Name))] = convert(val.Method(i))
 		}
 
 		if sortable, ok := val.Interface().(sortable); ok {
@@ -372,7 +372,7 @@ func (m *Map) Member(field string) Object {
 	if i, ok := m.Items[String(field)]; ok {
 		return i
 	}
-	if i, ok := m.Items[String(lowerFirst(field))]; ok {
+	if i, ok := m.Items[String(upperFirst(field))]; ok {
 		return i
 	}
 	if i, ok := m.Items[String(strings.Title(field))]; ok {

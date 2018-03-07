@@ -40,20 +40,20 @@ func TestConvert(t *testing.T) {
 		tcs1s := testConvertStruct1{Str: "TestStr", Num: 1337}
 		tcs1 := convert(tcs1s).(*Map).Items
 
-		assert.Equal(t, tcs1[String("Str")], String("TestStr"))
-		assert.Equal(t, tcs1[String("Num")], Number(1337))
-		assert.Equal(t, tcs1[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.Method))
-		assert.NotContains(t, tcs1, String("PtrMethod"))
+		assert.Equal(t, tcs1[String("str")], String("TestStr"))
+		assert.Equal(t, tcs1[String("num")], Number(1337))
+		assert.Equal(t, tcs1[String("method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.Method))
+		assert.NotContains(t, tcs1, String("ptrMethod"))
 	})
 
 	t.Run("Pointer", func(t *testing.T) {
 		tcs2s := &testConvertStruct1{Str: "TestStr", Num: 1337}
 		tcs2 := convert(tcs2s).(*Map).Items
 
-		assert.Equal(t, tcs2[String("Str")], String("TestStr"))
-		assert.Equal(t, tcs2[String("Num")], Number(1337))
-		assert.Equal(t, tcs2[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.Method))
-		assert.Equal(t, tcs2[String("PtrMethod")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.PtrMethod))
+		assert.Equal(t, tcs2[String("str")], String("TestStr"))
+		assert.Equal(t, tcs2[String("num")], Number(1337))
+		assert.Equal(t, tcs2[String("method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.Method))
+		assert.Equal(t, tcs2[String("ptrMethod")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.PtrMethod))
 
 		assert.Equal(t, Nil{}, convert((*testConvertStruct1)(nil)))
 	})
@@ -63,19 +63,19 @@ func TestConvert(t *testing.T) {
 		tcs1s := testConvertInterfaceEmpty(testConvertStruct1{Str: "TestStr", Num: 1337})
 		tcs1 := convert(tcs1s).(*Map).Items
 
-		assert.Equal(t, tcs1[String("Str")], String("TestStr"))
-		assert.Equal(t, tcs1[String("Num")], Number(1337))
-		assert.Equal(t, tcs1[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.(testConvertStruct1).Method))
-		assert.NotContains(t, tcs1, String("PtrMethod"))
+		assert.Equal(t, tcs1[String("str")], String("TestStr"))
+		assert.Equal(t, tcs1[String("num")], Number(1337))
+		assert.Equal(t, tcs1[String("method")].(*Func).fnc.Type(), reflect.TypeOf(tcs1s.(testConvertStruct1).Method))
+		assert.NotContains(t, tcs1, String("ptrMethod"))
 
 		// interface on struct
 		tcs2s := testConvertInterface1(testConvertStruct1{Str: "TestStr", Num: 1337})
 		tcs2 := convert(tcs2s).(*Map).Items
 
-		assert.Equal(t, tcs2[String("Str")], String("TestStr"))
-		assert.Equal(t, tcs2[String("Num")], Number(1337))
-		assert.Equal(t, tcs2[String("Method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.(testConvertStruct1).Method))
-		assert.NotContains(t, tcs2, String("PtrMethod"))
+		assert.Equal(t, tcs2[String("str")], String("TestStr"))
+		assert.Equal(t, tcs2[String("num")], Number(1337))
+		assert.Equal(t, tcs2[String("method")].(*Func).fnc.Type(), reflect.TypeOf(tcs2s.(testConvertStruct1).Method))
+		assert.NotContains(t, tcs2, String("ptrMethod"))
 	})
 
 	t.Run("Primitive types", func(t *testing.T) {
@@ -136,7 +136,7 @@ func TestConvert(t *testing.T) {
 			{testfuncs[2], &Func{fnc: reflect.ValueOf(testfuncs[2])}},
 
 			// Structs
-			{teststructs[0], &Map{Items: map[Object]Object{String("Foo"): String("foofoo"), String("Bar"): String("barbar")}, o: teststructs[0]}},
+			{teststructs[0], &Map{Items: map[Object]Object{String("foo"): String("foofoo"), String("bar"): String("barbar")}, o: teststructs[0]}},
 		}
 
 		for _, e := range expected {

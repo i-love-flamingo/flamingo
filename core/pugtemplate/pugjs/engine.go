@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -152,9 +151,16 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 	return result, nil
 }
 
+var renderChan = make(chan struct{}, 5)
+
 // Render via html/pug_template
 func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) (io.Reader, error) {
 	defer ctx.Profile("render", templateName)()
+
+	renderChan <- struct{}{}
+	defer func() {
+		<-renderChan
+	}()
 
 	p := strings.Split(templateName, "/")
 	for i, v := range p {
@@ -203,7 +209,7 @@ func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) 
 
 	// force GC to lower risk of runtime bugs in reflect.Value
 	// should be fixed in go1.9.2
-	runtime.GC()
+	//runtime.GC()
 	err = templateInstance.ExecuteTemplate(result, templateName, convert(data))
 	if err != nil {
 		errstr := err.Error() + "\n"

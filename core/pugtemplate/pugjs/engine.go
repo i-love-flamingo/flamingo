@@ -157,8 +157,10 @@ var renderChan = make(chan struct{}, 5)
 func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) (io.Reader, error) {
 	defer ctx.Profile("render", templateName)()
 
+	//block if buffered channel size is reached
 	renderChan <- struct{}{}
 	defer func() {
+		//release one entry from channel (will release one block)
 		<-renderChan
 	}()
 

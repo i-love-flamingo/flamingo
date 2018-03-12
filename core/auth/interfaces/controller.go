@@ -16,26 +16,43 @@ import (
 type (
 	// LoginController handles the login redirect
 	LoginController struct {
-		responder.RedirectAware `inject:""`
-		AuthManager             *application.AuthManager `inject:""`
+		responder.RedirectAware              `inject:""`
+		AuthManager *application.AuthManager `inject:""`
 	}
 
 	// LogoutController handles the logout
 	LogoutController struct {
-		responder.RedirectAware `inject:""`
-		AuthManager             *application.AuthManager    `inject:""`
-		EventPublisher          *application.EventPublisher `inject:""`
+		responder.RedirectAware                    `inject:""`
+		AuthManager    *application.AuthManager    `inject:""`
+		EventPublisher *application.EventPublisher `inject:""`
+		LogoutRedirect LogoutRedirectAware         `inject:",optional"`
 	}
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
-		responder.RedirectAware `inject:""`
-		responder.ErrorAware    `inject:""`
-		AuthManager             *application.AuthManager    `inject:""`
-		Logger                  flamingo.Logger             `inject:""`
-		EventPublisher          *application.EventPublisher `inject:""`
+		responder.RedirectAware                    `inject:""`
+		responder.ErrorAware                       `inject:""`
+		AuthManager    *application.AuthManager    `inject:""`
+		Logger         flamingo.Logger             `inject:""`
+		EventPublisher *application.EventPublisher `inject:""`
+	}
+
+	DefaultLogoutRedirect struct {
+		AuthManager *application.AuthManager `inject:""`
+	}
+
+	LogoutRedirectAware interface {
+		GetRedirectUrl(c web.Context, u *url.URL) string
 	}
 )
+
+// Build default redirect URL for logout
+func (d *DefaultLogoutRedirect) GetRedirectUrl(c web.Context, u *url.URL) string {
+	query := url.Values{}
+	query.Set("redirect_uri", d.AuthManager.MyHost)
+	u.RawQuery = query.Encode()
+	return u.String()
+}
 
 // Get handler for logins (redirect)
 func (l *LoginController) Get(c web.Context) web.Response {
@@ -53,24 +70,23 @@ func (l *LoginController) Get(c web.Context) web.Response {
 
 // Get handler for logout
 func (l *LogoutController) Get(c web.Context) web.Response {
-	delete(c.Session().Values, application.KeyAuthstate)
-	delete(c.Session().Values, application.KeyToken)
-	delete(c.Session().Values, application.KeyRawIDToken)
-
 	var claims struct {
 		EndSessionEndpoint string `json:"end_session_endpoint"`
 	}
 
 	l.AuthManager.OpenIDProvider().Claims(&claims)
-	endurl, _ := url.Parse(claims.EndSessionEndpoint)
-	query := url.Values{}
-	query.Set("redirect_uri", l.AuthManager.MyHost)
-	endurl.RawQuery = query.Encode()
+	endUrl, _ := url.Parse(claims.EndSessionEndpoint)
+
+	redirectUrl := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
+
+	delete(c.Session().Values, application.KeyAuthstate)
+	delete(c.Session().Values, application.KeyToken)
+	delete(c.Session().Values, application.KeyRawIDToken)
 
 	c.Session().AddFlash("successful logged out", "warning")
 	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{})
 
-	return l.RedirectURL(endurl.String())
+	return l.RedirectURL(redirectUrl)
 }
 
 // Get handler for callbacks

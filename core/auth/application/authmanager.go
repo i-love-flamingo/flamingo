@@ -127,29 +127,41 @@ func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error
 
 // IDToken retrieves and validates the ID Token from the session
 func (authmanager *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
+	token, _, err := authmanager.getIDToken(c)
+	return token, err
+}
+
+// Get RAW IDToken from session
+func (authmanager *AuthManager) GetRawIDToken(c web.Context) (string, error) {
+	_, raw, err := authmanager.getIDToken(c)
+	return raw, err
+}
+
+// IDToken retrieves and validates the ID Token from the session
+func (authmanager *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
 	if c.Session() == nil {
-		return nil, errors.New("no session configured")
+		return nil, "", errors.New("no session configured")
 	}
 
 	if token, ok := c.Session().Values[KeyRawIDToken]; ok {
 		idtoken, err := authmanager.Verifier().Verify(c, token.(string))
 		if err == nil {
-			return idtoken, nil
+			return idtoken, token.(string), nil
 		}
 	}
 
-	token, raw, err := authmanager.getIDToken(c)
+	token, raw, err := authmanager.getNewIdToken(c)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	c.Session().Values[KeyRawIDToken] = raw
 
-	return token, nil
+	return token, raw, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (authmanager *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
+func (authmanager *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, string, error) {
 	tokenSource, err := authmanager.TokenSource(c)
 	if err != nil {
 		return nil, "", errors.WithStack(err)

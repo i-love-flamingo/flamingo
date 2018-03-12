@@ -23,6 +23,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	gob.Register(&oidc.IDToken{})
 
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
+	injector.Bind((*interfaces.LogoutRedirectAware)(nil)).To(interfaces.DefaultLogoutRedirect{})
 
 	m.RouterRegistry.Route("/auth/login", `auth.login(redirecturl?="")`)
 	m.RouterRegistry.Handle("auth.login", new(interfaces.LoginController))

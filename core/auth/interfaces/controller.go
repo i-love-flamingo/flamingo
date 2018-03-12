@@ -23,6 +23,7 @@ type (
 	// LogoutController handles the logout
 	LogoutController struct {
 		responder.RedirectAware                    `inject:""`
+		Logger         flamingo.Logger             `inject:""`
 		AuthManager    *application.AuthManager    `inject:""`
 		EventPublisher *application.EventPublisher `inject:""`
 		LogoutRedirect LogoutRedirectAware         `inject:",optional"`
@@ -74,14 +75,18 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 		EndSessionEndpoint string `json:"end_session_endpoint"`
 	}
 
-	l.AuthManager.OpenIDProvider().Claims(&claims)
-	endUrl, _ := url.Parse(claims.EndSessionEndpoint)
-
-	redirectUrl := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
-
 	delete(c.Session().Values, application.KeyAuthstate)
 	delete(c.Session().Values, application.KeyToken)
 	delete(c.Session().Values, application.KeyRawIDToken)
+
+	l.AuthManager.OpenIDProvider().Claims(&claims)
+	endUrl, parseError := url.Parse(claims.EndSessionEndpoint)
+	if parseError != nil{
+		l.Logger.Errorf("Logout done local only. Could not parse end_session_endpoint claim to logout from IDP: %v", parseError.Error())
+		return l.RedirectURL(l.AuthManager.MyHost)
+	}
+
+	redirectUrl := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
 
 	c.Session().AddFlash("successful logged out", "warning")
 	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{})

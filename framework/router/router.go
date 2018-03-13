@@ -144,6 +144,23 @@ func (router *Router) SetBase(u *url.URL) {
 	router.base = u
 }
 
+// same as URL below, but checks if the url is possible and returns an error
+func (router *Router) TryURL(name string, params map[string]string) (u *url.URL, err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			log.Println(p)
+			if perr, ok := p.(error); ok {
+				err = perr
+			} else {
+				err = fmt.Errorf("%v", p)
+			}
+		}
+	}()
+
+	u = router.URL(name, params)
+	return
+}
+
 // URL helps resolving URL's by it's name.
 func (router *Router) URL(name string, params map[string]string) *url.URL {
 	var resultURL = new(url.URL)

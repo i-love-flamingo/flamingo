@@ -43,16 +43,16 @@ type (
 	}
 
 	LogoutRedirectAware interface {
-		GetRedirectUrl(c web.Context, u *url.URL) string
+		GetRedirectUrl(c web.Context, u *url.URL) (string, error)
 	}
 )
 
 // Build default redirect URL for logout
-func (d *DefaultLogoutRedirect) GetRedirectUrl(c web.Context, u *url.URL) string {
+func (d *DefaultLogoutRedirect) GetRedirectUrl(c web.Context, u *url.URL) (string, error) {
 	query := url.Values{}
 	query.Set("redirect_uri", d.AuthManager.MyHost)
 	u.RawQuery = query.Encode()
-	return u.String()
+	return u.String(), nil
 }
 
 // Get handler for logins (redirect)
@@ -82,11 +82,15 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	l.AuthManager.OpenIDProvider().Claims(&claims)
 	endUrl, parseError := url.Parse(claims.EndSessionEndpoint)
 	if parseError != nil{
-		l.Logger.Errorf("Logout done local only. Could not parse end_session_endpoint claim to logout from IDP: %v", parseError.Error())
+		l.Logger.Errorf("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP: %v", parseError.Error())
 		return l.RedirectURL(l.AuthManager.MyHost)
 	}
 
-	redirectUrl := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
+	redirectUrl, redirectUrlError := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
+	if redirectUrlError != nil{
+		l.Logger.Errorf("Logout locally only. Could not fetch redirect URL for logout: %v", redirectUrlError.Error())
+		return l.RedirectURL(l.AuthManager.MyHost)
+	}
 
 	c.Session().AddFlash("successful logged out", "warning")
 	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{})

@@ -442,7 +442,8 @@ func (s String) Member(field string) Object {
 }
 
 // CharAt function
-func (s String) CharAt(pos int) string {
+func (s String) CharAt(nPos Number) string {
+	pos := int(nPos)
 	if pos >= len(s) {
 		return ""
 	}

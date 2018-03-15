@@ -43,8 +43,8 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 	}
 
 	return &loggedResponse{
-		webResponse,
-		func() {
+		Response: webResponse,
+		logCallback: func() {
 			duration := time.Since(start)
 
 			var cp func(msg interface{}, styles ...string) string
@@ -78,14 +78,27 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 				sizeStr = strconv.Itoa(webResponse.GetContentLength()) + "b"
 			}
 
-			r.Logger.Printf(
-				cp("%03d | %-8s | % 15s | % 7s | %s%s"),
-				webResponse.GetStatus(),
-				ctx.Request().Method,
-				duration,
-				sizeStr,
-				ctx.Request().RequestURI,
-				extra,
+			l := r.Logger.
+				WithContext(ctx).
+				WithFields(
+					map[string]interface{}{
+						flamingo.LogKeyAccesslog:    1,
+						flamingo.LogKeyResponseCode: webResponse.GetStatus(),
+						flamingo.LogKeyResponseTime: duration,
+					},
+				)
+			defer l.Flush()
+
+			l.Info(
+				fmt.Sprintf(
+					cp("%03d | %-8s | % 15s | % 7s | %s%s"),
+					webResponse.GetStatus(),
+					ctx.Request().Method,
+					duration,
+					sizeStr,
+					ctx.Request().RequestURI,
+					extra,
+				),
 			)
 		},
 	}

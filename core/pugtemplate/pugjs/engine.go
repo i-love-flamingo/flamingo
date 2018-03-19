@@ -151,7 +151,7 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 	return result, nil
 }
 
-var renderChan = make(chan struct{}, 5)
+var renderChan = make(chan struct{}, 8)
 
 // Render via html/pug_template
 func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) (io.Reader, error) {

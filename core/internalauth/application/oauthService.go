@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -30,4 +31,14 @@ func (os *OauthService) GetOauthToken(ctx context.Context, config *clientcredent
 	}
 
 	return token, nil
+}
+
+func (os *OauthService) GetClaimsFromToken(tokenString string) jwt.MapClaims {
+	claims := jwt.MapClaims{}
+
+	jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte("f9f812f1-f020-4c5c-a5ab-20fcfe628bf0"), nil
+	})
+
+	return claims
 }

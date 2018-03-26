@@ -19,7 +19,7 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 		IsSubmitted: true,
 	}
 
-	if urlValues.Get("isSubmitted") == "false" || ctx.Request().Method != "POST" {
+	if urlValues.Get("novalidate") == "true" || ctx.Request().Method != "POST" {
 		form.IsSubmitted = false
 		form.Data, err = parseFormData(urlValues, service, ctx)
 		return form, err

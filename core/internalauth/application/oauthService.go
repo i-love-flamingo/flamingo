@@ -15,6 +15,7 @@ type (
 	}
 )
 
+// GetConfig returns an oauth config object
 func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, GrantType string) clientcredentials.Config {
 	return clientcredentials.Config{
 		ClientID: ClientID,
@@ -24,6 +25,7 @@ func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, Cli
 	}
 }
 
+// GetOauthToken wraps the oauth2 call to retrieve a token
 func (os *OauthService) GetOauthToken(ctx context.Context, config *clientcredentials.Config) (*oauth2.Token, error) {
 	token, err:= config.Token(ctx)
 	if err != nil {
@@ -33,6 +35,7 @@ func (os *OauthService) GetOauthToken(ctx context.Context, config *clientcredent
 	return token, nil
 }
 
+// GetClaimsFromToken is a "fix" for the oauth2 libs inability to decode extra data from the token
 func (os *OauthService) GetClaimsFromToken(tokenString string) jwt.MapClaims {
 	claims := jwt.MapClaims{}
 

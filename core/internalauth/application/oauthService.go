@@ -37,7 +37,7 @@ func (os *OauthService) GetClaimsFromToken(tokenString string) jwt.MapClaims {
 	claims := jwt.MapClaims{}
 
 	jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("f9f812f1-f020-4c5c-a5ab-20fcfe628bf0"), nil
+		return []byte(""), nil
 	})
 
 	return claims

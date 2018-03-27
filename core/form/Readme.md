@@ -7,7 +7,7 @@ This package provides helper to use forms in your interfaces.
 * Add your Data Representation of your form to your package ("/interfaces/controller/form")
 
   Example *(Example contains already annotations for the suggested libs - see below)*
-  ```
+```go
   package form
   
   type (
@@ -27,9 +27,7 @@ This package provides helper to use forms in your interfaces.
       Email        string `form:"email" validate:"required" conform:"name"`
     }
   )
-  
-  
-  ```
+```
 
 * Write an implementation of the interface domain.FormService.
   This interface describes two methods:
@@ -45,7 +43,7 @@ This package provides helper to use forms in your interfaces.
       This "form" package contains a service func "ValidationErrorsToValidationInfo" to use the results of this package.
 
   Example:
-    ```
+```go
   import (
     "net/url"
   
@@ -82,11 +80,11 @@ This package provides helper to use forms in your interfaces.
       return nil, errors.New("Cannot convert to AddressFormData")
     }
   }
-    ```
+```
     
   * Use the form in your controller Action:
   
-  ```  
+```go
     form, e := formApplicationService.ProcessFormRequest(ctx, new(form.AddressFormService))
     // return on parse error (template need to handle error display)
     if e != nil {
@@ -100,4 +98,4 @@ This package provides helper to use forms in your interfaces.
         return cc.Redirect("checkout.success", nil).With("checkout.success.orderid", "orderid")
       }      
     }
-  ``` 
+``` 

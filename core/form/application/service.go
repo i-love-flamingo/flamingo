@@ -14,19 +14,17 @@ import (
 
 //ProcessFormRequest: Parses and Validates a Request to a Form - with the Help of the passed FormService
 func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.Form, error) {
-	var err error
-	var urlValues url.Values
-	form := domain.Form{}
+	urlValues, err := getPostValues(ctx)
+	form := domain.Form{
+		IsSubmitted: true,
+	}
 
-	if ctx.Request().Method != "POST" {
+	if urlValues.Get("novalidate") == "true" || ctx.Request().Method != "POST" {
 		form.IsSubmitted = false
 		form.Data, err = parseFormData(urlValues, service, ctx)
 		return form, err
 	}
 
-	form.IsSubmitted = true
-
-	urlValues, err = getPostValues(ctx)
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err

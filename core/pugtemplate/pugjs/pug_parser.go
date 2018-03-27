@@ -221,6 +221,13 @@ func (p *renderState) buildNode(t *Token) (res Node) {
 
 		return each
 
+	case "While":
+		while := new(While)
+		while.Test = JavaScriptExpression(t.Test)
+		while.Block = Block{Nodes: p.build(t.Block)}
+
+		return while
+
 	case "Doctype":
 		doctype := new(Doctype)
 		doctype.Val = t.Val

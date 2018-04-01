@@ -43,18 +43,18 @@ func init() {
 }
 
 //TryServeHTTP - implementation of OptionalHandler (from prefixrouter package)
-func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) error {
+func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bool, error) {
 	contextPath := req.RequestURI
 	r.Logger.Debugf("TryServeHTTP called with %v", contextPath)
 	status, location, err := r.processRedirects(contextPath)
 	if err != nil {
-		return errors.New("no redirect found")
+		return true, errors.New("no redirect found")
 	}
 	if location != "" {
 		rw.Header().Set("Location", location)
 	}
 	rw.WriteHeader(status)
-	return nil
+	return false, nil
 }
 
 //Filter - implementation of Filter interface (from router package)

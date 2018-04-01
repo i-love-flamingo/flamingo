@@ -21,7 +21,7 @@ type (
 	}
 
 	OptionalHandler interface {
-		TryServeHTTP(rw http.ResponseWriter, req *http.Request) error
+		TryServeHTTP(rw http.ResponseWriter, req *http.Request) (proceed bool, err error)
 	}
 )
 
@@ -57,8 +57,8 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	//process registered primaryHandlers - and if they are sucessfull exist
 	for _, handler := range fr.primaryHandlers {
-		err := handler.TryServeHTTP(w, req)
-		if err == nil {
+		proceed, _ := handler.TryServeHTTP(w, req)
+		if !proceed {
 			return
 		}
 	}
@@ -94,8 +94,8 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	//process registered fallbackHandlers - and if they are sucessfull exist
 	for _, handler := range fr.fallbackHandlers {
-		err := handler.TryServeHTTP(w, req)
-		if err == nil {
+		proceed, _ := handler.TryServeHTTP(w, req)
+		if !proceed {
 			return
 		}
 	}

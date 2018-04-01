@@ -27,7 +27,7 @@ var _ = Describe("FrontRouter", func() {
 		w.Write([]byte("Host1, Prefix 1"))
 	}))
 
-	fr.Default(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fr.SetFinalFallbackHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Default"))
 	}))
 

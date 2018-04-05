@@ -18,6 +18,12 @@
   revision = "04cdfd42973bb9c8589fd6a731800cf222fde1a9"
 
 [[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/etgryphon/stringUp"
   packages = ["."]
@@ -319,6 +325,7 @@
   name = "golang.org/x/oauth2"
   packages = [
     ".",
+    "clientcredentials",
     "internal"
   ]
   revision = "626d87b99350690f6eb2b92c2f717221cdaf6f9a"
@@ -400,6 +407,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2c3e756aaadad856e46d40398d29716fbd341af533fe64c01f7a9591f8c20d2a"
+  inputs-digest = "4e486a6fda8604441458d501172e171c0d6b1aa186d7112d31c1b39eceb52bb2"
   solver-name = "gps-cdcl"
   solver-version = 1

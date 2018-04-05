@@ -409,6 +409,17 @@ func (s *state) walkRange(dot reflect.Value, r *parse.RangeNode) {
 			break
 		}
 		return
+	case reflect.Bool:
+		i := 0
+		for val.Bool() {
+			oneIteration(reflect.ValueOf(i), val)
+			val = s.evalPipeline(dot, r.Pipe)
+			i++
+			if i > 10000 {
+				s.errorf("max iteration of 10000 in while loop")
+			}
+		}
+		return
 	case reflect.Invalid:
 		break // An invalid value is likely a nil map, etc. and acts like an empty map.
 	default:

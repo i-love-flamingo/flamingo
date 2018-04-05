@@ -150,6 +150,13 @@ type (
 		Key JavaScriptIdentifier
 	}
 
+	// While loop
+	While struct {
+		BlockNode
+
+		Test JavaScriptExpression
+	}
+
 	// Mixin
 
 	// Mixin can be defined or called

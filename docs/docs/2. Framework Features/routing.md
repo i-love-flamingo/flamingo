@@ -8,7 +8,7 @@ The baseurl is matched against the configured contexts and determines the contex
 For the part of the url behind the baseurl (=path) a standard routing concept is applied, where at the end the URL is matched to a controller.
 
 * a route is assigned to a handle. (A handle is a string that represents a unique name). A handle can be something like "cms.page.view"
-* for a handle a Controller can be registered. The indirection through handles allows us to regsiter different controllers for certain handlers in different contexts.
+* for a handle a Controller can be registered. The indirection through handles allows us to register different controllers for certain handlers in different contexts.
 
 Routes can be configured the following ways:
 * Via `router.Registry` in `module.go`
@@ -181,3 +181,22 @@ This will result in the following accessable routes:
 - `/special?name=foo`: Shows `cms.page.view(name="foo")` (optional argument retrieved from GET)
 
 The `/` route is now also available as a controller named `home`, which is just an alias for calling the `flamingo.redirect` controller with the parameters `to="cms.page.view"` and `name="home"`.
+
+# Router filter
+
+Router filters can be used as middleware in the dispatching process. The filters are executed before the controller action.
+A router filter can be registered via dingo injection in `module.go`'s Configure function:
+
+```go
+func (m *Module) Configure(injector *dingo.Injector) {
+	
+	injector.BindMulti((*router.Filter)(nil)).To(myFilter{})
+	
+}
+```
+
+A Filter must implement the `router.Filter` interface by providing a Filter function: `Filter(ctx web.Context, w http.ResponseWriter, fc *FilterChain) web.Response`.
+
+The filters are handled in order of `dingo.Modules` as defined in `flamingo.App()` call.
+You will have to return `chain.Next(ctx, w)` in your `Filter` function to call the next filter. If you return something else,
+the chain will be aborted and the actual controller action will not be executed.

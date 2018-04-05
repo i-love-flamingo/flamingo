@@ -25,7 +25,7 @@ func init() {
 	csvContent, _ = readCSV()
 }
 
-func GetRedirectData() ([]CsvContent) {
+func GetRedirectData() []CsvContent {
 	return csvContent
 }
 
@@ -41,7 +41,10 @@ func readCSV() ([]CsvContent, error) {
 	var CsvContents []CsvContent
 	// Create a new reader.
 	r := csv.NewReader(bufio.NewReader(f))
+	rowCount := 0
+	isFirstRow := true
 	for {
+		rowCount++
 		record, err := r.Read()
 
 		// Stop at EOF.
@@ -49,8 +52,20 @@ func readCSV() ([]CsvContent, error) {
 			break
 		}
 
-		if isAlpha(record[0]) && isAlpha(record[1]) && isAlpha(record[2]) {
-			// Header Row
+		if isFirstRow {
+			isFirstRow = false
+			continue
+		}
+
+		if len(record) != 3 {
+			// invalid row
+			log.Printf("Redirect load - Error - Invalid Row (wrong amount) %v in Row: %v", record, rowCount)
+			continue
+		}
+
+		if isAlpha(record[0]) {
+			// invalid row
+			log.Printf("Redirect load - Error - Invalid Row (no int status) %v in Row: %v", record, rowCount)
 			continue
 		}
 

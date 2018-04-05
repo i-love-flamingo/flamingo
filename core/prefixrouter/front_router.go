@@ -10,8 +10,18 @@ import (
 type (
 	// FrontRouter is a http.handler which serves multiple sites based on the host/path prefix
 	FrontRouter struct {
-		router   map[string]http.Handler
-		fallback http.Handler
+		//primaryHandlers a list of handlers used before processing
+		primaryHandlers []OptionalHandler
+		//router registered to serve the request based on the prefix
+		router map[string]http.Handler
+		//fallbackHandlers is used if no router is matching
+		fallbackHandlers []OptionalHandler
+		//finalFallbackHandler is used as final fallback handler - which is called if no other handler can process
+		finalFallbackHandler http.Handler
+	}
+
+	OptionalHandler interface {
+		TryServeHTTP(rw http.ResponseWriter, req *http.Request) (proceed bool, err error)
 	}
 )
 
@@ -27,13 +37,32 @@ func (fr *FrontRouter) Add(prefix string, handler http.Handler) {
 	fr.router[prefix] = handler
 }
 
-// Default sets Fallback for undefined Handler
-func (fr *FrontRouter) Default(handler http.Handler) {
-	fr.fallback = handler
+// SetFinalFallbackHandler sets Fallback for undefined Handler
+func (fr *FrontRouter) SetFinalFallbackHandler(handler http.Handler) {
+	fr.finalFallbackHandler = handler
+}
+
+// SetFallbackHandlers sets list of optional fallback Handlers
+func (fr *FrontRouter) SetFallbackHandlers(handlers []OptionalHandler) {
+	fr.fallbackHandlers = handlers
+}
+
+// SetPrimarykHandlers sets list of optional fallback Handlers
+func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
+	fr.primaryHandlers = handlers
 }
 
 // ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+
+	//process registered primaryHandlers - and if they are sucessfull exist
+	for _, handler := range fr.primaryHandlers {
+		proceed, _ := handler.TryServeHTTP(w, req)
+		if !proceed {
+			return
+		}
+	}
+
 	host := req.Host
 	if strings.Index(host, ":") > -1 {
 		host = strings.Split(host, ":")[0]
@@ -63,8 +92,17 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	if fr.fallback != nil {
-		fr.fallback.ServeHTTP(w, req)
+	//process registered fallbackHandlers - and if they are sucessfull exist
+	for _, handler := range fr.fallbackHandlers {
+		proceed, _ := handler.TryServeHTTP(w, req)
+		if !proceed {
+			return
+		}
+	}
+
+	//fallback to final handler if given
+	if fr.finalFallbackHandler != nil {
+		fr.finalFallbackHandler.ServeHTTP(w, req)
 	} else {
 		w.WriteHeader(404)
 	}

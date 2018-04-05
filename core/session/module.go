@@ -16,6 +16,7 @@ type Module struct {
 	Backend  string `inject:"config:session.backend"`
 	Secret   string `inject:"config:session.secret"`
 	FileName string `inject:"config:session.file"`
+	Secure   bool   `inject:"config:session.cookie.secure"`
 	// float64 is used due to the injection as config from json - int is not possible on this
 	StoreLength          float64 `inject:"config:session.store.length"`
 	MaxAge               float64 `inject:"config:session.max.age"`
@@ -33,17 +34,20 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		}
 		sessionStore.SetMaxAge(int(m.MaxAge))
 		sessionStore.SetMaxLength(int(m.StoreLength))
+		sessionStore.Options.Secure = bool(m.Secure)
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	case "file":
 		os.Mkdir(m.FileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.FileName, []byte(m.Secret))
 		sessionStore.MaxLength(int(m.StoreLength))
 		sessionStore.MaxAge(int(m.MaxAge))
+		sessionStore.Options.Secure = bool(m.Secure)
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	default: //memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.Secret))
 		sessionStore.MaxLength(int(m.StoreLength))
 		sessionStore.MaxAge(int(m.MaxAge))
+		sessionStore.Options.Secure = bool(m.Secure)
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	}
 }
@@ -56,6 +60,7 @@ func (m *Module) DefaultConfig() config.Map {
 		"session.file":                   "/sessions",
 		"session.store.length":           float64(1024 * 1024),
 		"session.max.age":                float64(60 * 60 * 24 * 30),
+		"session.cookie.secure":          true,
 		"session.redis.host":             "redis",
 		"session.redis.idle.connections": float64(10),
 	}

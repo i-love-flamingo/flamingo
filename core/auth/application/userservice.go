@@ -11,6 +11,11 @@ type (
 	}
 )
 
+type UserServiceInterface interface {
+	GetUser(web.Context) *domain.User
+	IsLoggedIn(web.Context) bool
+}
+
 func (us *UserService) GetUser(c web.Context) *domain.User {
 	id, err := us.AuthManager.IDToken(c)
 	if err != nil {

@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"net/url"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/oauth2"
@@ -20,7 +21,7 @@ func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, Cli
 	return clientcredentials.Config{
 		ClientID: ClientID,
 		ClientSecret: ClientSecret,
-		TokenURL: os.BaseUrl + TokenEndpointPath,
+		TokenURL: strings.TrimRight(os.BaseUrl, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
 		EndpointParams: url.Values{},
 	}
 }

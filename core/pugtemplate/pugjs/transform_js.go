@@ -329,8 +329,11 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 			if strings.Index(n, ".") > 0 {
 				ns := strings.Split(n, ".")
 				n = strings.Join(ns[:len(ns)-1], ".")
+				if !strings.HasPrefix(n, "(__pug__index ") {
+					n = `$` + n
+				}
 				r := ns[len(ns)-1]
-				result = fmt.Sprintf(`($%s.__assign "%s" %s)`,
+				result = fmt.Sprintf(`(%s.__assign "%s" %s)`,
 					n,
 					r,
 					right)

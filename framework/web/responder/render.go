@@ -47,7 +47,9 @@ func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data inter
 			panic(err)
 		}
 		response = &web.ContentResponse{
-			Status:      statusCode,
+			BasicResponse: web.BasicResponse{
+				Status: statusCode,
+			},
 			Body:        body,
 			ContentType: "text/html; charset=utf-8",
 		}
@@ -57,7 +59,9 @@ func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data inter
 			panic(err)
 		}
 		response = &web.ContentResponse{
-			Status:      statusCode,
+			BasicResponse: web.BasicResponse{
+				Status: statusCode,
+			},
 			Body:        bytes.NewReader(body),
 			ContentType: "application/json; charset=utf-8",
 		}

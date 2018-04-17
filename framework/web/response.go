@@ -35,7 +35,6 @@ type (
 	// RedirectResponse redirect
 	RedirectResponse struct {
 		BasicResponse
-		Status   int
 		Location string
 		data     map[string]interface{}
 	}
@@ -43,7 +42,6 @@ type (
 	// ContentResponse contains a response with body
 	ContentResponse struct {
 		BasicResponse
-		Status      int
 		Body        io.Reader
 		ContentType string
 	}
@@ -51,8 +49,7 @@ type (
 	// JSONResponse returns Data encoded as JSON
 	JSONResponse struct {
 		BasicResponse
-		Data   interface{}
-		Status int
+		Data interface{}
 	}
 
 	// ErrorResponse wraps a response with an error

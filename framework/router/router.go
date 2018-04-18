@@ -310,16 +310,16 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		// fire response event
 		router.eventrouter.Dispatch(ctx, &OnResponseEvent{controller, response, req, rw, ctx})
 
-		if router.Sessions != nil {
-			if err := router.Sessions.Save(req, rw, ctx.Session()); err != nil {
-				log.Println(err)
-			}
-		}
-
 		return response
 	}))
 
 	response := chain.Next(ctx, rw)
+
+	if router.Sessions != nil {
+		if err := router.Sessions.Save(req, rw, ctx.Session()); err != nil {
+			log.Println(err)
+		}
+	}
 
 	if response != nil {
 		response.Apply(ctx, rw)

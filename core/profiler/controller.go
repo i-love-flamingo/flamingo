@@ -274,15 +274,19 @@ func (dc *profileController) Get(ctx web.Context) web.Response {
 	if !ok {
 		return &web.ContentResponse{
 			ContentType: "text/html; charset=utf-8",
-			Status:      http.StatusNotFound,
+			BasicResponse: web.BasicResponse{
+				Status: http.StatusNotFound,
+			},
 		}
 	}
 	t.ExecuteTemplate(body, "tpl", profile)
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
-		Status:      http.StatusOK,
-		Body:        body,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusOK,
+		},
+		Body: body,
 	}
 }
 
@@ -294,7 +298,9 @@ func (dc *profileController) Post(ctx web.Context) web.Response {
 	if !ok {
 		return &web.ContentResponse{
 			ContentType: "text/html; charset=utf-8",
-			Status:      http.StatusNotFound,
+			BasicResponse: web.BasicResponse{
+				Status: http.StatusNotFound,
+			},
 		}
 	}
 

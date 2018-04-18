@@ -30,7 +30,9 @@ func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) we
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
-		Status:   http.StatusFound,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusFound,
+		},
 		Location: u.String(),
 	}
 }
@@ -38,7 +40,9 @@ func (r *FlamingoRedirectAware) Redirect(name string, args map[string]string) we
 // RedirectURL returns a web.RedirectResponse with the proper URL
 func (r *FlamingoRedirectAware) RedirectURL(url string) web.Redirect {
 	return &web.RedirectResponse{
-		Status:   http.StatusFound,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusFound,
+		},
 		Location: url,
 	}
 }
@@ -48,7 +52,9 @@ func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]s
 	u := r.Router.URL(name, args)
 
 	return &web.RedirectResponse{
-		Status:   http.StatusMovedPermanently,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusMovedPermanently,
+		},
 		Location: u.String(),
 	}
 }
@@ -56,7 +62,9 @@ func (r *FlamingoRedirectAware) RedirectPermanent(name string, args map[string]s
 // RedirectPermanentURL returns a web.RedirectResponse with the proper URL
 func (r *FlamingoRedirectAware) RedirectPermanentURL(url string) web.Redirect {
 	return &web.RedirectResponse{
-		Status:   http.StatusMovedPermanently,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusMovedPermanently,
+		},
 		Location: url,
 	}
 }

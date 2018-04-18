@@ -53,7 +53,9 @@ func (dc *DebugController) Get(ctx web.Context) web.Response {
 
 	return &web.ContentResponse{
 		ContentType: "text/html; charset=utf-8",
-		Status:      http.StatusOK,
-		Body:        body,
+		BasicResponse: web.BasicResponse{
+			Status: http.StatusOK,
+		},
+		Body: body,
 	}
 }

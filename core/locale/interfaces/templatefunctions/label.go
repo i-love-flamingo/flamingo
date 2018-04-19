@@ -10,7 +10,7 @@ import (
 type (
 	// Label is exported as a template function
 	Label struct {
-		TranslationService *application.TranslationService `inject:""`
+		TranslationService application.TranslationServiceInterface `inject:""`
 	}
 )
 

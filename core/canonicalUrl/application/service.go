@@ -14,8 +14,11 @@ type (
 	}
 )
 
+func (s *Service) GetBaseUrl() string {
+	return strings.TrimRight(s.BaseUrl, "/")
+}
+
 // @todo: Add logic to add allowed parameters via controller
 func (s *Service) GetCanonicalUrlForCurrentRequest(ctx web.Context) string {
-	baseUrl := strings.TrimRight(s.BaseUrl, "/")
-	return baseUrl + s.Router.Base().Path + ctx.Request().URL.Path
+	return s.GetBaseUrl() + s.Router.Base().Path + ctx.Request().URL.Path
 }

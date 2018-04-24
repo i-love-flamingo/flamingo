@@ -42,10 +42,12 @@ type (
 
 func (vi *ValidationInfo) AddGeneralUnknownError(err error) {
 	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: "unknown_error", DefaultLabel: "An error occured!"})
+	vi.IsValid = false
 }
 
 func (vi *ValidationInfo) AddError(key string, defaultLabel string) {
 	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: key, DefaultLabel: defaultLabel})
+	vi.IsValid = false
 }
 
 func (vi *ValidationInfo) AddFieldError(fieldName string, key string, defaultLabel string) {
@@ -56,6 +58,7 @@ func (vi *ValidationInfo) AddFieldError(fieldName string, key string, defaultLab
 		vi.FieldErrors[fieldName] = make([]Error, 0)
 	}
 	vi.FieldErrors[fieldName] = append(vi.FieldErrors[fieldName], Error{MessageKey: key, DefaultLabel: defaultLabel})
+	vi.IsValid = false
 }
 
 func (f Form) IsValidAndSubmitted() bool {

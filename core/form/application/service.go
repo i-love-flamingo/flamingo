@@ -120,7 +120,7 @@ func getRelativeFieldNameFromValidationError(err validator.FieldError) string {
 func getPostValues(ctx web.Context) (url.Values, error) {
 	err := ctx.Request().ParseForm()
 	if err != nil {
-		log.Printf("customer.registercontroller: Parse Form Error %v", err)
+		log.Printf("form.application: Parse Form Error %v", err)
 		return ctx.Request().Form, errors.New("unkown_error")
 	}
 	return ctx.Request().Form, nil
@@ -129,7 +129,7 @@ func getPostValues(ctx web.Context) (url.Values, error) {
 func parseFormData(values url.Values, service domain.FormService, ctx web.Context) (interface{}, error) {
 	formData, err := service.ParseFormData(ctx, values)
 	if err != nil {
-		log.Printf("customer.registercontroller: ParseForm Error %v", err)
+		log.Printf("form.application: ParseForm Error %v", err)
 		return formData, errors.New("unkown_error")
 	}
 	return formData, nil

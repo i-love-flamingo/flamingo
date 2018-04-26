@@ -16,7 +16,8 @@ import (
 func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.Form, error) {
 	urlValues, err := getPostValues(ctx)
 	form := domain.Form{
-		IsSubmitted: true,
+		IsSubmitted:        true,
+		OriginalPostValues: urlValues,
 	}
 
 	if urlValues.Get("novalidate") == "true" || ctx.Request().Method != "POST" {

@@ -16,6 +16,8 @@ type (
 		IsSubmitted bool
 		//IsSuccess  - if IsValid && IsSubmitted && The planned Action was sucessfull (e.g. register user)
 		IsSuccess bool
+		//OriginalPostValues contain the original posted values
+		OriginalPostValues url.Values
 	}
 
 	ValidationInfo struct {
@@ -85,4 +87,15 @@ func (f Form) GetErrorsForField(name string) []Error {
 		return v
 	}
 	return nil
+}
+
+func (f Form) GetOriginalPostValue1(key string) string {
+	if f.OriginalPostValues == nil {
+		return ""
+	}
+	values := f.OriginalPostValues[key]
+	if len(values) > 0 {
+		return values[0]
+	}
+	return ""
 }

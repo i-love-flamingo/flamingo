@@ -39,6 +39,7 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 	} else {
 		if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
 			form.Data = defaultFormDataService.GetDefaultFormData(form.Data)
+			log.Printf("############ %v", form.Data)
 		}
 	}
 

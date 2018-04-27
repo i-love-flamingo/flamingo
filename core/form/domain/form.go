@@ -40,6 +40,11 @@ type (
 		//ValidateFormData is responsible to run validations on the Data, the returned error type can be a slice of errors. each error is converted to a validation Error
 		ValidateFormData(data interface{}) (ValidationInfo, error)
 	}
+	// GetDefaultFormData interface
+	GetDefaultFormData interface {
+		//GetDefaultFormData
+		GetDefaultFormData(parsedData interface{}) interface{}
+	}
 )
 
 func (vi *ValidationInfo) AddGeneralUnknownError(err error) {

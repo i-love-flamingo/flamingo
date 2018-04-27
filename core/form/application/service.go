@@ -14,31 +14,32 @@ import (
 
 //ProcessFormRequest: Parses and Validates a Request to a Form - with the Help of the passed FormService
 func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.Form, error) {
+	form := domain.Form{}
+
 	urlValues, err := getPostValues(ctx)
-	form := domain.Form{
-		IsSubmitted:        true,
-		OriginalPostValues: urlValues,
-	}
-
-	if urlValues.Get("novalidate") == "true" || ctx.Request().Method != "POST" {
-		form.IsSubmitted = false
-		form.Data, err = parseFormData(urlValues, service, ctx)
-		return form, err
-	}
-
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
+	form.OriginalPostValues = urlValues
+
 	form.Data, err = parseFormData(urlValues, service, ctx)
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
 
-	form.ValidationInfo, err = service.ValidateFormData(form.Data)
-	if err != nil {
-		form.ValidationInfo = ValidationErrorsToValidationInfo(err)
+	//Run Validation only if form was submitted
+	if urlValues.Get("novalidate") != "true" && ctx.Request().Method == "POST" {
+		form.IsSubmitted = true
+		form.ValidationInfo, err = service.ValidateFormData(form.Data)
+		if err != nil {
+			form.ValidationInfo = ValidationErrorsToValidationInfo(err)
+		}
+	} else {
+		if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
+			form.Data = defaultFormDataService.GetDefaultFormData(form.Data)
+		}
 	}
 
 	return form, nil

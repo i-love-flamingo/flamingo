@@ -16,6 +16,8 @@ type (
 		IsSubmitted bool
 		//IsSuccess  - if IsValid && IsSubmitted && The planned Action was sucessfull (e.g. register user)
 		IsSuccess bool
+		//OriginalPostValues contain the original posted values
+		OriginalPostValues url.Values
 	}
 
 	ValidationInfo struct {
@@ -37,6 +39,11 @@ type (
 		ParseFormData(ctx web.Context, formValues url.Values) (interface{}, error)
 		//ValidateFormData is responsible to run validations on the Data, the returned error type can be a slice of errors. each error is converted to a validation Error
 		ValidateFormData(data interface{}) (ValidationInfo, error)
+	}
+	// GetDefaultFormData interface
+	GetDefaultFormData interface {
+		//GetDefaultFormData
+		GetDefaultFormData(parsedData interface{}) interface{}
 	}
 )
 
@@ -85,4 +92,15 @@ func (f Form) GetErrorsForField(name string) []Error {
 		return v
 	}
 	return nil
+}
+
+func (f Form) GetOriginalPostValue1(key string) string {
+	if f.OriginalPostValues == nil {
+		return ""
+	}
+	values := f.OriginalPostValues[key]
+	if len(values) > 0 {
+		return values[0]
+	}
+	return ""
 }

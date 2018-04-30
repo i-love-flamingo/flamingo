@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	"go.aoe.com/flamingo/framework/router"
@@ -16,7 +17,9 @@ import (
 type (
 	engine struct {
 		Glob              string                             `inject:"config:gotemplates.engine.glob"`
+		Debug             bool                               `inject:"config:debug.mode"`
 		TemplateFunctions *flamingotemplate.FunctionRegistry `inject:""`
+		templates         *template.Template
 	}
 
 	// urlFunc allows templates to access the routers `URL` helper method
@@ -35,12 +38,27 @@ type (
 )
 
 var (
-	_ flamingotemplate.Function        = new(urlFunc)
-	_ flamingotemplate.ContextFunction = new(getFunc)
-	_ flamingotemplate.ContextFunction = new(dataFunc)
+	_    flamingotemplate.Function        = new(urlFunc)
+	_    flamingotemplate.ContextFunction = new(getFunc)
+	_    flamingotemplate.ContextFunction = new(dataFunc)
+	lock                                  = &sync.Mutex{}
 )
 
 func (e *engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
+	lock.Lock()
+	if e.Debug || e.templates == nil {
+		e.templates = e.loadTemplates(context)
+	}
+	lock.Unlock()
+
+	defer context.Profile("template engine", "render template "+name)()
+	buf := &bytes.Buffer{}
+	err := e.templates.ExecuteTemplate(buf, name+".html", data)
+
+	return buf, err
+}
+
+func (e *engine) loadTemplates(context web.Context) *template.Template {
 	done := context.Profile("template engine", "load templates")
 
 	functionsMap := template.FuncMap{
@@ -66,11 +84,7 @@ func (e *engine) Render(context web.Context, name string, data interface{}) (io.
 
 	done()
 
-	defer context.Profile("template engine", "render template "+name)()
-	buf := &bytes.Buffer{}
-	err := tpl.ExecuteTemplate(buf, name+".html", data)
-
-	return buf, err
+	return tpl
 }
 
 // Name alias for use in template

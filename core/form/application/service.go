@@ -39,10 +39,18 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 	} else {
 		if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
 			form.Data = defaultFormDataService.GetDefaultFormData(form.Data)
-			log.Printf("############ %v", form.Data)
 		}
 	}
+	return form, nil
+}
 
+//GetUnsubmittedForm: Use this if you need an unsubmitted form
+func GetUnsubmittedForm(_ web.Context, service domain.FormService) (domain.Form, error) {
+	form := domain.Form{}
+
+	if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
+		form.Data = defaultFormDataService.GetDefaultFormData(form.Data)
+	}
 	return form, nil
 }
 

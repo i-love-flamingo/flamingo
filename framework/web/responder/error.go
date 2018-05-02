@@ -83,10 +83,10 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 	return web.ErrorResponse{Response: response, Error: error}
 }
 
-// ErrorGone returns a web.ContentResponse with status 410 and ContentType text/html
+// ErrorWithCode returns a web.ContentResponse with give status code and ContentType text/html
 func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, httpStatus int) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").Errorf("Error with code %v %v", httpStatus, error)
+	r.Logger.WithField("category", "error_aware").Error("Error with code ", httpStatus, error)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
@@ -109,7 +109,7 @@ func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, htt
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
 func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").Errorf("Error %v", error)
+	r.Logger.WithField("category", "error_aware").Error("Error ", error.Error())
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,

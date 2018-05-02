@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -14,12 +16,15 @@ import (
 	"go.aoe.com/flamingo/framework/web"
 )
 
+const pathSeparatorString = string(os.PathSeparator)
+
 type (
 	engine struct {
-		Glob              string                             `inject:"config:gotemplates.engine.glob"`
-		Debug             bool                               `inject:"config:debug.mode"`
-		TemplateFunctions *flamingotemplate.FunctionRegistry `inject:""`
-		templates         *template.Template
+		TemplatesBasePath  string                             `inject:"config:gotemplates.engine.templates.basepath"`
+		LayoutTemplatesDir string                             `inject:"config:gotemplates.engine.layout.dir"`
+		Debug              bool                               `inject:"config:debug.mode"`
+		TemplateFunctions  *flamingotemplate.FunctionRegistry `inject:""`
+		templates          map[string]*template.Template
 	}
 
 	// urlFunc allows templates to access the routers `URL` helper method
@@ -47,19 +52,21 @@ var (
 func (e *engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
 	lock.Lock()
 	if e.Debug || e.templates == nil {
-		e.templates = e.loadTemplates(context)
+		e.loadTemplates(context)
 	}
 	lock.Unlock()
 
 	defer context.Profile("template engine", "render template "+name)()
 	buf := &bytes.Buffer{}
-	err := e.templates.ExecuteTemplate(buf, name+".html", data)
+	err := e.templates[name+".html"].Execute(buf, data)
 
 	return buf, err
 }
 
-func (e *engine) loadTemplates(context web.Context) *template.Template {
+func (e *engine) loadTemplates(context web.Context) {
 	done := context.Profile("template engine", "load templates")
+
+	e.templates = make(map[string]*template.Template, 0)
 
 	functionsMap := template.FuncMap{
 		"Upper": strings.ToUpper,
@@ -80,11 +87,67 @@ func (e *engine) loadTemplates(context web.Context) *template.Template {
 		funcs[k] = f(context)
 	}
 
-	tpl := template.Must(template.New("").Funcs(functionsMap).Funcs(funcs).ParseGlob(e.Glob))
+	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, funcs))
+
+	err := e.parseSiteTemplateDirectory(layoutTemplate, e.TemplatesBasePath)
+	if err != nil {
+		panic(err)
+	}
 
 	done()
+}
 
-	return tpl
+// parses all layout templates in a template instance which is the base instance for all other templates
+func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs template.FuncMap) (*template.Template, error) {
+	tpl := template.New("").Funcs(functionsMap).Funcs(funcs)
+
+	if e.LayoutTemplatesDir == "" {
+		return tpl, nil
+	}
+
+	dir := e.TemplatesBasePath + pathSeparatorString + e.LayoutTemplatesDir
+	layoutFilesInfo, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	layoutFilesNames := make([]string, 0)
+	for _, file := range layoutFilesInfo {
+		if file.IsDir() {
+			continue
+		}
+		layoutFilesNames = append(layoutFilesNames, dir+pathSeparatorString+file.Name())
+	}
+
+	return tpl.ParseFiles(layoutFilesNames...)
+}
+
+// parses all templates from a given directory into a clone of the given layout template, so that all layouts are available
+func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, dir string) error {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, f := range files {
+		t := template.Must(layoutTemplate.Clone())
+		fullName := dir + pathSeparatorString + f.Name()
+		if f.IsDir() {
+			err = e.parseSiteTemplateDirectory(layoutTemplate, fullName)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		tContent, err := ioutil.ReadFile(fullName)
+		if err != nil {
+			return err
+		}
+
+		templateName := strings.TrimPrefix(fullName, e.TemplatesBasePath+pathSeparatorString)
+		e.templates[templateName] = template.Must(t.Parse(string(tContent)))
+	}
+
+	return nil
 }
 
 // Name alias for use in template

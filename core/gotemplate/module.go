@@ -20,6 +20,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for gotemplate module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"gotemplates.engine.glob": "templates/*",
+		"gotemplates.engine.templates.basepath": "templates",
+		"gotemplates.engine.layout.dir":         "",
 	}
 }

@@ -25,6 +25,7 @@ type (
 
 	// LogoutEvent
 	LogoutEvent struct {
+		Context web.Context
 	}
 
 	Auth struct {

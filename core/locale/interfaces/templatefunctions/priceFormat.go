@@ -12,8 +12,8 @@ import (
 type (
 	// PriceFormatFunc for formatting prices
 	PriceFormatFunc struct {
-		Config             config.Map                      `inject:"config:locale.accounting"`
-		TranslationService *application.TranslationService `inject:""`
+		Config             config.Map                              `inject:"config:locale.accounting"`
+		TranslationService application.TranslationServiceInterface `inject:""`
 	}
 )
 

@@ -1,6 +1,7 @@
 package locale
 
 import (
+	"go.aoe.com/flamingo/core/locale/application"
 	"go.aoe.com/flamingo/core/locale/interfaces/templatefunctions"
 	"go.aoe.com/flamingo/framework/config"
 	"go.aoe.com/flamingo/framework/dingo"
@@ -14,6 +15,8 @@ type (
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
+	injector.Bind((*application.TranslationServiceInterface)(nil)).To(application.TranslationService{})
+
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.NumberFormatFunc{})
@@ -33,8 +36,8 @@ func (m *Module) DefaultConfig() config.Map {
 				"format":     "%s %v",
 			},
 			"numbers": config.Map{
-				"decimal": ",",
-				"thousand": ".",
+				"decimal":   ",",
+				"thousand":  ".",
 				"precision": float64(2),
 			},
 			"date": config.Map{

@@ -10,6 +10,11 @@ import (
 )
 
 type (
+	// TranslationServiceInterface defines the translation service
+	TranslationServiceInterface interface {
+		Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string
+	}
+
 	TranslationService struct {
 		DefaultLocaleCode string          `inject:"config:locale.locale"`
 		TranslationFile   string          `inject:"config:locale.translationFile,optional"`
@@ -17,6 +22,9 @@ type (
 		Logger            flamingo.Logger `inject:""`
 	}
 )
+
+// check if TranslationService implements its interface
+var _ TranslationServiceInterface = (*TranslationService)(nil)
 
 var i18bundle *bundle.Bundle
 var filesLoaded bool

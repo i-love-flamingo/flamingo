@@ -16,26 +16,26 @@ import (
 type (
 	// LoginController handles the login redirect
 	LoginController struct {
-		responder.RedirectAware              `inject:""`
-		AuthManager *application.AuthManager `inject:""`
+		responder.RedirectAware `inject:""`
+		AuthManager             *application.AuthManager `inject:""`
 	}
 
 	// LogoutController handles the logout
 	LogoutController struct {
-		responder.RedirectAware                    `inject:""`
-		Logger         flamingo.Logger             `inject:""`
-		AuthManager    *application.AuthManager    `inject:""`
-		EventPublisher *application.EventPublisher `inject:""`
-		LogoutRedirect LogoutRedirectAware         `inject:",optional"`
+		responder.RedirectAware `inject:""`
+		Logger                  flamingo.Logger             `inject:""`
+		AuthManager             *application.AuthManager    `inject:""`
+		EventPublisher          *application.EventPublisher `inject:""`
+		LogoutRedirect          LogoutRedirectAware         `inject:",optional"`
 	}
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
-		responder.RedirectAware                    `inject:""`
-		responder.ErrorAware                       `inject:""`
-		AuthManager    *application.AuthManager    `inject:""`
-		Logger         flamingo.Logger             `inject:""`
-		EventPublisher *application.EventPublisher `inject:""`
+		responder.RedirectAware `inject:""`
+		responder.ErrorAware    `inject:""`
+		AuthManager             *application.AuthManager    `inject:""`
+		Logger                  flamingo.Logger             `inject:""`
+		EventPublisher          *application.EventPublisher `inject:""`
 	}
 
 	DefaultLogoutRedirect struct {
@@ -84,14 +84,14 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 
 	l.AuthManager.OpenIDProvider().Claims(&claims)
 	endUrl, parseError := url.Parse(claims.EndSessionEndpoint)
-	if parseError != nil{
+	if parseError != nil {
 		logout(c)
 		l.Logger.Errorf("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP: %v", parseError.Error())
 		return l.RedirectURL(l.AuthManager.MyHost)
 	}
 
 	redirectUrl, redirectUrlError := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
-	if redirectUrlError != nil{
+	if redirectUrlError != nil {
 		logout(c)
 		l.Logger.Errorf("Logout locally only. Could not fetch redirect URL for IDP logout: %v", redirectUrlError.Error())
 		return l.RedirectURL(l.AuthManager.MyHost)
@@ -100,7 +100,9 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	logout(c)
 
 	c.Session().AddFlash("successful logged out", "warning")
-	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{})
+	l.EventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{
+		Context: c,
+	})
 
 	return l.RedirectURL(redirectUrl)
 }

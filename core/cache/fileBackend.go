@@ -1,3 +1,5 @@
+package cache
+
 import (
 	"bytes"
 	"encoding/gob"

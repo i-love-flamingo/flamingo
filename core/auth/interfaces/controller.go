@@ -18,6 +18,7 @@ type (
 	LoginController struct {
 		responder.RedirectAware `inject:""`
 		AuthManager             *application.AuthManager `inject:""`
+		MyHost                  string                   `inject:"config:auth.myhost"`
 	}
 
 	// LogoutController handles the logout
@@ -66,7 +67,13 @@ func logout(c web.Context) {
 func (l *LoginController) Get(c web.Context) web.Response {
 	redirecturl, err := c.Param1("redirecturl")
 	if err != nil || redirecturl == "" {
-		redirecturl = c.Request().Referer()
+		if refURL, err := url.Parse(c.Request().Referer()); err == nil && refURL.Host == c.Request().Host {
+			redirecturl = c.Request().Referer()
+		}
+	}
+
+	if redirecturl == "" {
+		redirecturl = l.MyHost
 	}
 
 	state := uuid.NewV4().String()

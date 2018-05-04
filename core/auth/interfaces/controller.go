@@ -67,12 +67,10 @@ func logout(c web.Context) {
 func (l *LoginController) Get(c web.Context) web.Response {
 	redirecturl, err := c.Param1("redirecturl")
 	if err != nil || redirecturl == "" {
-		if refURL, err := url.Parse(c.Request().Referer()); err == nil && refURL.Host == c.Request().Host {
-			redirecturl = c.Request().Referer()
-		}
+		redirecturl = c.Request().Referer()
 	}
 
-	if redirecturl == "" {
+	if refURL, err := url.Parse(redirecturl); err != nil || refURL.Host != c.Request().Host {
 		redirecturl = l.MyHost
 	}
 

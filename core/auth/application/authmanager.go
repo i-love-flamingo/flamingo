@@ -30,11 +30,12 @@ const (
 type (
 	// AuthManager handles authentication related operations
 	AuthManager struct {
-		Server   string          `inject:"config:auth.server"`
-		Secret   string          `inject:"config:auth.secret"`
-		ClientID string          `inject:"config:auth.clientid"`
-		MyHost   string          `inject:"config:auth.myhost"`
-		Logger   flamingo.Logger `inject:""`
+		Server              string          `inject:"config:auth.server"`
+		Secret              string          `inject:"config:auth.secret"`
+		ClientID            string          `inject:"config:auth.clientid"`
+		MyHost              string          `inject:"config:auth.myhost"`
+		DisableOfflineToken bool            `inject:"config:auth.disableOfflineToken"`
+		Logger              flamingo.Logger `inject:""`
 
 		NotBefore time.Time
 
@@ -90,6 +91,11 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
+	scopes := []string{oidc.ScopeOpenID, "profile", "email"}
+	if !authmanager.DisableOfflineToken {
+		scopes = append(scopes, oidc.ScopeOfflineAccess)
+	}
+
 	authmanager.oauth2Config = &oauth2.Config{
 		ClientID:     authmanager.ClientID,
 		ClientSecret: authmanager.Secret,
@@ -100,7 +106,7 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		Endpoint: authmanager.OpenIDProvider().Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess, "profile", "email"},
+		Scopes: scopes,
 	}
 	authmanager.Logger.WithField("category", "auth").Debugf("authmanager.oauth2Config %#v ", authmanager.oauth2Config)
 	return authmanager.oauth2Config

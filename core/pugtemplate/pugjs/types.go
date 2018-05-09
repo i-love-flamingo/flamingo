@@ -199,7 +199,9 @@ func (f *Func) copy() Object              { return &(*f) }
 // MarshalJSON implementation
 func (f *Func) MarshalJSON() ([]byte, error) {
 	if f.fnc.Type().NumIn() == 0 && f.fnc.Type().NumOut() == 1 {
-		return json.Marshal(convert(f.fnc.Call(nil)[0]))
+		//return json.Marshal(convert(f.fnc.Call(nil)[0]))
+		// return function name as string, to avoid circular calls
+		return json.Marshal(f.fnc.String())
 	}
 	return []byte(`"` + f.String() + `"`), nil
 }

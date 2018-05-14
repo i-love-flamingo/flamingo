@@ -19,6 +19,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatLongFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.NumberFormatFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromIso{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromTime{})

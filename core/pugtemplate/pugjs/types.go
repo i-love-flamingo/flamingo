@@ -196,10 +196,14 @@ func (f *Func) String() string            { return f.fnc.String() } // String fo
 func (f *Func) True() bool                { return true }           // True getter
 func (f *Func) copy() Object              { return &(*f) }
 
+var AllowDeep = true
+
 // MarshalJSON implementation
 func (f *Func) MarshalJSON() ([]byte, error) {
 	if f.fnc.Type().NumIn() == 0 && f.fnc.Type().NumOut() == 1 {
-		//return json.Marshal(convert(f.fnc.Call(nil)[0]))
+		if AllowDeep {
+			return json.Marshal(convert(f.fnc.Call(nil)[0]))
+		}
 		// return function name as string, to avoid circular calls
 		return json.Marshal(f.fnc.String())
 	}

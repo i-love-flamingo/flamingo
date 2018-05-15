@@ -2,6 +2,8 @@ package templatefunctions
 
 import (
 	"encoding/json"
+
+	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
 )
 
 type (
@@ -17,8 +19,12 @@ func (df DebugFunc) Name() string {
 
 // Func as implementation of debug method
 func (df DebugFunc) Func() interface{} {
-	return func(o interface{}) string {
+	return func(o interface{}, allowDeep ...bool) string {
+		if len(allowDeep) > 0 {
+			pugjs.AllowDeep = allowDeep[0]
+		}
 		d, _ := json.MarshalIndent(o, "", "    ")
+		pugjs.AllowDeep = true
 		return string(d)
 	}
 }

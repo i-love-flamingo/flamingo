@@ -53,6 +53,12 @@ func (f *csrfFilter) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 			return f.Error(ctx, errors.New("session doesn't contain the csrf-nonce of the request"))
 		}
 		deleteNonceInSession(nonce, ctx)
+	} else {
+		nonce, err := ctx.Query1("csrf_token")
+		if err != nil {
+			deleteNonceInSession(nonce, ctx)
+			ctx.Request().URL.Query().Del("csrf_token")
+		}
 	}
 
 	return chain.Next(ctx, w)

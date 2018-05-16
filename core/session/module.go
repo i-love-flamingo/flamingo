@@ -34,20 +34,23 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		}
 		sessionStore.SetMaxAge(int(m.MaxAge))
 		sessionStore.SetMaxLength(int(m.StoreLength))
-		sessionStore.Options.Secure = bool(m.Secure)
+		sessionStore.Options.Secure = m.Secure
+		sessionStore.Options.HttpOnly = true
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	case "file":
 		os.Mkdir(m.FileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.FileName, []byte(m.Secret))
 		sessionStore.MaxLength(int(m.StoreLength))
 		sessionStore.MaxAge(int(m.MaxAge))
-		sessionStore.Options.Secure = bool(m.Secure)
+		sessionStore.Options.Secure = m.Secure
+		sessionStore.Options.HttpOnly = true
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	default: //memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.Secret))
 		sessionStore.MaxLength(int(m.StoreLength))
 		sessionStore.MaxAge(int(m.MaxAge))
-		sessionStore.Options.Secure = bool(m.Secure)
+		sessionStore.Options.Secure = m.Secure
+		sessionStore.Options.HttpOnly = true
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
 	}
 }

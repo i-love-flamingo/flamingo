@@ -91,8 +91,7 @@ ignored = ["go.aoe.com/flamingo/core","go.aoe.com/flamingo/framework","go.aoe.co
 
 [[constraint]]
   name = "github.com/leebenson/conform"
-  source = "github.com/AOEpeople/conform"
-  branch = "master"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/nicksnyder/go-i18n"

@@ -136,10 +136,11 @@
   version = "v0.2.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/leebenson/conform"
   packages = ["."]
-  revision = "bdfc728cafe576ce87010707d3ed365c75e854cd"
-  version = "1.2.0"
+  revision = "a57993a078fec828d6dd95a7f61905e799986341"
+  source = "github.com/AOEpeople/conform"
 
 [[projects]]
   name = "github.com/leekchan/accounting"
@@ -413,6 +414,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f4662d18dad759337b8b0591b7cee86c5f3f37bc6544e152451e4cf98ae6b17b"
+  inputs-digest = "b25241fb2f864efbc9f29f4bb32e84a0cac6c67a35e70302753c04354b366885"
   solver-name = "gps-cdcl"
   solver-version = 1

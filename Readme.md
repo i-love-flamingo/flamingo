@@ -49,14 +49,3 @@ https://github.com/vektra/mockery
 
 Usage:
 mockery -name <Name of Interface>
-
-
-
-What we changed
-
-We forked https://github.com/leebenson/conform into https://github.com/AOEpeople/conform and removed the faulties regarding stripping special chars in a wrong way.
-
-
-special chars are simply removed from the given string
-apostrophes (') are allowed in a name e.g. Andy O'Dowell is possible now
-dashes and spaces are shrinked together e.g. " ab   -  cd" becomes "Ab-Cd"

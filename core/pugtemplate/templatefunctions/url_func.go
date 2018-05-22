@@ -42,11 +42,26 @@ func (u *URLFunc) Func(ctx web.Context) interface{} {
 		}
 
 		var p = make(map[string]string)
+		var q = make(map[string][]string)
 		if len(params) == 1 {
 			for k, v := range params[0].Items {
-				p[k.String()] = v.String()
+				if arr, ok := v.(*pugjs.Array); ok {
+					for _, i := range arr.Items() {
+						q[k.String()] = append(q[k.String()], i.String())
+					}
+				} else {
+					p[k.String()] = v.String()
+				}
 			}
 		}
-		return template.URL(u.Router.URL(where, p).String())
+		url := u.Router.URL(where, p)
+		query := url.Query()
+		for k, v := range q {
+			for _, i := range v {
+				query.Add(k, i)
+			}
+		}
+		url.RawQuery = query.Encode()
+		return template.URL(url.String())
 	}
 }

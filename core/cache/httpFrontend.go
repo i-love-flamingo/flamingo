@@ -68,15 +68,17 @@ func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, erro
 	}
 	if entry, ok := hf.Backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
+			hf.Logger.WithField("category", "httpFrontendCache").Debugf("Serving from cache %v", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
 			go hf.load(key, loader)
+			hf.Logger.WithField("category", "httpFrontendCache").Debugf("Gracetime! Serving from cache %v", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
-
+	hf.Logger.WithField("category", "httpFrontendCache").Debugf("No cache entry for %v", key)
 	return copyResponse(hf.load(key, loader))
 }
 
@@ -143,14 +145,19 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		cached = loadedData.(cachedResponse)
 	}
 
-	hf.Backend.Set(key, &Entry{
-		Data: cached,
-		Meta: Meta{
-			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
-			gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
-			Tags:      data.(loaderResponse).meta.Tags,
-		},
-	})
+	if err == nil {
+		hf.Logger.WithField("category", "httpFrontendCache").Debugf("Store in Cache %v / Meta: %#v", key, data.(loaderResponse).meta)
+		hf.Backend.Set(key, &Entry{
+			Data: cached,
+			Meta: Meta{
+				lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
+				gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
+				Tags:      data.(loaderResponse).meta.Tags,
+			},
+		})
+	} else {
+		hf.Logger.WithField("category", "httpFrontendCache").Warnf("loader error - not going to cache %v", err)
+	}
 
 	return cached, err
 }

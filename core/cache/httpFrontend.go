@@ -145,19 +145,15 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		cached = loadedData.(cachedResponse)
 	}
 
-	if err == nil {
-		hf.Logger.WithField("category", "httpFrontendCache").Debugf("Store in Cache %v / Meta: %#v", key, data.(loaderResponse).meta)
-		hf.Backend.Set(key, &Entry{
-			Data: cached,
-			Meta: Meta{
-				lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
-				gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
-				Tags:      data.(loaderResponse).meta.Tags,
-			},
-		})
-	} else {
-		hf.Logger.WithField("category", "httpFrontendCache").Warnf("loader error - not going to cache %v", err)
-	}
+	hf.Logger.WithField("category", "httpFrontendCache").Debugf("Store in Cache %v / Meta: %#v", key, data.(loaderResponse).meta)
+	hf.Backend.Set(key, &Entry{
+		Data: cached,
+		Meta: Meta{
+			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
+			gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
+			Tags:      data.(loaderResponse).meta.Tags,
+		},
+	})
 
 	return cached, err
 }

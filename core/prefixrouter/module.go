@@ -53,10 +53,12 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 
 		for _, area := range root.GetFlatContexts() {
 			baseurl, ok := area.Configuration.Get("prefixrouter.baseurl")
+
 			if !ok {
+				logger.WithField("category", "prefixrouter").Warnf("No baseurl configured for config area %v", area.Name)
 				continue
 			}
-			logger.Println("Routing", area.Name, "at", baseurl)
+			logger.WithField("category", "prefixrouter").Println("Routing", area.Name, "at", baseurl)
 			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(router.Router{}).(*router.Router)
 			areaRouter.Init(area)

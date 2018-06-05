@@ -303,6 +303,9 @@ func (c *ctx) MustQuery1(n string) string {
 
 // QueryAll returns a Map of the Raw Query
 func (c *ctx) QueryAll() map[string][]string {
+	if c.request == nil {
+		return nil
+	}
 	return c.request.URL.Query()
 }
 

@@ -55,14 +55,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	if m.DefaultMux != nil {
 		m.DefaultMux.HandleFunc("/assets/", func(rw http.ResponseWriter, req *http.Request) {
+			origin := req.Header.Get("Origin")
+			if origin != "" {
+				//TODO - configure whitelist
+				rw.Header().Add("Access-Control-Allow-Origin", origin)
+			}
 			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 				io.Copy(rw, r.Body)
 			} else {
-				origin := req.Header.Get("Origin")
-				if origin != "" {
-					//TODO - configure whitelist
-					rw.Header().Add("Access-Control-Allow-Origin", origin)
-				}
 				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 			}
 		})
@@ -70,14 +70,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	m.RouterRegistry.Route("/assets/*f", "_pugtemplate.assets")
 	m.RouterRegistry.Handle("_pugtemplate.assets", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		origin := req.Header.Get("Origin")
+		if origin != "" {
+			//TODO - configure whitelist
+			rw.Header().Add("Access-Control-Allow-Origin", origin)
+		}
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 			io.Copy(rw, r.Body)
 		} else {
-			origin := req.Header.Get("Origin")
-			if origin != "" {
-				//TODO - configure whitelist
-				rw.Header().Add("Access-Control-Allow-Origin", origin)
-			}
 			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
 		}
 	}))

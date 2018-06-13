@@ -2,15 +2,10 @@ package web
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
-	"net/url"
-
 	"go.aoe.com/flamingo/framework/event"
 	"go.aoe.com/flamingo/framework/profiler"
-
 	"github.com/gorilla/sessions"
 	"github.com/satori/go.uuid"
 )
@@ -116,17 +111,6 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 	}
 
 	c.Context = context.WithValue(r.Context(), ID, c.id)
-
-	if r.Header.Get("Content-Type") == "application/json" {
-		b, _ := ioutil.ReadAll(r.Body)
-		var data map[string]string
-		json.Unmarshal(b, &data)
-
-		r.PostForm = make(url.Values)
-		for k, v := range data {
-			r.PostForm[k] = []string{v}
-		}
-	}
 
 	return c
 }

@@ -16,7 +16,7 @@ type (
 		GenerateNonce() string
 	}
 
-	uuidGenerator struct{}
+	UuidGenerator struct{}
 )
 
 const (
@@ -56,6 +56,6 @@ func appendNonceToList(list []string, nonce string, tokenLimit int) []string {
 }
 
 // generateNonce generates a nonce
-func (*uuidGenerator) GenerateNonce() string {
+func (*UuidGenerator) GenerateNonce() string {
 	return uuid.NewV4().String()
 }

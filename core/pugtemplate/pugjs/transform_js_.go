@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"strings"
 
+	"io"
+
 	"github.com/pkg/errors"
 	"github.com/robertkrimen/otto/ast"
 	ottoparser "github.com/robertkrimen/otto/parser"
@@ -48,6 +50,8 @@ var (
 
 		token.DELETE: "__op__delete",
 	}
+
+	writeTranslations io.Writer
 )
 
 // StrToStatements reads Javascript Statements and returns an AST representation
@@ -174,6 +178,50 @@ func (p *renderState) renderStatement(stmt ast.Statement, wrap bool, dot bool) s
 	return finalexpr
 }
 
+func (p *renderState) exprToString(expr ast.Expression) string {
+	if expr == nil {
+		return ""
+	}
+
+	switch expr := expr.(type) {
+	case *ast.Identifier:
+		return expr.Name
+
+	case *ast.StringLiteral:
+		return fmt.Sprintf("%q", expr.Value)
+
+	case *ast.DotExpression:
+		return p.exprToString(expr.Left) + `.` + expr.Identifier.Name
+
+	case *ast.ObjectLiteral:
+		x := make([]string, len(expr.Value))
+		for i, v := range expr.Value {
+			x[i] = fmt.Sprintf("%q: %s", v.Key, p.exprToString(v.Value))
+		}
+		return fmt.Sprintf("{%s}", strings.Join(x, ", "))
+
+	case *ast.NumberLiteral:
+		return fmt.Sprintf("%d", expr.Value)
+
+	case *ast.BracketExpression:
+		return fmt.Sprintf("%s[%s]", p.exprToString(expr.Left), p.exprToString(expr.Member))
+
+	case *ast.BinaryExpression:
+		return fmt.Sprintf("%s %s %s", p.exprToString(expr.Left), expr.Operator.String(), p.exprToString(expr.Right))
+
+	case *ast.CallExpression:
+		x := make([]string, len(expr.ArgumentList))
+		for i, c := range expr.ArgumentList {
+			x[i] = p.exprToString(c)
+		}
+		return fmt.Sprintf("%s(%s)", p.exprToString(expr.Callee), strings.Join(x, ", "))
+
+	default:
+		return fmt.Sprintf("%#v", expr)
+		//panic(0)
+	}
+}
+
 // renderExpression renders the javascript expression into go template
 func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool) string {
 	if expr == nil {
@@ -297,6 +345,31 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 
 	// CallExpression: calls a function (Callee) with arguments, e.g. url("target", "arg1", 1)
 	case *ast.CallExpression:
+		if i, ok := expr.Callee.(*ast.Identifier); writeTranslations != nil && ok && i.Name == "__" {
+			//fmt.Fprintln(writeTranslations, p.exprToString(expr))
+			switch len(expr.ArgumentList) {
+			case 1:
+				fmt.Fprintf(writeTranslations, `{
+	"id": %s,
+	"translations": %s
+},
+`, p.exprToString(expr.ArgumentList[0]), p.exprToString(expr.ArgumentList[0]))
+			case 2:
+				fmt.Fprintf(writeTranslations, `{
+	"id": %s,
+	"translations": %s
+},
+`, p.exprToString(expr.ArgumentList[0]), p.exprToString(expr.ArgumentList[1]))
+			case 3:
+				fmt.Fprintf(writeTranslations, `{
+	"id": %s,
+	"translations": %s,
+	"__args": %s
+},
+`, p.exprToString(expr.ArgumentList[0]), p.exprToString(expr.ArgumentList[1]), p.exprToString(expr.ArgumentList[2]))
+			}
+		}
+
 		result = `(` + p.renderExpression(expr.Callee, false, false)
 		for _, c := range expr.ArgumentList {
 			result += ` ` + p.renderExpression(c, false, true)

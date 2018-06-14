@@ -269,9 +269,18 @@
 
 [[projects]]
   name = "github.com/sirupsen/logrus"
-  packages = ["."]
+  packages = [
+    ".",
+    "hooks/test"
+  ]
   revision = "f006c2ac4710855cf0f916dd6b77acf6b048dc6e"
   version = "v1.0.3"
+
+[[projects]]
+  name = "github.com/sony/gobreaker"
+  packages = ["."]
+  revision = "e9556a45379ef1da12e54847edb2fb3d7d566f36"
+  version = "0.3.0"
 
 [[projects]]
   name = "github.com/spf13/cobra"
@@ -414,6 +423,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b25241fb2f864efbc9f29f4bb32e84a0cac6c67a35e70302753c04354b366885"
+  inputs-digest = "7fb189968b0eaf001188e08c0921999608a2cda03d5cdf22fbfbb3a7b90a7e96"
   solver-name = "gps-cdcl"
   solver-version = 1

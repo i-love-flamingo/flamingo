@@ -55,10 +55,10 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 			baseurl, ok := area.Configuration.Get("prefixrouter.baseurl")
 
 			if !ok {
-				logger.WithField("category", "prefixrouter").Warnf("No baseurl configured for config area %v", area.Name)
+				logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue
 			}
-			logger.WithField("category", "prefixrouter").Println("Routing", area.Name, "at", baseurl)
+			logger.WithField("category", "prefixrouter").Info("Routing", area.Name, "at", baseurl)
 			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(router.Router{}).(*router.Router)
 			areaRouter.Init(area)
@@ -67,7 +67,7 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 			frontRouter.Add(baseurl.(string), areaRouter)
 		}
 
-		logger.Printf("Starting HTTP Server at %s .....", *addr)
+		logger.Info("Starting HTTP Server at %s .....", *addr)
 		e := http.ListenAndServe(*addr, frontRouter)
 		if e != nil {
 			logger.Error("Unexpected Error", e)

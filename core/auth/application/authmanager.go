@@ -83,11 +83,11 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 
 	callbackURL := authmanager.Router.URL("auth.callback", nil)
 
-	authmanager.Logger.WithField("category", "auth").Debugf("authmanager %#v  Callback", authmanager, callbackURL)
+	authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("authmanager Callback", authmanager, callbackURL)
 
 	myhost, err := url.Parse(authmanager.MyHost)
 	if err != nil {
-		authmanager.Logger.WithField("category", "auth").Errorf("Url parse failed %v %v", authmanager.MyHost, err)
+		authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", authmanager.MyHost, err)
 	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
@@ -108,7 +108,7 @@ func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
 	}
-	authmanager.Logger.WithField("category", "auth").Debugf("authmanager.oauth2Config %#v ", authmanager.oauth2Config)
+	authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("authmanager.oauth2Config", authmanager.oauth2Config)
 	return authmanager.oauth2Config
 }
 

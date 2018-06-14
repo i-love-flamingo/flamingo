@@ -91,14 +91,14 @@ func (l *LogoutController) Get(c web.Context) web.Response {
 	endUrl, parseError := url.Parse(claims.EndSessionEndpoint)
 	if parseError != nil {
 		logout(c)
-		l.Logger.Errorf("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP: %v", parseError.Error())
+		l.Logger.Error("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP", parseError.Error())
 		return l.RedirectURL(l.AuthManager.MyHost)
 	}
 
 	redirectUrl, redirectUrlError := l.LogoutRedirect.GetRedirectUrl(c, endUrl)
 	if redirectUrlError != nil {
 		logout(c)
-		l.Logger.Errorf("Logout locally only. Could not fetch redirect URL for IDP logout: %v", redirectUrlError.Error())
+		l.Logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectUrlError.Error())
 		return l.RedirectURL(l.AuthManager.MyHost)
 	}
 
@@ -118,7 +118,7 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	defer delete(c.Session().Values, application.KeyAuthstate)
 
 	if c.Session().Values[application.KeyAuthstate] != c.MustQuery1("state") {
-		cc.Logger.Errorf("Invalid State %v vs %v", c.Session().Values[application.KeyAuthstate], c.MustQuery1("state"))
+		cc.Logger.Error("Invalid State", c.Session().Values[application.KeyAuthstate], c.MustQuery1("state"))
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
@@ -126,18 +126,18 @@ func (cc *CallbackController) Get(c web.Context) web.Response {
 	oauth2Token, err := cc.AuthManager.OAuth2Config().Exchange(c, c.MustQuery1("code"))
 	finish()
 	if err != nil {
-		cc.Logger.Errorf("core.auth.callback Error OAuth2Config Exchange %v", err)
+		cc.Logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
 
 	c.Session().Values[application.KeyToken] = oauth2Token
 	c.Session().Values[application.KeyRawIDToken], err = cc.AuthManager.ExtractRawIDToken(oauth2Token)
 	if err != nil {
-		cc.Logger.Errorf("core.auth.callback Error ExtractRawIDToken %v", err)
+		cc.Logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
 	cc.EventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Context: c})
-	cc.Logger.Debugf("successful logged in and saved tokens: %v", oauth2Token)
+	cc.Logger.Debug("successful logged in and saved tokens", oauth2Token)
 	c.Session().AddFlash("successful logged in", "info")
 
 	if redirect, ok := c.Session().Values["auth.redirect"]; ok {

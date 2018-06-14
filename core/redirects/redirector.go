@@ -45,7 +45,7 @@ func init() {
 //TryServeHTTP - implementation of OptionalHandler (from prefixrouter package)
 func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bool, error) {
 	contextPath := req.RequestURI
-	//r.Logger.Debugf("TryServeHTTP called with %v", contextPath)
+	//r.Logger.Debug("TryServeHTTP called with %v", contextPath)
 	status, location, err := r.processRedirects(contextPath)
 	if err != nil {
 		return true, errors.New("no redirect found")
@@ -90,7 +90,7 @@ func (r *redirector) processRedirects(contextPath string) (status int, location 
 		return 0, "", errors.New("contextPath not found")
 	}
 
-	r.Logger.Debugf("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HttpStatusCode)
+	r.Logger.Debug("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HttpStatusCode)
 
 	switch code := entry.HttpStatusCode; code {
 	case http.StatusMovedPermanently, http.StatusFound:

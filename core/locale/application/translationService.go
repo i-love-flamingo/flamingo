@@ -52,10 +52,10 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	}
 	T, err := i18bundle.Tfunc(localeCode)
 	if err != nil {
-		ts.Logger.Warningf("Error - locale.translationservice %v", err)
+		ts.Logger.Warn("Error - locale.translationservice", err)
 		label = defaultLabel
 	} else {
-		//ts.Logger.Debugf("called with key %v  default: %v  localeCode: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
+		//ts.Logger.Debug("called with key %v  default: %v  localeCode: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
 		label = T(key, count, translationArguments)
 	}
 
@@ -77,13 +77,13 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 }
 func (ts *TranslationService) loadFiles() {
 	if ts.TranslationFile != "" {
-		ts.Logger.Infof("Load translationfile %v", ts.TranslationFile)
+		ts.Logger.Info("Load translationfile", ts.TranslationFile)
 		i18bundle.LoadTranslationFile(ts.TranslationFile)
 	}
 	if len(ts.TranslationFiles) > 0 {
 		for _, file := range ts.TranslationFiles {
 			if fileName, ok := file.(string); ok {
-				ts.Logger.Infof("Load translationfile %v", fileName)
+				ts.Logger.Info("Load translationfile", fileName)
 				i18bundle.LoadTranslationFile(fileName)
 			}
 		}

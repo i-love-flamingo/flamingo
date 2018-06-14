@@ -74,11 +74,11 @@ func (_m *Logger) WithContext(ctx web.Context) flamingo.Logger {
 }
 
 // WithField provides a mock function with given fields: key, value
-func (_m *Logger) WithField(key string, value interface{}) flamingo.Logger {
+func (_m *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
 	ret := _m.Called(key, value)
 
 	var r0 flamingo.Logger
-	if rf, ok := ret.Get(0).(func(string, interface{}) flamingo.Logger); ok {
+	if rf, ok := ret.Get(0).(func(flamingo.LogKey, interface{}) flamingo.Logger); ok {
 		r0 = rf(key, value)
 	} else {
 		if ret.Get(0) != nil {
@@ -90,11 +90,11 @@ func (_m *Logger) WithField(key string, value interface{}) flamingo.Logger {
 }
 
 // WithFields provides a mock function with given fields: fields
-func (_m *Logger) WithFields(fields map[string]interface{}) flamingo.Logger {
+func (_m *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
 	ret := _m.Called(fields)
 
 	var r0 flamingo.Logger
-	if rf, ok := ret.Get(0).(func(map[string]interface{}) flamingo.Logger); ok {
+	if rf, ok := ret.Get(0).(func(map[flamingo.LogKey]interface{}) flamingo.Logger); ok {
 		r0 = rf(fields)
 	} else {
 		if ret.Get(0) != nil {

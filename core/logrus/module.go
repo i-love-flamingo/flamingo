@@ -127,13 +127,17 @@ func (e *LogrusEntry) WithContext(ctx web.Context) flamingo.Logger {
 func (e *LogrusEntry) Flush() {}
 
 // WithField adds a single field to the Entry.
-func (e *LogrusEntry) WithField(key string, value interface{}) flamingo.Logger {
-	return &LogrusEntry{Entry: e.Entry.WithField(key, value)}
+func (e *LogrusEntry) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	return &LogrusEntry{Entry: e.Entry.WithField(string(key), value)}
 }
 
 // WithFields adds a map of fields to the Entry.
-func (e *LogrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger {
-	return &LogrusEntry{Entry: e.Entry.WithFields(fields)}
+func (e *LogrusEntry) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
+	f := make(map[string]interface{}, len(fields))
+	for k, v := range fields {
+		f[string(k)] = v
+	}
+	return &LogrusEntry{Entry: e.Entry.WithFields(f)}
 }
 
 // WithContext returns a logger with fields filled from the context
@@ -154,13 +158,17 @@ func (e *LogrusLogger) Flush() {}
 // WithField adds a field to the log entry, note that it doesn't log until you call
 // Debug, Print, Info, Warn, Fatal or Panic. It only creates a log entry.
 // If you want multiple fields, use `WithFields`.
-func (e *LogrusLogger) WithField(key string, value interface{}) flamingo.Logger {
-	return &LogrusEntry{Entry: e.Logger.WithField(key, value)}
+func (e *LogrusLogger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	return &LogrusEntry{Entry: e.Logger.WithField(string(key), value)}
 }
 
 // WithFields adds a struct of fields to the log entry. All it does is call `WithField` for each `Field`.
-func (e *LogrusLogger) WithFields(fields map[string]interface{}) flamingo.Logger {
-	return &LogrusEntry{Entry: e.Logger.WithFields(fields)}
+func (e *LogrusLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
+	f := make(map[string]interface{}, len(fields))
+	for k, v := range fields {
+		f[string(k)] = v
+	}
+	return &LogrusEntry{Entry: e.Logger.WithFields(f)}
 }
 
 func appendContext(logger flamingo.Logger, ctx web.Context) flamingo.Logger {
@@ -172,7 +180,7 @@ func appendContext(logger flamingo.Logger, ctx web.Context) flamingo.Logger {
 	body, _ := ioutil.ReadAll(request.Body)
 
 	return logger.WithFields(
-		map[string]interface{}{
+		map[flamingo.LogKey]interface{}{
 			flamingo.LogKeyBusinessID:    request.Header.Get("X-Business-ID"),
 			flamingo.LogKeyClientIP:      clientIP,
 			flamingo.LogKeyCorrelationID: ctx.ID(),

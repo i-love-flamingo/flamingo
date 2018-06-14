@@ -34,7 +34,7 @@ func (tf DateTimeFormatFromIso) Func() interface{} {
 	return func(dateTimeString string) *domain.DateTimeFormatter {
 		dateTimeFormatter, e := tf.DateTimeService.GetDateTimeFormatterFromIsoString(dateTimeString)
 		if e != nil {
-			tf.Logger.Errorf("Error Parsing dateTime %v / %v", dateTimeString, e)
+			tf.Logger.Error("Error Parsing dateTime %v / %v", dateTimeString, e)
 			return &domain.DateTimeFormatter{}
 		}
 		return dateTimeFormatter
@@ -53,7 +53,7 @@ func (tf DateTimeFormatFromTime) Func() interface{} {
 	return func(dateTime time.Time) *domain.DateTimeFormatter {
 		dateTimeFormatter, e := tf.DateTimeService.GetDateTimeFormatter(dateTime)
 		if e != nil {
-			tf.Logger.Errorf("Error getting formatter dateTime %v", e)
+			tf.Logger.Error("Error getting formatter dateTime %v", e)
 			return &domain.DateTimeFormatter{}
 		}
 		return dateTimeFormatter

@@ -81,7 +81,7 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 			l := r.Logger.
 				WithContext(ctx).
 				WithFields(
-					map[string]interface{}{
+					map[flamingo.LogKey]interface{}{
 						flamingo.LogKeyAccesslog:    1,
 						flamingo.LogKeyResponseCode: webResponse.GetStatus(),
 						flamingo.LogKeyResponseTime: duration,

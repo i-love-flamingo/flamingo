@@ -2,7 +2,6 @@ package domain
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"go.aoe.com/flamingo/framework/flamingo"
 	"go.aoe.com/flamingo/framework/web"
@@ -32,21 +31,21 @@ func (l *Logger) WithCorrelationID(cid string) flamingo.Logger {
 // request:       received payload from request
 func (l *Logger) WithContext(ctx web.Context) flamingo.Logger {
 	request := ctx.Request()
-	clientIP := request.Header.Get("X-Forwarded-For")
-	if clientIP == "" {
-		clientIP = request.RemoteAddr
+	clientIP := request.RemoteAddr
+	if request.Header.Get("X-Forwarded-For") != "" {
+		clientIP += ", " + request.Header.Get("X-Forwarded-For")
 	}
-	body, _ := ioutil.ReadAll(request.Body)
+	//body, _ := ioutil.ReadAll(request.Body)
 
 	return l.WithFields(
-		map[string]interface{}{
+		map[flamingo.LogKey]interface{}{
 			flamingo.LogKeyBusinessID:    request.Header.Get("X-Business-ID"),
 			flamingo.LogKeyClientIP:      clientIP,
 			flamingo.LogKeyCorrelationID: ctx.ID(),
 			flamingo.LogKeyMethod:        request.Method,
 			flamingo.LogKeyPath:          request.URL.Path,
 			flamingo.LogKeyReferer:       request.Referer(),
-			flamingo.LogKeyRequest:       string(body),
+			//flamingo.LogKeyRequest:       string(body),
 		},
 	)
 }
@@ -84,20 +83,20 @@ func (l *Logger) Panic(args ...interface{}) {
 }
 
 // WithField creates a child logger and adds structured context to it.
-func (l *Logger) WithField(key string, value interface{}) flamingo.Logger {
+func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
 	return &Logger{
 		Logger: l.Logger.With(
-			zap.Any(key, value),
+			zap.Any(string(key), value),
 		),
 	}
 }
 
 // WithFields creates a child logger and adds structured context to it.
-func (l *Logger) WithFields(fields map[string]interface{}) flamingo.Logger {
+func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
 	zapFields := make([]zapcore.Field, len(fields))
 	i := 0
 	for key, value := range fields {
-		zapFields[i] = zap.Any(key, value)
+		zapFields[i] = zap.Any(string(key), value)
 		i++
 	}
 

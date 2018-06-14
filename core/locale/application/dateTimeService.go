@@ -35,7 +35,7 @@ func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.D
 	loc, err := time.LoadLocation(dts.Location)
 	if err != nil {
 		if dts.Logger != nil {
-			dts.Logger.Warnf("dateTime Parsing error - could not load location %v  - use UTC as fallback", dts.Location)
+			dts.Logger.Warn("dateTime Parsing error - could not load location - use UTC as fallback", dts.Location)
 		}
 		loc = time.UTC
 	}

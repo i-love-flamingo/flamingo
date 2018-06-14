@@ -2,6 +2,35 @@ package flamingo
 
 //go:generate mockery -name "Logger"
 
+// Common logger field keys
+const (
+	LogKeyAccesslog         string = "accesslog" // LogKeyAccesslog marks a logmessage belonging to an (incoming) call (value should be 1)
+	LogKeyApicall                  = "apicall"   // LogKeyApicall marks a logmessage belonging to an (outgoing) api call (value should be 1)
+	LogKeyArea                     = "area"
+	LogKeyBusinessID               = "businessId"
+	LogKeyCategory                 = "category"
+	LogKeySubCategory              = "sub_category"
+	LogKeyClientIP                 = "client_ip"
+	LogKeyCode                     = "code"
+	LogKeyConnectionStatus         = "connection_status"
+	LogKeyCorrelationID            = "correlationId"
+	LogKeyLevel                    = "level"
+	LogKeyMessage                  = "message"
+	LogKeyMethod                   = "method"
+	LogKeyPath                     = "path"
+	LogKeyReferer                  = "referer"
+	LogKeyRequest                  = "request"
+	LogKeyRequestTime              = "request_time"
+	LogKeyRequestedEndpoint        = "requested_endpoint"
+	LogKeyRequestedURL             = "requested_url"
+	LogKeyResponse                 = "response"
+	LogKeyResponseCode             = "response_code"
+	LogKeyResponseTime             = "response_time"
+	LogKeySource                   = "source"
+	LogKeyTimestamp                = "@timestamp"
+	LogKeyTrace                    = "trace"
+)
+
 // Logger defines a standard Flamingo logger interfaces
 type Logger interface {
 	Debugf(format string, args ...interface{})

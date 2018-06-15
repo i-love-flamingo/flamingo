@@ -273,7 +273,11 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	case *ast.ArrayLiteral:
 		result += `(__op__array`
 		for _, e := range expr.Value {
-			result += ` ` + p.renderExpression(e, false, true)
+			ex := p.renderExpression(e, false, true)
+			if ex == "" {
+				ex = "null"
+			}
+			result += ` ` + ex
 		}
 		result += `)`
 		if wrap {
@@ -444,7 +448,11 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	case *ast.SequenceExpression:
 		result = `(__op__array`
 		for _, s := range expr.Sequence {
-			result += ` ` + p.renderExpression(s, false, true)
+			ex := p.renderExpression(s, false, true)
+			if ex == "" {
+				ex = "null"
+			}
+			result += ` ` + ex
 		}
 		result += `)`
 
@@ -474,7 +482,11 @@ func (p *renderState) renderExpression(expr ast.Expression, wrap bool, dot bool)
 	case *ast.NewExpression:
 		result = `(__op__array`
 		for _, o := range expr.ArgumentList {
-			result += ` ` + p.renderExpression(o, false, true)
+			ex := p.renderExpression(o, false, true)
+			if ex == "" {
+				ex = "null"
+			}
+			result += ` ` + ex
 		}
 		result += `)`
 		if wrap {

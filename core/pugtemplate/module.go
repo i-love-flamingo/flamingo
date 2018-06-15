@@ -88,6 +88,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DebugFunc{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.JsJSON{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.StartsWithFunc{})
+	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.TruncateFunc{})
 
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.URLFunc{})
 	injector.BindMulti((*template.ContextFunction)(nil)).To(templatefunctions.TryURLFunc{})

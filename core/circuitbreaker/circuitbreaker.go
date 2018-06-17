@@ -92,7 +92,7 @@ func readyToTrip(counts gobreaker.Counts) bool {
 
 func (b *goBreaker) onStateChange(name string, from, to gobreaker.State) {
 	if b.Logger != nil {
-		b.Logger.Printf("Circuit breaker '%s' changed state from %s to %s", name, from.String(), to.String())
+		b.Logger.Info("Circuit breaker '%s' changed state from %s to %s", name, from.String(), to.String())
 	}
 	if b.stateChangeFunc != nil {
 		b.stateChangeFunc(b, from, to)

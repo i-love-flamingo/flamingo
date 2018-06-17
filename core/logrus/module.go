@@ -2,6 +2,7 @@ package logrus
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -11,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.aoe.com/flamingo/framework/dingo"
 	"go.aoe.com/flamingo/framework/flamingo"
+	"go.aoe.com/flamingo/framework/web"
 )
 
 type (
@@ -21,10 +23,11 @@ type (
 		LogLevel string `inject:"config:logrus.loglevel,optional"`
 	}
 
+	// LogrusEntry is a Wrapper for the logrus.Entry logger fulfilling the flamingo.Logger interface
 	LogrusEntry struct {
 		*logrus.Entry
 	}
-
+	// LogrusLogger is a Wrapper for the logrus.Logger fulfilling the flamingo.Logger interface
 	LogrusLogger struct {
 		*logrus.Logger
 	}
@@ -108,34 +111,83 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*flamingo.Logger)(nil)).ToInstance(&LogrusLogger{l})
 }
 
+// WithContext returns a logger with fields filled from the context
+// businessId:    From Header X-Business-ID
+// client_ip:     From Header X-Forwarded-For or request if header is empty
+// correlationId: The ID of the context
+// method:        HTTP verb from request
+// path:          URL path from request
+// referer:       referer from request
+// request:       received payload from request
+func (e *LogrusEntry) WithContext(ctx web.Context) flamingo.Logger {
+	return appendContext(e, ctx)
+}
+
+// Flush does nothing because logrus is not buffered
+func (e *LogrusEntry) Flush() {}
+
 // WithField adds a single field to the Entry.
-func (e *LogrusEntry) WithField(key string, value interface{}) flamingo.Logger {
-	return &LogrusEntry{e.Entry.WithField(key, value)}
+func (e *LogrusEntry) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	return &LogrusEntry{Entry: e.Entry.WithField(string(key), value)}
 }
 
 // WithFields adds a map of fields to the Entry.
-func (e *LogrusEntry) WithFields(fields map[string]interface{}) flamingo.Logger {
-	return &LogrusEntry{e.Entry.WithFields(fields)}
+func (e *LogrusEntry) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
+	f := make(map[string]interface{}, len(fields))
+	for k, v := range fields {
+		f[string(k)] = v
+	}
+	return &LogrusEntry{Entry: e.Entry.WithFields(f)}
 }
 
-// WithError adds an error as single field (using the key defined in ErrorKey) to the Entry.
-func (e *LogrusEntry) WithError(err error) flamingo.Logger {
-	return &LogrusEntry{e.Entry.WithError(err)}
+// WithContext returns a logger with fields filled from the context
+// businessId:    From Header X-Business-ID
+// client_ip:     From Header X-Forwarded-For or request if header is empty
+// correlationId: The ID of the context
+// method:        HTTP verb from request
+// path:          URL path from request
+// referer:       referer from request
+// request:       received payload from request
+func (e *LogrusLogger) WithContext(ctx web.Context) flamingo.Logger {
+	return appendContext(e, ctx)
 }
+
+// Flush does nothing because logrus is not buffered
+func (e *LogrusLogger) Flush() {}
 
 // WithField adds a field to the log entry, note that it doesn't log until you call
 // Debug, Print, Info, Warn, Fatal or Panic. It only creates a log entry.
 // If you want multiple fields, use `WithFields`.
-func (e *LogrusLogger) WithField(key string, value interface{}) flamingo.Logger {
-	return &LogrusEntry{e.Logger.WithField(key, value)}
+func (e *LogrusLogger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	return &LogrusEntry{Entry: e.Logger.WithField(string(key), value)}
 }
 
 // WithFields adds a struct of fields to the log entry. All it does is call `WithField` for each `Field`.
-func (e *LogrusLogger) WithFields(fields map[string]interface{}) flamingo.Logger {
-	return &LogrusEntry{e.Logger.WithFields(fields)}
+func (e *LogrusLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
+	f := make(map[string]interface{}, len(fields))
+	for k, v := range fields {
+		f[string(k)] = v
+	}
+	return &LogrusEntry{Entry: e.Logger.WithFields(f)}
 }
 
-// WithError add an error as single field to the log entry.  All it does is call `WithError` for the given `error`.
-func (e *LogrusLogger) WithError(err error) flamingo.Logger {
-	return &LogrusEntry{e.Logger.WithError(err)}
+func appendContext(logger flamingo.Logger, ctx web.Context) flamingo.Logger {
+	request := ctx.Request()
+	clientIP := request.Header.Get("X-Forwarded-For")
+	if clientIP == "" {
+		clientIP = request.RemoteAddr
+	}
+	body, _ := ioutil.ReadAll(request.Body)
+
+	return logger.WithFields(
+		map[flamingo.LogKey]interface{}{
+			flamingo.LogKeyBusinessID:    request.Header.Get("X-Business-ID"),
+			flamingo.LogKeyClientIP:      clientIP,
+			flamingo.LogKeyCorrelationID: ctx.ID(),
+			flamingo.LogKeyMethod:        request.Method,
+			flamingo.LogKeyPath:          request.URL.Path,
+			flamingo.LogKeyReferer:       request.Referer(),
+			flamingo.LogKeyRequest:       string(body),
+		},
+	)
 }

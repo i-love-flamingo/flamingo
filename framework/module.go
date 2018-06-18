@@ -24,7 +24,7 @@ import (
 
 const (
 	// VERSION of flamingo core
-	VERSION = "1.0"
+	VERSION = "2"
 )
 
 type (

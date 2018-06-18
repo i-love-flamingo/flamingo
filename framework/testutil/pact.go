@@ -15,7 +15,7 @@ import (
 
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
-	"go.aoe.com/flamingo/framework"
+	"flamingo.me/flamingo/framework"
 )
 
 // ErrNoPact error

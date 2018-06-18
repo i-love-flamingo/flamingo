@@ -1,11 +1,11 @@
 package locale
 
 import (
-	"go.aoe.com/flamingo/core/locale/application"
-	"go.aoe.com/flamingo/core/locale/interfaces/templatefunctions"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/template"
+	"flamingo.me/flamingo/core/locale/application"
+	"flamingo.me/flamingo/core/locale/interfaces/templatefunctions"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/template"
 )
 
 type (

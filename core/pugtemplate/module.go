@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/core/pugtemplate/templatefunctions"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

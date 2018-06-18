@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"sync"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs/parse"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs/parse"
 )
 
 // common holds the information shared by related templates.

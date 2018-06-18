@@ -1,8 +1,8 @@
 package csrfPreventionFilter
 
 import (
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/framework/event"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/framework/event"
 )
 
 type (

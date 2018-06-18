@@ -10,9 +10,9 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/flamingo"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

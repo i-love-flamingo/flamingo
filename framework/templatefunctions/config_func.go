@@ -1,6 +1,6 @@
 package templatefunctions
 
-import "go.aoe.com/flamingo/framework/config"
+import "flamingo.me/flamingo/framework/config"
 
 type (
 	// ConfigFunc allows to retrieve config variables

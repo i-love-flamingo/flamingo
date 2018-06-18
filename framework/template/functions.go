@@ -3,7 +3,7 @@ package template
 import (
 	"html/template"
 
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/labstack/gommon/color"
-	"go.aoe.com/flamingo/framework/flamingo"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

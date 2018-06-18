@@ -9,9 +9,9 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
 )
 
 type (

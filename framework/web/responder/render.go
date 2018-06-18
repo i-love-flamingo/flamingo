@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

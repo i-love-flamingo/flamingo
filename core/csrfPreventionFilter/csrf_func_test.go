@@ -5,8 +5,8 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
-	"go.aoe.com/flamingo/core/csrfPreventionFilter/mocks"
-	webmocks "go.aoe.com/flamingo/framework/web/mocks"
+	"flamingo.me/flamingo/core/csrfPreventionFilter/mocks"
+	webmocks "flamingo.me/flamingo/framework/web/mocks"
 )
 
 type (

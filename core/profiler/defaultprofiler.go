@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"go.aoe.com/flamingo/framework/profiler"
-	"go.aoe.com/flamingo/framework/profiler/collector"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/profiler/collector"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

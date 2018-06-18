@@ -1,7 +1,7 @@
 package flamingo
 
 import (
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 //go:generate mockery -name "Logger"

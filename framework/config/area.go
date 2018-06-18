@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/dingo"
 )
 
 type (

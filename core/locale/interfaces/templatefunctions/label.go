@@ -3,8 +3,8 @@ package templatefunctions
 import (
 	"strconv"
 
-	"go.aoe.com/flamingo/core/locale/application"
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/core/locale/application"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 )
 
 type (

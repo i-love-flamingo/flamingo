@@ -1,9 +1,9 @@
 package healthcheck
 
 import (
-	"go.aoe.com/flamingo/core/healthcheck/interfaces/controllers"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
+	"flamingo.me/flamingo/core/healthcheck/interfaces/controllers"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
 )
 
 type Module struct {

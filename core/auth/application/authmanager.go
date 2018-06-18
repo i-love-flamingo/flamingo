@@ -6,13 +6,13 @@ import (
 	"net/url"
 	"time"
 
-	"go.aoe.com/flamingo/framework/flamingo"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/core/auth/domain"
 	"golang.org/x/oauth2"
 )
 

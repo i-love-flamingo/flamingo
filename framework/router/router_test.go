@@ -15,12 +15,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"go.aoe.com/flamingo/framework/event"
-	eventMocks "go.aoe.com/flamingo/framework/event/mocks"
-	"go.aoe.com/flamingo/framework/profiler"
-	profilerMocks "go.aoe.com/flamingo/framework/profiler/mocks"
-	"go.aoe.com/flamingo/framework/web"
-	webMocks "go.aoe.com/flamingo/framework/web/mocks"
+	"flamingo.me/flamingo/framework/event"
+	eventMocks "flamingo.me/flamingo/framework/event/mocks"
+	"flamingo.me/flamingo/framework/profiler"
+	profilerMocks "flamingo.me/flamingo/framework/profiler/mocks"
+	"flamingo.me/flamingo/framework/web"
+	webMocks "flamingo.me/flamingo/framework/web/mocks"
 )
 
 // Example

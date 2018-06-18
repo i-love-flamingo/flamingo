@@ -2,8 +2,8 @@ package templatefunctions
 
 import (
 	"fmt"
-	"go.aoe.com/flamingo/core/locale/application"
-	"go.aoe.com/flamingo/framework/config"
+	"flamingo.me/flamingo/core/locale/application"
+	"flamingo.me/flamingo/framework/config"
 )
 
 type (

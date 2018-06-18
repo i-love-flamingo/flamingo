@@ -3,7 +3,7 @@ package application
 import (
 	"fmt"
 
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 // DataCollector for profiling

@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"go.aoe.com/flamingo/core/healthcheck/domain/healthcheck"
-	"go.aoe.com/flamingo/framework/web"
-	"go.aoe.com/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/core/healthcheck/domain/healthcheck"
+	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web/responder"
 )
 
 type (

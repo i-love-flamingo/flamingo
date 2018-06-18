@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.aoe.com/flamingo/framework/flamingo"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

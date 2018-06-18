@@ -3,7 +3,7 @@ package responder
 import (
 	"net/http"
 
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

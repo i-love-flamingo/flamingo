@@ -12,9 +12,9 @@ import (
 
 	"github.com/gojuno/minimock"
 	sessions "github.com/gorilla/sessions"
-	event "go.aoe.com/flamingo/framework/event"
-	profiler "go.aoe.com/flamingo/framework/profiler"
-	web "go.aoe.com/flamingo/framework/web"
+	event "flamingo.me/flamingo/framework/event"
+	profiler "flamingo.me/flamingo/framework/profiler"
+	web "flamingo.me/flamingo/framework/web"
 
 	testify_assert "github.com/stretchr/testify/assert"
 )

@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"go.aoe.com/flamingo/framework/router"
-	flamingotemplate "go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/router"
+	flamingotemplate "flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 )
 
 const pathSeparatorString = string(os.PathSeparator)

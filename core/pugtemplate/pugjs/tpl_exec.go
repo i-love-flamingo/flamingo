@@ -14,7 +14,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs/parse"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs/parse"
 )
 
 // maxExecDepth specifies the maximum stack depth of templates within

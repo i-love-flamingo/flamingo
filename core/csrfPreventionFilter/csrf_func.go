@@ -2,7 +2,7 @@ package csrfPreventionFilter
 
 import (
 	"github.com/satori/go.uuid"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

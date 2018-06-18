@@ -1,11 +1,11 @@
 package csrfPreventionFilter
 
 import (
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/template"
 )
 
 // Module for core/csrfPreventionFilter

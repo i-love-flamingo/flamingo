@@ -3,9 +3,9 @@ package templatefunctions
 import (
 	"time"
 
-	"go.aoe.com/flamingo/core/locale/application"
-	"go.aoe.com/flamingo/core/locale/domain"
-	"go.aoe.com/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/core/locale/application"
+	"flamingo.me/flamingo/core/locale/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (

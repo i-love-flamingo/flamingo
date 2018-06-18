@@ -3,7 +3,7 @@ package templatefunctions
 import (
 	"testing"
 
-	"go.aoe.com/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/template"
 
 	"github.com/stretchr/testify/assert"
 )

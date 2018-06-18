@@ -1,16 +1,16 @@
 package interfaces
 
 import (
-	"go.aoe.com/flamingo/core/auth/application"
-	"go.aoe.com/flamingo/framework/web"
-	"go.aoe.com/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/core/auth/application"
+	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web/responder"
 
 	"net/url"
 
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
-	"go.aoe.com/flamingo/core/auth/domain"
-	"go.aoe.com/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (

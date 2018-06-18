@@ -1,8 +1,8 @@
 package application
 
 import (
-	"go.aoe.com/flamingo/core/auth/domain"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

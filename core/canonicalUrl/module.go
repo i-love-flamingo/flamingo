@@ -1,9 +1,9 @@
 package canonicalUrl
 
 import (
-	"go.aoe.com/flamingo/core/canonicalUrl/interfaces"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/template"
+	"flamingo.me/flamingo/core/canonicalUrl/interfaces"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/template"
 )
 
 // Module for core/canonicalUrl

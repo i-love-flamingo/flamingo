@@ -1,9 +1,9 @@
 package redirects
 
 import (
-	"go.aoe.com/flamingo/core/prefixrouter"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
+	"flamingo.me/flamingo/core/prefixrouter"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
 )
 
 // Module for core/redirects

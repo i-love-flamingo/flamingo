@@ -2,7 +2,7 @@ package mocks
 
 import (
 	"github.com/gorilla/sessions"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 // Map builds a parameter map for setting up test request contexts

@@ -2,7 +2,7 @@ package domain
 
 import (
 	oidc "github.com/coreos/go-oidc"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 	"golang.org/x/oauth2"
 )
 

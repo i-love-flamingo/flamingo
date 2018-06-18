@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/profiler"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

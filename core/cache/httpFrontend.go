@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/groupcache/singleflight"
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (

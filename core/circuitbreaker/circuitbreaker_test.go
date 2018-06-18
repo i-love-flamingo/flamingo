@@ -9,7 +9,7 @@ import (
 	"github.com/sony/gobreaker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.aoe.com/flamingo/core/logrus"
+	"flamingo.me/flamingo/core/logrus"
 )
 
 func TestGoBreakerExecute(t *testing.T) {

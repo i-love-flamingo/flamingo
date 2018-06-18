@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/core/locale/domain"
-	"go.aoe.com/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/core/locale/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (

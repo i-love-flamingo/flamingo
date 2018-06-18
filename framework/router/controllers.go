@@ -1,6 +1,6 @@
 package router
 
-import "go.aoe.com/flamingo/framework/web"
+import "flamingo.me/flamingo/framework/web"
 
 type (
 	// Controller defines a web Controller

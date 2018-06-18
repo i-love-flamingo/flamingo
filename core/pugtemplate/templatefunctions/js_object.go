@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strconv"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 )
 
 type (

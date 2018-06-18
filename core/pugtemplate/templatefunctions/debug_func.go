@@ -3,7 +3,7 @@ package templatefunctions
 import (
 	"encoding/json"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 )
 
 type (

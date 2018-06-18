@@ -5,8 +5,8 @@ import (
 	"text/template"
 
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (

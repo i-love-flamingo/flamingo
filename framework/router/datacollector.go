@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

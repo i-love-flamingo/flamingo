@@ -4,11 +4,11 @@ import (
 	"encoding/gob"
 
 	"github.com/coreos/go-oidc"
-	"go.aoe.com/flamingo/core/auth/application"
-	"go.aoe.com/flamingo/core/auth/interfaces"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/profiler/collector"
-	"go.aoe.com/flamingo/framework/router"
+	"flamingo.me/flamingo/core/auth/application"
+	"flamingo.me/flamingo/core/auth/interfaces"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/profiler/collector"
+	"flamingo.me/flamingo/framework/router"
 	"golang.org/x/oauth2"
 )
 

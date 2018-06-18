@@ -9,17 +9,17 @@
 package framework
 
 import (
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/controller"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/profiler"
-	"go.aoe.com/flamingo/framework/profiler/collector"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/templatefunctions"
-	"go.aoe.com/flamingo/framework/web"
-	"go.aoe.com/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/controller"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/profiler/collector"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/templatefunctions"
+	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web/responder"
 )
 
 const (

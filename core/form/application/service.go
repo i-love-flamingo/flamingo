@@ -7,8 +7,8 @@ import (
 
 	"strings"
 
-	"go.aoe.com/flamingo/core/form/domain"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/form/domain"
+	"flamingo.me/flamingo/framework/web"
 	"gopkg.in/go-playground/validator.v9"
 )
 

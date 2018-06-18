@@ -3,8 +3,8 @@ package domain
 import (
 	"fmt"
 
-	"go.aoe.com/flamingo/framework/flamingo"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/web"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

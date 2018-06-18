@@ -3,7 +3,7 @@ package domain
 import (
 	"net/url"
 
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

@@ -4,9 +4,9 @@ import (
 	"html/template"
 	"net/url"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

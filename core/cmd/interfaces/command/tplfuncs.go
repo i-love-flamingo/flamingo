@@ -6,8 +6,8 @@ import (
 	"reflect"
 
 	"github.com/spf13/cobra"
-	"go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

@@ -3,8 +3,8 @@ package robotstxt
 import (
 	"net/http"
 
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
 )
 
 type (

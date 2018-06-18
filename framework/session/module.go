@@ -6,8 +6,8 @@ import (
 	"github.com/boj/redistore"
 	"github.com/gorilla/sessions"
 	"github.com/zemirco/memorystore"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
 )
 
 // Module for session management

@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"go.aoe.com/flamingo/core/csrfPreventionFilter"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
-	"go.aoe.com/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/core/csrfPreventionFilter"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/web/responder"
 )
 
 type (

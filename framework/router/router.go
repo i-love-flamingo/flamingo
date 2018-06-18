@@ -12,11 +12,11 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/profiler"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/web"
 )
 
 const (

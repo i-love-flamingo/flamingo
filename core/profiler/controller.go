@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"go.aoe.com/flamingo/core/csrfPreventionFilter"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/csrfPreventionFilter"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

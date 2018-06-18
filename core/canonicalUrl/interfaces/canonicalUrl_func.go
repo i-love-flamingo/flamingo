@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	"go.aoe.com/flamingo/core/canonicalUrl/application"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/core/canonicalUrl/application"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

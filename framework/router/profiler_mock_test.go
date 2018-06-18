@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gojuno/minimock"
-	profiler "go.aoe.com/flamingo/framework/profiler"
+	profiler "flamingo.me/flamingo/framework/profiler"
 
 	testify_assert "github.com/stretchr/testify/assert"
 )

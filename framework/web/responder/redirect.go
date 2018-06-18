@@ -3,8 +3,8 @@ package responder
 import (
 	"net/http"
 
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 )
 
 // RedirectAware allows a controller to issue a 302 redirect

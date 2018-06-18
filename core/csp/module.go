@@ -1,10 +1,10 @@
 package csp
 
 import (
-	"go.aoe.com/flamingo/core/csrfPreventionFilter"
-	"go.aoe.com/flamingo/framework/config"
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
+	"flamingo.me/flamingo/core/csrfPreventionFilter"
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
 )
 
 // Module for core/csp

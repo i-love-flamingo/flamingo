@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gojuno/minimock"
-	event "go.aoe.com/flamingo/framework/event"
+	event "flamingo.me/flamingo/framework/event"
 
 	testify_assert "github.com/stretchr/testify/assert"
 )

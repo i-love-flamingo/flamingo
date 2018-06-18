@@ -3,8 +3,8 @@ package templatefunctions
 import (
 	"testing"
 
-	"go.aoe.com/flamingo/core/pugtemplate/pugjs"
-	"go.aoe.com/flamingo/framework/template"
+	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/framework/template"
 
 	"github.com/stretchr/testify/assert"
 )

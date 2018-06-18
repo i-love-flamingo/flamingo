@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/profiler"
 	"github.com/gorilla/sessions"
 	"github.com/satori/go.uuid"
 )

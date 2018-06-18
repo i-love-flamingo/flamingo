@@ -1,10 +1,10 @@
 package internalauth
 
 import (
-	"go.aoe.com/flamingo/framework/dingo"
-	"go.aoe.com/flamingo/framework/router"
-	"go.aoe.com/flamingo/core/internalauth/domain"
-	"go.aoe.com/flamingo/core/internalauth/application"
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/core/internalauth/domain"
+	"flamingo.me/flamingo/core/internalauth/application"
 )
 
 type (

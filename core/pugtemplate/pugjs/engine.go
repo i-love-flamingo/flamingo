@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"go.aoe.com/flamingo/framework/event"
-	"go.aoe.com/flamingo/framework/template"
-	"go.aoe.com/flamingo/framework/web"
+	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (

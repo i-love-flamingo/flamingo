@@ -10,7 +10,8 @@
 [[projects]]
   name = "github.com/coreos/go-oidc"
   packages = ["."]
-  revision = "5157aa730c25a7531d4b99483e6a440d4ab735a0"
+  revision = "1180514eaf4d9f38d0d19eef639a1d695e066e72"
+  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -24,12 +25,6 @@
   version = "v3.2.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/etgryphon/stringUp"
-  packages = ["."]
-  revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
-
-[[projects]]
   name = "github.com/garyburd/redigo"
   packages = [
     "internal",
@@ -39,16 +34,10 @@
   version = "v1.3.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/ghodss/yaml"
   packages = ["."]
-  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
-  version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/go-playground/form"
-  packages = ["."]
-  revision = "7b3f7e7430f0f1b8a744c80bb7ce6a629c65b396"
-  version = "v3.0.1"
+  revision = "e9ed3c6dfb39bb1a32197cb10d527906fe4da4b6"
 
 [[projects]]
   name = "github.com/go-playground/locales"
@@ -79,15 +68,7 @@
 
 [[projects]]
   name = "github.com/golang/protobuf"
-  packages = [
-    "jsonpb",
-    "proto",
-    "ptypes",
-    "ptypes/any",
-    "ptypes/duration",
-    "ptypes/struct",
-    "ptypes/timestamp"
-  ]
+  packages = ["proto"]
   revision = "18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8"
 
 [[projects]]
@@ -134,13 +115,6 @@
   packages = ["color"]
   revision = "1121fd3e243c202482226a7afe4dcd07ffc4139a"
   version = "v0.2.1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/leebenson/conform"
-  packages = ["."]
-  revision = "a57993a078fec828d6dd95a7f61905e799986341"
-  source = "github.com/AOEpeople/conform"
 
 [[projects]]
   name = "github.com/leekchan/accounting"
@@ -439,15 +413,9 @@
   packages = ["."]
   revision = "cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b"
 
-[[projects]]
-  branch = "master"
-  name = "k8s.io/apimachinery"
-  packages = ["pkg/util/json"]
-  revision = "b54e2be8c5c22805a615d4e84c3cbffcdca8654f"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "464119e0b181fb0b18732eb429ffbe5c3eb7452958eba30a0b11b40c5b41dd82"
+  inputs-digest = "c6d8f9489413e03293fe134355529e1220caa97150fcefd69529fdfcd3903b86"
   solver-name = "gps-cdcl"
   solver-version = 1

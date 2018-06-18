@@ -1,7 +1,7 @@
 package redirects
 
 import (
-	"flamingo.me/flamingo/core/prefixrouter"
+	"flamingo.me/flamingo/framework/prefixrouter"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/router"
 )

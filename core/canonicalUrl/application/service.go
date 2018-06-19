@@ -1,6 +1,7 @@
 package application
 
 import (
+	"net/url"
 	"strings"
 
 	"flamingo.me/flamingo/framework/router"
@@ -13,6 +14,16 @@ type (
 		BaseUrl string         `inject:"config:canonicalurl.baseurl"`
 	}
 )
+
+func (s *Service) GetBaseDomain() string {
+	url, err := url.Parse(s.BaseUrl)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return url.Host
+}
 
 func (s *Service) GetBaseUrl() string {
 	return strings.TrimRight(s.BaseUrl, "/")

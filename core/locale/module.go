@@ -16,6 +16,7 @@ type (
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*application.TranslationServiceInterface)(nil)).To(application.TranslationService{})
+	injector.Bind((*application.DateTimeServiceInterface)(nil)).To(application.DateTimeService{})
 
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})

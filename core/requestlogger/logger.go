@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/gommon/color"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/labstack/gommon/color"
 )
 
 type (
@@ -25,6 +25,7 @@ type (
 	}
 )
 
+// Apply logger to request
 func (l *loggedResponse) Apply(ctx web.Context, rw http.ResponseWriter) {
 	if l.Response != nil {
 		l.Response.Apply(ctx, rw)
@@ -33,6 +34,7 @@ func (l *loggedResponse) Apply(ctx web.Context, rw http.ResponseWriter) {
 	l.logCallback()
 }
 
+// Filter a web request
 func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
 	start := time.Now()
 

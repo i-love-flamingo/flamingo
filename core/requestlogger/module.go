@@ -5,9 +5,11 @@ import (
 	"flamingo.me/flamingo/framework/router"
 )
 
-// Module for core/requestlogger
 type (
-	Module    struct{}
+	// Module for core/requestlogger
+	Module struct{}
+
+	// LogFilter to filter web requests
 	LogFilter struct{}
 )
 

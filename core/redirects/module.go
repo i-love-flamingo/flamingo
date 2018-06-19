@@ -1,18 +1,17 @@
 package redirects
 
 import (
-	"flamingo.me/flamingo/framework/prefixrouter"
 	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/prefixrouter"
 	"flamingo.me/flamingo/framework/router"
 )
 
-// Module for core/redirects
 type (
+	// Module for core/redirects
 	Module struct {
 		UseInRouter       bool `inject:"config:redirects.useInRouter,optional"`
 		UseInPrefixRouter bool `inject:"config:redirects.useInPrefixRouter,optional"`
 	}
-	LogFilter struct{}
 )
 
 // Configure DI

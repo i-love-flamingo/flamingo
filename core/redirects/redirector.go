@@ -90,9 +90,9 @@ func (r *redirector) processRedirects(contextPath string) (status int, location 
 		return 0, "", errors.New("contextPath not found")
 	}
 
-	r.Logger.Debug("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HttpStatusCode)
+	r.Logger.Debug("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HTTPStatusCode)
 
-	switch code := entry.HttpStatusCode; code {
+	switch code := entry.HTTPStatusCode; code {
 	case http.StatusMovedPermanently, http.StatusFound:
 		return code, entry.RedirectTarget, nil
 	case http.StatusGone:

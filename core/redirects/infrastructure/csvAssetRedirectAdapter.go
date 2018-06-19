@@ -12,8 +12,9 @@ import (
 )
 
 type (
+	// CsvContent definition / dto
 	CsvContent struct {
-		HttpStatusCode int
+		HTTPStatusCode int
 		OriginalPath   string
 		RedirectTarget string
 	}
@@ -25,6 +26,7 @@ func init() {
 	csvContent, _ = readCSV()
 }
 
+// GetRedirectData getter
 func GetRedirectData() []CsvContent {
 	return csvContent
 }
@@ -77,7 +79,7 @@ func readCSV() ([]CsvContent, error) {
 		}
 
 		CsvContents = append(CsvContents, CsvContent{
-			HttpStatusCode: statusCode,
+			HTTPStatusCode: statusCode,
 			OriginalPath:   record[1],
 			RedirectTarget: record[2],
 		})

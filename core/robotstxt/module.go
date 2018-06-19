@@ -8,6 +8,7 @@ import (
 )
 
 type (
+	// Module for robotstxt
 	Module struct {
 		DefaultMux *http.ServeMux `inject:",optional"`
 		Filepath   string         `inject:"config:robotstxt.filepath"`

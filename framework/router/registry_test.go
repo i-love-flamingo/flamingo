@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/stretchr/testify/assert"
 )
 
 func testController(web.Context) web.Response {
@@ -143,7 +143,7 @@ func TestRegistry(t *testing.T) {
 
 			request, _ = http.NewRequest("GET", "/mustget", nil)
 			controller, params, _ = registry.MatchRequest(request)
-			assert.Nil(t, controller)
+			assert.Equal(t, handlerAction{}, controller)
 			assert.Nil(t, params)
 
 			request, _ = http.NewRequest("GET", "/mustget?page=foo", nil)

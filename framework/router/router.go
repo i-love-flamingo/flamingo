@@ -37,23 +37,26 @@ type (
 	// FilterProvider for filter injection
 	FilterProvider func() []Filter
 
+	RegistryProvider func() []Module
+
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc
 	Router struct {
 		base *url.URL
 
-		Sessions            sessions.Store      `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
-		SessionName         string              `inject:"config:session.name"`
-		ContextFactory      web.ContextFactory  `inject:""` // ContextFactory for new contexts
-		ProfilerProvider    ProfilerProvider    `inject:""`
-		EventRouterProvider EventRouterProvider `inject:""`
-		eventrouter         event.Router
-		Injector            *dingo.Injector `inject:""`
-		RouterRegistry      *Registry       `inject:""`
-		NotFoundHandler     string          `inject:"config:flamingo.router.notfound"`
-		ErrorHandler        string          `inject:"config:flamingo.router.error"`
-		FilterProvider      FilterProvider  `inject:",optional"`
-		filters             []Filter
+		Sessions               sessions.Store      `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
+		SessionName            string              `inject:"config:session.name"`
+		ContextFactory         web.ContextFactory  `inject:""` // ContextFactory for new contexts
+		ProfilerProvider       ProfilerProvider    `inject:""`
+		EventRouterProvider    EventRouterProvider `inject:""`
+		eventrouter            event.Router
+		Injector               *dingo.Injector  `inject:""`
+		RouterRegistryProvider RegistryProvider `inject:""`
+		RouterRegistry         *Registry        `inject:""`
+		NotFoundHandler        string           `inject:"config:flamingo.router.notfound"`
+		ErrorHandler           string           `inject:"config:flamingo.router.error"`
+		FilterProvider         FilterProvider   `inject:",optional"`
+		filters                []Filter
 	}
 
 	// P is a shorthand for parameter
@@ -85,6 +88,12 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 		}
 	}
 
+	for _, m := range router.RouterRegistryProvider() {
+		log.Println(m)
+		m.Routes(router.RouterRegistry)
+		//m.Routes(routes)
+	}
+
 	var routerroutes = make([]*Handler, len(router.RouterRegistry.routes))
 	for k, v := range router.RouterRegistry.routes {
 		routerroutes[k] = v
@@ -92,35 +101,40 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 	routes.routes = append(routes.routes, routerroutes...)
 
 	// inject router instances
-	for name, c := range router.RouterRegistry.handler {
-		switch c.(type) {
-		case http.Handler, func(web.Context) web.Response, func(web.Context) interface{}:
-			break
+	// deprecated: only used for legacy controllers
+	for name, ha := range router.RouterRegistry.handler {
+		c := ha.legacyController
+		if c != nil {
+			switch c.(type) {
+			case http.Handler, func(web.Context) web.Response, func(web.Context) interface{}:
+				break
 
-		case GETController, POSTController, HEADController, PUTController, DELETEController, DataController:
-			c = router.Injector.GetInstance(reflect.TypeOf(c))
+			case GETController, POSTController, HEADController, PUTController, DELETEController, DataController:
+				c = router.Injector.GetInstance(reflect.TypeOf(c))
 
-		default:
-			var rv = reflect.ValueOf(c)
-			if !rv.IsValid() {
-				panic(fmt.Sprintf("Invalid Controller bound! %s: %#v", name, c))
-			}
-			// Check if we have a Receiver Function of the type
-			// func(c Controller, ctx web.Context) web.Response
-			// If so, we instantiate c Controller and convert it to
-			// c.func(ctx web.Context) web.Response
-			if rv.Type().Kind() == reflect.Func &&
-				rv.Type().NumIn() == 2 &&
-				rv.Type().NumOut() == 1 &&
-				rv.Type().In(1).AssignableTo(reflect.TypeOf((*web.Context)(nil)).Elem()) &&
-				rv.Type().Out(0).AssignableTo(reflect.TypeOf((*web.Response)(nil)).Elem()) {
-				var ci = reflect.ValueOf(router.Injector.GetInstance(rv.Type().In(0).Elem()))
-				c = func(ctx web.Context) web.Response {
-					return rv.Call([]reflect.Value{ci, reflect.ValueOf(ctx)})[0].Interface().(web.Response)
+			default:
+				var rv = reflect.ValueOf(c)
+				if !rv.IsValid() {
+					panic(fmt.Sprintf("Invalid Controller bound! %s: %#v", name, c))
+				}
+				// Check if we have a Receiver Function of the type
+				// func(c Controller, ctx web.Context) web.Response
+				// If so, we instantiate c Controller and convert it to
+				// c.func(ctx web.Context) web.Response
+				if rv.Type().Kind() == reflect.Func &&
+					rv.Type().NumIn() == 2 &&
+					rv.Type().NumOut() == 1 &&
+					rv.Type().In(1).AssignableTo(reflect.TypeOf((*web.Context)(nil)).Elem()) &&
+					rv.Type().Out(0).AssignableTo(reflect.TypeOf((*web.Response)(nil)).Elem()) {
+					var ci = reflect.ValueOf(router.Injector.GetInstance(rv.Type().In(0).Elem()))
+					c = func(ctx web.Context) web.Response {
+						return rv.Call([]reflect.Value{ci, reflect.ValueOf(ctx)})[0].Interface().(web.Response)
+					}
 				}
 			}
 		}
-		routes.handler[name] = c
+		ha.legacyController = c
+		routes.handler[name] = ha
 	}
 
 	for _, handler := range routes.routes {
@@ -203,11 +217,11 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 	}()
 
 	if e, ok := err.(error); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
 	} else if err, ok := err.(string); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
 	} else {
-		router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
 	}
 }
 
@@ -216,6 +230,7 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// shadow the response writer
 	rw = &web.VerboseResponseWriter{ResponseWriter: rw}
+	req = req.WithContext(context.WithValue(req.Context(), "rw", rw))
 
 	var s *sessions.Session
 	var err error
@@ -245,9 +260,10 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	done := ctx.Profile("matchRequest", req.RequestURI)
 	controller, params, handler := router.RouterRegistry.MatchRequest(req)
+
 	ctx.LoadParams(params)
-	if controller == nil {
-		controller = router.RouterRegistry.handler[router.NotFoundHandler]
+	if controller.legacyController == nil {
+		controller.legacyController = router.RouterRegistry.handler[router.NotFoundHandler]
 	}
 	if handler != nil {
 		ctx.WithValue("HandlerName", handler.GetHandlerName())
@@ -256,6 +272,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	done()
 
 	defer ctx.Profile("request", req.RequestURI)()
+
+	webRequest := web.RequestFromRequest(req, s).WithVars(params)
 
 	chain := &FilterChain{
 		Filters:    make([]Filter, len(router.filters)),
@@ -275,33 +293,40 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		var response web.Response
 
-		if cc, ok := controller.(GETController); ok && req.Method == http.MethodGet {
-			response = cc.Get(ctx)
-		} else if cc, ok := controller.(POSTController); ok && req.Method == http.MethodPost {
-			response = cc.Post(ctx)
-		} else if cc, ok := controller.(PUTController); ok && req.Method == http.MethodPut {
-			response = cc.Put(ctx)
-		} else if cc, ok := controller.(DELETEController); ok && req.Method == http.MethodDelete {
-			response = cc.Delete(ctx)
-		} else if cc, ok := controller.(HEADController); ok && req.Method == http.MethodHead {
-			response = cc.Head(ctx)
+		if c, ok := controller.method[req.Method]; ok {
+			response = c(req.Context(), webRequest)
+		} else if controller.any != nil {
+			response = controller.any(req.Context(), webRequest)
 		} else {
-			switch c := controller.(type) {
-			case DataController:
-				response = &web.JSONResponse{Data: c.Data(ctx)}
+			// deprecated: refactored in favor of proper controller actions
+			if cc, ok := controller.legacyController.(GETController); ok && req.Method == http.MethodGet {
+				response = cc.Get(ctx)
+			} else if cc, ok := controller.legacyController.(POSTController); ok && req.Method == http.MethodPost {
+				response = cc.Post(ctx)
+			} else if cc, ok := controller.legacyController.(PUTController); ok && req.Method == http.MethodPut {
+				response = cc.Put(ctx)
+			} else if cc, ok := controller.legacyController.(DELETEController); ok && req.Method == http.MethodDelete {
+				response = cc.Delete(ctx)
+			} else if cc, ok := controller.legacyController.(HEADController); ok && req.Method == http.MethodHead {
+				response = cc.Head(ctx)
+			} else {
+				switch c := controller.legacyController.(type) {
+				case DataController:
+					response = &web.JSONResponse{Data: c.Data(ctx)}
 
-			case func(web.Context) web.Response:
-				response = c(ctx)
+				case func(web.Context) web.Response:
+					response = c(ctx)
 
-			case func(web.Context) interface{}:
-				response = &web.JSONResponse{Data: c(ctx)}
+				case func(web.Context) interface{}:
+					response = &web.JSONResponse{Data: c(ctx)}
 
-			case http.Handler:
-				response = &web.ServeHTTPResponse{VerboseResponseWriter: rw.(*web.VerboseResponseWriter)}
-				c.ServeHTTP(response.(http.ResponseWriter), req)
+				case http.Handler:
+					response = &web.ServeHTTPResponse{VerboseResponseWriter: rw.(*web.VerboseResponseWriter)}
+					c.ServeHTTP(response.(http.ResponseWriter), req)
 
-			default:
-				response = router.RouterRegistry.handler[router.ErrorHandler].(func(web.Context) web.Response)(ctx)
+				default:
+					response = router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx)
+				}
 			}
 		}
 
@@ -339,10 +364,10 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 	getCtx := ctx.WithVars(vars)
 
 	if c, ok := router.RouterRegistry.handler[handler]; ok {
-		if c, ok := c.(DataController); ok {
+		if c, ok := c.legacyController.(DataController); ok {
 			return router.Injector.GetInstance(c).(DataController).Data(getCtx)
 		}
-		if c, ok := c.(func(web.Context) interface{}); ok {
+		if c, ok := c.legacyController.(func(web.Context) interface{}); ok {
 			return c(getCtx)
 		}
 		panic(errors.Errorf("%q is not a data Controller", handler))

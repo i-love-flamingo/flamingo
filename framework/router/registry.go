@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"flamingo.me/flamingo/framework/dingo"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ type (
 	//
 	// Handler: key -> Controller
 	Registry struct {
-		handler map[string]Controller
+		handler map[string]handlerAction
 		routes  []*Handler
 		alias   map[string]*Handler
 	}
@@ -31,34 +32,133 @@ type (
 		catchall bool
 	}
 
+	handlerAction struct {
+		method           map[string]Action
+		any              Action
+		legacyController Controller
+	}
+
 	param struct {
 		value    string
 		optional bool
 	}
+
+	Module interface {
+		Routes(registry *Registry)
+	}
 )
+
+// Bind is a convenience helper to multi-bind router modules
+func Bind(injector *dingo.Injector, m Module) {
+	injector.BindMulti((*Module)(nil)).To(m)
+}
 
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
-		handler: make(map[string]Controller),
+		handler: make(map[string]handlerAction),
 		alias:   make(map[string]*Handler),
 	}
 }
 
+func (ha *handlerAction) set(method string, action Action) {
+	if ha.method == nil {
+		ha.method = make(map[string]Action, 1)
+	}
+	ha.method[method] = action
+}
+
+func (ha *handlerAction) setLegacyController(legacyController Controller) {
+	ha.legacyController = legacyController
+}
+
+func (ha *handlerAction) setAny(any Action) {
+	ha.any = any
+}
+
 // Handle assigns a Controller to a name
+// deprecated: use explicit handler
 func (registry *Registry) Handle(name string, controller Controller) {
 	if hf, ok := controller.(http.HandlerFunc); ok {
 		controller = http.Handler(hf)
 	}
-	registry.handler[name] = controller
+	la := registry.handler[name]
+	la.setLegacyController(controller)
+	registry.handler[name] = la
+}
+
+// HandleAny serves as a fallback to handle HTTP requests which are not taken care of by other handlers
+func (registry *Registry) HandleAny(name string, action Action) {
+	ha := registry.handler[name]
+	ha.setAny(action)
+	registry.handler[name] = ha
+}
+
+// HandleMethod handles requests for the specified HTTP Method
+func (registry *Registry) HandleMethod(method, name string, action Action) {
+	ha := registry.handler[name]
+	ha.set(method, action)
+	registry.handler[name] = ha
+}
+
+// HandleGet handles a HTTP GET request
+func (registry *Registry) HandleGet(name string, action Action) {
+	registry.HandleMethod(http.MethodGet, name, action)
+}
+
+// HandlePost handles HTTP POST requests
+func (registry *Registry) HandlePost(name string, action Action) {
+	registry.HandleMethod(http.MethodPost, name, action)
+}
+
+// HandlePut handles HTTP PUT requests
+func (registry *Registry) HandlePut(name string, action Action) {
+	registry.HandleMethod(http.MethodPut, name, action)
+}
+
+// HandleDelete handles HTTP DELETE requests
+func (registry *Registry) HandleDelete(name string, action Action) {
+	registry.HandleMethod(http.MethodDelete, name, action)
+}
+
+// HandleOptions handles HTTP OPTIONS requests
+func (registry *Registry) HandleOptions(name string, action Action) {
+	registry.HandleMethod(http.MethodOptions, name, action)
+}
+
+// HandleHead handles HTTP HEAD requests
+func (registry *Registry) HandleHead(name string, action Action) {
+	registry.HandleMethod(http.MethodHead, name, action)
+}
+
+// Has checks if a method is set for a given handler name
+func (registry *Registry) Has(method, name string) bool {
+	la, ok := registry.handler[name]
+	_, methodSet := la.method[method]
+	return ok && methodSet
+}
+
+// HasAny checks if an any handler is set for a given name
+func (registry *Registry) HasAny(name string) bool {
+	la, ok := registry.handler[name]
+	return ok && la.any != nil
+}
+
+// HasLegacy checks if a legacy handler is set for a given name
+func (registry *Registry) HasLegacy(name string) bool {
+	la, ok := registry.handler[name]
+	return ok && la.legacyController != nil
 }
 
 // HandleIfNotSet assigns a Controller to a name if not already set
+// deprecated: do not use if not necessary
 func (registry *Registry) HandleIfNotSet(name string, controller Controller) bool {
 	if _, ok := registry.handler[name]; ok {
 		return false
 	}
-	registry.handler[name] = controller
+	la := registry.handler[name]
+	la.setLegacyController(controller)
+	registry.handler[name] = la
 	return true
 }
 
@@ -86,7 +186,7 @@ func (registry *Registry) GetRoutes() []*Handler {
 }
 
 // GetHandler returns registered Routes
-func (registry *Registry) GetHandler() map[string]Controller {
+func (registry *Registry) GetHandler() map[string]handlerAction {
 	return registry.handler
 }
 
@@ -301,8 +401,8 @@ func (registry *Registry) Match(path string) (controller Controller, params map[
 	return
 }
 
-// MatchRequest matches a http Request (with GET and path parameters)
-func (registry *Registry) MatchRequest(req *http.Request) (Controller, map[string]string, *Handler) {
+// MatchRequest matches a http Request (with query and path parameters)
+func (registry *Registry) MatchRequest(req *http.Request) (handlerAction, map[string]string, *Handler) {
 	var path = req.URL.Path
 	if req.URL.RawPath != "" {
 		path = req.URL.RawPath
@@ -333,7 +433,7 @@ matchloop:
 			return controller, params, handler
 		}
 	}
-	return nil, nil, nil
+	return handlerAction{}, nil, nil
 }
 
 // GetPath getter

@@ -20,6 +20,7 @@ type (
 		finalFallbackHandler http.Handler
 	}
 
+	// OptionalHandler tries to handle a request
 	OptionalHandler interface {
 		TryServeHTTP(rw http.ResponseWriter, req *http.Request) (proceed bool, err error)
 	}
@@ -47,7 +48,7 @@ func (fr *FrontRouter) SetFallbackHandlers(handlers []OptionalHandler) {
 	fr.fallbackHandlers = handlers
 }
 
-// SetPrimarykHandlers sets list of optional fallback Handlers
+// SetPrimaryHandlers sets list of optional fallback Handlers
 func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
 	fr.primaryHandlers = handlers
 }

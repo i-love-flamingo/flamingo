@@ -36,6 +36,7 @@ const (
 )
 
 type (
+	// LogKey is a logging key constant
 	LogKey string
 
 	// Logger defines a standard Flamingo logger interfaces
@@ -59,14 +60,32 @@ type (
 // NullLogger does not log
 type NullLogger struct{}
 
-func (n NullLogger) WithContext(ctx web.Context) Logger              { return n }
-func (n NullLogger) WithField(key LogKey, value interface{}) Logger  { return n }
+// WithContext null-implementation
+func (n NullLogger) WithContext(ctx web.Context) Logger { return n }
+
+// WithField null-implementation
+func (n NullLogger) WithField(key LogKey, value interface{}) Logger { return n }
+
+// WithFields null-implementation
 func (n NullLogger) WithFields(fields map[LogKey]interface{}) Logger { return n }
-func (NullLogger) Debug(args ...interface{})                         {}
-func (NullLogger) Info(args ...interface{})                          {}
-func (NullLogger) Print(args ...interface{})                         {}
-func (NullLogger) Warn(args ...interface{})                          {}
-func (NullLogger) Error(args ...interface{})                         {}
-func (NullLogger) Fatal(args ...interface{})                         {}
-func (NullLogger) Panic(args ...interface{})                         {}
-func (n NullLogger) Flush()                                          {}
+
+// Debug null-implementation
+func (NullLogger) Debug(args ...interface{}) {}
+
+// Info null-implementation
+func (NullLogger) Info(args ...interface{}) {}
+
+// Warn null-implementation
+func (NullLogger) Warn(args ...interface{}) {}
+
+// Error null-implementation
+func (NullLogger) Error(args ...interface{}) {}
+
+// Fatal null-implementation
+func (NullLogger) Fatal(args ...interface{}) {}
+
+// Panic null-implementation
+func (NullLogger) Panic(args ...interface{}) {}
+
+// Flush null-implementation
+func (n NullLogger) Flush() {}

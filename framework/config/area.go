@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/pkg/errors"
 	"flamingo.me/flamingo/framework/dingo"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -30,6 +30,7 @@ type (
 	// Map contains configuration
 	Map map[string]interface{}
 
+	// Slice contains a list of configuration options
 	Slice []interface{}
 
 	// DefaultConfigModule is used to get a module's default configuration

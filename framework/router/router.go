@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gorilla/sessions"
-	"github.com/pkg/errors"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/profiler"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/gorilla/sessions"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -63,6 +63,7 @@ type (
 	errorKey uint
 )
 
+// NewRouter factory
 func NewRouter() *Router {
 	return new(Router)
 }
@@ -135,6 +136,7 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 	return router
 }
 
+// Base URL getter
 func (router *Router) Base() *url.URL {
 	return router.base
 }
@@ -144,7 +146,7 @@ func (router *Router) SetBase(u *url.URL) {
 	router.base = u
 }
 
-// same as URL below, but checks if the url is possible and returns an error
+// TryURL is the same as URL below, but checks if the url is possible and returns an error
 func (router *Router) TryURL(name string, params map[string]string) (u *url.URL, err error) {
 	defer func() {
 		if p := recover(); p != nil {

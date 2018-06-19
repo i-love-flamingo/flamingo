@@ -8,7 +8,7 @@ build docker env:
   script:
   - cd build/docker
   - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
-  - docker build --pull --squash -t iloveflamingo/buildenv:1.10 .
+  - docker build --pull -t iloveflamingo/buildenv:1.10 .
   - docker push iloveflamingo/buildenv:1.10
   only:
   - master

@@ -10,9 +10,9 @@ import (
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
 
+	"flamingo.me/flamingo/core/auth/domain"
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
-	"flamingo.me/flamingo/core/auth/domain"
 	"golang.org/x/oauth2"
 )
 
@@ -47,12 +47,12 @@ type (
 )
 
 // Auth tries to retrieve the authentication context for a active session
-func (cs *AuthManager) Auth(c web.Context) (domain.Auth, error) {
-	ts, err := cs.TokenSource(c)
+func (am *AuthManager) Auth(c web.Context) (domain.Auth, error) {
+	ts, err := am.TokenSource(c)
 	if err != nil {
 		return domain.Auth{}, err
 	}
-	idToken, err := cs.IDToken(c)
+	idToken, err := am.IDToken(c)
 	if err != nil {
 		return domain.Auth{}, err
 	}
@@ -64,61 +64,61 @@ func (cs *AuthManager) Auth(c web.Context) (domain.Auth, error) {
 }
 
 // OpenIDProvider is a lazy initialized OID provider
-func (authmanager *AuthManager) OpenIDProvider() *oidc.Provider {
-	if authmanager.openIDProvider == nil {
+func (am *AuthManager) OpenIDProvider() *oidc.Provider {
+	if am.openIDProvider == nil {
 		var err error
-		authmanager.openIDProvider, err = oidc.NewProvider(context.Background(), authmanager.Server)
+		am.openIDProvider, err = oidc.NewProvider(context.Background(), am.Server)
 		if err != nil {
 			panic(err)
 		}
 	}
-	return authmanager.openIDProvider
+	return am.openIDProvider
 }
 
 // OAuth2Config is lazy setup oauth2config
-func (authmanager *AuthManager) OAuth2Config() *oauth2.Config {
-	if authmanager.oauth2Config != nil {
-		return authmanager.oauth2Config
+func (am *AuthManager) OAuth2Config() *oauth2.Config {
+	if am.oauth2Config != nil {
+		return am.oauth2Config
 	}
 
-	callbackURL := authmanager.Router.URL("auth.callback", nil)
+	callbackURL := am.Router.URL("auth.callback", nil)
 
-	authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("authmanager Callback", authmanager, callbackURL)
+	am.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am Callback", am, callbackURL)
 
-	myhost, err := url.Parse(authmanager.MyHost)
+	myhost, err := url.Parse(am.MyHost)
 	if err != nil {
-		authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", authmanager.MyHost, err)
+		am.Logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", am.MyHost, err)
 	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
 	scopes := []string{oidc.ScopeOpenID, "profile", "email"}
-	if !authmanager.DisableOfflineToken {
+	if !am.DisableOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
-	authmanager.oauth2Config = &oauth2.Config{
-		ClientID:     authmanager.ClientID,
-		ClientSecret: authmanager.Secret,
+	am.oauth2Config = &oauth2.Config{
+		ClientID:     am.ClientID,
+		ClientSecret: am.Secret,
 		RedirectURL:  callbackURL.String(),
 
 		// Discovery returns the OAuth2 endpoints.
 		// It might panic here if Endpoint cannot be discovered
-		Endpoint: authmanager.OpenIDProvider().Endpoint(),
+		Endpoint: am.OpenIDProvider().Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
 	}
-	authmanager.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("authmanager.oauth2Config", authmanager.oauth2Config)
-	return authmanager.oauth2Config
+	am.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
+	return am.oauth2Config
 }
 
 // Verifier creates an OID verifier
-func (authmanager *AuthManager) Verifier() *oidc.IDTokenVerifier {
-	return authmanager.OpenIDProvider().Verifier(&oidc.Config{ClientID: authmanager.ClientID})
+func (am *AuthManager) Verifier() *oidc.IDTokenVerifier {
+	return am.OpenIDProvider().Verifier(&oidc.Config{ClientID: am.ClientID})
 }
 
 // OAuth2Token retrieves the oauth2 token from the session
-func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error) {
+func (am *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error) {
 	if _, ok := c.Session().Values[KeyToken]; !ok {
 		return nil, errors.New("no token")
 	}
@@ -132,31 +132,31 @@ func (authmanager *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (authmanager *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
-	token, _, err := authmanager.getIDToken(c)
+func (am *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
+	token, _, err := am.getIDToken(c)
 	return token, err
 }
 
-// Get RAW IDToken from session
-func (authmanager *AuthManager) GetRawIDToken(c web.Context) (string, error) {
-	_, raw, err := authmanager.getIDToken(c)
+// GetRawIDToken gets the raw IDToken from session
+func (am *AuthManager) GetRawIDToken(c web.Context) (string, error) {
+	_, raw, err := am.getIDToken(c)
 	return raw, err
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (authmanager *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
+func (am *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
 	if c.Session() == nil {
 		return nil, "", errors.New("no session configured")
 	}
 
 	if token, ok := c.Session().Values[KeyRawIDToken]; ok {
-		idtoken, err := authmanager.Verifier().Verify(c, token.(string))
+		idtoken, err := am.Verifier().Verify(c, token.(string))
 		if err == nil {
 			return idtoken, token.(string), nil
 		}
 	}
 
-	token, raw, err := authmanager.getNewIdToken(c)
+	token, raw, err := am.getNewIdToken(c)
 	if err != nil {
 		return nil, "", err
 	}
@@ -167,8 +167,8 @@ func (authmanager *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (authmanager *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, string, error) {
-	tokenSource, err := authmanager.TokenSource(c)
+func (am *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, string, error) {
+	tokenSource, err := am.TokenSource(c)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
 	}
@@ -178,12 +178,12 @@ func (authmanager *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, str
 		return nil, "", errors.WithStack(err)
 	}
 
-	raw, err := authmanager.ExtractRawIDToken(token)
+	raw, err := am.ExtractRawIDToken(token)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
 	}
 
-	idtoken, err := authmanager.Verifier().Verify(c, raw)
+	idtoken, err := am.Verifier().Verify(c, raw)
 
 	if idtoken == nil {
 		return nil, "", errors.New("idtoken nil")
@@ -193,7 +193,7 @@ func (authmanager *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, str
 }
 
 // ExtractRawIDToken from the provided (fresh) oatuh2token
-func (authmanager *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, error) {
+func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, error) {
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
@@ -204,18 +204,18 @@ func (authmanager *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (st
 }
 
 // TokenSource to be used in situations where you need it
-func (authmanager *AuthManager) TokenSource(c web.Context) (oauth2.TokenSource, error) {
-	oauth2Token, err := authmanager.OAuth2Token(c)
+func (am *AuthManager) TokenSource(c web.Context) (oauth2.TokenSource, error) {
+	oauth2Token, err := am.OAuth2Token(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return authmanager.OAuth2Config().TokenSource(c, oauth2Token), nil
+	return am.OAuth2Config().TokenSource(c, oauth2Token), nil
 }
 
 // HTTPClient to retrieve a client with automatic tokensource
-func (authmanager *AuthManager) HTTPClient(c web.Context) (*http.Client, error) {
-	ts, err := authmanager.TokenSource(c)
+func (am *AuthManager) HTTPClient(c web.Context) (*http.Client, error) {
+	ts, err := am.TokenSource(c)
 	if err != nil {
 		return nil, err
 	}

@@ -34,6 +34,7 @@ type (
 		Configure(injector *Injector)
 	}
 
+	// Depender defines a dependency-aware module
 	Depender interface {
 		Depends() []Module
 	}

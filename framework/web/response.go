@@ -65,6 +65,7 @@ type (
 		Size   int
 	}
 
+	// ServeHTTPResponse wraps the original response with a VerboseResponseWriter
 	ServeHTTPResponse struct {
 		*VerboseResponseWriter
 		BasicResponse

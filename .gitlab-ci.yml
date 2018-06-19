@@ -1,9 +1,21 @@
 stages:
+- prepare
 - test
+
+build docker env:
+  stage: prepare
+  image: docker:latest
+  script:
+  - cd build/docker
+  - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
+  - docker build --pull --squash -t iloveflamingo/buildenv:1.10 .
+  - docker push iloveflamingo/buildenv:1.10
+  only:
+  - master
 
 test flamingo:
   stage: test
-  image: thebod/goenv:0.0.1
+  image: iloveflamingo/buildenv:1.10
   script:
   - mkdir -p "${GOPATH}/src/flamingo.me/"
   - export GODIR="${GOPATH}/src/flamingo.me/flamingo"

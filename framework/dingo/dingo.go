@@ -579,6 +579,13 @@ func (injector *Injector) requestInjection(object interface{}) {
 		switch ctype.Kind() {
 		// dereference pointer
 		case reflect.Ptr:
+			if setup := current.MethodByName("Inject"); setup.IsValid() {
+				args := make([]reflect.Value, setup.Type().NumIn())
+				for i := range args {
+					args[i] = injector.getInstance(setup.Type().In(i), "")
+				}
+				setup.Call(args)
+			}
 			injectlist = append(injectlist, current.Elem())
 			continue
 

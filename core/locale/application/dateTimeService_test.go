@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/assert"
-	"go.aoe.com/flamingo/framework/flamingo"
 )
 
 func TestGetDateTimeFormatterFromIsoString(t *testing.T) {

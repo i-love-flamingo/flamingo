@@ -6,11 +6,12 @@ import (
 	"net/url"
 	"time"
 
+	"encoding/gob"
+
+	"flamingo.me/flamingo/core/auth/domain"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
-
-	"flamingo.me/flamingo/core/auth/domain"
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -27,24 +28,45 @@ const (
 	KeyAuthstate = "auth.state"
 )
 
+func init() {
+	gob.Register(&oauth2.Token{})
+	gob.Register(&oidc.IDToken{})
+}
+
 type (
-	// AuthManager handles authentication related operations
+	// authManager handles authentication related operations
 	AuthManager struct {
-		Server              string          `inject:"config:auth.server"`
-		Secret              string          `inject:"config:auth.secret"`
-		ClientID            string          `inject:"config:auth.clientid"`
-		MyHost              string          `inject:"config:auth.myhost"`
-		DisableOfflineToken bool            `inject:"config:auth.disableOfflineToken"`
-		Logger              flamingo.Logger `inject:""`
-
-		NotBefore time.Time
-
-		Router *router.Router `inject:""`
+		server              string
+		secret              string
+		clientID            string
+		myHost              string
+		disableOfflineToken bool
+		logger              flamingo.Logger
+		router              *router.Router
 
 		openIDProvider *oidc.Provider
 		oauth2Config   *oauth2.Config
+
+		NotBefore time.Time // todo: is this used?
 	}
 )
+
+// Inject authManager dependencies
+func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, config *struct {
+	Server              string `inject:"config:auth.server"`
+	Secret              string `inject:"config:auth.secret"`
+	ClientID            string `inject:"config:auth.clientid"`
+	MyHost              string `inject:"config:auth.myhost"`
+	DisableOfflineToken bool   `inject:"config:auth.disableOfflineToken"`
+}) {
+	am.logger = logger
+	am.router = router
+	am.server = config.Server
+	am.secret = config.Secret
+	am.clientID = config.ClientID
+	am.myHost = config.MyHost
+	am.disableOfflineToken = config.DisableOfflineToken
+}
 
 // Auth tries to retrieve the authentication context for a active session
 func (am *AuthManager) Auth(c web.Context) (domain.Auth, error) {
@@ -67,7 +89,7 @@ func (am *AuthManager) Auth(c web.Context) (domain.Auth, error) {
 func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 	if am.openIDProvider == nil {
 		var err error
-		am.openIDProvider, err = oidc.NewProvider(context.Background(), am.Server)
+		am.openIDProvider, err = oidc.NewProvider(context.Background(), am.server)
 		if err != nil {
 			panic(err)
 		}
@@ -81,24 +103,24 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 		return am.oauth2Config
 	}
 
-	callbackURL := am.Router.URL("auth.callback", nil)
+	callbackURL := am.router.URL("auth.callback", nil)
 
-	am.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am Callback", am, callbackURL)
+	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am Callback", am, callbackURL)
 
-	myhost, err := url.Parse(am.MyHost)
+	myhost, err := url.Parse(am.myHost)
 	if err != nil {
-		am.Logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", am.MyHost, err)
+		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", am.myHost, err)
 	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
 	scopes := []string{oidc.ScopeOpenID, "profile", "email"}
-	if !am.DisableOfflineToken {
+	if !am.disableOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
 	am.oauth2Config = &oauth2.Config{
-		ClientID:     am.ClientID,
-		ClientSecret: am.Secret,
+		ClientID:     am.clientID,
+		ClientSecret: am.secret,
 		RedirectURL:  callbackURL.String(),
 
 		// Discovery returns the OAuth2 endpoints.
@@ -108,13 +130,13 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
 	}
-	am.Logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
+	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
 	return am.oauth2Config
 }
 
 // Verifier creates an OID verifier
 func (am *AuthManager) Verifier() *oidc.IDTokenVerifier {
-	return am.OpenIDProvider().Verifier(&oidc.Config{ClientID: am.ClientID})
+	return am.OpenIDProvider().Verifier(&oidc.Config{ClientID: am.clientID})
 }
 
 // OAuth2Token retrieves the oauth2 token from the session

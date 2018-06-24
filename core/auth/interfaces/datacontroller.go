@@ -8,11 +8,16 @@ import (
 type (
 	// UserController uc
 	UserController struct {
-		UserService *application.UserService `inject:""`
+		userService *application.UserService
 	}
 )
 
+// Inject UserController dependencies
+func (u *UserController) Inject(service *application.UserService) {
+	u.userService = service
+}
+
 // Data controller to return userinfo
 func (u *UserController) Data(c web.Context) interface{} {
-	return u.UserService.GetUser(c)
+	return u.userService.GetUser(c)
 }

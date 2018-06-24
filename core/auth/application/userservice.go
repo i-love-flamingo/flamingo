@@ -6,9 +6,9 @@ import (
 )
 
 type (
-	// UserService helps to use the authenticated user information
+	// userService helps to use the authenticated user information
 	UserService struct {
-		AuthManager *AuthManager `inject:""`
+		authManager *AuthManager
 	}
 
 	// UserServiceInterface to mock in tests
@@ -18,9 +18,13 @@ type (
 	}
 )
 
+func (us *UserService) Inject(manager *AuthManager) {
+	us.authManager = manager
+}
+
 // GetUser returns the current user information
 func (us *UserService) GetUser(c web.Context) *domain.User {
-	id, err := us.AuthManager.IDToken(c)
+	id, err := us.authManager.IDToken(c)
 	if err != nil {
 		return domain.Guest
 	}

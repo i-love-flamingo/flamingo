@@ -43,6 +43,7 @@ type (
 		optional bool
 	}
 
+	// Module defines a router Module, which is able to register routes
 	Module interface {
 		Routes(registry *Registry)
 	}
@@ -185,8 +186,8 @@ func (registry *Registry) GetRoutes() []*Handler {
 	return registry.routes
 }
 
-// GetHandler returns registered Routes
-func (registry *Registry) GetHandler() map[string]handlerAction {
+// getHandler returns registered Routes
+func (registry *Registry) getHandler() map[string]handlerAction {
 	return registry.handler
 }
 
@@ -401,8 +402,8 @@ func (registry *Registry) Match(path string) (controller Controller, params map[
 	return
 }
 
-// MatchRequest matches a http Request (with query and path parameters)
-func (registry *Registry) MatchRequest(req *http.Request) (handlerAction, map[string]string, *Handler) {
+// matchRequest matches a http Request (with query and path parameters)
+func (registry *Registry) matchRequest(req *http.Request) (handlerAction, map[string]string, *Handler) {
 	var path = req.URL.Path
 	if req.URL.RawPath != "" {
 		path = req.URL.RawPath

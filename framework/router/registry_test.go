@@ -130,24 +130,24 @@ func TestRegistry(t *testing.T) {
 
 		t.Run("Should match HTTP Requests", func(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/page2", nil)
-			controller, params, _ := registry.MatchRequest(request)
+			controller, params, _ := registry.matchRequest(request)
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "page2", params["page"])
 
 			request, _ = http.NewRequest("GET", "/page2?page=foo", nil)
-			controller, params, _ = registry.MatchRequest(request)
+			controller, params, _ = registry.matchRequest(request)
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "foo", params["page"])
 
 			request, _ = http.NewRequest("GET", "/mustget", nil)
-			controller, params, _ = registry.MatchRequest(request)
+			controller, params, _ = registry.matchRequest(request)
 			assert.Equal(t, handlerAction{}, controller)
 			assert.Nil(t, params)
 
 			request, _ = http.NewRequest("GET", "/mustget?page=foo", nil)
-			controller, params, _ = registry.MatchRequest(request)
+			controller, params, _ = registry.matchRequest(request)
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "foo", params["page"])

@@ -36,7 +36,7 @@ type (
 	EventRouterProvider func() event.Router
 	// FilterProvider for filter injection
 	FilterProvider func() []Filter
-
+	// RegistryProvider is called to retrieve registered routes
 	RegistryProvider func() []Module
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
@@ -259,7 +259,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req = e.Request
 
 	done := ctx.Profile("matchRequest", req.RequestURI)
-	controller, params, handler := router.RouterRegistry.MatchRequest(req)
+	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
 	ctx.LoadParams(params)
 	if controller.legacyController == nil {
@@ -331,7 +331,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		if response, ok := response.(web.OnResponse); ok {
-			response.OnResponse(ctx, rw)
+			response.OnResponse(ctx, webRequest, rw)
 		}
 
 		// fire response event

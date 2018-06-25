@@ -74,8 +74,8 @@ type (
 	DataHandler func(web.Context) interface{}
 )
 
-// HttpAction wraps a default http.Handler to a flamingo router action
-func HttpAction(handler http.Handler) Action {
+// HTTPAction wraps a default http.Handler to a flamingo router action
+func HTTPAction(handler http.Handler) Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		r := &web.ServeHTTPResponse{
 			VerboseResponseWriter: ctx.Value("rw").(*web.VerboseResponseWriter),

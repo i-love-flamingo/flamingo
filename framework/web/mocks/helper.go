@@ -1,11 +1,12 @@
 package mocks
 
 import (
-	"github.com/gorilla/sessions"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/gorilla/sessions"
 )
 
 // Map builds a parameter map for setting up test request contexts
+// deprecated: do not use anymore
 func Map(p ...string) map[string][]string {
 	res := make(map[string][]string)
 	for i := 0; i < len(p); i += 2 {
@@ -15,6 +16,7 @@ func Map(p ...string) map[string][]string {
 }
 
 // RequestContext helper for easy mock creation
+// deprecated: do not use anymore
 func RequestContext(params map[string][]string, forms map[string][]string) web.Context {
 	mock := new(Context)
 

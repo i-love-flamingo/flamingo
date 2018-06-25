@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// CanonicalDomainFunc is exported as a template function
+	// IsExternalUrl is exported as a template function
 	IsExternalUrl struct {
 		Service *application.Service `inject:""`
 	}
@@ -18,7 +18,7 @@ func (c *IsExternalUrl) Name() string {
 	return "isExternalUrl"
 }
 
-// Func returns the CSRF NONCE
+// Func returns a boolean if a given URL is external
 func (c *IsExternalUrl) Func() interface{} {
 	return func(urlStr string) bool {
 		if url, err := url.Parse(urlStr); err == nil {

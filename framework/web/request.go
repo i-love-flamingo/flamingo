@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	// Request defines what a controller sees
+	// Request defines a web request
 	Request struct {
 		request *http.Request
 		vars    map[string]string
@@ -17,19 +17,20 @@ type (
 )
 
 var (
-	ErrFormNotFound  = errors.New("form value not found")
+	// ErrFormNotFound is triggered for missing form values
+	ErrFormNotFound = errors.New("form value not found")
+	// ErrParamNotFound for missing router params
 	ErrParamNotFound = errors.New("param value not found")
+	// ErrQueryNotFound for missing query params
 	ErrQueryNotFound = errors.New("query value not found")
 )
 
 // RequestFromRequest wraps a http Request
 func RequestFromRequest(r *http.Request, session *sessions.Session) *Request {
-	c := &Request{
+	return &Request{
 		request: r,
 		session: session,
 	}
-
-	return c
 }
 
 // WithVars loads parameters
@@ -49,8 +50,9 @@ func (r *Request) clone() *Request {
 }
 
 // LoadParams load request params
-func (r *Request) LoadParams(p map[string]string) {
+func (r *Request) LoadParams(p map[string]string) *Request {
 	r.vars = p
+	return r
 }
 
 // Session returns the ctx Session

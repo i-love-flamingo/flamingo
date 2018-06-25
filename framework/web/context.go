@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/profiler"
 	"github.com/gorilla/sessions"
@@ -14,9 +15,11 @@ import (
 
 type (
 	// ContextKey is used for context.WithValue
+	// deprecated: not supposed to be used anymore
 	ContextKey string
 
 	// Context defines what a controller sees
+	// deprecated: use *Request instead
 	Context interface {
 		context.Context
 		profiler.Profiler
@@ -50,8 +53,10 @@ type (
 	}
 
 	// ContextFactory creates a new context
+	// deprecated: use *Request instead
 	ContextFactory func(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context
 
+	// deprecated: internal implementation of Context
 	ctx struct {
 		context.Context
 		profiler    profiler.Profiler
@@ -68,12 +73,15 @@ type (
 
 const (
 	// CONTEXT key for contexts
+	// deprecated: used for legacy compatibility
 	CONTEXT ContextKey = "context"
 	// ID for request id
+	// deprecated: do not use anymore
 	ID ContextKey = "ID"
 )
 
 // NewContext creates a new context with a unique ID
+// deprecated: only for legacy
 func NewContext() Context {
 	id := uuid.NewV4().String()
 
@@ -88,6 +96,7 @@ func NewContext() Context {
 }
 
 // ContextFromRequest returns a ctx enriched by Request Data
+// deprecated: only for legacy
 func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) Context {
 	id := uuid.NewV4().String()
 
@@ -116,6 +125,7 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 }
 
 // WithVars loads parameters
+// deprecated: only or legacy
 func (c *ctx) WithVars(vars map[string]string) Context {
 	newctx := c.clone()
 

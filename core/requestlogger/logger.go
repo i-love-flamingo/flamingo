@@ -1,6 +1,7 @@
 package requestlogger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,7 +27,7 @@ type (
 )
 
 // Apply logger to request
-func (l *loggedResponse) Apply(ctx web.Context, rw http.ResponseWriter) {
+func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) {
 	if l.Response != nil {
 		l.Response.Apply(ctx, rw)
 	}

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -10,7 +11,7 @@ type (
 	// Response defines the generic web response
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
-		Apply(Context, http.ResponseWriter)
+		Apply(context.Context, http.ResponseWriter)
 		GetStatus() int
 		GetContentLength() int
 	}
@@ -18,12 +19,12 @@ type (
 	// BasicResponse defines a response with basic attributes
 	BasicResponse struct {
 		Status      int
-		ContentSize int
+		contentSize int
 	}
 
 	// OnResponse hook
 	OnResponse interface {
-		OnResponse(Context, http.ResponseWriter)
+		OnResponse(context.Context, *Request, http.ResponseWriter)
 	}
 
 	// Redirect response with the ability to add data
@@ -47,6 +48,7 @@ type (
 	}
 
 	// JSONResponse returns Data encoded as JSON
+	// todo: create a generic data response instead
 	JSONResponse struct {
 		BasicResponse
 		Data interface{}
@@ -86,7 +88,7 @@ func (response *VerboseResponseWriter) WriteHeader(h int) {
 }
 
 // Apply Response (empty, it has already been applied)
-func (shr *ServeHTTPResponse) Apply(c Context, rw http.ResponseWriter) {
+func (shr *ServeHTTPResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	shr.BasicResponse.Apply(c, rw)
 }
 
@@ -97,19 +99,19 @@ func (br *BasicResponse) GetStatus() int {
 
 // GetContentLength returns the content size of the response
 func (br *BasicResponse) GetContentLength() int {
-	return br.ContentSize
+	return br.contentSize
 }
 
 // Apply sets status and content size of the response
-func (br *BasicResponse) Apply(c Context, rw http.ResponseWriter) {
+func (br *BasicResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	if vrb, ok := rw.(*VerboseResponseWriter); ok {
 		br.Status = vrb.Status
-		br.ContentSize = vrb.Size
+		br.contentSize = vrb.Size
 	}
 }
 
 // Apply Response
-func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
+func (rr *RedirectResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	if rr.Status == 0 {
 		rr.Status = http.StatusTemporaryRedirect
 	}
@@ -121,9 +123,9 @@ func (rr *RedirectResponse) Apply(c Context, rw http.ResponseWriter) {
 }
 
 // OnResponse Hook
-func (rr *RedirectResponse) OnResponse(c Context, rw http.ResponseWriter) {
+func (rr *RedirectResponse) OnResponse(c context.Context, r *Request, rw http.ResponseWriter) {
 	for k, v := range rr.data {
-		c.Session().AddFlash(v, k)
+		r.Session().AddFlash(v, k)
 	}
 }
 
@@ -138,7 +140,7 @@ func (rr *RedirectResponse) With(key string, data interface{}) Redirect {
 }
 
 // Apply ContentResponse
-func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
+func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain; charset=utf-8"
 	}
@@ -157,7 +159,7 @@ func (cr *ContentResponse) Apply(c Context, rw http.ResponseWriter) {
 }
 
 // Apply JSONResponse
-func (js *JSONResponse) Apply(c Context, rw http.ResponseWriter) {
+func (js *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	if js.Status == 0 {
 		js.Status = http.StatusOK
 	}

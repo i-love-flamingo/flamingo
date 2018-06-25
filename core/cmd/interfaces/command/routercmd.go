@@ -83,13 +83,13 @@ func (r *routesHelper) printDataHandlers() {
 	fmt.Println("    Handler-Name:         Type        (Registered Handler)")
 
 	fmt.Println("----------------------------------------------------------")
-	//for k, v := range r.RouterRegistry.GetHandler() {
-		//if c, ok := v.(router.DataController); ok {
-		//	fmt.Printf("    %s:\t\t> %s \t(%v)\n", k, "DataController", c)
-		//}
-		//if c, ok := v.(func(web.Context) interface{}); ok {
-		//	fmt.Printf("    %s:\t\t> %s \t(%v)\n", k, "Function", reflect.ValueOf(c))
-		//}
+	//for k, v := range r.RouterRegistry.getHandler() {
+	//if c, ok := v.(router.DataController); ok {
+	//	fmt.Printf("    %s:\t\t> %s \t(%v)\n", k, "DataController", c)
+	//}
+	//if c, ok := v.(func(web.Context) interface{}); ok {
+	//	fmt.Printf("    %s:\t\t> %s \t(%v)\n", k, "Function", reflect.ValueOf(c))
+	//}
 	//}
 }
 

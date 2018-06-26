@@ -35,10 +35,14 @@ type (
 	Module struct {
 		RouterRegistry *router.Registry `inject:""`
 	}
+
+	routes struct{}
 )
 
 // Configure the InitModule
 func (initmodule *InitModule) Configure(injector *dingo.Injector) {
+	router.Bind(injector, new(routes))
+
 	injector.Bind((*event.Router)(nil)).To(event.DefaultRouter{})
 	injector.Bind((*profiler.Profiler)(nil)).To(profiler.NullProfiler{})
 
@@ -49,6 +53,8 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ConfigFunc{})
 }
+
+func (*routes) Routes(*router.Registry) {}
 
 // Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {

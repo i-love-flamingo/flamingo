@@ -20,6 +20,7 @@ type (
 	}
 )
 
+// NewInMemoryCache creates a new lru TwoQueue backed cache backend
 func NewInMemoryCache() *inMemoryCache {
 	cache, _ := lru.New2Q(100)
 
@@ -30,6 +31,7 @@ func NewInMemoryCache() *inMemoryCache {
 	return m
 }
 
+// Get tries to get an object from cache
 func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	entry, ok := m.pool.Get(key)
 	if !ok {
@@ -38,6 +40,7 @@ func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	return entry.(inMemoryCacheEntry).data.(*Entry), ok
 }
 
+// Set a cache entry with a key
 func (m *inMemoryCache) Set(key string, entry *Entry) {
 	m.pool.Add(key, inMemoryCacheEntry{
 		data:  entry,
@@ -45,14 +48,17 @@ func (m *inMemoryCache) Set(key string, entry *Entry) {
 	})
 }
 
+// Purge a cache key
 func (m *inMemoryCache) Purge(key string) {
 	m.pool.Remove(key)
 }
 
+// PurgeTags purges all entries with matching tags from the cache
 func (m *inMemoryCache) PurgeTags(tags []string) {
 	panic("implement me")
 }
 
+// Flush purges all entries in the cache
 func (m *inMemoryCache) Flush() {
 	m.pool.Purge()
 }

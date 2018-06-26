@@ -7,9 +7,7 @@ import (
 )
 
 // Module for core/canonicalUrl
-type (
-	Module struct{}
-)
+type Module struct{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {

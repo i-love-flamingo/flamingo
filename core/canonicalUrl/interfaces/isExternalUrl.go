@@ -9,9 +9,14 @@ import (
 type (
 	// IsExternalUrl is exported as a template function
 	IsExternalUrl struct {
-		Service *application.Service `inject:""`
+		service *application.Service
 	}
 )
+
+// Inject CanonicalUrlFunc dependencies
+func (c *IsExternalUrl) Inject(service *application.Service) {
+	c.service = service
+}
 
 // Name alias for use in template
 func (c *IsExternalUrl) Name() string {
@@ -22,8 +27,7 @@ func (c *IsExternalUrl) Name() string {
 func (c *IsExternalUrl) Func() interface{} {
 	return func(urlStr string) bool {
 		if url, err := url.Parse(urlStr); err == nil {
-			baseUrl := c.Service.GetBaseDomain()
-			return baseUrl != url.Host
+			return c.service.GetBaseDomain() != url.Host
 		}
 
 		return false

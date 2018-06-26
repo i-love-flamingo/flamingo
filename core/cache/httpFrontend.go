@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/golang/groupcache/singleflight"
 	"github.com/pkg/errors"
-	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (
@@ -20,8 +20,8 @@ type (
 	// HTTPFrontend stores and caches http responses
 	HTTPFrontend struct {
 		singleflight.Group
-		Backend Backend         `inject:""`
-		Logger  flamingo.Logger `inject:""`
+		backend Backend
+		logger  flamingo.Logger
 	}
 
 	nopCloser struct {
@@ -34,10 +34,17 @@ type (
 	}
 )
 
+// Inject HTTPFrontend dependencies
+func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) {
+	hf.backend = backend
+	hf.logger = logger
+}
+
+// GetHTTPFrontendCacheWithNullBackend helper for tests
 func GetHTTPFrontendCacheWithNullBackend() *HTTPFrontend {
 	return &HTTPFrontend{
-		Backend: &NullBackend{},
-		Logger:  flamingo.NullLogger{},
+		backend: &NullBackend{},
+		logger:  flamingo.NullLogger{},
 	}
 }
 
@@ -63,22 +70,22 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 // Get a http response, with tags and a loader
 // the tags will be used when the entry is stored
 func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, error) {
-	if hf.Backend == nil {
-		return nil, errors.New("NO Backend in Cache")
+	if hf.backend == nil {
+		return nil, errors.New("NO backend in Cache")
 	}
-	if entry, ok := hf.Backend.Get(key); ok {
+	if entry, ok := hf.backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
-			hf.Logger.WithField("category", "httpFrontendCache").Debug("Serving from cache", key)
+			hf.logger.WithField("category", "httpFrontendCache").Debug("Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
 			go hf.load(key, loader)
-			hf.Logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
+			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
-	hf.Logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
+	hf.logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
 	return copyResponse(hf.load(key, loader))
 }
 
@@ -145,8 +152,8 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 		cached = loadedData.(cachedResponse)
 	}
 
-	hf.Logger.WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
-	hf.Backend.Set(key, &Entry{
+	hf.logger.WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
+	hf.backend.Set(key, &Entry{
 		Data: cached,
 		Meta: Meta{
 			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),

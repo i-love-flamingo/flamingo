@@ -5,17 +5,20 @@ import (
 )
 
 type (
+	// Meta describes life and gracetimes, as well as tags, for cache entries
 	Meta struct {
 		Tags                []string
 		Lifetime, Gracetime time.Duration
 		lifetime, gracetime time.Time
 	}
 
+	// Entry is a cached object with associated meta data
 	Entry struct {
 		Meta Meta
 		Data interface{}
 	}
 
+	// Backend describes a cache backend, responsible for storing, flushing, setting and getting entries
 	Backend interface {
 		Get(key string) (entry *Entry, found bool) // Get a cache entry
 		Set(key string, entry *Entry)              // Set a cache entry

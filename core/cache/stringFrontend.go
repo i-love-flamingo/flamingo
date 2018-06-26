@@ -7,16 +7,24 @@ import (
 )
 
 type (
-	StringLoader   func() (string, *Meta, error)
+	// StringLoader is used to load strings for singleflight cache loads
+	StringLoader func() (string, *Meta, error)
+
+	// StringFrontend manages cache entries as strings
 	StringFrontend struct {
 		singleflight.Group
-		Backend Backend `inject:""`
+		backend Backend
 	}
 )
 
-// Get string cache
+// Inject StringFrontend dependencies
+func (sf *StringFrontend) Inject(backend Backend) {
+	sf.backend = backend
+}
+
+// Get and load string cache entries
 func (sf *StringFrontend) Get(key string, loader StringLoader) (string, error) {
-	if entry, ok := sf.Backend.Get(key); ok {
+	if entry, ok := sf.backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
 			return entry.Data.(string), nil
 		}
@@ -46,7 +54,7 @@ func (sf *StringFrontend) load(key string, loader StringLoader) (string, error) 
 		return "", err
 	}
 
-	sf.Backend.Set(key, &Entry{
+	sf.backend.Set(key, &Entry{
 		Data: data.(loaderResponse).data,
 		Meta: Meta{
 			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),

@@ -88,10 +88,10 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 		}
 	}
 
-	for _, m := range router.RouterRegistryProvider() {
-		log.Println(m)
-		m.Routes(router.RouterRegistry)
-		//m.Routes(routes)
+	if router.RouterRegistryProvider != nil {
+		for _, m := range router.RouterRegistryProvider() {
+			m.Routes(router.RouterRegistry)
+		}
 	}
 
 	var routerroutes = make([]*Handler, len(router.RouterRegistry.routes))

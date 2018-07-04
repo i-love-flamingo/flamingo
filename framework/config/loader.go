@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 
 	"github.com/ghodss/yaml"
@@ -32,17 +32,17 @@ func LoadConfigFile(area *Area, file string) error {
 }
 
 func load(area *Area, basedir, curdir string) error {
-	loadConfig(area, path.Join(basedir, curdir, "config.yml"))
-	loadRoutes(area, path.Join(basedir, curdir, "routes.yml"))
+	loadConfig(area, filepath.Join(basedir, curdir, "config.yml"))
+	loadRoutes(area, filepath.Join(basedir, curdir, "routes.yml"))
 	if os.Getenv("CONTEXT") != "" {
-		loadConfig(area, path.Join(basedir, curdir, "config_"+os.Getenv("CONTEXT")+".yml"))
-		loadRoutes(area, path.Join(basedir, curdir, "routes_"+os.Getenv("CONTEXT")+".yml"))
+		loadConfig(area, filepath.Join(basedir, curdir, "config_"+os.Getenv("CONTEXT")+".yml"))
+		loadRoutes(area, filepath.Join(basedir, curdir, "routes_"+os.Getenv("CONTEXT")+".yml"))
 	}
-	loadConfig(area, path.Join(basedir, curdir, "config_local.yml"))
-	loadRoutes(area, path.Join(basedir, curdir, "routes_local.yml"))
+	loadConfig(area, filepath.Join(basedir, curdir, "config_local.yml"))
+	loadRoutes(area, filepath.Join(basedir, curdir, "routes_local.yml"))
 
 	for _, child := range area.Childs {
-		load(child, basedir, path.Join(curdir, child.Name))
+		load(child, basedir, filepath.Join(curdir, child.Name))
 	}
 
 	return nil

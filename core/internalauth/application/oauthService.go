@@ -12,23 +12,29 @@ import (
 
 type (
 	OauthService struct {
-		BaseUrl string `inject:"config:internalauth.baseurl"`
+		baseUrl string
 	}
 )
+
+func (os *OauthService) Inject(config *struct {
+	BaseUrl string `inject:"config:internalauth.baseurl"`
+}) {
+	os.baseUrl = config.BaseUrl
+}
 
 // GetConfig returns an oauth config object
 func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, GrantType string) clientcredentials.Config {
 	return clientcredentials.Config{
-		ClientID: ClientID,
-		ClientSecret: ClientSecret,
-		TokenURL: strings.TrimRight(os.BaseUrl, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
+		ClientID:       ClientID,
+		ClientSecret:   ClientSecret,
+		TokenURL:       strings.TrimRight(os.baseUrl, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
 		EndpointParams: url.Values{},
 	}
 }
 
 // GetOauthToken wraps the oauth2 call to retrieve a token
 func (os *OauthService) GetOauthToken(ctx context.Context, config *clientcredentials.Config) (*oauth2.Token, error) {
-	token, err:= config.Token(ctx)
+	token, err := config.Token(ctx)
 	if err != nil {
 		return nil, err
 	}

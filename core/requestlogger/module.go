@@ -8,9 +8,6 @@ import (
 type (
 	// Module for core/requestlogger
 	Module struct{}
-
-	// LogFilter to filter web requests
-	LogFilter struct{}
 )
 
 // Configure DI

@@ -32,11 +32,15 @@ type (
 	InitModule struct{}
 
 	// Module for framework functionality
-	Module struct {
-		RouterRegistry *router.Registry `inject:""`
-	}
+	Module struct{}
 
-	routes struct{}
+	routes struct {
+		dataController  *controller.DataController
+		flashController *controller.SessionFlashController
+		render          *controller.Render
+		redirect        *controller.Redirect
+		errorController *controller.Error
+	}
 )
 
 // Configure the InitModule
@@ -54,30 +58,46 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ConfigFunc{})
 }
 
-func (*routes) Routes(*router.Registry) {}
-
 // Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {
-	module.RouterRegistry.Route("/_flamingo/json/:handler", "flamingo.data.handler")
-	module.RouterRegistry.Handle("flamingo.data.handler", new(controller.DataController))
-	module.RouterRegistry.Handle("session.flash", new(controller.SessionFlashController))
-
-	module.RouterRegistry.Handle("flamingo.render", (*controller.Render).Render)
-
-	module.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)
-	module.RouterRegistry.Handle("flamingo.redirectUrl", (*controller.Redirect).RedirectURL)
-	module.RouterRegistry.Handle("flamingo.redirectPermanent", (*controller.Redirect).RedirectPermanent)
-	module.RouterRegistry.Handle("flamingo.redirectPermanentUrl", (*controller.Redirect).RedirectPermanentURL)
-
-	module.RouterRegistry.Handle(router.FlamingoError, (*controller.Error).Error)
-	module.RouterRegistry.Handle(router.FlamingoNotfound, (*controller.Error).NotFound)
-
 	injector.BindMulti((*collector.DataCollector)(nil)).To(router.DataCollector{})
 
 	injector.Bind((*responder.RedirectAware)(nil)).To(responder.FlamingoRedirectAware{})
 	injector.Bind((*responder.RenderAware)(nil)).To(responder.FlamingoRenderAware{})
 	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})
 	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
+
+	router.Bind(injector, new(routes))
+}
+
+func (r *routes) Inject(
+	dataController *controller.DataController,
+	flashController *controller.SessionFlashController,
+	render *controller.Render,
+	redirect *controller.Redirect,
+	errorController *controller.Error,
+) {
+	r.dataController = dataController
+	r.flashController = flashController
+	r.render = render
+	r.redirect = redirect
+	r.errorController = errorController
+}
+
+func (r *routes) Routes(registry *router.Registry) {
+	registry.Route("/_flamingo/json/:handler", "flamingo.data.handler")
+	registry.Handle("flamingo.data.handler", r.dataController)
+	registry.Handle("session.flash", r.flashController)
+
+	registry.HandleAny("flamingo.render", r.render.Render)
+
+	registry.HandleAny("flamingo.redirect", r.redirect.Redirect)
+	registry.HandleAny("flamingo.redirectUrl", r.redirect.RedirectURL)
+	registry.HandleAny("flamingo.redirectPermanent", r.redirect.RedirectPermanent)
+	registry.HandleAny("flamingo.redirectPermanentUrl", r.redirect.RedirectPermanentURL)
+
+	registry.HandleAny(router.FlamingoError, r.errorController.Error)
+	registry.HandleAny(router.FlamingoNotfound, r.errorController.NotFound)
 }
 
 // DefaultConfig for this module

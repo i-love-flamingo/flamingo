@@ -13,10 +13,10 @@ import (
 
 type (
 	// Module registers our profiler
+	// deprecated: use opencensus tracing
 	Module struct {
 		RouterRegistry *router.Registry `inject:""`
 		DebugMode      bool             `inject:"config:debug.mode"`
-
 	}
 
 	roundTripper struct {
@@ -45,7 +45,7 @@ func init() {
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	if (m.DebugMode) {
+	if m.DebugMode {
 		m.RouterRegistry.Route("/_profiler/view/:profile", "_profiler.view")
 		m.RouterRegistry.Handle("_profiler.view", new(profileController))
 

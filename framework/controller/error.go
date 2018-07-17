@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
@@ -14,7 +16,7 @@ type (
 )
 
 // Error responder
-func (controller *Error) Error(ctx web.Context) web.Response {
+func (controller *Error) Error(ctx context.Context, request *web.Request) web.Response {
 	var err error
 	if ctx.Value(router.ERROR) != nil {
 		err = ctx.Value(router.ERROR).(error)
@@ -23,7 +25,7 @@ func (controller *Error) Error(ctx web.Context) web.Response {
 }
 
 // NotFound responder
-func (controller *Error) NotFound(ctx web.Context) web.Response {
+func (controller *Error) NotFound(ctx context.Context, request *web.Request) web.Response {
 	var err error
 	if ctx.Value(router.ERROR) != nil {
 		err = ctx.Value(router.ERROR).(error)

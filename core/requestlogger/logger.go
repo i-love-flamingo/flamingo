@@ -17,7 +17,7 @@ import (
 
 type (
 	logger struct {
-		Logger flamingo.Logger `inject:""`
+		logger flamingo.Logger
 	}
 
 	loggedResponse struct {
@@ -33,6 +33,10 @@ func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) {
 	}
 
 	l.logCallback()
+}
+
+func (r *logger) Inject(flogger flamingo.Logger) {
+	r.logger = flogger
 }
 
 // Filter a web request
@@ -81,7 +85,7 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 				sizeStr = strconv.Itoa(webResponse.GetContentLength()) + "b"
 			}
 
-			l := r.Logger.
+			l := r.logger.
 				WithContext(ctx).
 				WithFields(
 					map[flamingo.LogKey]interface{}{

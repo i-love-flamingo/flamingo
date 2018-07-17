@@ -47,6 +47,11 @@ func TestRouter(t *testing.T) {
 			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "HandlerName" }),
 			mock.Anything,
 		).Return(contextMock)
+		contextMock.On(
+			"WithValue",
+			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
+			mock.Anything,
+		).Return(contextMock)
 		return contextMock
 	}
 	eventRouter := new(eventMocks.Router)
@@ -206,6 +211,11 @@ func TestRouterTestify(t *testing.T) {
 		contextMock.On(
 			"WithValue",
 			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "HandlerName" }),
+			mock.Anything,
+		).Return(contextMock)
+		contextMock.On(
+			"WithValue",
+			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
 			mock.Anything,
 		).Return(contextMock)
 		return contextMock

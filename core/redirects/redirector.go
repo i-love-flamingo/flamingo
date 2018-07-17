@@ -15,9 +15,9 @@ import (
 
 type (
 	redirector struct {
-		responder.RedirectAware `inject:""`
-		responder.ErrorAware    `inject:""`
-		Logger                  flamingo.Logger `inject:""`
+		responder.RedirectAware
+		responder.ErrorAware
+		logger flamingo.Logger
 	}
 )
 
@@ -40,6 +40,12 @@ func init() {
 		}
 	}
 
+}
+
+func (r *redirector) Inject(redirectAware responder.RedirectAware, errorAware responder.ErrorAware, logger flamingo.Logger) {
+	r.RedirectAware = redirectAware
+	r.ErrorAware = errorAware
+	r.logger = logger
 }
 
 //TryServeHTTP - implementation of OptionalHandler (from prefixrouter package)
@@ -90,7 +96,7 @@ func (r *redirector) processRedirects(contextPath string) (status int, location 
 		return 0, "", errors.New("contextPath not found")
 	}
 
-	r.Logger.Debug("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HTTPStatusCode)
+	r.logger.Debug("Redirecting from %s to %s by %d", entry.OriginalPath, entry.RedirectTarget, entry.HTTPStatusCode)
 
 	switch code := entry.HTTPStatusCode; code {
 	case http.StatusMovedPermanently, http.StatusFound:

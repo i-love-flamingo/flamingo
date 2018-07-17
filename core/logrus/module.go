@@ -9,14 +9,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sirupsen/logrus"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/sirupsen/logrus"
 )
 
 type (
 	// Module for logrus logging
+	// deprecated: old and unstable, upgrade to zap please
 	Module struct {
 		Area     string `inject:"config:area"`
 		JSON     bool   `inject:"config:logrus.json,optional"`

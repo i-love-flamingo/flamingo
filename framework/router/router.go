@@ -274,6 +274,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	defer ctx.Profile("request", req.RequestURI)()
 
 	webRequest := web.RequestFromRequest(req, s).WithVars(params)
+	ctx.WithValue("__req", webRequest)
 
 	chain := &FilterChain{
 		Filters:    make([]Filter, len(router.filters)),

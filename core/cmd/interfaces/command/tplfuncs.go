@@ -5,9 +5,9 @@ import (
 
 	"reflect"
 
-	"github.com/spf13/cobra"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -34,12 +34,12 @@ var (
 				fmt.Println("Routed Context  - Baseurl:" + baseurl + " Contextpath: [" + routeConfig.Name + "]")
 				tfr := routeConfig.Injector.GetInstance(template.FunctionRegistry{}).(*template.FunctionRegistry)
 				fmt.Println("Functions")
-				for _, f := range tfr.TemplateFunctions {
+				for _, f := range tfr.templateFunctions {
 					fmt.Printf("%s: %s (from %s)\n", f.Name(), reflect.ValueOf(f.Func()).String(), reflect.ValueOf(f).Type().String())
 				}
 				fmt.Println()
 				fmt.Println("Context Functions")
-				for _, f := range tfr.ContextTemplateFunctions {
+				for _, f := range tfr.contextTemplateFunctions {
 					fmt.Printf("%s: %s (from %s)\n", f.Name(), reflect.ValueOf(f.Func(web.NewContext())).String(), reflect.ValueOf(f).Type().String())
 				}
 				fmt.Println()

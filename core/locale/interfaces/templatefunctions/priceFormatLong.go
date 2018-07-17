@@ -2,6 +2,7 @@ package templatefunctions
 
 import (
 	"fmt"
+
 	"flamingo.me/flamingo/core/locale/application"
 	"flamingo.me/flamingo/framework/config"
 )
@@ -9,11 +10,23 @@ import (
 type (
 	// PriceFormatFunc for formatting prices
 	PriceFormatLongFunc struct {
-		Config             config.Map                              `inject:"config:locale.accounting"`
-		TranslationService application.TranslationServiceInterface `inject:""`
-		PriceFormat        *PriceFormatFunc                        `inject:""`
+		config             config.Map
+		translationService application.TranslationServiceInterface
+		priceFormat        *PriceFormatFunc
 	}
 )
+
+func (pff *PriceFormatLongFunc) Inject(
+	serviceInterface application.TranslationServiceInterface,
+	formatFunc *PriceFormatFunc,
+	config *struct {
+		Config config.Map `inject:"config:locale.accounting"`
+	},
+) {
+	pff.config = config.Config
+	pff.translationService = serviceInterface
+	pff.priceFormat = formatFunc
+}
 
 // Name alias for use in template
 func (pff PriceFormatLongFunc) Name() string {
@@ -23,10 +36,10 @@ func (pff PriceFormatLongFunc) Name() string {
 // Func as implementation of debug method
 func (pff PriceFormatLongFunc) Func() interface{} {
 	return func(value interface{}, currency string, currencyLabel string) string {
-		priceFunc := pff.PriceFormat.Func().(func(value interface{}, currency string) string)
+		priceFunc := pff.priceFormat.Func().(func(value interface{}, currency string) string)
 		price := priceFunc(value, currency)
-		currencyLabel = pff.TranslationService.Translate(currencyLabel, "", "", 1, nil)
-		format, ok := pff.Config["formatLong"].(string)
+		currencyLabel = pff.translationService.Translate(currencyLabel, "", "", 1, nil)
+		format, ok := pff.config["formatLong"].(string)
 		if ok {
 			return fmt.Sprintf(format, price, currencyLabel)
 		}

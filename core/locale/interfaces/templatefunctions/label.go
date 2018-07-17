@@ -10,9 +10,13 @@ import (
 type (
 	// Label is exported as a template function
 	Label struct {
-		TranslationService application.TranslationServiceInterface `inject:""`
+		translationService application.TranslationServiceInterface
 	}
 )
+
+func (tf *Label) Inject(service application.TranslationServiceInterface) {
+	tf.translationService = service
+}
 
 // Name alias for use in template
 func (tf Label) Name() string {
@@ -59,7 +63,7 @@ func (tf Label) Func() interface{} {
 			}
 		}
 
-		return tf.TranslationService.Translate(key, defaultLabel, localeCode, count, translationArguments)
+		return tf.translationService.Translate(key, defaultLabel, localeCode, count, translationArguments)
 
 	}
 }

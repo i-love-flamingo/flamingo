@@ -23,7 +23,7 @@ func TestGetDateTimeFormatterFromIsoString(t *testing.T) {
 
 func TestGetTimeFormatter(t *testing.T) {
 	dateTimeService := DateTimeService{
-		Logger: flamingo.NullLogger{},
+		logger: flamingo.NullLogger{},
 	}
 
 	now := time.Now()
@@ -34,7 +34,7 @@ func TestGetTimeFormatter(t *testing.T) {
 	assert.Nil(t, e, "no error received")
 
 	// get a formatter for a configured locale
-	dateTimeService.Location = "America/New_York"
+	dateTimeService.location = "America/New_York"
 	f, e = dateTimeService.GetDateTimeFormatter(now)
 	assert.NotNil(t, f, "got a formatter")
 	assert.Nil(t, e, "no error received")

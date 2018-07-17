@@ -2,6 +2,7 @@ package responder
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -14,7 +15,7 @@ import (
 type (
 	// RenderAware controller trait
 	RenderAware interface {
-		Render(context web.Context, tpl string, data interface{}) web.Response
+		Render(context context.Context, tpl string, data interface{}) web.Response
 		WithStatusCode(code int) RenderAware
 	}
 
@@ -29,17 +30,17 @@ type (
 var _ RenderAware = &FlamingoRenderAware{}
 
 // Render returns a web.ContentResponse with status 200 and ContentType text/html
-func (r *FlamingoRenderAware) Render(context web.Context, tpl string, data interface{}) (response web.Response) {
+func (r *FlamingoRenderAware) Render(context context.Context, tpl string, data interface{}) (response web.Response) {
 	statusCode := http.StatusOK
 	if r.httpStatusCode > 0 {
 		statusCode = r.httpStatusCode
 	}
 
-	if d, err := context.Query1("debugdata"); err == nil && d != "" {
-		return &web.JSONResponse{
-			Data: pugjs.Convert(data),
-		}
-	}
+	//if d, err := context.Query1("debugdata"); err == nil && d != "" {
+	//	return &web.JSONResponse{
+	//		Data: pugjs.Convert(data),
+	//	}
+	//}
 
 	if r.Engine != nil {
 		body, err := r.Engine.Render(context, tpl, data)

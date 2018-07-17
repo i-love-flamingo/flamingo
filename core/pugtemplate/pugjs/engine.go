@@ -2,6 +2,7 @@ package pugjs
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,10 +15,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -154,7 +155,9 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 var renderChan = make(chan struct{}, 8)
 
 // Render via html/pug_template
-func (e *Engine) Render(ctx web.Context, templateName string, data interface{}) (io.Reader, error) {
+func (e *Engine) Render(ctx_ context.Context, templateName string, data interface{}) (io.Reader, error) {
+	ctx := web.ToContext(ctx_)
+
 	defer ctx.Profile("render", templateName)()
 
 	//block if buffered channel size is reached

@@ -1,6 +1,7 @@
 package responder
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,9 +12,9 @@ import (
 type (
 	// ErrorAware responder trait
 	ErrorAware interface {
-		Error(context web.Context, err error) web.Response
-		ErrorNotFound(context web.Context, err error) web.Response
-		ErrorWithCode(context web.Context, error error, httpStatus int) web.Response
+		Error(context context.Context, err error) web.Response
+		ErrorNotFound(context context.Context, err error) web.Response
+		ErrorWithCode(context context.Context, err error, httpStatus int) web.Response
 	}
 
 	// FlamingoErrorAware responder can return errors
@@ -60,7 +61,7 @@ func (ee EmptyError) Error() string {
 }
 
 // ErrorNotFound returns a web.ContentResponse with status 404 and ContentType text/html
-func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web.Response {
+func (r *FlamingoErrorAware) ErrorNotFound(context context.Context, error error) web.Response {
 	var response web.Response
 
 	if !r.DebugMode {
@@ -84,7 +85,7 @@ func (r *FlamingoErrorAware) ErrorNotFound(context web.Context, error error) web
 }
 
 // ErrorWithCode returns a web.ContentResponse with give status code and ContentType text/html
-func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, httpStatus int) web.Response {
+func (r *FlamingoErrorAware) ErrorWithCode(context context.Context, error error, httpStatus int) web.Response {
 	var response web.Response
 	r.Logger.WithField("category", "error_aware").Error("Error with code ", httpStatus, error)
 	if !r.DebugMode {
@@ -107,9 +108,9 @@ func (r *FlamingoErrorAware) ErrorWithCode(context web.Context, error error, htt
 }
 
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
-func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Response {
+func (r *FlamingoErrorAware) Error(context context.Context, err error) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").Error("Error ", error.Error())
+	r.Logger.WithField("category", "error_aware").Error("Error ", err.Error())
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
@@ -120,7 +121,7 @@ func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Respons
 		response = r.RenderAware.Render(
 			context,
 			r.Tpl503,
-			ErrorViewData{Error: DebugError{error}, Code: 500},
+			ErrorViewData{Error: DebugError{err}, Code: 500},
 		)
 	}
 
@@ -128,5 +129,5 @@ func (r *FlamingoErrorAware) Error(context web.Context, error error) web.Respons
 		r.Status = http.StatusInternalServerError
 	}
 
-	return web.ErrorResponse{Response: response, Error: error}
+	return web.ErrorResponse{Response: response, Error: err}
 }

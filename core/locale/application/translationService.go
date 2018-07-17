@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/nicksnyder/go-i18n/i18n/bundle"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/flamingo"
+	"github.com/nicksnyder/go-i18n/i18n/bundle"
 )
 
 type (
@@ -16,14 +16,14 @@ type (
 	}
 
 	TranslationService struct {
-		DefaultLocaleCode string          `inject:"config:locale.locale"`
-		TranslationFile   string          `inject:"config:locale.translationFile,optional"`
-		TranslationFiles  config.Slice    `inject:"config:locale.translationFiles,optional"`
-		Logger            flamingo.Logger `inject:""`
+		defaultLocaleCode string
+		translationFile   string
+		translationFiles  config.Slice
+		logger            flamingo.Logger
 	}
 )
 
-// check if TranslationService implements its interface
+// check if translationService implements its interface
 var _ TranslationServiceInterface = (*TranslationService)(nil)
 
 var i18bundle *bundle.Bundle
@@ -32,6 +32,21 @@ var filesLoaded bool
 func init() {
 	i18bundle = bundle.New()
 	filesLoaded = false
+}
+
+// Inject dependencies
+func (ts *TranslationService) Inject(
+	logger flamingo.Logger,
+	config *struct {
+		DefaultLocaleCode string       `inject:"config:locale.locale"`
+		TranslationFile   string       `inject:"config:locale.translationFile,optional"`
+		TranslationFiles  config.Slice `inject:"config:locale.translationFiles,optional"`
+	},
+) {
+	ts.logger = logger
+	ts.defaultLocaleCode = config.DefaultLocaleCode
+	ts.translationFile = config.TranslationFile
+	ts.translationFiles = config.TranslationFiles
 }
 
 func (ts *TranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
@@ -48,11 +63,11 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	label := ""
 	//Use default configured localeCode if nothing is given explicitly
 	if localeCode == "" {
-		localeCode = ts.DefaultLocaleCode
+		localeCode = ts.defaultLocaleCode
 	}
 	T, err := i18bundle.Tfunc(localeCode)
 	if err != nil {
-		ts.Logger.Warn("Error - locale.translationservice", err)
+		ts.logger.Warn("Error - locale.translationservice", err)
 		label = defaultLabel
 	} else {
 		//ts.Logger.Debug("called with key %v  default: %v  localeCode: %v translationArguments: %#v Count %v", key, defaultLabel, localeCode, translationArguments, count)
@@ -76,14 +91,14 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 
 }
 func (ts *TranslationService) loadFiles() {
-	if ts.TranslationFile != "" {
-		ts.Logger.Info("Load translationfile", ts.TranslationFile)
-		i18bundle.LoadTranslationFile(ts.TranslationFile)
+	if ts.translationFile != "" {
+		ts.logger.Info("Load translationfile", ts.translationFile)
+		i18bundle.LoadTranslationFile(ts.translationFile)
 	}
-	if len(ts.TranslationFiles) > 0 {
-		for _, file := range ts.TranslationFiles {
+	if len(ts.translationFiles) > 0 {
+		for _, file := range ts.translationFiles {
 			if fileName, ok := file.(string); ok {
-				ts.Logger.Info("Load translationfile", fileName)
+				ts.logger.Info("Load translationfile", fileName)
 				i18bundle.LoadTranslationFile(fileName)
 			}
 		}

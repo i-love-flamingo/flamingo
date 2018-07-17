@@ -3,19 +3,26 @@ package templatefunctions
 import (
 	"strconv"
 
-	"github.com/leekchan/accounting"
 	"flamingo.me/flamingo/core/locale/application"
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 	"flamingo.me/flamingo/framework/config"
+	"github.com/leekchan/accounting"
 )
 
 type (
 	// PriceFormatFunc for formatting prices
 	PriceFormatFunc struct {
-		Config             config.Map                              `inject:"config:locale.accounting"`
-		TranslationService application.TranslationServiceInterface `inject:""`
+		config             config.Map
+		translationService application.TranslationServiceInterface
 	}
 )
+
+func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServiceInterface, config *struct {
+	Config config.Map `inject:"config:locale.accounting"`
+}) {
+	pff.translationService = serviceInterface
+	pff.config = config.Config
+}
 
 // Name alias for use in template
 func (pff PriceFormatFunc) Name() string {
@@ -25,24 +32,24 @@ func (pff PriceFormatFunc) Name() string {
 // Func as implementation of debug method
 func (pff PriceFormatFunc) Func() interface{} {
 	return func(value interface{}, currency string) string {
-		currency = pff.TranslationService.Translate(currency, "", "", 1, nil)
+		currency = pff.translationService.Translate(currency, "", "", 1, nil)
 		ac := accounting.Accounting{
 			Symbol:    currency,
 			Precision: 2,
 		}
-		decimal, ok := pff.Config["decimal"].(string)
+		decimal, ok := pff.config["decimal"].(string)
 		if ok {
 			ac.Decimal = decimal
 		}
-		thousand, ok := pff.Config["thousand"].(string)
+		thousand, ok := pff.config["thousand"].(string)
 		if ok {
 			ac.Thousand = thousand
 		}
-		formatZero, ok := pff.Config["formatZero"].(string)
+		formatZero, ok := pff.config["formatZero"].(string)
 		if ok {
 			ac.FormatZero = formatZero
 		}
-		format, ok := pff.Config["format"].(string)
+		format, ok := pff.config["format"].(string)
 		if ok {
 			ac.Format = format
 		}

@@ -11,16 +11,21 @@ import (
 type (
 	// DateTime template helper function
 	DateTimeFormatFromIso struct {
-		DateTimeService *application.DateTimeService `inject:""`
-		Logger          flamingo.Logger              `inject:""`
+		dateTimeService *application.DateTimeService
+		logger          flamingo.Logger
 	}
 
 	// DateTime template helper function
 	DateTimeFormatFromTime struct {
-		DateTimeService *application.DateTimeService `inject:""`
-		Logger          flamingo.Logger              `inject:""`
+		dateTimeService *application.DateTimeService
+		logger          flamingo.Logger
 	}
 )
+
+func (tf *DateTimeFormatFromIso) Inject(service *application.DateTimeService, logger flamingo.Logger) {
+	tf.dateTimeService = service
+	tf.logger = logger
+}
 
 // Name alias for use in template
 func (tf DateTimeFormatFromIso) Name() string {
@@ -32,13 +37,18 @@ func (tf DateTimeFormatFromIso) Func() interface{} {
 	// Usage
 	// dateTimeFormatFromIso(dateTimeString).formatDate()
 	return func(dateTimeString string) *domain.DateTimeFormatter {
-		dateTimeFormatter, e := tf.DateTimeService.GetDateTimeFormatterFromIsoString(dateTimeString)
+		dateTimeFormatter, e := tf.dateTimeService.GetDateTimeFormatterFromIsoString(dateTimeString)
 		if e != nil {
-			tf.Logger.Error("Error Parsing dateTime %v / %v", dateTimeString, e)
+			tf.logger.Error("Error Parsing dateTime %v / %v", dateTimeString, e)
 			return &domain.DateTimeFormatter{}
 		}
 		return dateTimeFormatter
 	}
+}
+
+func (tf *DateTimeFormatFromTime) Inject(service *application.DateTimeService, logger flamingo.Logger) {
+	tf.dateTimeService = service
+	tf.logger = logger
 }
 
 // Name alias for use in template
@@ -51,9 +61,9 @@ func (tf DateTimeFormatFromTime) Func() interface{} {
 	// Usage
 	// dateTimeFormat(dateTime).formatDate()
 	return func(dateTime time.Time) *domain.DateTimeFormatter {
-		dateTimeFormatter, e := tf.DateTimeService.GetDateTimeFormatter(dateTime)
+		dateTimeFormatter, e := tf.dateTimeService.GetDateTimeFormatter(dateTime)
 		if e != nil {
-			tf.Logger.Error("Error getting formatter dateTime %v", e)
+			tf.logger.Error("Error getting formatter dateTime %v", e)
 			return &domain.DateTimeFormatter{}
 		}
 		return dateTimeFormatter

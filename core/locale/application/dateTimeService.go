@@ -3,9 +3,9 @@ package application
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"flamingo.me/flamingo/core/locale/domain"
 	"flamingo.me/flamingo/framework/flamingo"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -14,18 +14,35 @@ type (
 		GetDateTimeFormatter(dateTime time.Time) (*domain.DateTimeFormatter, error)
 	}
 
-	// DateTimeService is a basic support service for date/time parsing
+	// dateTimeService is a basic support service for date/time parsing
 	DateTimeService struct {
-		DateFormat     string          `inject:"config:locale.date.dateFormat"`
-		TimeFormat     string          `inject:"config:locale.date.timeFormat"`
-		DateTimeFormat string          `inject:"config:locale.date.dateTimeFormat"`
-		Location       string          `inject:"config:locale.date.location"`
-		Logger         flamingo.Logger `inject:""`
+		dateFormat     string
+		timeFormat     string
+		dateTimeFormat string
+		location       string
+		logger         flamingo.Logger
 	}
 )
 
 // check interface implementation
 var _ DateTimeServiceInterface = (*DateTimeService)(nil)
+
+// Inject dependencies
+func (dts *DateTimeService) Inject(
+	logger flamingo.Logger,
+	config *struct {
+		DateFormat     string `inject:"config:locale.date.dateFormat"`
+		TimeFormat     string `inject:"config:locale.date.timeFormat"`
+		DateTimeFormat string `inject:"config:locale.date.dateTimeFormat"`
+		Location       string `inject:"config:locale.date.location"`
+	},
+) {
+	dts.logger = logger
+	dts.dateFormat = config.DateFormat
+	dts.timeFormat = config.TimeFormat
+	dts.dateTimeFormat = config.DateTimeFormat
+	dts.location = config.Location
+}
 
 //GetDateTimeFromString Need string in format ISO: "2017-11-25T06:30:00Z"
 func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
@@ -41,16 +58,16 @@ func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString str
 func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.DateTimeFormatter, error) {
 	loc, err := dts.loadLocation()
 	if err != nil {
-		if dts.Logger != nil {
-			dts.Logger.Warn("dateTime Parsing error - could not load location - use UTC as fallback", dts.Location)
+		if dts.logger != nil {
+			dts.logger.Warn("dateTime Parsing error - could not load location - use UTC as fallback", dts.location)
 		}
 		loc = time.UTC
 	}
 
 	dateTime := domain.DateTimeFormatter{
-		DateFormat:     dts.DateFormat,
-		TimeFormat:     dts.TimeFormat,
-		DateTimeFormat: dts.DateTimeFormat,
+		DateFormat:     dts.dateFormat,
+		TimeFormat:     dts.timeFormat,
+		DateTimeFormat: dts.dateTimeFormat,
 	}
 	dateTime.SetDateTime(timeValue, timeValue.In(loc))
 
@@ -58,10 +75,10 @@ func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.D
 }
 
 func (dts *DateTimeService) loadLocation() (*time.Location, error) {
-	if dts.Location == "" {
+	if dts.location == "" {
 		return nil, errors.Errorf("No location configured")
 	}
 
 	// try to load the configured location
-	return time.LoadLocation(dts.Location)
+	return time.LoadLocation(dts.location)
 }

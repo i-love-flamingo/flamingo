@@ -18,11 +18,16 @@ func URLTitle(title string) string {
 }
 
 // ToContext supports legacy usage of the web.Context type
+// deprecated: always use context+request directly
 func ToContext(ctx context.Context) Context {
+	if c, ok := ctx.(Context); ok {
+		return c
+	}
 	return ctx.Value(CONTEXT).(Context)
 }
 
 // ToRequest upgrades a web.Context to the new context+request form
+// deprecated: always use context+request directly
 func ToRequest(ctx Context) (context.Context, *Request) {
 	request := ctx.Value("__req").(*Request)
 

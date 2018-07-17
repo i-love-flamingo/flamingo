@@ -2,6 +2,7 @@ package gotemplate
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -64,22 +65,21 @@ func (e *engine) Inject(
 	e.debug = config.Debug
 }
 
-func (e *engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
+func (e *engine) Render(context context.Context, name string, data interface{}) (io.Reader, error) {
 	lock.Lock()
 	if e.debug || e.templates == nil {
 		e.loadTemplates(context)
 	}
 	lock.Unlock()
 
-	defer context.Profile("template engine", "render template "+name)()
 	buf := &bytes.Buffer{}
 	err := e.templates[name+".html"].Execute(buf, data)
 
 	return buf, err
 }
 
-func (e *engine) loadTemplates(context web.Context) {
-	done := context.Profile("template engine", "load templates")
+func (e *engine) loadTemplates(context context.Context) {
+	//done := context.Profile("template engine", "load templates")
 
 	e.templates = make(map[string]*template.Template, 0)
 
@@ -99,7 +99,7 @@ func (e *engine) loadTemplates(context web.Context) {
 
 	funcs := e.templateFunctions.Populate()
 	for k, f := range e.templateFunctions.ContextAware {
-		funcs[k] = f(context)
+		funcs[k] = f(web.ToContext(context))
 	}
 
 	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, funcs))
@@ -109,7 +109,7 @@ func (e *engine) loadTemplates(context web.Context) {
 		panic(err)
 	}
 
-	done()
+	//done()
 }
 
 // parses all layout templates in a template instance which is the base instance for all other templates

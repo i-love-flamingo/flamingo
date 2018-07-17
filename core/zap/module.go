@@ -12,13 +12,13 @@ import (
 type (
 	// Module for logrus logging
 	Module struct {
-		Area               string  `inject:"config:area"`
-		JSON               bool    `inject:"config:zap.json,optional"`
-		LogLevel           string  `inject:"config:zap.loglevel,optional"`
-		DevelopmentMode    bool    `inject:"config:zap.devmode,optional"`
-		SamplingEnabled    bool    `inject:"config:zap.sampling.enabled,optional"`
-		SamplingInitial    float32 `inject:"config:zap.sampling.initial,optional"`
-		SamplingThereafter float32 `inject:"config:zap.sampling.thereafter,optional"`
+		area               string
+		json               bool
+		logLevel           string
+		developmentMode    bool
+		samplingEnabled    bool
+		samplingInitial    float32
+		samplingThereafter float32
 	}
 
 	// ShutdownEventSubscriber handles the logger sync on flamingo shutdown
@@ -37,9 +37,27 @@ var logLevels = map[string]zapcore.Level{
 	"Fatal":  zap.FatalLevel,
 }
 
+func (m *Module) Inject(config *struct {
+	Area               string  `inject:"config:area"`
+	JSON               bool    `inject:"config:zap.json,optional"`
+	LogLevel           string  `inject:"config:zap.loglevel,optional"`
+	DevelopmentMode    bool    `inject:"config:zap.devmode,optional"`
+	SamplingEnabled    bool    `inject:"config:zap.sampling.enabled,optional"`
+	SamplingInitial    float32 `inject:"config:zap.sampling.initial,optional"`
+	SamplingThereafter float32 `inject:"config:zap.sampling.thereafter,optional"`
+}) {
+	m.area = config.Area
+	m.json = config.JSON
+	m.logLevel = config.LogLevel
+	m.developmentMode = config.DevelopmentMode
+	m.samplingEnabled = config.SamplingEnabled
+	m.samplingInitial = config.SamplingInitial
+	m.samplingThereafter = config.SamplingThereafter
+}
+
 // Configure the logrus logger as flamingo.Logger (in JSON mode kibana compatible)
 func (m *Module) Configure(injector *dingo.Injector) {
-	level, ok := logLevels[m.LogLevel]
+	level, ok := logLevels[m.logLevel]
 	if !ok {
 		// if nothing is configured user ErrorLevel
 		level = zap.ErrorLevel
@@ -47,21 +65,21 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	var samplingConfig *zap.SamplingConfig
 
-	if m.SamplingEnabled {
+	if m.samplingEnabled {
 		samplingConfig = &zap.SamplingConfig{
-			Initial:    int(m.SamplingInitial),
-			Thereafter: int(m.SamplingThereafter),
+			Initial:    int(m.samplingInitial),
+			Thereafter: int(m.samplingThereafter),
 		}
 	}
 
 	output := "console"
-	if m.JSON {
+	if m.json {
 		output = "json"
 	}
 
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
-		Development:       m.DevelopmentMode,
+		Development:       m.developmentMode,
 		DisableCaller:     false,
 		DisableStacktrace: false,
 		Sampling:          samplingConfig,
@@ -89,7 +107,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	if err != nil {
 		panic(err)
 	}
-	logger = logger.With(zap.String(flamingo.LogKeyArea, m.Area))
+	logger = logger.With(zap.String(flamingo.LogKeyArea, m.area))
 
 	zapLogger := &domain.Logger{
 		Logger: logger,

@@ -20,10 +20,10 @@ const pathSeparatorString = string(os.PathSeparator)
 
 type (
 	engine struct {
-		TemplatesBasePath  string                             `inject:"config:gotemplates.engine.templates.basepath"`
-		LayoutTemplatesDir string                             `inject:"config:gotemplates.engine.layout.dir"`
-		Debug              bool                               `inject:"config:debug.mode"`
-		TemplateFunctions  *flamingotemplate.FunctionRegistry `inject:""`
+		templatesBasePath  string
+		layoutTemplatesDir string
+		debug              bool
+		templateFunctions  *flamingotemplate.FunctionRegistry
 		templates          map[string]*template.Template
 	}
 
@@ -49,9 +49,24 @@ var (
 	lock                                  = &sync.Mutex{}
 )
 
+// Inject engine dependencies
+func (e *engine) Inject(
+	templateFunctions *flamingotemplate.FunctionRegistry,
+	config *struct {
+		TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
+		LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
+		Debug              bool   `inject:"config:debug.mode"`
+	},
+) {
+	e.templateFunctions = templateFunctions
+	e.templatesBasePath = config.TemplatesBasePath
+	e.layoutTemplatesDir = config.LayoutTemplatesDir
+	e.debug = config.Debug
+}
+
 func (e *engine) Render(context web.Context, name string, data interface{}) (io.Reader, error) {
 	lock.Lock()
-	if e.Debug || e.templates == nil {
+	if e.debug || e.templates == nil {
 		e.loadTemplates(context)
 	}
 	lock.Unlock()
@@ -82,14 +97,14 @@ func (e *engine) loadTemplates(context web.Context) {
 		},
 	}
 
-	funcs := e.TemplateFunctions.Populate()
-	for k, f := range e.TemplateFunctions.ContextAware {
+	funcs := e.templateFunctions.Populate()
+	for k, f := range e.templateFunctions.ContextAware {
 		funcs[k] = f(context)
 	}
 
 	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, funcs))
 
-	err := e.parseSiteTemplateDirectory(layoutTemplate, e.TemplatesBasePath)
+	err := e.parseSiteTemplateDirectory(layoutTemplate, e.templatesBasePath)
 	if err != nil {
 		panic(err)
 	}
@@ -101,11 +116,11 @@ func (e *engine) loadTemplates(context web.Context) {
 func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs template.FuncMap) (*template.Template, error) {
 	tpl := template.New("").Funcs(functionsMap).Funcs(funcs)
 
-	if e.LayoutTemplatesDir == "" {
+	if e.layoutTemplatesDir == "" {
 		return tpl, nil
 	}
 
-	dir := e.TemplatesBasePath + pathSeparatorString + e.LayoutTemplatesDir
+	dir := e.templatesBasePath + pathSeparatorString + e.layoutTemplatesDir
 	layoutFilesInfo, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -143,7 +158,7 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 			return err
 		}
 
-		templateName := strings.TrimPrefix(fullName, e.TemplatesBasePath+pathSeparatorString)
+		templateName := strings.TrimPrefix(fullName, e.templatesBasePath+pathSeparatorString)
 		e.templates[templateName] = template.Must(t.Parse(string(tContent)))
 	}
 

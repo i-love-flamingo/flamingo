@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"fmt"
 
 	"flamingo.me/flamingo/framework/flamingo"
@@ -29,7 +30,13 @@ func (l *Logger) WithCorrelationID(cid string) flamingo.Logger {
 // path:          URL path from request
 // referer:       referer from request
 // request:       received payload from request
-func (l *Logger) WithContext(ctx web.Context) flamingo.Logger {
+func (l *Logger) WithContext(ctx_ context.Context) flamingo.Logger {
+	ctx := web.ToContext(ctx_)
+
+	if ctx == nil {
+		return l
+	}
+
 	request := ctx.Request()
 	clientIP := request.RemoteAddr
 	if request.Header.Get("X-Forwarded-For") != "" {

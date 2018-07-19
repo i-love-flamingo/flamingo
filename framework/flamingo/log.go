@@ -1,7 +1,7 @@
 package flamingo
 
 import (
-	"flamingo.me/flamingo/framework/web"
+	"context"
 )
 
 //go:generate mockery -name "Logger"
@@ -41,7 +41,7 @@ type (
 
 	// Logger defines a standard Flamingo logger interfaces
 	Logger interface {
-		WithContext(ctx web.Context) Logger
+		WithContext(ctx context.Context) Logger
 
 		Debug(args ...interface{})
 		Info(args ...interface{})
@@ -61,7 +61,7 @@ type (
 type NullLogger struct{}
 
 // WithContext null-implementation
-func (n NullLogger) WithContext(ctx web.Context) Logger { return n }
+func (n NullLogger) WithContext(ctx context.Context) Logger { return n }
 
 // WithField null-implementation
 func (n NullLogger) WithField(key LogKey, value interface{}) Logger { return n }

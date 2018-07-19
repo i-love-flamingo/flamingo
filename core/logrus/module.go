@@ -1,6 +1,7 @@
 package logrus
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -120,7 +121,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // path:          URL path from request
 // referer:       referer from request
 // request:       received payload from request
-func (e *LogrusEntry) WithContext(ctx web.Context) flamingo.Logger {
+func (e *LogrusEntry) WithContext(ctx context.Context) flamingo.Logger {
 	return appendContext(e, ctx)
 }
 
@@ -149,7 +150,7 @@ func (e *LogrusEntry) WithFields(fields map[flamingo.LogKey]interface{}) flaming
 // path:          URL path from request
 // referer:       referer from request
 // request:       received payload from request
-func (e *LogrusLogger) WithContext(ctx web.Context) flamingo.Logger {
+func (e *LogrusLogger) WithContext(ctx context.Context) flamingo.Logger {
 	return appendContext(e, ctx)
 }
 
@@ -172,7 +173,13 @@ func (e *LogrusLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamin
 	return &LogrusEntry{Entry: e.Logger.WithFields(f)}
 }
 
-func appendContext(logger flamingo.Logger, ctx web.Context) flamingo.Logger {
+func appendContext(logger flamingo.Logger, ctx_ context.Context) flamingo.Logger {
+	ctx := web.ToContext(ctx_)
+
+	if ctx == nil {
+		return logger
+	}
+
 	request := ctx.Request()
 	clientIP := request.Header.Get("X-Forwarded-For")
 	if clientIP == "" {

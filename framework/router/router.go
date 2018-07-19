@@ -217,11 +217,11 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 	}()
 
 	if e, ok := err.(error); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.WithStack(e))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx.WithValue(ERROR, errors.WithStack(e)))).Apply(ctx, rw)
 	} else if err, ok := err.(string); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx.WithValue(ERROR, errors.New(err))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx.WithValue(ERROR, errors.New(err)))).Apply(ctx, rw)
 	} else {
-		router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx)).Apply(ctx, rw)
 	}
 }
 

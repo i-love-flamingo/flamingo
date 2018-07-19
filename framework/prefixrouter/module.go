@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/spf13/cobra"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
+	"github.com/spf13/cobra"
 )
 
 // Module for core/prefix_router

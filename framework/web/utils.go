@@ -23,7 +23,10 @@ func ToContext(ctx context.Context) Context {
 	if c, ok := ctx.(Context); ok {
 		return c
 	}
-	return ctx.Value(CONTEXT).(Context)
+	if c, ok := ctx.Value(CONTEXT).(Context); ok {
+		return c
+	}
+	return nil
 }
 
 // ToRequest upgrades a web.Context to the new context+request form

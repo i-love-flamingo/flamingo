@@ -2,6 +2,7 @@ package csp
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 
@@ -20,9 +21,11 @@ type (
 	}
 )
 
+var _ router.Filter = (*cspFilter)(nil)
+
 // Filter realizes the Content-Security-Policy-Report and adds nonces to the script tags
-func (f *cspFilter) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
-	response := chain.Next(ctx, w)
+func (f *cspFilter) Filter(ctx context.Context, r *web.Request, w http.ResponseWriter, chain *router.FilterChain) web.Response {
+	response := chain.Next(ctx, r, w)
 
 	if cr, ok := response.(*web.ContentResponse); ok {
 		originalBody, err := ioutil.ReadAll(cr.Body)

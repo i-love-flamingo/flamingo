@@ -1,18 +1,15 @@
 package prefixrouter
 
 import (
-	"testing"
-
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 
-	"io/ioutil"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 )
 
-var _ = Describe("FrontRouter", func() {
+func TestFrontRouter(t *testing.T) {
 	var fr = NewFrontRouter()
 
 	fr.Add("/prefix1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -31,52 +28,68 @@ var _ = Describe("FrontRouter", func() {
 		w.Write([]byte("Default"))
 	}))
 
-	Context("Request Routing", func() {
-		It("Should Match Host before Prefix", func() {
+	t.Run("Request Routing", func(t *testing.T) {
+		t.Run("Should Match Host before Prefix", func(t *testing.T) {
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest("GET", "/prefix1/test", nil)
+			request := httptest.NewRequest("GET", "http://example.com/prefix1/test", nil)
+
 			fr.ServeHTTP(recorder, request)
 
-			Expect(ioutil.ReadAll(recorder.Result().Body)).To(Equal([]byte(`Host1, Prefix 1`)))
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Host1, Prefix 1`))
 		})
 
-		It("Should Match Prefix", func() {
+		t.Run("Should Match Host before Prefix", func(t *testing.T) {
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest("GET", "/prefix2/test", nil)
+			request := httptest.NewRequest("GET", "http://example2.com/prefix1/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			Expect(ioutil.ReadAll(recorder.Result().Body)).To(Equal([]byte(`Prefix 2`)))
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Prefix 1`))
 		})
 
-		It("Should Match just the Prefix", func() {
+		t.Run("Should Match Prefix", func(t *testing.T) {
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest("GET", "/prefix2", nil)
+			request := httptest.NewRequest("GET", "http://example.com/prefix2/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			Expect(ioutil.ReadAll(recorder.Result().Body)).To(Equal([]byte(`Prefix 2`)))
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Prefix 2`))
 		})
 
-		It("Should have a default", func() {
+		t.Run("Should Match just the Prefix", func(t *testing.T) {
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest("GET", "/UNKNOWN/test", nil)
+			request := httptest.NewRequest("GET", "http://example.com/prefix2", nil)
 			fr.ServeHTTP(recorder, request)
 
-			Expect(ioutil.ReadAll(recorder.Result().Body)).To(Equal([]byte(`Default`)))
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Prefix 2`))
 		})
 
-		It("Should use 404 if no default is set", func() {
+		t.Run("Should have a default", func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest("GET", "http://example.com/UNKNOWN/test", nil)
+			fr.ServeHTTP(recorder, request)
+
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Default`))
+		})
+
+		t.Run("Should use 404 if no default is set", func(t *testing.T) {
 			fr = NewFrontRouter()
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest("GET", "/prefix1/test", nil)
+			request := httptest.NewRequest("GET", "http://example.com/prefix1/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			Expect(ioutil.ReadAll(recorder.Result().Body)).To(Equal([]byte(``)))
-			Expect(recorder.Result().StatusCode).To(Equal(404))
+			assert.Equal(t, recorder.Result().StatusCode, 404)
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(``))
 		})
 	})
-})
-
-func TestFrontRouter(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "FrontRouter Suite")
 }

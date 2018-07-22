@@ -72,10 +72,28 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		host = strings.Split(host, ":")[0]
 	}
 
-	test := req.RequestURI
+	path := req.URL.Path
+	if req.URL.RawPath != "" {
+		path = req.URL.RawPath
+	}
+
+	path = "/" + strings.TrimLeft(path, "/")
+
 	for prefix, router := range fr.router {
-		if strings.HasPrefix(test, prefix) {
-			req.URL, _ = url.Parse(test[len(prefix):])
+		if strings.HasPrefix(host+path, prefix) {
+			req.URL, _ = url.Parse(path[len(prefix)-len(host):])
+
+			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+
+			span.End()
+			router.ServeHTTP(w, req)
+			return
+		}
+	}
+
+	for prefix, router := range fr.router {
+		if strings.HasPrefix(path, prefix) {
+			req.URL, _ = url.Parse(path[len(prefix):])
 
 			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
 

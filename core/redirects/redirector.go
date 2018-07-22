@@ -6,6 +6,8 @@ import (
 
 	"log"
 
+	"context"
+
 	"flamingo.me/flamingo/core/redirects/infrastructure"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
@@ -63,14 +65,16 @@ func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bo
 	return false, nil
 }
 
-//Filter - implementation of Filter interface (from router package)
-func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
+var _ router.Filter = (*redirector)(nil)
 
-	contextPath := ctx.Request().RequestURI
+//Filter - implementation of Filter interface (from router package)
+func (r *redirector) Filter(ctx context.Context, req *web.Request, w http.ResponseWriter, chain *router.FilterChain) web.Response {
+
+	contextPath := req.Request().RequestURI
 
 	status, location, err := r.processRedirects(contextPath)
 	if err != nil {
-		return chain.Next(ctx, w)
+		return chain.Next(ctx, req, w)
 	}
 
 	switch code := status; code {
@@ -84,7 +88,7 @@ func (r *redirector) Filter(ctx web.Context, w http.ResponseWriter, chain *route
 		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page not found"))
 	}
 
-	return chain.Next(ctx, w)
+	return chain.Next(ctx, req, w)
 }
 
 //processRedirects - if a redirect is existing for given contextPath it returns the desired HTTP Response status and location (if relevant for the status) - if nothing is found it return 0

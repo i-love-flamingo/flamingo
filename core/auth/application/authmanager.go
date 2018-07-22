@@ -2,17 +2,16 @@ package application
 
 import (
 	"context"
+	"encoding/gob"
 	"net/http"
 	"net/url"
 	"time"
 
-	"encoding/gob"
-
 	"flamingo.me/flamingo/core/auth/domain"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
 	"github.com/coreos/go-oidc"
+	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
@@ -69,12 +68,12 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 }
 
 // Auth tries to retrieve the authentication context for a active session
-func (am *AuthManager) Auth(c web.Context) (domain.Auth, error) {
-	ts, err := am.TokenSource(c)
+func (am *AuthManager) Auth(c context.Context, session *sessions.Session) (domain.Auth, error) {
+	ts, err := am.TokenSource(c, session)
 	if err != nil {
 		return domain.Auth{}, err
 	}
-	idToken, err := am.IDToken(c)
+	idToken, err := am.IDToken(c, session)
 	if err != nil {
 		return domain.Auth{}, err
 	}
@@ -140,57 +139,57 @@ func (am *AuthManager) Verifier() *oidc.IDTokenVerifier {
 }
 
 // OAuth2Token retrieves the oauth2 token from the session
-func (am *AuthManager) OAuth2Token(c web.Context) (*oauth2.Token, error) {
-	if _, ok := c.Session().Values[KeyToken]; !ok {
+func (am *AuthManager) OAuth2Token(session *sessions.Session) (*oauth2.Token, error) {
+	if _, ok := session.Values[KeyToken]; !ok {
 		return nil, errors.New("no token")
 	}
 
-	oauth2Token, ok := c.Session().Values[KeyToken].(*oauth2.Token)
+	oauth2Token, ok := session.Values[KeyToken].(*oauth2.Token)
 	if !ok {
-		return nil, errors.Errorf("invalid token %T %v", c.Session().Values[KeyToken], c.Session().Values[KeyToken])
+		return nil, errors.Errorf("invalid token %T %v", session.Values[KeyToken], session.Values[KeyToken])
 	}
 
 	return oauth2Token, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) IDToken(c web.Context) (*oidc.IDToken, error) {
-	token, _, err := am.getIDToken(c)
+func (am *AuthManager) IDToken(c context.Context, session *sessions.Session) (*oidc.IDToken, error) {
+	token, _, err := am.getIDToken(c, session)
 	return token, err
 }
 
 // GetRawIDToken gets the raw IDToken from session
-func (am *AuthManager) GetRawIDToken(c web.Context) (string, error) {
-	_, raw, err := am.getIDToken(c)
+func (am *AuthManager) GetRawIDToken(c context.Context, session *sessions.Session) (string, error) {
+	_, raw, err := am.getIDToken(c, session)
 	return raw, err
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getIDToken(c web.Context) (*oidc.IDToken, string, error) {
-	if c.Session() == nil {
+func (am *AuthManager) getIDToken(c context.Context, session *sessions.Session) (*oidc.IDToken, string, error) {
+	if session == nil {
 		return nil, "", errors.New("no session configured")
 	}
 
-	if token, ok := c.Session().Values[KeyRawIDToken]; ok {
+	if token, ok := session.Values[KeyRawIDToken]; ok {
 		idtoken, err := am.Verifier().Verify(c, token.(string))
 		if err == nil {
 			return idtoken, token.(string), nil
 		}
 	}
 
-	token, raw, err := am.getNewIdToken(c)
+	token, raw, err := am.getNewIdToken(c, session)
 	if err != nil {
 		return nil, "", err
 	}
 
-	c.Session().Values[KeyRawIDToken] = raw
+	session.Values[KeyRawIDToken] = raw
 
 	return token, raw, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewIdToken(c web.Context) (*oidc.IDToken, string, error) {
-	tokenSource, err := am.TokenSource(c)
+func (am *AuthManager) getNewIdToken(c context.Context, session *sessions.Session) (*oidc.IDToken, string, error) {
+	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
 	}
@@ -226,8 +225,8 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 }
 
 // TokenSource to be used in situations where you need it
-func (am *AuthManager) TokenSource(c web.Context) (oauth2.TokenSource, error) {
-	oauth2Token, err := am.OAuth2Token(c)
+func (am *AuthManager) TokenSource(c context.Context, session *sessions.Session) (oauth2.TokenSource, error) {
+	oauth2Token, err := am.OAuth2Token(session)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +235,8 @@ func (am *AuthManager) TokenSource(c web.Context) (oauth2.TokenSource, error) {
 }
 
 // HTTPClient to retrieve a client with automatic tokensource
-func (am *AuthManager) HTTPClient(c web.Context) (*http.Client, error) {
-	ts, err := am.TokenSource(c)
+func (am *AuthManager) HTTPClient(c context.Context, session *sessions.Session) (*http.Client, error) {
+	ts, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, err
 	}

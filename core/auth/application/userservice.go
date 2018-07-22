@@ -1,8 +1,10 @@
 package application
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/web"
+	"github.com/gorilla/sessions"
 )
 
 type (
@@ -13,8 +15,8 @@ type (
 
 	// UserServiceInterface to mock in tests
 	UserServiceInterface interface {
-		GetUser(web.Context) *domain.User
-		IsLoggedIn(web.Context) bool
+		GetUser(ctx context.Context, session *sessions.Session) *domain.User
+		IsLoggedIn(ctx context.Context, session *sessions.Session) bool
 	}
 )
 
@@ -23,8 +25,8 @@ func (us *UserService) Inject(manager *AuthManager) {
 }
 
 // GetUser returns the current user information
-func (us *UserService) GetUser(c web.Context) *domain.User {
-	id, err := us.authManager.IDToken(c)
+func (us *UserService) GetUser(c context.Context, session *sessions.Session) *domain.User {
+	id, err := us.authManager.IDToken(c, session)
 	if err != nil {
 		return domain.Guest
 	}
@@ -33,7 +35,7 @@ func (us *UserService) GetUser(c web.Context) *domain.User {
 }
 
 // IsLoggedIn determines the user's login status
-func (us *UserService) IsLoggedIn(c web.Context) bool {
-	user := us.GetUser(c)
+func (us *UserService) IsLoggedIn(c context.Context, session *sessions.Session) bool {
+	user := us.GetUser(c, session)
 	return user.Type == domain.USER
 }

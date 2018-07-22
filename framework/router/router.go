@@ -17,6 +17,7 @@ import (
 	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 const (
@@ -228,6 +229,8 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 // TODO simplify and merge with `handle`
 func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	_, span := trace.StartSpan(req.Context(), "router/ServeHTTP")
+
 	// shadow the response writer
 	rw = &web.VerboseResponseWriter{ResponseWriter: rw}
 	req = req.WithContext(context.WithValue(req.Context(), "rw", rw))
@@ -237,14 +240,18 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// initialize the session
 	if router.Sessions != nil {
+		_, span := trace.StartSpan(req.Context(), "router/sessions/get")
 		s, err = router.Sessions.Get(req, router.SessionName)
 		if err != nil {
 			log.Println(err)
+			_, span := trace.StartSpan(req.Context(), "router/sessions/new")
 			s, err = router.Sessions.New(req, router.SessionName)
 			if err != nil {
 				log.Println(err)
 			}
+			span.End()
 		}
+		span.End()
 	}
 
 	// retrieve a new context
@@ -258,7 +265,10 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	router.eventrouter.Dispatch(ctx, e)
 	req = e.Request
 
+	span.End()
+
 	done := ctx.Profile("matchRequest", req.RequestURI)
+	_, span = trace.StartSpan(req.Context(), "router/matchRequest")
 	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
 	ctx.LoadParams(params)
@@ -270,8 +280,13 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 	ctx.WithValue("Handler", handlerdata{params, handler})
 	done()
+	span.End()
 
 	defer ctx.Profile("request", req.RequestURI)()
+
+	tracectx, span := trace.StartSpan(req.Context(), "router/request")
+	req = req.WithContext(tracectx)
+	defer span.End()
 
 	webRequest := web.RequestFromRequest(req, s).WithVars(params)
 	ctx.WithValue("__req", webRequest)
@@ -282,51 +297,54 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 	copy(chain.Filters, router.filters)
 
-	chain.Filters = append(chain.Filters, lastFilter(func(ctx web.Context, rw http.ResponseWriter) web.Response {
+	chain.Filters = append(chain.Filters, lastFilter(func(ctx context.Context, r *web.Request, rw http.ResponseWriter) web.Response {
+		ctx, span := trace.StartSpan(ctx, "router/controller")
+		defer span.End()
+
 		// catch errors
 		defer func() {
 			if err := recover(); err != nil {
-				router.recover(ctx, rw, err)
+				router.recover(web.ToContext(ctx), rw, err)
 			}
 			// fire finish event
-			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err, ctx})
+			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err, web.ToContext(ctx)})
 		}()
 
 		var response web.Response
 
 		if c, ok := controller.method[req.Method]; ok {
-			response = c(req.Context(), webRequest)
+			response = c(ctx, webRequest)
 		} else if controller.any != nil {
-			response = controller.any(req.Context(), webRequest)
+			response = controller.any(ctx, webRequest)
 		} else {
 			// deprecated: refactored in favor of proper controller actions
 			if cc, ok := controller.legacyController.(GETController); ok && req.Method == http.MethodGet {
-				response = cc.Get(ctx)
+				response = cc.Get(web.ToContext(ctx))
 			} else if cc, ok := controller.legacyController.(POSTController); ok && req.Method == http.MethodPost {
-				response = cc.Post(ctx)
+				response = cc.Post(web.ToContext(ctx))
 			} else if cc, ok := controller.legacyController.(PUTController); ok && req.Method == http.MethodPut {
-				response = cc.Put(ctx)
+				response = cc.Put(web.ToContext(ctx))
 			} else if cc, ok := controller.legacyController.(DELETEController); ok && req.Method == http.MethodDelete {
-				response = cc.Delete(ctx)
+				response = cc.Delete(web.ToContext(ctx))
 			} else if cc, ok := controller.legacyController.(HEADController); ok && req.Method == http.MethodHead {
-				response = cc.Head(ctx)
+				response = cc.Head(web.ToContext(ctx))
 			} else {
 				switch c := controller.legacyController.(type) {
 				case DataController:
-					response = &web.JSONResponse{Data: c.Data(ctx)}
+					response = &web.JSONResponse{Data: c.Data(web.ToContext(ctx))}
 
 				case func(web.Context) web.Response:
-					response = c(ctx)
+					response = c(web.ToContext(ctx))
 
 				case func(web.Context) interface{}:
-					response = &web.JSONResponse{Data: c(ctx)}
+					response = &web.JSONResponse{Data: c(web.ToContext(ctx))}
 
 				case http.Handler:
 					response = &web.ServeHTTPResponse{VerboseResponseWriter: rw.(*web.VerboseResponseWriter)}
 					c.ServeHTTP(response.(http.ResponseWriter), req)
 
 				default:
-					response = router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(ctx)
+					response = router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(web.ToContext(ctx))
 				}
 			}
 		}
@@ -336,21 +354,25 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		// fire response event
-		router.eventrouter.Dispatch(ctx, &OnResponseEvent{controller, response, req, rw, ctx})
+		router.eventrouter.Dispatch(ctx, &OnResponseEvent{controller, response, req, rw, web.ToContext(ctx)})
 
 		return response
 	}))
 
-	response := chain.Next(ctx, rw)
+	response := chain.Next(ctx, webRequest, rw)
 
 	if router.Sessions != nil {
+		_, span := trace.StartSpan(ctx, "router/sessions/safe")
 		if err := router.Sessions.Save(req, rw, ctx.Session()); err != nil {
 			log.Println(err)
 		}
+		span.End()
 	}
 
 	if response != nil {
+		_, span := trace.StartSpan(ctx, "router/responseApply")
 		response.Apply(ctx, rw)
+		span.End()
 	}
 }
 

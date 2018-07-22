@@ -42,7 +42,7 @@ func (b *Binding) To(what interface{}) *Binding {
 	}
 
 	if !to.AssignableTo(b.typeof) && !reflect.PtrTo(to).AssignableTo(b.typeof) {
-		panic(fmt.Sprintf("%s not assignable to %s", to, b.typeof))
+		panic(fmt.Sprintf("%s#%s not assignable to %s#%s", to.PkgPath(), to.Name(), b.typeof.PkgPath(), b.typeof.Name()))
 	}
 
 	b.to = to

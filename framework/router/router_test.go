@@ -52,6 +52,7 @@ func TestRouter(t *testing.T) {
 			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
 			mock.Anything,
 		).Return(contextMock)
+		contextMock.On("Value", mock.Anything).Return(contextMock)
 		return contextMock
 	}
 	eventRouter := new(eventMocks.Router)
@@ -218,6 +219,7 @@ func TestRouterTestify(t *testing.T) {
 			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
 			mock.Anything,
 		).Return(contextMock)
+		contextMock.On("Value", mock.Anything).Return(contextMock)
 		return contextMock
 	}
 	eventRouter := new(eventMocks.Router)
@@ -264,6 +266,7 @@ func TestRouterMiniMocks(t *testing.T) {
 	contextMock.ProfileFunc = func(p string, p1 string) (r profiler.ProfileFinishFunc) { return profiler.ProfileFinishFunc(func() {}) }
 	contextMock.LoadParamsMock.Expect(map[string]string{}).Return()
 	contextMock.WithValueFunc = func(p interface{}, p1 interface{}) (r web.Context) { return nil }
+	contextMock.ValueFunc = func(p interface{}) (r interface{}) { return contextMock }
 	routerVar.ContextFactory = func(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) web.Context {
 		return contextMock
 	}

@@ -35,6 +35,7 @@ type (
 	handlerAction struct {
 		method           map[string]Action
 		any              Action
+		data             DataAction
 		legacyController Controller
 	}
 
@@ -77,6 +78,10 @@ func (ha *handlerAction) setAny(any Action) {
 	ha.any = any
 }
 
+func (ha *handlerAction) setData(data DataAction) {
+	ha.data = data
+}
+
 // Handle assigns a Controller to a name
 // deprecated: use explicit handler
 func (registry *Registry) Handle(name string, controller Controller) {
@@ -92,6 +97,13 @@ func (registry *Registry) Handle(name string, controller Controller) {
 func (registry *Registry) HandleAny(name string, action Action) {
 	ha := registry.handler[name]
 	ha.setAny(action)
+	registry.handler[name] = ha
+}
+
+// HandleData sets the controllers data action
+func (registry *Registry) HandleData(name string, action DataAction) {
+	ha := registry.handler[name]
+	ha.setData(action)
 	registry.handler[name] = ha
 }
 
@@ -143,6 +155,12 @@ func (registry *Registry) Has(method, name string) bool {
 func (registry *Registry) HasAny(name string) bool {
 	la, ok := registry.handler[name]
 	return ok && la.any != nil
+}
+
+// HasData checks if a data handler is set for a given name
+func (registry *Registry) HasData(name string) bool {
+	la, ok := registry.handler[name]
+	return ok && la.data != nil
 }
 
 // HasLegacy checks if a legacy handler is set for a given name

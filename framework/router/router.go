@@ -375,6 +375,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 // Get is the ServeHTTP's equivalent for DataController and DataHandler.
 // TODO refactor
+// deprecated: use Data instead
 func (router *Router) Get(handler string, ctx web.Context, params ...map[interface{}]interface{}) interface{} {
 	defer ctx.Profile("get", handler)()
 
@@ -395,6 +396,7 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 	panic(errors.Errorf("data Controller %q not found", handler))
 }
 
+// deprecated: uses web.Context :(
 func reformatParams(ctx web.Context, params ...map[interface{}]interface{}) map[string]string {
 	vars := make(map[string]string)
 	for k, v := range ctx.ParamAll() {
@@ -418,4 +420,48 @@ func reformatParams(ctx web.Context, params ...map[interface{}]interface{}) map[
 		}
 	}
 	return vars
+}
+
+func dataParams(r *web.Request, params map[interface{}]interface{}) map[string]string {
+	vars := make(map[string]string)
+	for k, v := range r.ParamAll() {
+		vars[k] = v
+	}
+
+	for k, v := range params {
+		if k, ok := k.(string); ok {
+			switch v := v.(type) {
+			case string:
+				vars[k] = v
+			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+				vars[k] = strconv.Itoa(int(reflect.ValueOf(v).Int()))
+			case float32:
+				vars[k] = strconv.FormatFloat(float64(v), 'f', -1, 32)
+			case float64:
+				vars[k] = strconv.FormatFloat(v, 'f', -1, 64)
+			}
+		}
+	}
+
+	return vars
+}
+
+// Data calls a flamingo data controller
+func (router *Router) Data(ctx context.Context, handler string, r *web.Request, params map[interface{}]interface{}) interface{} {
+	r.LoadParams(dataParams(r, params))
+
+	if c, ok := router.RouterRegistry.handler[handler]; ok {
+		if c.data != nil {
+			return c.data(ctx, r)
+		}
+
+		if _, ok := c.legacyController.(DataController); ok {
+			return router.Get(handler, web.ToContext(ctx), params)
+		}
+		if _, ok := c.legacyController.(func(web.Context) interface{}); ok {
+			return router.Get(handler, web.ToContext(ctx), params)
+		}
+		panic(errors.Errorf("%q is not a data Controller", handler))
+	}
+	panic(errors.Errorf("data Controller %q not found", handler))
 }

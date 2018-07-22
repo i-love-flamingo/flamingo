@@ -11,6 +11,9 @@ type (
 	// Action defines an explicit http action
 	Action func(ctx context.Context, req *web.Request) web.Response
 
+	// DataAction is a method called which does not return the web response itself, but data instead
+	DataAction func(ctx context.Context, req *web.Request) interface{}
+
 	// Controller defines a web Controller
 	// it is an interface{} as it can be served by multiple possible controllers,
 	// such as generic GET/POST Controller, http.Handler, Handler-functions, etc.

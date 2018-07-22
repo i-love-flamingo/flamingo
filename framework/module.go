@@ -86,7 +86,7 @@ func (r *routes) Inject(
 
 func (r *routes) Routes(registry *router.Registry) {
 	registry.Route("/_flamingo/json/:handler", "flamingo.data.handler")
-	registry.Handle("flamingo.data.handler", r.dataController)
+	registry.HandleGet("flamingo.data.handler", r.dataController.Get)
 	registry.Handle("session.flash", r.flashController)
 
 	registry.HandleAny("flamingo.render", r.render.Render)

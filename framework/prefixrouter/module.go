@@ -9,6 +9,7 @@ import (
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 // Module for core/prefix_router
@@ -68,7 +69,8 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 		}
 
 		logger.Info("Starting HTTP Server at %s .....", *addr)
-		e := http.ListenAndServe(*addr, frontRouter)
+
+		e := http.ListenAndServe(*addr, &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter})
 		if e != nil {
 			logger.Error("Unexpected Error", e)
 		}

@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
+
+	"go.opencensus.io/trace"
 )
 
 type (
@@ -55,6 +57,8 @@ func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
 
 // ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	_, span := trace.StartSpan(req.Context(), "prefixrouter/ServeHTTP")
+	defer span.End()
 
 	//process registered primaryHandlers - and if they are sucessfull exist
 	for _, handler := range fr.primaryHandlers {
@@ -76,6 +80,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if req.URL.Path == "" {
 				req.URL.Path = "/"
 			}
+			span.End()
 			router.ServeHTTP(w, req)
 			return
 		}
@@ -88,6 +93,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			if req.URL.Path == "" {
 				req.URL.Path = "/"
 			}
+			span.End()
 			router.ServeHTTP(w, req)
 			return
 		}
@@ -103,6 +109,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	//fallback to final handler if given
 	if fr.finalFallbackHandler != nil {
+		span.End()
 		fr.finalFallbackHandler.ServeHTTP(w, req)
 	} else {
 		w.WriteHeader(404)

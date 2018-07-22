@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // URLTitle normalizes a title for nice usage in URLs
@@ -29,7 +27,8 @@ func ToContext(ctx context.Context) Context {
 		return c
 	}
 
-	panic(errors.New("can not convert a context.Context to a web.Context"))
+	return nil
+	//panic(errors.New("can not convert a context.Context to a web.Context"))
 }
 
 // ToRequest upgrades a web.Context to the new context+request form

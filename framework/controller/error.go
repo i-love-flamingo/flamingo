@@ -6,6 +6,7 @@ import (
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -20,6 +21,8 @@ func (controller *Error) Error(ctx context.Context, request *web.Request) web.Re
 	var err error
 	if ctx.Value(router.ERROR) != nil {
 		err = ctx.Value(router.ERROR).(error)
+	} else {
+		err = errors.New("no error found in provided context")
 	}
 	return controller.Responder.Error(ctx, err)
 }
@@ -29,6 +32,8 @@ func (controller *Error) NotFound(ctx context.Context, request *web.Request) web
 	var err error
 	if ctx.Value(router.ERROR) != nil {
 		err = ctx.Value(router.ERROR).(error)
+	} else {
+		err = errors.New("no error found in provided context")
 	}
 	return controller.Responder.ErrorNotFound(ctx, err)
 }

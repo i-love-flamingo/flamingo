@@ -120,6 +120,7 @@ func ContextFromRequest(profiler profiler.Profiler, eventrouter event.Router, rw
 	}
 
 	c.Context = context.WithValue(r.Context(), ID, c.id)
+	c.Context = context.WithValue(c.Context, CONTEXT, c)
 
 	return c
 }

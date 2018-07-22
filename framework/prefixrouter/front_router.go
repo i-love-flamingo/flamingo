@@ -3,7 +3,6 @@ package prefixrouter
 import (
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"go.opencensus.io/trace"
@@ -73,26 +72,13 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		host = strings.Split(host, ":")[0]
 	}
 
-	test := path.Join(host, req.RequestURI)
+	test := req.RequestURI
 	for prefix, router := range fr.router {
 		if strings.HasPrefix(test, prefix) {
 			req.URL, _ = url.Parse(test[len(prefix):])
-			if req.URL.Path == "" {
-				req.URL.Path = "/"
-			}
-			span.End()
-			router.ServeHTTP(w, req)
-			return
-		}
-	}
 
-	test = req.RequestURI
-	for prefix, router := range fr.router {
-		if strings.HasPrefix(test, prefix) {
-			req.URL, _ = url.Parse(test[len(prefix):])
-			if req.URL.Path == "" {
-				req.URL.Path = "/"
-			}
+			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+
 			span.End()
 			router.ServeHTTP(w, req)
 			return

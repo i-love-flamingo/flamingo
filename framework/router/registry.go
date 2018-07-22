@@ -409,6 +409,8 @@ func (registry *Registry) matchRequest(req *http.Request) (handlerAction, map[st
 		path = req.URL.RawPath
 	}
 
+	path = "/" + strings.TrimLeft(path, "/")
+
 matchloop:
 	for _, handler := range registry.routes {
 		if match := handler.path.Match(path); match != nil {

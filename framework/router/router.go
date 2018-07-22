@@ -196,7 +196,7 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 	if err != nil {
 		panic(err)
 	}
-	resultURL, err = url.Parse(router.base.Path + p)
+	resultURL, err = url.Parse(strings.TrimRight(router.base.Path, "/") + "/" + strings.TrimLeft(p, "/"))
 	if err != nil {
 		panic(err)
 	}
@@ -204,7 +204,7 @@ func (router *Router) URL(name string, params map[string]string) *url.URL {
 	return resultURL
 }
 
-func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err interface{}) {
+func (router *Router) recover(ctx context.Context, r *web.Request, rw http.ResponseWriter, err interface{}) {
 	defer func() {
 		if err := recover(); err != nil {
 			// bad bad recover
@@ -218,11 +218,11 @@ func (router *Router) recover(ctx web.Context, rw http.ResponseWriter, err inter
 	}()
 
 	if e, ok := err.(error); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx.WithValue(ERROR, errors.WithStack(e)))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(context.WithValue(ctx, ERROR, errors.WithStack(e)), r).Apply(ctx, rw)
 	} else if err, ok := err.(string); ok {
-		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx.WithValue(ERROR, errors.New(err)))).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(context.WithValue(ctx, ERROR, errors.New(err)), r).Apply(ctx, rw)
 	} else {
-		router.RouterRegistry.handler[router.ErrorHandler].any(web.ToRequest(ctx)).Apply(ctx, rw)
+		router.RouterRegistry.handler[router.ErrorHandler].any(ctx, r).Apply(ctx, rw)
 	}
 }
 
@@ -272,9 +272,6 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
 	ctx.LoadParams(params)
-	if controller.legacyController == nil {
-		controller.legacyController = router.RouterRegistry.handler[router.NotFoundHandler]
-	}
 	if handler != nil {
 		ctx.WithValue("HandlerName", handler.GetHandlerName())
 	}
@@ -304,7 +301,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		// catch errors
 		defer func() {
 			if err := recover(); err != nil {
-				router.recover(web.ToContext(ctx), rw, err)
+				router.recover(ctx, r, rw, err)
 			}
 			// fire finish event
 			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err, web.ToContext(ctx)})
@@ -344,7 +341,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 					c.ServeHTTP(response.(http.ResponseWriter), req)
 
 				default:
-					response = router.RouterRegistry.handler[router.ErrorHandler].legacyController.(func(web.Context) web.Response)(web.ToContext(ctx))
+					response = router.RouterRegistry.handler[router.NotFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("legacy controller type unknown/unset: %T", c)), r)
 				}
 			}
 		}

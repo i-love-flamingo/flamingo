@@ -3,6 +3,7 @@ package prefixrouter
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
@@ -53,19 +54,27 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 		frontRouter.SetPrimaryHandlers(primaryHandlers)
 
 		for _, area := range root.GetFlatContexts() {
-			baseurl, ok := area.Configuration.Get("prefixrouter.baseurl")
+			baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl")
 
 			if !ok {
 				logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue
 			}
+
+			baseurl := baseurlVal.(string)
+
+			if strings.HasPrefix(baseurl, "/") {
+				baseurl = "host" + baseurl
+			}
+
 			logger.WithField("category", "prefixrouter").Info("Routing", area.Name, "at", baseurl)
 			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(router.Router{}).(*router.Router)
 			areaRouter.Init(area)
-			bu, _ := url.Parse("scheme://" + baseurl.(string))
+			bu, _ := url.Parse("scheme://" + baseurl)
+
 			areaRouter.SetBase(bu)
-			frontRouter.Add(baseurl.(string), areaRouter)
+			frontRouter.Add(bu.Path, areaRouter)
 		}
 
 		logger.Info("Starting HTTP Server at %s .....", *addr)

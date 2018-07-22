@@ -40,10 +40,10 @@ func (r *logger) Inject(flogger flamingo.Logger) {
 }
 
 // Filter a web request
-func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.FilterChain) web.Response {
+func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWriter, chain *router.FilterChain) web.Response {
 	start := time.Now()
 
-	webResponse := chain.Next(ctx, w)
+	webResponse := chain.Next(ctx, req, w)
 
 	if webResponse == nil {
 		webResponse = &web.ErrorResponse{Error: errors.New("nil response"), Response: &web.BasicResponse{}}
@@ -100,10 +100,10 @@ func (r *logger) Filter(ctx web.Context, w http.ResponseWriter, chain *router.Fi
 				fmt.Sprintf(
 					cp("%03d | %-8s | % 15s | % 7s | %s%s"),
 					webResponse.GetStatus(),
-					ctx.Request().Method,
+					req.Request().Method,
 					duration,
 					sizeStr,
-					ctx.Request().RequestURI,
+					req.Request().RequestURI,
 					extra,
 				),
 			)

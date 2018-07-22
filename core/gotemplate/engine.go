@@ -15,6 +15,7 @@ import (
 	"flamingo.me/flamingo/framework/router"
 	flamingotemplate "flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web"
+	"go.opencensus.io/trace"
 )
 
 const pathSeparatorString = string(os.PathSeparator)
@@ -65,21 +66,28 @@ func (e *engine) Inject(
 	e.debug = config.Debug
 }
 
-func (e *engine) Render(context context.Context, name string, data interface{}) (io.Reader, error) {
+func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.Reader, error) {
+	ctx, span := trace.StartSpan(ctx, "gotemplate/Render")
+	defer span.End()
+
 	lock.Lock()
 	if e.debug || e.templates == nil {
-		e.loadTemplates(context)
+		e.loadTemplates(ctx)
 	}
 	lock.Unlock()
 
+	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}
 	err := e.templates[name+".html"].Execute(buf, data)
+	defer span.End()
 
 	return buf, err
 }
 
-func (e *engine) loadTemplates(context context.Context) {
+func (e *engine) loadTemplates(ctx context.Context) {
 	//done := context.Profile("template engine", "load templates")
+	ctx, span := trace.StartSpan(ctx, "gotemplate/loadTemplates")
+	defer span.End()
 
 	e.templates = make(map[string]*template.Template, 0)
 
@@ -99,7 +107,7 @@ func (e *engine) loadTemplates(context context.Context) {
 
 	funcs := e.templateFunctions.Populate()
 	for k, f := range e.templateFunctions.ContextAware {
-		funcs[k] = f(web.ToContext(context))
+		funcs[k] = f(web.ToContext(ctx))
 	}
 
 	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, funcs))

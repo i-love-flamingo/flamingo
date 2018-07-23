@@ -72,10 +72,11 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		host = strings.Split(host, ":")[0]
 	}
 
-	path := req.URL.Path
-	if req.URL.RawPath != "" {
-		path = req.URL.RawPath
-	}
+	//path := req.URL.Path
+	//if req.URL.RawPath != "" {
+	//	path = req.URL.RawPath
+	//}
+	path := req.RequestURI
 
 	path = "/" + strings.TrimLeft(path, "/")
 

@@ -309,7 +309,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		var response web.Response
 
-		if c, ok := controller.method[req.Method]; ok {
+		if c, ok := controller.method[req.Method]; ok && c != nil {
 			response = c(ctx, webRequest)
 		} else if controller.any != nil {
 			response = controller.any(ctx, webRequest)

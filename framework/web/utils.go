@@ -40,5 +40,7 @@ func ToRequest(ctx Context) (context.Context, *Request) {
 		return ctx, RequestFromRequest(ctx.Request(), ctx.Session())
 	}
 
+	request.request.URL = ctx.Request().URL
+
 	return request.request.Context(), request
 }

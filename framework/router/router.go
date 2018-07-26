@@ -78,7 +78,7 @@ var (
 )
 
 func init() {
-	opencensus.View(rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), controllerKey)
+	opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), controllerKey)
 }
 
 // NewRouter factory

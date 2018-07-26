@@ -9,14 +9,19 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/opencensus"
 	"flamingo.me/flamingo/framework/profiler"
 	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 )
 
@@ -66,6 +71,15 @@ type (
 	// errorKey for context errors
 	errorKey uint
 )
+
+var (
+	rt               = stats.Int64("flamingo/router/controller", "controller request times", stats.UnitMilliseconds)
+	controllerKey, _ = tag.NewKey("controller")
+)
+
+func init() {
+	opencensus.View(rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), controllerKey)
+}
 
 // NewRouter factory
 func NewRouter() *Router {
@@ -274,7 +288,14 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ctx.LoadParams(params)
 	if handler != nil {
 		ctx.WithValue("HandlerName", handler.GetHandlerName())
+
+		start := time.Now()
+		defer func() {
+			ctx, _ := tag.New(req.Context(), tag.Upsert(controllerKey, handler.GetHandlerName()))
+			stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
+		}()
 	}
+
 	ctx.WithValue("Handler", handlerdata{params, handler})
 	done()
 	span.End()

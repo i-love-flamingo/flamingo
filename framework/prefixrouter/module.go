@@ -74,7 +74,7 @@ func Serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primar
 			bu, _ := url.Parse("scheme://" + baseurl)
 
 			areaRouter.SetBase(bu)
-			frontRouter.Add(bu.Path, areaRouter)
+			frontRouter.Add(bu.Path, routerHandler{area: area.Name, handler: areaRouter})
 		}
 
 		logger.Info("Starting HTTP Server at %s .....", *addr)

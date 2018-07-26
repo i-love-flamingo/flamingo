@@ -12,17 +12,17 @@ import (
 func TestFrontRouter(t *testing.T) {
 	var fr = NewFrontRouter()
 
-	fr.Add("/prefix1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fr.Add("/prefix1", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Prefix 1"))
-	}))
+	})})
 
-	fr.Add("/prefix2", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fr.Add("/prefix2", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Prefix 2"))
-	}))
+	})})
 
-	fr.Add("example.com/prefix1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fr.Add("example.com/prefix1", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Host1, Prefix 1"))
-	}))
+	})})
 
 	fr.SetFinalFallbackHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Default"))

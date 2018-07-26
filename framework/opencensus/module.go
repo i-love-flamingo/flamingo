@@ -21,8 +21,9 @@ var (
 	KeyArea, _   = tag.NewKey("area")
 )
 
-func View(m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) {
+func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) {
 	view.Register(&view.View{
+		Name:        name,
 		Measure:     m,
 		Aggregation: aggr,
 		TagKeys:     append([]tag.Key{KeyArea}, tagKeys...),

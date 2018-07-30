@@ -61,6 +61,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				rw.Header().Add("Access-Control-Allow-Origin", origin)
 			}
 			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+				copyHeaders(r, rw)
 				io.Copy(rw, r.Body)
 			} else {
 				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
@@ -76,6 +77,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			rw.Header().Add("Access-Control-Allow-Origin", origin)
 		}
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+			copyHeaders(r, rw)
 			io.Copy(rw, r.Body)
 		} else {
 			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
@@ -141,5 +143,13 @@ func mockcontroller(name string, data interface{}) func(web.Context) interface{}
 	return func(ctx web.Context) interface{} {
 		defer ctx.Profile("pugmock", name)()
 		return data
+	}
+}
+
+func copyHeaders(r *http.Response, w http.ResponseWriter) {
+	for key, values := range r.Header {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
 	}
 }

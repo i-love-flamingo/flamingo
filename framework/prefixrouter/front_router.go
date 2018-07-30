@@ -83,6 +83,9 @@ func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
 
 // ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r, _ := tag.New(req.Context(), tag.Insert(opencensus.KeyArea, "-"))
+	req = req.WithContext(r)
+
 	start := time.Now()
 	defer func() {
 		stats.Record(req.Context(), rt.M(time.Since(start).Nanoseconds()/1000000))
@@ -114,7 +117,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	for prefix, router := range fr.router {
 		if strings.HasPrefix(host+path, prefix) {
-			r, _ := tag.New(req.Context(), tag.Insert(opencensus.KeyArea, router.area))
+			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 			req = req.WithContext(r)
 
 			req.URL, _ = url.Parse(path[len(prefix)-len(host):])
@@ -128,7 +131,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	for prefix, router := range fr.router {
 		if strings.HasPrefix(path, prefix) {
-			r, _ := tag.New(req.Context(), tag.Insert(opencensus.KeyArea, router.area))
+			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 			req = req.WithContext(r)
 
 			req.URL, _ = url.Parse(path[len(prefix):])

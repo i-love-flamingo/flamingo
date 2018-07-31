@@ -30,6 +30,19 @@ func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.K
 	})
 }
 
+type correlationIDInjector struct {
+	next http.RoundTripper
+}
+
+// RoundTrip a request
+func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
+	if span := trace.FromContext(req.Context()); span != nil {
+		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID.String())
+	}
+
+	return rt.next.RoundTrip(req)
+}
+
 type Module struct {
 	Endpoint     string `inject:"config:opencensus.jaeger.endpoint"`
 	ServiceName  string `inject:"config:opencensus.serviceName"`
@@ -41,7 +54,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-		http.DefaultTransport = &ochttp.Transport{Base: http.DefaultTransport}
+		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {
 			// Register the Jaeger exporter to be able to retrieve

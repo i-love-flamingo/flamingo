@@ -8,18 +8,22 @@ import (
 )
 
 type (
+	ResponseHook func(c context.Context, r *Request, rw http.ResponseWriter)
+
 	// Response defines the generic web response
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
 		Apply(context.Context, http.ResponseWriter)
 		GetStatus() int
 		GetContentLength() int
+		Hook(...ResponseHook) Response
 	}
 
 	// BasicResponse defines a response with basic attributes
 	BasicResponse struct {
 		Status      int
 		contentSize int
+		hooks       []ResponseHook
 	}
 
 	// OnResponse hook
@@ -92,6 +96,12 @@ func (shr *ServeHTTPResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	shr.BasicResponse.Apply(c, rw)
 }
 
+// Hook appends hooks to the response
+func (shr *ServeHTTPResponse) Hook(hooks ...ResponseHook) Response {
+	shr.BasicResponse.hooks = append(shr.BasicResponse.hooks, hooks...)
+	return shr
+}
+
 // GetStatus returns the status of the response
 func (br *BasicResponse) GetStatus() int {
 	return br.Status
@@ -108,6 +118,19 @@ func (br *BasicResponse) Apply(c context.Context, rw http.ResponseWriter) {
 		br.Status = vrb.Status
 		br.contentSize = vrb.Size
 	}
+}
+
+// OnResponse callback to apply hooks
+func (br *BasicResponse) OnResponse(c context.Context, r *Request, rw http.ResponseWriter) {
+	for _, hook := range br.hooks {
+		hook(c, r, rw)
+	}
+}
+
+// Hook appends hooks to the response
+func (br *BasicResponse) Hook(hooks ...ResponseHook) Response {
+	br.hooks = append(br.hooks, hooks...)
+	return br
 }
 
 // Apply Response
@@ -139,6 +162,12 @@ func (rr *RedirectResponse) With(key string, data interface{}) Redirect {
 	return rr
 }
 
+// Hook appends hooks to the response
+func (rr *RedirectResponse) Hook(hooks ...ResponseHook) Response {
+	rr.BasicResponse.hooks = append(rr.BasicResponse.hooks, hooks...)
+	return rr
+}
+
 // Apply ContentResponse
 func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	if cr.ContentType == "" {
@@ -158,20 +187,32 @@ func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	cr.BasicResponse.Apply(c, rw)
 }
 
+// Hook appends hooks to the response
+func (cr *ContentResponse) Hook(hooks ...ResponseHook) Response {
+	cr.BasicResponse.hooks = append(cr.BasicResponse.hooks, hooks...)
+	return cr
+}
+
 // Apply JSONResponse
-func (js *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) {
-	if js.Status == 0 {
-		js.Status = http.StatusOK
+func (jr *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) {
+	if jr.Status == 0 {
+		jr.Status = http.StatusOK
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(js.Status)
+	rw.WriteHeader(jr.Status)
 
-	p, err := json.Marshal(js.Data)
+	p, err := json.Marshal(jr.Data)
 	if err != nil {
 		panic(err)
 	}
 	rw.Write(p)
 
-	js.BasicResponse.Apply(c, rw)
+	jr.BasicResponse.Apply(c, rw)
+}
+
+// Hook appends hooks to the response
+func (jr *JSONResponse) Hook(hooks ...ResponseHook) Response {
+	jr.BasicResponse.hooks = append(jr.BasicResponse.hooks, hooks...)
+	return jr
 }

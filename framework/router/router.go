@@ -412,6 +412,9 @@ func (router *Router) Get(handler string, ctx web.Context, params ...map[interfa
 		if c, ok := c.legacyController.(func(web.Context) interface{}); ok {
 			return c(getCtx)
 		}
+		if c.data != nil {
+			return c.data(web.ToRequest(getCtx))
+		}
 		panic(errors.Errorf("%q is not a data Controller", handler))
 	}
 	panic(errors.Errorf("data Controller %q not found", handler))

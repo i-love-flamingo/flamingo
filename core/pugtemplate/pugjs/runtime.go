@@ -177,21 +177,43 @@ var funcmap = FuncMap{
 				if attr == nil {
 					continue
 				}
-				name := string(attr.(*Map).Items[String("name")].(String))
-				mustEscape := bool(attr.(*Map).Items[String("mustEscape")].(Bool))
-				var val string
-				att := tmpattr{mustEscape: mustEscape}
-				if _, ok := attr.(*Map).Items[String("boolVal")].(Bool); attr.(*Map).Items[String("boolVal")] != nil && ok {
-					b := attr.(*Map).Items[String("boolVal")].(Bool).True()
-					att.bool = &b
-					if mustEscape {
-						val = name
+
+				var name, val string
+				var mustEscape bool
+				var att tmpattr
+
+				if UseGoObject {
+					name = attr.(*goObj).Member("name").String()
+					mustEscape = bool(attr.(*goObj).Member("mustEscape").(Bool))
+					att.mustEscape = mustEscape
+					if _, ok := attr.(*goObj).Member("boolVal").(Bool); attr.(*goObj).Member("boolVal") != nil && ok {
+						b := attr.(*goObj).Member("boolVal").(Bool).True()
+						att.bool = &b
+						if mustEscape {
+							val = name
+						} else {
+							val = `"` + name + `"`
+						}
 					} else {
-						val = `"` + name + `"`
+						val = attr.(*goObj).Member("val").String()
 					}
 				} else {
-					val = string(attr.(*Map).Items[String("val")].(String))
+					name = string(attr.(*Map).Items[String("name")].(String))
+					mustEscape = bool(attr.(*Map).Items[String("mustEscape")].(Bool))
+					att.mustEscape = mustEscape
+					if _, ok := attr.(*Map).Items[String("boolVal")].(Bool); attr.(*Map).Items[String("boolVal")] != nil && ok {
+						b := attr.(*Map).Items[String("boolVal")].(Bool).True()
+						att.bool = &b
+						if mustEscape {
+							val = name
+						} else {
+							val = `"` + name + `"`
+						}
+					} else {
+						val = string(attr.(*Map).Items[String("val")].(String))
+					}
 				}
+
 				att.val = val
 				if _, ok := a[name]; ok {
 					if name == "class" {

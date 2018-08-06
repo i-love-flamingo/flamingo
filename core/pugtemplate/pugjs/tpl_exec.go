@@ -193,9 +193,12 @@ func (t *Template) execute(wr io.Writer, data interface{}) (err error) {
 	if !ok {
 		value = reflect.ValueOf(data)
 	}
-	if data, ok := data.(*Map); ok {
-		value = reflect.ValueOf(data.Items)
+	if d, ok := data.(*Map); ok {
+		value = reflect.ValueOf(d.Items)
+	} else if d, ok := data.(*goObj); ok {
+		value = d.v
 	}
+
 	state := &state{
 		tmpl: t,
 		wr:   wr,

@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var UseGoObject = false
+
 type (
 	// Object describes a pugjs JavaScript object
 	Object interface {
@@ -45,6 +47,10 @@ func convert(in interface{}) Object {
 	}
 
 	if !val.IsValid() {
+		return Nil{}
+	}
+
+	if !val.CanInterface() {
 		return Nil{}
 	}
 
@@ -87,6 +93,21 @@ func convert(in interface{}) Object {
 		return newMap
 
 	case reflect.Struct:
+		if UseGoObject {
+			if !val.CanAddr() {
+				return &goObj{
+					o: val.Interface(),
+					v: val,
+				}
+			}
+
+			return &goObj{
+				o:  val.Interface(),
+				v:  val,
+				va: val.Addr(),
+			}
+		}
+
 		newMap := &Map{
 			Items: make(map[Object]Object, val.Type().NumField()+val.Type().NumMethod()),
 			o:     val.Interface(),
@@ -116,9 +137,14 @@ func convert(in interface{}) Object {
 		return String(val.String())
 
 	case reflect.Interface:
+		if UseGoObject {
+			return convert(val.Interface())
+		}
+
 		if val.Type().NumMethod() == 0 {
 			return convert(val.Interface())
 		}
+
 		newMap := &Map{
 			Items: make(map[Object]Object, val.Type().NumMethod()),
 			o:     val.Interface(),
@@ -184,6 +210,105 @@ func convert(in interface{}) Object {
 	}
 
 	panic(fmt.Sprintf("Cannot convert %#v %T %s %s", val, val, val.Type(), val.Kind()))
+}
+
+type goObj struct {
+	o  interface{}
+	v  reflect.Value
+	va reflect.Value
+}
+
+// MarshalJSON implementation
+func (o *goObj) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.o)
+}
+
+func (o *goObj) Member(name string) Object {
+	if o.v.Kind() == reflect.Struct {
+		if f := o.v.FieldByName(upperFirst(name)); f.IsValid() {
+			return convert(f)
+		}
+
+		if f := o.v.FieldByName(strings.Title(name)); f.IsValid() {
+			return convert(f)
+		}
+
+		//for i := 0; i < o.v.NumField(); i++ {
+		//	log.Print(o.v.Type().Field(i).Name, o.v.Field(i).String())
+		//}
+	}
+
+	if f := o.v.MethodByName(upperFirst(name)); f.IsValid() {
+		return convert(f)
+	}
+
+	if f := o.v.MethodByName(strings.Title(name)); f.IsValid() {
+		return convert(f)
+	}
+
+	//for i := 0; i < o.v.NumMethod(); i++ {
+	//	log.Print(o.v.Type().Method(i).Name, o.v.Method(i).String())
+	//}
+
+	if o.va.IsValid() {
+
+		if o.va.Kind() == reflect.Struct {
+			if f := o.va.FieldByName(upperFirst(name)); f.IsValid() {
+				return convert(f)
+			}
+
+			if f := o.va.FieldByName(strings.Title(name)); f.IsValid() {
+				return convert(f)
+			}
+
+			//for i := 0; i < o.va.NumField(); i++ {
+			//	log.Print(o.va.Type().Field(i).Name, o.va.Field(i).String())
+			//}
+		}
+
+		if f := o.va.MethodByName(upperFirst(name)); f.IsValid() {
+			return convert(f)
+		}
+
+		if f := o.va.MethodByName(strings.Title(name)); f.IsValid() {
+			return convert(f)
+		}
+
+		//for i := 0; i < o.va.NumMethod(); i++ {
+		//	log.Print(o.va.Type().Method(i).Name, o.va.Method(i).String())
+		//}
+
+	}
+
+	//if f := o.v.FieldByName(name); f.IsValid() {
+	//return convert(f)
+	//}
+
+	//if f := o.v.MethodByName(name); f.IsValid() {
+	//return convert(f)
+	//}
+
+	//return Nil{}
+	panic(name + " not found in " + fmt.Sprintf("%#v", o.o))
+}
+
+func (o *goObj) String() string {
+	if s, ok := o.o.(fmt.Stringer); ok {
+		return s.String()
+	}
+	return o.v.String()
+}
+
+func (o *goObj) copy() Object {
+	n := o.v.Interface()
+	return &goObj{
+		o: n,
+		v: reflect.ValueOf(n),
+	}
+}
+
+func (o *goObj) True() bool {
+	return true
 }
 
 // Func type

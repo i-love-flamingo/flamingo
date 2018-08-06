@@ -13,6 +13,7 @@ type Module struct {
 
 // Configure the Module and bind routes
 func (m *Module) Configure(injector *dingo.Injector) {
+	panic("do not use me")
 	router.Bind(injector, m.Routes)
 }
 

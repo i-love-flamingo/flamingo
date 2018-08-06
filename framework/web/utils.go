@@ -42,5 +42,5 @@ func ToRequest(ctx Context) (context.Context, *Request) {
 
 	request.request.URL = ctx.Request().URL
 
-	return request.request.Context(), request
+	return request.request.Context(), request.WithVars(ctx.ParamAll())
 }

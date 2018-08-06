@@ -76,8 +76,7 @@ func (injector *Injector) Child() *Injector {
 	newInjector := NewInjector()
 	newInjector.parent = injector
 	newInjector.Bind(Injector{}).ToInstance(newInjector)
-	newInjector.BindScope(new(ChildSingletonScope))    // bind a new child-singleton
-	newInjector.multibindings = injector.multibindings // todo is this good? what about mapbindings?
+	newInjector.BindScope(new(ChildSingletonScope)) // bind a new child-singleton
 
 	return newInjector
 }
@@ -363,6 +362,24 @@ func (injector *Injector) createProviderForBinding(t reflect.Type, binding *Bind
 	})
 }
 
+func (injector *Injector) joinMultibindings(t reflect.Type, annotation string) []*Binding {
+	var parent []*Binding
+	if injector.parent != nil {
+		parent = injector.parent.joinMultibindings(t, annotation)
+	}
+
+	bindings := make([]*Binding, len(parent)+len(injector.multibindings[t]))
+	copy(bindings, parent)
+	c := len(parent)
+	for _, b := range injector.multibindings[t] {
+		if b.annotatedWith == annotation {
+			bindings[c] = b
+			c++
+		}
+	}
+	return bindings
+}
+
 func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string, optional bool) reflect.Value {
 	targetType := t.Elem()
 	if targetType.Kind() == reflect.Ptr {
@@ -376,24 +393,23 @@ func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string,
 		targetType = targetType.Out(0)
 	}
 
-	if bindings, ok := injector.multibindings[targetType]; ok {
+	if bindings := injector.joinMultibindings(targetType, annotation); len(bindings) > 0 {
 		n := reflect.MakeSlice(t, 0, len(bindings))
 		for _, binding := range bindings {
-			if binding.annotatedWith == annotation {
-				if provider {
-					n = reflect.Append(n, injector.createProviderForBinding(providerType, binding, annotation, false))
-					continue
-				}
-
-				r, err := injector.resolveBinding(binding, t, optional)
-				if err != nil {
-					panic(err)
-				}
-				n = reflect.Append(n, r)
+			if provider {
+				n = reflect.Append(n, injector.createProviderForBinding(providerType, binding, annotation, false))
+				continue
 			}
+
+			r, err := injector.resolveBinding(binding, t, optional)
+			if err != nil {
+				panic(err)
+			}
+			n = reflect.Append(n, r)
 		}
 		return n
 	}
+
 	if !optional {
 		if injector.parent != nil {
 			return injector.parent.resolveMultibinding(t, annotation, optional)
@@ -403,6 +419,24 @@ func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string,
 	}
 
 	return reflect.MakeSlice(t, 0, 0)
+}
+
+func (injector *Injector) joinMapbindings(t reflect.Type, annotation string) map[string]*Binding {
+	var parent map[string]*Binding
+	if injector.parent != nil {
+		parent = injector.parent.joinMapbindings(t, annotation)
+	}
+
+	bindings := make(map[string]*Binding, len(parent)+len(injector.multibindings[t]))
+	for k, v := range parent {
+		bindings[k] = v
+	}
+	for k, v := range injector.mapbindings[t] {
+		if v.annotatedWith == annotation {
+			bindings[k] = v
+		}
+	}
+	return bindings
 }
 
 func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, optional bool) reflect.Value {
@@ -418,21 +452,19 @@ func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, o
 		targetType = targetType.Out(0)
 	}
 
-	if bindings, ok := injector.mapbindings[targetType]; ok {
+	if bindings := injector.joinMapbindings(targetType, annotation); len(bindings) > 0 {
 		n := reflect.MakeMapWithSize(t, len(bindings))
 		for key, binding := range bindings {
-			if binding.annotatedWith == annotation {
-				if provider {
-					n.SetMapIndex(reflect.ValueOf(key), injector.createProviderForBinding(providerType, binding, annotation, false))
-					continue
-				}
-
-				r, err := injector.resolveBinding(binding, t, optional)
-				if err != nil {
-					panic(err)
-				}
-				n.SetMapIndex(reflect.ValueOf(key), r)
+			if provider {
+				n.SetMapIndex(reflect.ValueOf(key), injector.createProviderForBinding(providerType, binding, annotation, false))
+				continue
 			}
+
+			r, err := injector.resolveBinding(binding, t, optional)
+			if err != nil {
+				panic(err)
+			}
+			n.SetMapIndex(reflect.ValueOf(key), r)
 		}
 		return n
 	}

@@ -377,7 +377,7 @@ func (injector *Injector) joinMultibindings(t reflect.Type, annotation string) [
 			c++
 		}
 	}
-	return bindings
+	return bindings[:c]
 }
 
 func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string, optional bool) reflect.Value {

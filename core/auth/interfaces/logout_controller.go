@@ -56,6 +56,9 @@ func logout(r *web.Request) {
 	delete(r.Session().Values, application.KeyAuthstate)
 	delete(r.Session().Values, application.KeyToken)
 	delete(r.Session().Values, application.KeyRawIDToken)
+
+	// kill session
+	r.Session().Options.MaxAge = -1
 }
 
 // Inject LogoutController dependencies

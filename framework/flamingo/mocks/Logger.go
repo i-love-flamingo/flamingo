@@ -17,6 +17,11 @@ func (_m *Logger) Debug(args ...interface{}) {
 	_m.Called(_ca...)
 }
 
+// Debug provides a mock function with given fields: args
+func (_m *Logger) Debugf(log string, args ...interface{}) {
+	panic("WIP - mockery was broken")
+}
+
 // Error provides a mock function with given fields: args
 func (_m *Logger) Error(args ...interface{}) {
 	var _ca []interface{}

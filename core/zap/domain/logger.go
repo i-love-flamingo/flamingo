@@ -62,6 +62,11 @@ func (l *Logger) Debug(args ...interface{}) {
 	l.Logger.Debug(fmt.Sprint(args...))
 }
 
+// Debug logs a message at debug level
+func (l *Logger) Debugf(log string, args ...interface{}) {
+	l.Logger.Debug(fmt.Sprintf(log, args...))
+}
+
 // Info logs a message at info level
 func (l *Logger) Info(args ...interface{}) {
 	l.Logger.Info(fmt.Sprint(args...))

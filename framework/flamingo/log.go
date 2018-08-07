@@ -50,6 +50,8 @@ type (
 		Fatal(args ...interface{})
 		Panic(args ...interface{})
 
+		Debugf(log string, args ...interface{})
+
 		WithField(key LogKey, value interface{}) Logger
 		WithFields(fields map[LogKey]interface{}) Logger
 
@@ -71,6 +73,9 @@ func (n NullLogger) WithFields(fields map[LogKey]interface{}) Logger { return n 
 
 // Debug null-implementation
 func (NullLogger) Debug(args ...interface{}) {}
+
+// Debug null-implementation
+func (NullLogger) Debugf(log string, args ...interface{}) {}
 
 // Info null-implementation
 func (NullLogger) Info(args ...interface{}) {}

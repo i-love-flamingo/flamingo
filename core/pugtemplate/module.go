@@ -1,6 +1,7 @@
 package pugtemplate
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -40,7 +41,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.RouterRegistry.Route("/_pugtpl/debug", "pugtpl.debug")
 	m.RouterRegistry.Handle("pugtpl.debug", new(DebugController))
 
-	m.RouterRegistry.Handle("page.template", func(ctx web.Context) interface{} {
+	m.RouterRegistry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {
 		return ctx.Value("page.template")
 	})
 

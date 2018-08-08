@@ -10,11 +10,6 @@ type (
 	StriptagsFunc struct{}
 )
 
-// Name alias for use in template
-func (df StriptagsFunc) Name() string {
-	return "stripTags"
-}
-
 // Func as implementation of debug method
 func (df StriptagsFunc) Func() interface{} {
 	return func(htmlString string) string {

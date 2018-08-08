@@ -15,11 +15,6 @@ type (
 	Object struct{}
 )
 
-// Name alias for use in template
-func (ol JsObject) Name() string {
-	return "Object"
-}
-
 // Func as implementation of debug method
 func (ol JsObject) Func() interface{} {
 	return func() Object {

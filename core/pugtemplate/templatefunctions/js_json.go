@@ -14,11 +14,6 @@ type (
 	JSON struct{}
 )
 
-// Name of JS object
-func (jl JsJSON) Name() string {
-	return "JSON"
-}
-
 // Func returns the JSON object
 func (jl JsJSON) Func() interface{} {
 	return func() JSON {

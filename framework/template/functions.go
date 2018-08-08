@@ -1,28 +1,44 @@
 package template
 
 import (
+	"context"
 	"html/template"
 
 	"flamingo.me/flamingo/framework/web"
 )
 
 type (
+	Func interface {
+		Func() interface{}
+	}
+
+	CtxFunc interface {
+		Func(context.Context) interface{}
+	}
+
+	FuncProvider    func() map[string]Func
+	CtxFuncProvider func() map[string]CtxFunc
+
 	// Function is a function which will be available in templates
+	// deprecated: use Func
 	Function interface {
 		Name() string
 		Func() interface{}
 	}
 
 	// ContextFunction is a Function with late context binding
+	// deprecated: use CtxFunc
 	ContextFunction interface {
 		Name() string
 		Func(web.Context) interface{}
 	}
 
 	// ContextAware is the used for late-bindings
+	// deprecated: use CtxFunc
 	ContextAware func(ctx web.Context) interface{}
 
 	// FunctionRegistry knows about the context-aware template functions
+	// deprecated: use CtxFuncProvider()
 	FunctionRegistry struct {
 		templateFunctions        []Function
 		contextTemplateFunctions []ContextFunction
@@ -36,6 +52,7 @@ func (tfr *FunctionRegistry) Inject(templateFunctions []Function, contextTemplat
 }
 
 // Populate Template Registry, mapping short method names to Functions
+// deprecated: use CtxFuncProvider()
 func (tfr *FunctionRegistry) Populate() template.FuncMap {
 	tfr.ContextAware = make(map[string]ContextAware)
 	funcMap := make(template.FuncMap)
@@ -46,8 +63,11 @@ func (tfr *FunctionRegistry) Populate() template.FuncMap {
 		}
 	}
 	for _, tplFunc := range tfr.contextTemplateFunctions {
+		tplFunc := tplFunc
 		if tplFunc != nil {
-			funcMap[tplFunc.Name()] = tplFunc.Func
+			funcMap[tplFunc.Name()] = func(ctx context.Context) interface{} {
+				return tplFunc.Func(web.ToContext(ctx))
+			}
 			tfr.ContextAware[tplFunc.Name()] = tplFunc.Func
 		}
 	}

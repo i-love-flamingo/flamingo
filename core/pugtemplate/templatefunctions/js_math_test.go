@@ -9,9 +9,7 @@ import (
 )
 
 func TestJsMath(t *testing.T) {
-	var jsMath template.Function = new(JsMath)
-
-	assert.Equal(t, "Math", jsMath.Name())
+	var jsMath template.Func = new(JsMath)
 
 	math := jsMath.Func().(func() Math)()
 

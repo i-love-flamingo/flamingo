@@ -1,12 +1,12 @@
 package templatefunctions
 
 import (
+	"context"
 	"html/template"
 	"strings"
 
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -18,13 +18,8 @@ type (
 	}
 )
 
-// Name alias for use in template
-func (af AssetFunc) Name() string {
-	return "asset"
-}
-
 // Func as implementation of asset method
-func (af *AssetFunc) Func(ctx web.Context) interface{} {
+func (af *AssetFunc) Func(ctx context.Context) interface{} {
 	return func(asset pugjs.String) template.URL {
 		// let webpack dev server handle URL's
 		if af.Engine.Webpackserver {
@@ -55,7 +50,6 @@ func (af *AssetFunc) Func(ctx web.Context) interface{} {
 			result = baseUrl + result
 		}
 
-		ctx.Push(result, nil) // h2 server push
 		return template.URL(result)
 	}
 }

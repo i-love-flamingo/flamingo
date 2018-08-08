@@ -16,9 +16,13 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/opencensus"
 	"flamingo.me/flamingo/framework/template"
-	"flamingo.me/flamingo/framework/web"
 	"github.com/pkg/errors"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
+	"go.opencensus.io/trace"
 )
 
 type (
@@ -51,8 +55,19 @@ type (
 		TemplateFunctions         *template.FunctionRegistry
 		TemplateFunctionsProvider TemplateFunctionRegistryProvider `inject:""`
 		EventRouter               event.Router                     `inject:""`
+		FuncProvider              template.FuncProvider            `inject:""`
+		CtxFuncProvider           template.CtxFuncProvider         `inject:""`
 	}
 )
+
+var (
+	rt             = stats.Int64("flamingo/pugtemplate/render", "pugtemplate render times", stats.UnitMilliseconds)
+	templateKey, _ = tag.NewKey("template")
+)
+
+func init() {
+	opencensus.View("flamingo/pugtemplate/render", rt, view.Distribution(50, 100, 250, 500, 1000, 2000), templateKey)
+}
 
 // NewEngine constructor
 func NewEngine() *Engine {
@@ -137,6 +152,14 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 
 				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug, e.EventRouter)
 				renderState.funcs = FuncMap(e.TemplateFunctions.Populate())
+
+				for k, f := range e.FuncProvider() {
+					renderState.funcs[k] = f.Func()
+				}
+				for k, f := range e.CtxFuncProvider() {
+					renderState.funcs[k] = f.Func
+				}
+
 				token, err := renderState.Parse(name)
 				if err != nil {
 					return nil, err
@@ -155,10 +178,11 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 var renderChan = make(chan struct{}, 8)
 
 // Render via html/pug_template
-func (e *Engine) Render(ctx_ context.Context, templateName string, data interface{}) (io.Reader, error) {
-	ctx := web.ToContext(ctx_)
+func (e *Engine) Render(ctx context.Context, templateName string, data interface{}) (io.Reader, error) {
+	ctx, span := trace.StartSpan(ctx, "pug/render")
+	defer span.End()
 
-	defer ctx.Profile("render", templateName)()
+	span.Annotate(nil, templateName)
 
 	//block if buffered channel size is reached
 	renderChan <- struct{}{}
@@ -175,47 +199,41 @@ func (e *Engine) Render(ctx_ context.Context, templateName string, data interfac
 	if len(p) >= 2 && p[len(p)-2] != page {
 		page = p[len(p)-2] + p[len(p)-1]
 	}
-	ctx.WithValue("page.template", "page"+page)
+	ctx = context.WithValue(ctx, "page.template", "page"+page)
 
 	// recompile
 	if e.templates == nil {
-		var finish = ctx.Profile("loadTemplates", "-all-")
+		_, span := trace.StartSpan(ctx, "pug/loadAllTemplates")
 		if err := e.LoadTemplates(""); err != nil {
-			finish()
+			span.End()
 			return nil, err
 		}
-		finish()
+		span.End()
 	} else if e.Debug {
-		var finish = ctx.Profile("debugReloadTemplates", templateName)
+		_, span := trace.StartSpan(ctx, "pug/loadTemplate")
+		span.Annotate(nil, templateName)
 		if err := e.LoadTemplates(templateName); err != nil {
-			finish()
+			span.End()
 			return nil, err
 		}
-		finish()
+		span.End()
 	}
 
 	result := new(bytes.Buffer)
 
-	tpl, ok := e.templates[templateName]
+	templateInstance, ok := e.templates[templateName]
 	if !ok {
 		return nil, errors.Errorf(`Template %s not found!`, templateName)
 	}
 
-	templateInstance, err := tpl.Clone()
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
+	ctx, span = trace.StartSpan(ctx, "pug/execute")
+	span.Annotate(nil, templateName)
+	start := time.Now()
+	err := templateInstance.ExecuteTemplate(ctx, result, templateName, convert(data))
+	span.End()
+	ctx, _ = tag.New(ctx, tag.Upsert(templateKey, templateName))
+	stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
 
-	funcs := make(FuncMap)
-	for k, f := range e.TemplateFunctions.ContextAware {
-		funcs[k] = f(ctx)
-	}
-	templateInstance.Funcs(funcs)
-
-	// force GC to lower risk of runtime bugs in reflect.Value
-	// should be fixed in go1.9.2
-	//runtime.GC()
-	err = templateInstance.ExecuteTemplate(result, templateName, convert(data))
 	if err != nil {
 		errstr := err.Error() + "\n"
 		for i, l := range strings.Split(e.TemplateCode[templateName], "\n") {

@@ -6,6 +6,7 @@ package pugjs
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -99,12 +100,17 @@ func goodName(name string) bool {
 	return true
 }
 
+var ctxFuncType = reflect.TypeOf((*func(context.Context) interface{})(nil)).Elem()
+
 // findFunction looks for a function in the template, and global map.
-func findFunction(name string, tmpl *Template) (reflect.Value, bool) {
+func (s *state) findFunction(name string, tmpl *Template) (reflect.Value, bool) {
 	if tmpl != nil && tmpl.common != nil {
 		tmpl.muFuncs.RLock()
 		defer tmpl.muFuncs.RUnlock()
 		if fn := tmpl.execFuncs[name]; fn.IsValid() {
+			if fn.Type() == ctxFuncType {
+				fn = fn.Call([]reflect.Value{s.ctx})[0].Elem()
+			}
 			return fn, true
 		}
 	}

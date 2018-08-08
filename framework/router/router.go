@@ -471,7 +471,12 @@ func dataParams(r *web.Request, params map[interface{}]interface{}) map[string]s
 }
 
 // Data calls a flamingo data controller
-func (router *Router) Data(ctx context.Context, handler string, r *web.Request, params map[interface{}]interface{}) interface{} {
+func (router *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
+	r, ok := ctx.Value("__req").(*web.Request)
+	if !ok {
+		r = web.RequestFromRequest(nil, sessions.NewSession(router.Sessions, "-"))
+	}
+
 	r.LoadParams(dataParams(r, params))
 
 	if c, ok := router.RouterRegistry.handler[handler]; ok {

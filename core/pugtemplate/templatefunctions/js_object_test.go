@@ -10,9 +10,7 @@ import (
 )
 
 func TestJsObject(t *testing.T) {
-	var jsObject template.Function = new(JsObject)
-
-	assert.Equal(t, "Object", jsObject.Name())
+	var jsObject template.Func = new(JsObject)
 
 	object := jsObject.Func().(func() Object)()
 

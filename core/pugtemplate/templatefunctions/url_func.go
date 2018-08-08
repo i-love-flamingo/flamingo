@@ -1,6 +1,7 @@
 package templatefunctions
 
 import (
+	"context"
 	"html/template"
 	"net/url"
 
@@ -16,16 +17,12 @@ type (
 	}
 )
 
-// Name alias for use in template
-func (u URLFunc) Name() string {
-	return "url"
-}
-
 // Func as implementation of url method
-func (u *URLFunc) Func(ctx web.Context) interface{} {
+func (u *URLFunc) Func(ctx context.Context) interface{} {
 	return func(where string, params ...*pugjs.Map) template.URL {
+		request := ctx.Value("__req").(*web.Request)
 		if where == "" {
-			q := ctx.Request().URL.Query()
+			q := request.Request().URL.Query()
 			if len(params) == 1 {
 				for k, v := range params[0].Items {
 					q.Del(k.String())
@@ -38,7 +35,7 @@ func (u *URLFunc) Func(ctx web.Context) interface{} {
 					}
 				}
 			}
-			return template.URL((&url.URL{RawQuery: q.Encode(), Path: u.Router.Base().Path + ctx.Request().URL.Path}).String())
+			return template.URL((&url.URL{RawQuery: q.Encode(), Path: u.Router.Base().Path + request.Request().URL.Path}).String())
 		}
 
 		var p = make(map[string]string)

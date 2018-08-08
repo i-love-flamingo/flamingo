@@ -13,11 +13,6 @@ type (
 	Math struct{}
 )
 
-// Name alias for use in template
-func (ml JsMath) Name() string {
-	return "Math"
-}
-
 // Func as implementation of debug method
 func (ml JsMath) Func() interface{} {
 	return func() Math {

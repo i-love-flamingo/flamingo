@@ -1,9 +1,10 @@
 package templatefunctions
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -13,13 +14,8 @@ type (
 	}
 )
 
-// Name alias for use in template
-func (g DataFunc) Name() string {
-	return "data"
-}
-
 // Func as implementation of get method
-func (g *DataFunc) Func(ctx web.Context) interface{} {
+func (g *DataFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...*pugjs.Map) interface{} {
 		var p = make(map[interface{}]interface{})
 		if len(params) == 1 {
@@ -27,6 +23,6 @@ func (g *DataFunc) Func(ctx web.Context) interface{} {
 				p[k.String()] = v.String()
 			}
 		}
-		return g.Router.Get(what, ctx, p)
+		return g.Router.Data(ctx, what, p)
 	}
 }

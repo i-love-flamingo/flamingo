@@ -410,14 +410,6 @@ func (injector *Injector) resolveMultibinding(t reflect.Type, annotation string,
 		return n
 	}
 
-	if !optional {
-		if injector.parent != nil {
-			return injector.parent.resolveMultibinding(t, annotation, optional)
-		}
-
-		panic(fmt.Sprintf("Can not resolve multibinding for %s, provider: %v, target: %s", t, provider, targetType))
-	}
-
 	return reflect.MakeSlice(t, 0, 0)
 }
 
@@ -467,14 +459,6 @@ func (injector *Injector) resolveMapbinding(t reflect.Type, annotation string, o
 			n.SetMapIndex(reflect.ValueOf(key), r)
 		}
 		return n
-	}
-	//return reflect.New(targetType).Elem()
-	if !optional {
-		if injector.parent != nil {
-			return injector.parent.resolveMapbinding(t, annotation, optional)
-		}
-
-		panic(fmt.Sprintf("Can not resolve mapbinding for %s, provider: %v, target: %s", t, provider, targetType))
 	}
 
 	return reflect.MakeMap(t)

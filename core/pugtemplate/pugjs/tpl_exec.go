@@ -232,6 +232,8 @@ func (t *Template) execute(ctx context.Context, wr io.Writer, data interface{}) 
 		}
 	}
 
+	state.globals = append(state.globals, variable{`$global`, reflect.ValueOf(Object(&Map{Items: make(map[Object]Object, 10)}))})
+
 	for _, v := range state.globals {
 		state.vars = append(state.vars, v)
 	}

@@ -616,10 +616,14 @@ func (injector *Injector) requestInjection(object interface{}) {
 					}
 
 					var optional bool
-					if strings.HasSuffix(tag, ",optional") {
-						optional = true
-						tag = tag[:len(tag)-9]
+					for _, option := range strings.Split(tag, ",") {
+						switch strings.TrimSpace(option) {
+						case "optional":
+							optional = true
+						}
 					}
+					tag = strings.Split(tag, ",")[0]
+
 					instance := injector.resolveType(field.Type(), tag, optional)
 					if instance.Kind() == reflect.Ptr {
 						if instance.Elem().Kind() == reflect.Func || instance.Elem().Kind() == reflect.Interface || instance.Elem().Kind() == reflect.Slice {

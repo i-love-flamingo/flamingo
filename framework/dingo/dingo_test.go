@@ -167,3 +167,29 @@ func TestDingo(t *testing.T) {
 		})
 	})
 }
+
+func TestOptional(t *testing.T) {
+	type test struct {
+		Must      string `inject:"must"`
+		Optional  string `inject:"option,optional"`
+		Optional2 string `inject:"option, optional"`
+	}
+
+	injector := NewInjector()
+
+	assert.Panics(t, func() {
+		_ = injector.GetInstance(new(test)).(*test)
+	}, "should panic because `must` is unbound")
+
+	injector.Bind(new(string)).AnnotatedWith("must").ToInstance("must")
+	i := injector.GetInstance(new(test)).(*test)
+	assert.Equal(t, i.Must, "must")
+	assert.Equal(t, i.Optional, "")
+	assert.Equal(t, i.Optional2, "")
+
+	injector.Bind(new(string)).AnnotatedWith("option").ToInstance("option")
+	i = injector.GetInstance(new(test)).(*test)
+	assert.Equal(t, i.Must, "must")
+	assert.Equal(t, i.Optional, "option")
+	assert.Equal(t, i.Optional2, "option")
+}

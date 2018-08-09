@@ -1,41 +1,57 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+
 	"flamingo.me/flamingo/core/cmd/interfaces/command"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
-
 	"github.com/spf13/cobra"
 )
 
 // Name for the default command
+// deprecated: do not use
 var Name = "flamingo"
-var _ dingo.Module = &Module{}
 
-// Module for core/cmd
-type Module struct {
-	Root *config.Area `inject:""`
-}
+// Module for DI
+type Module struct{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	var rootCmd = &cobra.Command{
-		Use:   Name,
-		Short: Name + " Console",
-		Long:  "The " + Name + " command line interfaces.",
-	}
+	//command.VersionCmd,
+	//command.DiCmd,
+	//command.RoutingConfCmd,
+	//command.RouterCmd,
+	//command.DataControllerCmd,
+	//command.TplfuncsCmd,
 
-	command.ConfigArea = m.Root
+	injector.Bind(new(cobra.Command)).AnnotatedWith("flamingo").ToProvider(
+		func(commands []*cobra.Command, config *struct {
+			Name string `inject:"config:cmd.name"`
+		}) *cobra.Command {
+			rootCmd := &cobra.Command{
+				Use:   config.Name,
+				Short: "Flamingo " + config.Name,
+			}
 
-	rootCmd.AddCommand(
-		command.VersionCmd,
-		command.DiCmd,
-		command.RoutingConfCmd,
-		command.RouterCmd,
-		command.DataControllerCmd,
-		command.ConfigCmd,
-		command.TplfuncsCmd,
+			rootCmd.AddCommand(commands...)
+
+			return rootCmd
+		},
 	)
 
-	injector.Bind((*cobra.Command)(nil)).AnnotatedWith("flamingo").ToInstance(rootCmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(command.ConfigCmd)
+}
+
+// DefaultConfig specifies the command name
+func (m *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"cmd.name": filepath.Base(os.Args[0]),
+	}
+}
+
+// Run the root command
+func Run(injector *dingo.Injector) error {
+	return injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command).Execute()
 }

@@ -14,7 +14,6 @@ import (
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/profiler"
-	"flamingo.me/flamingo/framework/profiler/collector"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/templatefunctions"
@@ -60,8 +59,6 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 // Configure the Module
 func (module *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*collector.DataCollector)(nil)).To(router.DataCollector{})
-
 	injector.Bind((*responder.RedirectAware)(nil)).To(responder.FlamingoRedirectAware{})
 	injector.Bind((*responder.RenderAware)(nil)).To(responder.FlamingoRenderAware{})
 	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})

@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -15,6 +17,7 @@ type (
 		parts         []part // {'path/to', ':something', '$id<[0-9]+>', '*foo'}
 		params        []string
 		trailingSlash bool
+		normalize     map[string]struct{}
 	}
 
 	// Match is the result of matching a path
@@ -25,7 +28,7 @@ type (
 	part interface {
 		match(path string) (matched bool, key, value string, length int)
 		read(segment string) (leftover, paramname string)
-		render(values map[string]string) (string, []string, error)
+		render(values map[string]string, normalize map[string]struct{}) (string, []string, error)
 	}
 
 	partFixed struct {
@@ -72,7 +75,7 @@ func (p *partFixed) match(path string) (matched bool, key, value string, length 
 	return false, "", "", 0
 }
 
-func (p *partFixed) render(values map[string]string) (string, []string, error) {
+func (p *partFixed) render(values map[string]string, normalize map[string]struct{}) (string, []string, error) {
 	return p.part, []string{}, nil
 }
 
@@ -113,8 +116,11 @@ func (p *partParam) match(path string) (matched bool, key, value string, length 
 	return true, p.name, val, len(parts[0])
 }
 
-func (p *partParam) render(values map[string]string) (string, []string, error) {
+func (p *partParam) render(values map[string]string, normalize map[string]struct{}) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
+		if _, ok := normalize[p.name]; ok {
+			value = web.URLTitle(value)
+		}
 		return url.QueryEscape(value) + p.suffix, []string{p.name}, nil
 	}
 	return "", []string{}, errors.New("param " + p.name + " not found")
@@ -142,8 +148,11 @@ func (p *partRegex) match(path string) (matched bool, key, value string, length 
 	return true, p.name, matches[0], len(matches[0])
 }
 
-func (p *partRegex) render(values map[string]string) (string, []string, error) {
+func (p *partRegex) render(values map[string]string, normalize map[string]struct{}) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
+		if _, ok := normalize[p.name]; ok {
+			value = web.URLTitle(value)
+		}
 		if p.regex.FindStringSubmatch(value) != nil {
 			return value, []string{p.name}, nil
 		}
@@ -171,8 +180,11 @@ func (p *partWildcard) match(path string) (matched bool, key, value string, leng
 	return true, p.name, path, len(path)
 }
 
-func (p *partWildcard) render(values map[string]string) (string, []string, error) {
+func (p *partWildcard) render(values map[string]string, normalize map[string]struct{}) (string, []string, error) {
 	if value, ok := values[p.name]; ok {
+		if _, ok := normalize[p.name]; ok {
+			value = web.URLTitle(value)
+		}
 		return value, []string{p.name}, nil
 	}
 	return "", []string{}, nil
@@ -269,7 +281,7 @@ func (p *Path) Render(values map[string]string, usedValues map[string]struct{}) 
 	var path string
 
 	for _, part := range p.parts {
-		val, used, err := part.render(values)
+		val, used, err := part.render(values, p.normalize)
 		if err != nil {
 			return "", err
 		}

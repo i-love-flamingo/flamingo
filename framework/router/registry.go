@@ -190,13 +190,14 @@ func (registry *Registry) GetControllerForHandle(name string) (Controller, error
 }
 
 // Route assigns a route to a Handler
-func (registry *Registry) Route(path, handler string) {
+func (registry *Registry) Route(path, handler string) *Handler {
 	var h = parseHandler(handler)
 	h.path = NewPath(path)
 	if len(h.params) == 0 {
 		h.params, h.catchall = parseParams(strings.Join(h.path.params, ", "))
 	}
 	registry.routes = append(registry.routes, h)
+	return h
 }
 
 // GetRoutes returns registered Routes
@@ -465,4 +466,15 @@ func (handler *Handler) GetPath() string {
 // GetHandlerName getter
 func (handler *Handler) GetHandlerName() string {
 	return handler.handler
+}
+
+// Normalize enforces a normalization of passed parameters
+func (handler *Handler) Normalize(params ...string) *Handler {
+	if handler.path.normalize == nil {
+		handler.path.normalize = make(map[string]struct{}, len(params))
+	}
+	for _, p := range params {
+		handler.path.normalize[p] = struct{}{}
+	}
+	return handler
 }

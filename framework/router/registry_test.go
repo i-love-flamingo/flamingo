@@ -194,4 +194,20 @@ func TestRegistry(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "/page2/test?foo=bar&x=y", path)
 	})
+
+	t.Run("Enforce Normalization", func(t *testing.T) {
+		registry := NewRegistry()
+		registry.Handle("page.view", testController)
+		registry.Handle("page2.view", testController)
+		registry.Route("/page/:page", `page.view(page)`).Normalize("page")
+		registry.Route("/page2/:page", `page2.view(page)`)
+
+		path, err := registry.Reverse("page.view", map[string]string{"page": "Test & 123 - test"})
+		assert.NoError(t, err)
+		assert.Equal(t, "/page/test-%26-123-test", path)
+
+		path, err = registry.Reverse("page2.view", map[string]string{"page": "Test & 123 - test"})
+		assert.NoError(t, err)
+		assert.Equal(t, "/page2/Test+%26+123+-+test", path)
+	})
 }

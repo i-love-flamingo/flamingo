@@ -8,15 +8,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/spf13/cobra"
+	"flamingo.me/flamingo/core/cmd"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/router"
+	"github.com/spf13/cobra"
 )
 
 type (
 	appmodule struct {
-		Cmd    *cobra.Command `inject:"flamingo"`
 		Root   *config.Area   `inject:""`
 		Router *router.Router `inject:""`
 	}
@@ -28,7 +28,7 @@ type (
 
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
-	a.Cmd.AddCommand(&cobra.Command{
+	injector.BindMulti(new(cobra.Command)).ToInstance(&cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.handleShutdown()
@@ -63,7 +63,7 @@ func App(root *config.Area, configdir string) {
 	}
 	config.Load(root, configdir)
 
-	if err := app.Cmd.Execute(); err != nil {
+	if err := cmd.Run(root.Injector); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

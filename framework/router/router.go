@@ -296,7 +296,6 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}()
 	}
 
-	ctx.WithValue("Handler", handlerdata{params, handler})
 	done()
 	span.End()
 

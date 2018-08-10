@@ -15,7 +15,7 @@ Using metrics in your module:
 		"go.opencensus.io/stats/view"
 	)
 
-	var myMetric = stats.Int64("flamingo/package/mystat", "my stat records 5 milliseconds per call", stats.UnitMilliseconds)
+	var rt = stats.Int64("flamingo/package/mystat", "my stat records 5 milliseconds per call", stats.UnitMilliseconds)
 
 	// register view in opencensus
 	func init() {

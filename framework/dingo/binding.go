@@ -56,6 +56,9 @@ func (b *Binding) ToInstance(instance interface{}) *Binding {
 		itype:  reflect.TypeOf(instance),
 		ivalue: reflect.ValueOf(instance),
 	}
+	if !b.instance.itype.AssignableTo(b.typeof) && !b.instance.itype.AssignableTo(reflect.PtrTo(b.typeof)) {
+		panic(fmt.Sprintf("%s#%s not assignable to %s#%s", b.instance.itype.PkgPath(), b.instance.itype.Name(), b.typeof.PkgPath(), b.typeof.Name()))
+	}
 	return b
 }
 

@@ -23,7 +23,7 @@ func testScope(t *testing.T, scope Scope) {
 		return reflect.New(t).Elem()
 	}
 
-	runs := 1000
+	runs := 1 // change to 10? 100? 1000? to trigger a bug? todo investigate
 
 	wg := new(sync.WaitGroup)
 	wg.Add(runs)

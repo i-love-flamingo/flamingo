@@ -12,6 +12,7 @@ type (
 	}
 
 	// SingletonScope is our Scope to handle Singletons
+	// todo use RWMutex for proper locking
 	SingletonScope struct {
 		sync.Mutex
 		instanceLock map[reflect.Type]*sync.Mutex
@@ -33,6 +34,7 @@ var (
 // ResolveType resolves a request in this scope
 func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped func(t reflect.Type, annotation string, optional bool) reflect.Value) reflect.Value {
 	// we got one :)
+	// todo: read lock?
 	if found, ok := s.instances[t]; ok {
 		if found, ok := found[annotation]; ok {
 			return found
@@ -86,6 +88,7 @@ func (s *SingletonScope) ResolveType(t reflect.Type, annotation string, unscoped
 	s.Unlock()
 
 	// save our new generated singleton
+	// todo race condition?
 	s.instances[t][annotation] = unscoped(t, annotation, false)
 
 	// return the new singleton

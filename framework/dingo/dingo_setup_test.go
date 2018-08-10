@@ -38,12 +38,3 @@ func Test_Dingo_Setup(t *testing.T) {
 	assert.Equal(t, test.member3, "Member 3")
 	assert.Equal(t, test.Member4, "Member 4")
 }
-
-type (
-	m1 struct{}
-	m2 struct{}
-)
-
-func TestDingo_Depender(t *testing.T) {
-	injector := NewInjector()
-}

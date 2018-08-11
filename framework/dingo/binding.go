@@ -103,9 +103,9 @@ func (b *Binding) equal(to *Binding) bool {
 func (p *Provider) Create(injector *Injector) reflect.Value {
 	in := make([]reflect.Value, p.fnc.Type().NumIn())
 	for i := 0; i < p.fnc.Type().NumIn(); i++ {
-		in[i] = injector.getInstance(p.fnc.Type().In(i), "")
+		in[i] = injector.getInstance(p.fnc.Type().In(i), "", traceCircular)
 	}
 	res := p.fnc.Call(in)[0]
-	injector.requestInjection(res)
+	injector.requestInjection(res, traceCircular)
 	return res
 }

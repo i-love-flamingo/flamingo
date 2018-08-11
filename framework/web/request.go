@@ -64,6 +64,7 @@ func (r *Request) clone() *Request {
 	return &Request{
 		session: r.session,
 		request: r.request,
+		Values:  r.Values,
 	}
 }
 

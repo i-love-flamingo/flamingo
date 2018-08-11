@@ -379,7 +379,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		return response
 	}))
 
-	response := chain.Next(ctx, webRequest, rw)
+	response := chain.Next(web.Context_(ctx, webRequest), webRequest, rw)
 
 	if router.Sessions != nil {
 		_, span := trace.StartSpan(ctx, "router/sessions/safe")

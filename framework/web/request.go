@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -14,6 +15,8 @@ type (
 		vars    map[string]string
 		session *sessions.Session
 	}
+
+	contextKey int
 )
 
 var (
@@ -24,6 +27,19 @@ var (
 	// ErrQueryNotFound for missing query params
 	ErrQueryNotFound = errors.New("query value not found")
 )
+
+const requestKey contextKey = iota
+
+// Context_ saves the session in the context
+func Context_(ctx context.Context, session *Request) context.Context {
+	return context.WithValue(ctx, requestKey, session)
+}
+
+// FromContext retrieves the session from the context
+func FromContext(ctx context.Context) (*Request, bool) {
+	r, ok := ctx.Value(requestKey).(*Request)
+	return r, ok
+}
 
 // RequestFromRequest wraps a http Request
 func RequestFromRequest(r *http.Request, session *sessions.Session) *Request {

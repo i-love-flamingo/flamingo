@@ -16,6 +16,7 @@ import (
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/opencensus"
 	"flamingo.me/flamingo/framework/profiler"
+	"flamingo.me/flamingo/framework/session"
 	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -267,6 +268,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 		span.End()
 	}
+
+	req = req.WithContext(session.Context(req.Context(), s))
 
 	// retrieve a new context
 	ctx := router.ContextFactory(router.ProfilerProvider(), router.eventrouter, rw, req, s)

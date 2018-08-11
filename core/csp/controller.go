@@ -1,6 +1,7 @@
 package csp
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 
@@ -30,11 +31,9 @@ type (
 )
 
 // Post logs the csp report
-func (dc *cspReportController) Post(ctx web.Context) web.Response {
-
-	if ctx.Request().Header.Get("Content-Type") == "application/csp-report" {
-
-		b, _ := ioutil.ReadAll(ctx.Request().Body)
+func (dc *cspReportController) Post(ctx context.Context, r *web.Request) web.Response {
+	if r.Request().Header.Get("Content-Type") == "application/csp-report" {
+		b, _ := ioutil.ReadAll(r.Request().Body)
 		var data report
 		json.Unmarshal(b, &data)
 		l := dc.Logger.WithField("BlockedURI", data.CspReport.BlockedURI)

@@ -11,7 +11,7 @@ type Module struct{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*template.Function)(nil)).To(interfaces.CanonicalDomainFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(interfaces.IsExternalUrl{})
-	injector.BindMulti((*template.ContextFunction)(nil)).To(interfaces.CanonicalUrlFunc{})
+	template.BindFunc(injector, "canonicalDomain", new(interfaces.CanonicalDomainFunc))
+	template.BindFunc(injector, "isExternalUrl", new(interfaces.IsExternalUrl))
+	template.BindCtxFunc(injector, "canonicalUrl", new(interfaces.CanonicalUrlFunc))
 }

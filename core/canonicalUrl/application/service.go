@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"net/url"
 	"strings"
 
@@ -42,6 +43,10 @@ func (s *Service) GetBaseUrl() string {
 
 // GetCanonicalUrlForCurrentRequest return the canonical url for the current request
 // @todo: Add logic to add allowed parameters via controller
-func (s *Service) GetCanonicalUrlForCurrentRequest(ctx web.Context) string {
-	return s.GetBaseUrl() + s.router.Base().Path + ctx.Request().URL.Path
+func (s *Service) GetCanonicalUrlForCurrentRequest(ctx context.Context) string {
+	r, ok := web.FromContext(ctx)
+	if !ok {
+		return s.GetBaseUrl() + s.router.Base().Path
+	}
+	return s.GetBaseUrl() + s.router.Base().Path + r.Request().URL.Path
 }

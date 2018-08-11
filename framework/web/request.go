@@ -14,6 +14,7 @@ type (
 		request *http.Request
 		vars    map[string]string
 		session *sessions.Session
+		Values  map[interface{}]interface{}
 	}
 
 	contextKey int
@@ -46,6 +47,7 @@ func RequestFromRequest(r *http.Request, session *sessions.Session) *Request {
 	return &Request{
 		request: r,
 		session: session,
+		Values:  make(map[interface{}]interface{}),
 	}
 }
 

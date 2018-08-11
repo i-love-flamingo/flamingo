@@ -1,6 +1,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/core/auth/application"
 	"flamingo.me/flamingo/framework/web"
 )
@@ -18,6 +20,6 @@ func (u *UserController) Inject(service *application.UserService) {
 }
 
 // Data controller to return userinfo
-func (u *UserController) Data(c web.Context) interface{} {
-	return u.userService.GetUser(c, c.Session())
+func (u *UserController) Data(c context.Context, r *web.Request) interface{} {
+	return u.userService.GetUser(c, r.Session())
 }

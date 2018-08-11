@@ -48,5 +48,5 @@ func (r *routes) Routes(registry *router.Registry) {
 	registry.Route("/auth/logout", "auth.logout")
 	registry.HandleGet("auth.logout", r.logout.Get)
 
-	registry.Handle("user", new(interfaces.UserController))
+	registry.HandleData("user", r.user.Data)
 }

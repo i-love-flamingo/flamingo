@@ -45,10 +45,10 @@ type (
 )
 
 var (
-	_    flamingotemplate.Function        = new(urlFunc)
-	_    flamingotemplate.ContextFunction = new(getFunc)
-	_    flamingotemplate.ContextFunction = new(dataFunc)
-	lock                                  = &sync.Mutex{}
+	_    flamingotemplate.Func    = new(urlFunc)
+	_    flamingotemplate.CtxFunc = new(getFunc)
+	_    flamingotemplate.CtxFunc = new(dataFunc)
+	lock                          = &sync.Mutex{}
 )
 
 // Inject engine dependencies
@@ -173,13 +173,8 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 	return nil
 }
 
-// Name alias for use in template
-func (g getFunc) Name() string {
-	return "get"
-}
-
 // Func as implementation of get method
-func (g *getFunc) Func(ctx web.Context) interface{} {
+func (g *getFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...map[string]interface{}) interface{} {
 		var p = make(map[interface{}]interface{})
 		if len(params) == 1 {
@@ -187,17 +182,12 @@ func (g *getFunc) Func(ctx web.Context) interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		return g.Router.Get(what, ctx, p)
+		return g.Router.Data(ctx, what, p)
 	}
 }
 
-// Name alias for use in template
-func (d dataFunc) Name() string {
-	return "data"
-}
-
 // Func as implementation of get method
-func (d *dataFunc) Func(ctx web.Context) interface{} {
+func (d *dataFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...map[string]interface{}) interface{} {
 		var p = make(map[interface{}]interface{})
 		if len(params) == 1 {
@@ -205,13 +195,8 @@ func (d *dataFunc) Func(ctx web.Context) interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		return d.Router.Get(what, ctx, p)
+		return d.Router.Data(ctx, what, p)
 	}
-}
-
-// Name alias for use in template
-func (u urlFunc) Name() string {
-	return "url"
 }
 
 // Func as implementation of url method

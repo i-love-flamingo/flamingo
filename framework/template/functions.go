@@ -4,6 +4,7 @@ import (
 	"context"
 	"html/template"
 
+	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/web"
 )
 
@@ -45,6 +46,14 @@ type (
 		ContextAware             map[string]ContextAware
 	}
 )
+
+func BindFunc(injector *dingo.Injector, name string, fnc Func) {
+	injector.BindMap(new(Func), name).To(fnc)
+}
+
+func BindCtxFunc(injector *dingo.Injector, name string, fnc CtxFunc) {
+	injector.BindMap(new(CtxFunc), name).To(fnc)
+}
 
 func (tfr *FunctionRegistry) Inject(templateFunctions []Function, contextTemplateFunctions []ContextFunction) {
 	tfr.templateFunctions = templateFunctions

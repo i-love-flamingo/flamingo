@@ -1,14 +1,10 @@
 package auth
 
 import (
-	"context"
-
 	"flamingo.me/flamingo/core/auth/application"
 	"flamingo.me/flamingo/core/auth/interfaces"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
-	"github.com/gorilla/sessions"
 )
 
 // Module for core.auth
@@ -53,11 +49,4 @@ func (r *routes) Routes(registry *router.Registry) {
 	registry.HandleGet("auth.logout", r.logout.Get)
 
 	registry.Handle("user", new(interfaces.UserController))
-}
-
-// CtxSession helper
-// deprecated: please refactor
-func CtxSession(c web.Context) (context.Context, *sessions.Session) {
-	ctx, r := web.ToRequest(c)
-	return ctx, r.Session()
 }

@@ -1,8 +1,10 @@
 package csrfPreventionFilter
 
 import (
+	"context"
+
+	"flamingo.me/flamingo/framework/session"
 	"github.com/satori/go.uuid"
-	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -23,24 +25,21 @@ const (
 	csrfNonces = "csrf_nonces"
 )
 
-// Name alias for use in template
-func (c *CsrfFunc) Name() string {
-	return "csrftoken"
-}
-
 // Func returns the CSRF nonce
-func (c *CsrfFunc) Func(ctx web.Context) interface{} {
+func (c *CsrfFunc) Func(ctx context.Context) interface{} {
 	return func() interface{} {
 		nonce := c.Generator.GenerateNonce()
 
-		if ns, ok := ctx.Session().Values[csrfNonces]; ok {
+		s, _ := session.FromContext(ctx)
+
+		if ns, ok := s.Values[csrfNonces]; ok {
 			if list, ok := ns.([]string); ok {
-				ctx.Session().Values[csrfNonces] = appendNonceToList(list, nonce, c.TokenLimit)
+				s.Values[csrfNonces] = appendNonceToList(list, nonce, c.TokenLimit)
 			} else {
-				ctx.Session().Values[csrfNonces] = []string{nonce}
+				s.Values[csrfNonces] = []string{nonce}
 			}
 		} else {
-			ctx.Session().Values[csrfNonces] = []string{nonce}
+			s.Values[csrfNonces] = []string{nonce}
 		}
 
 		return nonce

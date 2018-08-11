@@ -17,8 +17,6 @@ type (
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*router.Filter)(nil)).To(cspFilter{})
-	m.RouterRegistry.Route("/_cspreport", "_cspreport.view")
-	m.RouterRegistry.Handle("_cspreport.view", new(cspReportController))
 	injector.Bind((*csrfPreventionFilter.NonceGenerator)(nil)).To(csrfPreventionFilter.UuidGenerator{})
 }
 
@@ -27,4 +25,17 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"cspFilter.reportMode": true,
 	}
+}
+
+type routes struct {
+	controller *cspReportController
+}
+
+func (r *routes) Inject(controller *cspReportController) {
+	r.controller = controller
+}
+
+func (r *routes) Routes(registry *router.Registry) {
+	registry.Route("/_cspreport", "_cspreport.view")
+	registry.HandlePost("_cspreport.view", r.controller.Post)
 }

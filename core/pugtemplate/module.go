@@ -7,9 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
+	"fmt"
+
+	"flamingo.me/flamingo/core/pugtemplate/puganalyse"
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
 	"flamingo.me/flamingo/framework/config"
@@ -17,11 +21,13 @@ import (
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web"
+	"github.com/spf13/cobra"
 )
 
 type (
 	// Module for framework/pug_template
 	Module struct {
+		RootCmd        *cobra.Command   `inject:"flamingo"`
 		RouterRegistry *router.Registry `inject:""`
 		Basedir        string           `inject:"config:pug_template.basedir"`
 		DefaultMux     *http.ServeMux   `inject:",optional"`
@@ -35,6 +41,7 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
+
 	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
 	m.RouterRegistry.Route("/static/*n", "_static")
 
@@ -107,6 +114,71 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.loadmock("../src/organism/*")
 	m.loadmock("../src/page/*/*")
 	m.loadmock("../src/mock")
+
+	var servecmd = &cobra.Command{
+		Use: "pugcheck",
+		Run: Analyse(m.Basedir),
+	}
+	m.RootCmd.AddCommand(servecmd)
+
+}
+
+// Analyse command
+func Analyse(basedir string) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
+		hasError := false
+		if _, err := os.Stat("frontend/src"); err == nil {
+			fmt.Println()
+			fmt.Println("Analyse Project Design System (PUG) in frontend/src")
+			fmt.Println("###################################################")
+			analyser := puganalyse.NewAtomicDesignAnalyser("frontend/src")
+			analyser.CheckPugImports()
+			hasError = analyser.HasError
+			fmt.Println(fmt.Sprintf("%v files checked", analyser.CheckCount))
+
+			fmt.Println()
+			fmt.Println("Analyse Project JS dependencies in frontend/src")
+			fmt.Println("###################################################")
+			jsanalyser := puganalyse.NewJsDependencyAnalyser("frontend/src")
+			jsanalyser.Check()
+			if !hasError {
+				hasError = analyser.HasError
+			}
+			fmt.Println(fmt.Sprintf("%v files checked", jsanalyser.CheckCount))
+
+		} else {
+			fmt.Println("Project Design System not found in folder frontend/src")
+		}
+
+		if _, err := os.Stat("frontend/src/shared"); err == nil {
+			fmt.Println()
+			log.Printf("Analyse Shared Design System (PUG) in frontend/src/shared")
+			fmt.Println("###################################################")
+			analyser := puganalyse.NewAtomicDesignAnalyser("frontend/src/shared")
+			analyser.CheckPugImports()
+			fmt.Println(fmt.Sprintf("%v files checked", analyser.CheckCount))
+			if !hasError {
+				hasError = analyser.HasError
+			}
+
+			fmt.Println()
+			fmt.Println("Analyse Shared JS dependencies in frontend/src/shared")
+			fmt.Println("###################################################")
+			jsanalyser := puganalyse.NewJsDependencyAnalyser("frontend/src/shared")
+			jsanalyser.Check()
+			if !hasError {
+				hasError = analyser.HasError
+			}
+			fmt.Println(fmt.Sprintf("%v files checked", jsanalyser.CheckCount))
+
+		} else {
+			fmt.Println("No shared Design System not found in folder frontend/src/shared")
+		}
+
+		if hasError {
+			os.Exit(-1)
+		}
+	}
 }
 
 // DefaultConfig for setting pug-related config options

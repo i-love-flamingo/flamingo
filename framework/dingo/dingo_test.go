@@ -134,7 +134,7 @@ func TestDingo(t *testing.T) {
 				assert.Equal(t, 2, dt.Iface2.Test())
 
 				var dt2 DepTest
-				injector.requestInjection(&dt2)
+				injector.requestInjection(&dt2, nil)
 
 				assert.Equal(t, 1, dt2.Iface.Test())
 				assert.Equal(t, 2, dt2.Iface2.Test())
@@ -160,7 +160,7 @@ func TestDingo(t *testing.T) {
 				injector := NewInjector(new(AopModule))
 
 				var dep AopDep
-				injector.requestInjection(&dep)
+				injector.requestInjection(&dep, nil)
 
 				assert.Equal(t, "Test 1 2", dep.A.Test())
 			})

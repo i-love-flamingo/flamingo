@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/framework"
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
-	"flamingo.me/flamingo/framework"
 )
 
 // ErrNoPact error

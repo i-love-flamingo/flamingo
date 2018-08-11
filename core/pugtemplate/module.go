@@ -37,16 +37,26 @@ type (
 	TemplateFunctionInterceptor struct {
 		template.ContextFunction
 	}
+
+	routes struct {
+		controller *DebugController
+	}
 )
+
+func (r *routes) Inject(controller *DebugController) {
+	r.controller = controller
+}
+
+func (r *routes) Routes(registry *router.Registry) {
+	registry.Route("/_pugtpl/debug", "pugtpl.debug")
+	registry.HandleGet("pugtpl.debug", r.controller.Get)
+}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 
 	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
 	m.RouterRegistry.Route("/static/*n", "_static")
-
-	m.RouterRegistry.Route("/_pugtpl/debug", "pugtpl.debug")
-	m.RouterRegistry.Handle("pugtpl.debug", new(DebugController))
 
 	m.RouterRegistry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {
 		return ctx.Value("page.template")

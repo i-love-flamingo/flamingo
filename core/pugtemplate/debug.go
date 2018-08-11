@@ -2,6 +2,7 @@ package pugtemplate
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -34,10 +35,10 @@ const debugTemplate = `<!doctype html>
 `
 
 // Get Response for Debug Info
-func (dc *DebugController) Get(ctx web.Context) web.Response {
-	dc.Engine.LoadTemplates(ctx.MustQuery1("tpl"))
+func (dc *DebugController) Get(ctx context.Context, r *web.Request) web.Response {
+	dc.Engine.LoadTemplates(r.MustQuery1("tpl"))
 
-	tpl, ok := dc.Engine.TemplateCode[ctx.MustQuery1("tpl")]
+	tpl, ok := dc.Engine.TemplateCode[r.MustQuery1("tpl")]
 	if !ok {
 		panic("tpl not found")
 	}

@@ -115,16 +115,21 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.loadmock("../src/page/*/*")
 	m.loadmock("../src/mock")
 
-	var servecmd = &cobra.Command{
-		Use: "pugcheck",
-		Run: Analyse(m.Basedir),
-	}
-	m.RootCmd.AddCommand(servecmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(templatecheckCmd)
 
 }
 
+func templatecheckCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "templatecheck",
+		Short: "run opinionated checks in frontend/src: Checks atomic design system dependencies (PUG) and js dependencies conventions",
+		//Aliases: []string{"pugcheck"},
+		Run: AnalyseCommand(),
+	}
+}
+
 // Analyse command
-func Analyse(basedir string) func(cmd *cobra.Command, args []string) {
+func AnalyseCommand() func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		hasError := false
 		if _, err := os.Stat("frontend/src"); err == nil {

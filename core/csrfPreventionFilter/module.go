@@ -17,7 +17,7 @@ type (
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*router.Filter)(nil)).To(csrfFilter{})
 	injector.BindMulti((*event.Subscriber)(nil)).To(hiddenCsrfTagCreator{})
-	injector.BindMulti((*template.ContextFunction)(nil)).To(CsrfFunc{})
+	template.BindCtxFunc(injector, "csrftoken", new(CsrfFunc))
 	injector.Bind((*NonceGenerator)(nil)).To(UuidGenerator{})
 }
 

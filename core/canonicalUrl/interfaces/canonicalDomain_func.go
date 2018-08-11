@@ -16,11 +16,6 @@ func (c *CanonicalDomainFunc) Inject(service *application.Service) {
 	c.service = service
 }
 
-// Name alias for use in template
-func (c *CanonicalDomainFunc) Name() string {
-	return "canonicalDomain"
-}
-
 // Func returns the canonicalDomain func
 func (c *CanonicalDomainFunc) Func() interface{} {
 	return func() interface{} {

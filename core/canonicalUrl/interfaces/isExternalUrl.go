@@ -18,11 +18,6 @@ func (c *IsExternalUrl) Inject(service *application.Service) {
 	c.service = service
 }
 
-// Name alias for use in template
-func (c *IsExternalUrl) Name() string {
-	return "isExternalUrl"
-}
-
 // Func returns a boolean if a given URL is external
 func (c *IsExternalUrl) Func() interface{} {
 	return func(urlStr string) bool {

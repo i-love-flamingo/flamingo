@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"net/url"
 
 	"flamingo.me/flamingo/framework/web"
@@ -36,7 +37,7 @@ type (
 	// FormService interface
 	FormService interface {
 		//ParseFormData is responsible of mapping the passed formValues to your FormData Struct
-		ParseFormData(ctx web.Context, formValues url.Values) (interface{}, error)
+		ParseFormData(ctx context.Context, r *web.Request, formValues url.Values) (interface{}, error)
 		//ValidateFormData is responsible to run validations on the Data, the returned error type can be a slice of errors. each error is converted to a validation Error
 		ValidateFormData(data interface{}) (ValidationInfo, error)
 	}

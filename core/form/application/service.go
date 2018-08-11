@@ -1,10 +1,10 @@
 package application
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/url"
-
 	"strings"
 
 	"flamingo.me/flamingo/core/form/domain"
@@ -13,24 +13,24 @@ import (
 )
 
 //ProcessFormRequest: Parses and Validates a Request to a Form - with the Help of the passed FormService
-func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.Form, error) {
+func ProcessFormRequest(ctx context.Context, r *web.Request, service domain.FormService) (domain.Form, error) {
 	form := domain.Form{}
 
-	urlValues, err := getPostValues(ctx)
+	urlValues, err := getPostValues(ctx, r)
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
 	form.OriginalPostValues = urlValues
 
-	form.Data, err = parseFormData(urlValues, service, ctx)
+	form.Data, err = parseFormData(ctx, r, urlValues, service)
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
 	}
 
 	//Run Validation only if form was submitted
-	if urlValues.Get("novalidate") != "true" && ctx.Request().Method == "POST" {
+	if urlValues.Get("novalidate") != "true" && r.Request().Method == "POST" {
 		form.IsSubmitted = true
 		form.ValidationInfo, err = service.ValidateFormData(form.Data)
 		if err != nil {
@@ -45,7 +45,7 @@ func ProcessFormRequest(ctx web.Context, service domain.FormService) (domain.For
 }
 
 //GetUnsubmittedForm: Use this if you need an unsubmitted form
-func GetUnsubmittedForm(_ web.Context, service domain.FormService) (domain.Form, error) {
+func GetUnsubmittedForm(ctx context.Context, r *web.Request, service domain.FormService) (domain.Form, error) {
 	form := domain.Form{}
 
 	if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
@@ -55,12 +55,12 @@ func GetUnsubmittedForm(_ web.Context, service domain.FormService) (domain.Form,
 }
 
 //SimpleProcessFormRequest: Parses Post Values and returns a simple map - can be used if you dont need/want to implement a domain.FormService
-func SimpleProcessFormRequest(ctx web.Context) (domain.Form, error) {
+func SimpleProcessFormRequest(ctx context.Context, r *web.Request) (domain.Form, error) {
 	var err error
 	var urlValues url.Values
 	form := domain.Form{}
 
-	if ctx.Request().Method != "POST" {
+	if r.Request().Method != "POST" {
 		form.IsSubmitted = false
 		form.ValidationInfo.IsValid = true
 		return form, nil
@@ -68,7 +68,7 @@ func SimpleProcessFormRequest(ctx web.Context) (domain.Form, error) {
 
 	form.IsSubmitted = true
 
-	urlValues, err = getPostValues(ctx)
+	urlValues, err = getPostValues(ctx, r)
 	if err != nil {
 		form.ValidationInfo.AddGeneralUnknownError(err)
 		return form, err
@@ -128,17 +128,17 @@ func getRelativeFieldNameFromValidationError(err validator.FieldError) string {
 	return strings.Join(result, ".")
 }
 
-func getPostValues(ctx web.Context) (url.Values, error) {
-	err := ctx.Request().ParseForm()
+func getPostValues(ctx context.Context, r *web.Request) (url.Values, error) {
+	err := r.Request().ParseForm()
 	if err != nil {
 		log.Printf("form.application: Parse Form Error %v", err)
-		return ctx.Request().Form, errors.New("unkown_error")
+		return r.Request().Form, errors.New("unkown_error")
 	}
-	return ctx.Request().Form, nil
+	return r.Request().Form, nil
 }
 
-func parseFormData(values url.Values, service domain.FormService, ctx web.Context) (interface{}, error) {
-	formData, err := service.ParseFormData(ctx, values)
+func parseFormData(ctx context.Context, r *web.Request, values url.Values, service domain.FormService) (interface{}, error) {
+	formData, err := service.ParseFormData(ctx, r, values)
 	if err != nil {
 		log.Printf("form.application: ParseForm Error %v", err)
 		return formData, errors.New("unkown_error")

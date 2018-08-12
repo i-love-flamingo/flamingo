@@ -51,12 +51,13 @@ type (
 	}
 )
 
-// NewArea creates a new Area with childs
+// NewArea creates a new Area with optional childs
 func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 	ctx := &Area{
-		Name:    name,
-		Modules: modules,
-		Childs:  childs,
+		Name:          name,
+		Modules:       modules,
+		Childs:        childs,
+		Configuration: make(Map),
 	}
 
 	for _, c := range childs {

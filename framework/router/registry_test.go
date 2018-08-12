@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testController(web.Context) web.Response {
+func testController(context.Context, *web.Request) web.Response {
 	return &web.ContentResponse{}
 }
 
@@ -80,7 +81,7 @@ func TestRegistry(t *testing.T) {
 		})
 
 		t.Run("Should allow controller registration", func(t *testing.T) {
-			registry.Handle("page.view", testController)
+			registry.HandleAny("page.view", testController)
 		})
 
 		t.Run("Should make path registration easy", func(t *testing.T) {
@@ -107,22 +108,22 @@ func TestRegistry(t *testing.T) {
 		})
 
 		t.Run("Should match paths", func(t *testing.T) {
-			controller, params := registry.Match("/homepage/home2")
+			controller, params := registry.match("/homepage/home2")
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "home2", params["page"])
 
-			controller, params = registry.Match("/")
+			controller, params = registry.match("/")
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "home", params["page"])
 
-			controller, params = registry.Match("/page2")
+			controller, params = registry.match("/page2")
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "page2", params["page"])
 
-			controller, params = registry.Match("/page")
+			controller, params = registry.match("/page")
 			assert.NotNil(t, controller)
 			assert.Len(t, params, 1)
 			assert.Equal(t, "page", params["page"])
@@ -154,10 +155,10 @@ func TestRegistry(t *testing.T) {
 		})
 
 		t.Run("should render get requests if possible", func(t *testing.T) {
-			registry.Handle("page.get", testController)
+			registry.HandleAny("page.get", testController)
 			registry.Route("/path_mustget", `page.get(page)`)
 
-			registry.Handle("page.get2", testController)
+			registry.HandleAny("page.get2", testController)
 			registry.Route("/path_mustget2", `page.get2(page?="test")`)
 
 			path, err := registry.Reverse("page.get", map[string]string{"page": "test"})
@@ -177,7 +178,7 @@ func TestRegistry(t *testing.T) {
 	t.Run("Catchall", func(t *testing.T) {
 		registry := NewRegistry()
 		assert.NotNil(t, registry)
-		registry.Handle("page.view", testController)
+		registry.HandleAny("page.view", testController)
 		registry.Route("/page/:page", `page.view(page)`)
 		registry.Route("/page2/:page", `page.view(page, *")`)
 		registry.Route("/page3/:page", `page.view`)
@@ -197,8 +198,8 @@ func TestRegistry(t *testing.T) {
 
 	t.Run("Enforce Normalization", func(t *testing.T) {
 		registry := NewRegistry()
-		registry.Handle("page.view", testController)
-		registry.Handle("page2.view", testController)
+		registry.HandleAny("page.view", testController)
+		registry.HandleAny("page2.view", testController)
 		registry.Route("/page/:page", `page.view(page)`).Normalize("page")
 		registry.Route("/page2/:page", `page2.view(page)`)
 

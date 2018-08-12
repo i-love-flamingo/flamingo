@@ -15,8 +15,7 @@ type (
 
 	// FilterChain defines the chain which contains all filters which will be worked off
 	FilterChain struct {
-		Filters    []Filter
-		Controller Controller
+		Filters []Filter
 	}
 
 	lastFilter func(ctx context.Context, r *web.Request, w http.ResponseWriter) web.Response

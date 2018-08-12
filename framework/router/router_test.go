@@ -10,14 +10,8 @@ import (
 	"net/url"
 	"testing"
 
-	"flamingo.me/flamingo/framework/event"
 	eventMocks "flamingo.me/flamingo/framework/event/mocks"
-	"flamingo.me/flamingo/framework/profiler"
-	profilerMocks "flamingo.me/flamingo/framework/profiler/mocks"
 	"flamingo.me/flamingo/framework/web"
-	webMocks "flamingo.me/flamingo/framework/web/mocks"
-	"github.com/gojuno/minimock"
-	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,35 +20,9 @@ import (
 func TestRouter(t *testing.T) {
 	router := new(Router)
 
-	profilerMock := new(profilerMocks.Profiler)
-	router.ProfilerProvider = func() profiler.Profiler { return profilerMock }
-
 	registry := NewRegistry()
 	router.RouterRegistry = registry
 
-	contextMock := new(webMocks.Context)
-	router.ContextFactory = func(p profiler.Profiler, e event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) web.Context {
-		contextMock.On("Profile", "matchRequest", "/test").Return(profiler.ProfileFinishFunc(func() {}))
-		contextMock.On("Profile", "request", "/test").Return(profiler.ProfileFinishFunc(func() {}))
-		contextMock.On("LoadParams", mock.Anything)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "Handler" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "HandlerName" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On("Value", mock.Anything).Return(contextMock)
-		return contextMock
-	}
 	eventRouter := new(eventMocks.Router)
 	eventRouter.On("Dispatch", mock.Anything, mock.Anything)
 	router.eventrouter = eventRouter
@@ -79,7 +47,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("Test Legacy Fallback", func(t *testing.T) {
 		registry.Route("/test", "test")
-		registry.Handle("test", func(context web.Context) web.Response { method = "Handle"; return nil })
+		registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { method = "Handle"; return nil })
 
 		method = ""
 		assert.NoError(t, testReq(http.MethodGet, "/test"))
@@ -191,37 +159,11 @@ func TestTest(t *testing.T) {
 func TestRouterTestify(t *testing.T) {
 	router := new(Router)
 
-	profilerMock := new(profilerMocks.Profiler)
-	router.ProfilerProvider = func() profiler.Profiler { return profilerMock }
-
 	registry := NewRegistry()
 	registry.Route("/test", "test")
-	registry.Handle("test", func(context web.Context) web.Response { return nil })
+	registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { return nil })
 	router.RouterRegistry = registry
 
-	contextMock := new(webMocks.Context)
-	router.ContextFactory = func(p profiler.Profiler, e event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) web.Context {
-		contextMock.On("Profile", "matchRequest", "/test").Return(profiler.ProfileFinishFunc(func() {}))
-		contextMock.On("Profile", "request", "/test").Return(profiler.ProfileFinishFunc(func() {}))
-		contextMock.On("LoadParams", mock.Anything)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "Handler" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "HandlerName" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On(
-			"WithValue",
-			mock.MatchedBy(func(key interface{}) bool { return key.(string) == "__req" }),
-			mock.Anything,
-		).Return(contextMock)
-		contextMock.On("Value", mock.Anything).Return(contextMock)
-		return contextMock
-	}
 	eventRouter := new(eventMocks.Router)
 	eventRouter.On("Dispatch", mock.Anything, mock.Anything)
 	router.eventrouter = eventRouter
@@ -250,30 +192,14 @@ func TestRouterTestify(t *testing.T) {
 
 func TestRouterMiniMocks(t *testing.T) {
 	routerVar := new(Router)
-
-	profilerMock := NewProfilerMock(t)
-	routerVar.ProfilerProvider = func() profiler.Profiler { return profilerMock }
+	routerVar.eventrouter = new(eventMocks.Router)
+	routerVar.eventrouter.(*eventMocks.Router).On("Dispatch", mock.Anything, mock.Anything).Return()
 
 	registry := NewRegistry()
 	registry.Route("/test", "test")
-	registry.Handle("test", func(context web.Context) web.Response { return nil })
+	registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { return nil })
 
 	routerVar.RouterRegistry = registry
-
-	tester := minimock.NewController(t)
-
-	contextMock := NewContextMock(tester)
-	contextMock.ProfileFunc = func(p string, p1 string) (r profiler.ProfileFinishFunc) { return profiler.ProfileFinishFunc(func() {}) }
-	contextMock.LoadParamsMock.Expect(map[string]string{}).Return()
-	contextMock.WithValueFunc = func(p interface{}, p1 interface{}) (r web.Context) { return nil }
-	contextMock.ValueFunc = func(p interface{}) (r interface{}) { return contextMock }
-	routerVar.ContextFactory = func(profiler profiler.Profiler, eventrouter event.Router, rw http.ResponseWriter, r *http.Request, session *sessions.Session) web.Context {
-		return contextMock
-	}
-
-	eventRouter := NewRouterMock(t)
-	eventRouter.DispatchFunc = func(ctx context.Context, p event.Event) {}
-	routerVar.eventrouter = eventRouter
 
 	server := httptest.NewServer(routerVar)
 	defer server.Close()
@@ -292,6 +218,4 @@ func TestRouterMiniMocks(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Printf("%s", greeting)
-
-	assert.True(t, contextMock.AllMocksCalled())
 }

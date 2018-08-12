@@ -28,13 +28,8 @@ func (pff *PriceFormatLongFunc) Inject(
 	pff.priceFormat = formatFunc
 }
 
-// Name alias for use in template
-func (pff PriceFormatLongFunc) Name() string {
-	return "priceFormatLong"
-}
-
 // Func as implementation of debug method
-func (pff PriceFormatLongFunc) Func() interface{} {
+func (pff *PriceFormatLongFunc) Func() interface{} {
 	return func(value interface{}, currency string, currencyLabel string) string {
 		priceFunc := pff.priceFormat.Func().(func(value interface{}, currency string) string)
 		price := priceFunc(value, currency)

@@ -24,13 +24,8 @@ func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServi
 	pff.config = config.Config
 }
 
-// Name alias for use in template
-func (pff PriceFormatFunc) Name() string {
-	return "priceFormat"
-}
-
 // Func as implementation of debug method
-func (pff PriceFormatFunc) Func() interface{} {
+func (pff *PriceFormatFunc) Func() interface{} {
 	return func(value interface{}, currency string) string {
 		currency = pff.translationService.Translate(currency, "", "", 1, nil)
 		ac := accounting.Accounting{

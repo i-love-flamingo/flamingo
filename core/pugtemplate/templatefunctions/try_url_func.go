@@ -20,7 +20,7 @@ type (
 // Func as implementation of url method
 func (u *TryURLFunc) Func(ctx context.Context) interface{} {
 	return func(where string, params ...*pugjs.Map) template.URL {
-		request := ctx.Value("__req").(*web.Request)
+		request, _ := web.FromContext(ctx)
 		if where == "" {
 			q := request.Request().URL.Query()
 			if len(params) == 1 {

@@ -27,13 +27,8 @@ func (tf *DateTimeFormatFromIso) Inject(service *application.DateTimeService, lo
 	tf.logger = logger
 }
 
-// Name alias for use in template
-func (tf DateTimeFormatFromIso) Name() string {
-	return "dateTimeFormatFromIso"
-}
-
 // Func template function factory
-func (tf DateTimeFormatFromIso) Func() interface{} {
+func (tf *DateTimeFormatFromIso) Func() interface{} {
 	// Usage
 	// dateTimeFormatFromIso(dateTimeString).formatDate()
 	return func(dateTimeString string) *domain.DateTimeFormatter {
@@ -51,13 +46,8 @@ func (tf *DateTimeFormatFromTime) Inject(service *application.DateTimeService, l
 	tf.logger = logger
 }
 
-// Name alias for use in template
-func (tf DateTimeFormatFromTime) Name() string {
-	return "dateTimeFormat"
-}
-
 // Func template function factory
-func (tf DateTimeFormatFromTime) Func() interface{} {
+func (tf *DateTimeFormatFromTime) Func() interface{} {
 	// Usage
 	// dateTimeFormat(dateTime).formatDate()
 	return func(dateTime time.Time) *domain.DateTimeFormatter {

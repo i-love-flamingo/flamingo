@@ -30,13 +30,8 @@ func (nff *NumberFormatFunc) Inject(
 	nff.thousand = config.Thousand
 }
 
-// Name alias for use in template
-func (nff NumberFormatFunc) Name() string {
-	return "numberFormat"
-}
-
 // Func as implementation of debug method
-func (nff NumberFormatFunc) Func() interface{} {
+func (nff *NumberFormatFunc) Func() interface{} {
 	return func(value interface{}, params ...interface{}) string {
 
 		precision := int(nff.precision)

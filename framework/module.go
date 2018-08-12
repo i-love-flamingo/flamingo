@@ -13,11 +13,9 @@ import (
 	"flamingo.me/flamingo/framework/controller"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
-	"flamingo.me/flamingo/framework/profiler"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/templatefunctions"
-	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
 )
 
@@ -47,14 +45,11 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	router.Bind(injector, new(routes))
 
 	injector.Bind((*event.Router)(nil)).To(event.DefaultRouter{})
-	injector.Bind((*profiler.Profiler)(nil)).To(profiler.NullProfiler{})
-
-	injector.Bind((*web.ContextFactory)(nil)).ToInstance(web.ContextFromRequest)
 
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
 
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.ConfigFunc{})
+	template.BindFunc(injector, "config", new(templatefunctions.ConfigFunc))
 }
 
 // Configure the Module

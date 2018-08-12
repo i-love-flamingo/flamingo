@@ -3,7 +3,6 @@ package logrus
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -122,7 +121,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // referer:       referer from request
 // request:       received payload from request
 func (e *LogrusEntry) WithContext(ctx context.Context) flamingo.Logger {
-	return appendContext(e, ctx)
+	return appendContext(ctx, e)
 }
 
 // Flush does nothing because logrus is not buffered
@@ -151,7 +150,7 @@ func (e *LogrusEntry) WithFields(fields map[flamingo.LogKey]interface{}) flaming
 // referer:       referer from request
 // request:       received payload from request
 func (e *LogrusLogger) WithContext(ctx context.Context) flamingo.Logger {
-	return appendContext(e, ctx)
+	return appendContext(ctx, e)
 }
 
 // Flush does nothing because logrus is not buffered
@@ -173,29 +172,24 @@ func (e *LogrusLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamin
 	return &LogrusEntry{Entry: e.Logger.WithFields(f)}
 }
 
-func appendContext(logger flamingo.Logger, ctx_ context.Context) flamingo.Logger {
-	ctx := web.ToContext(ctx_)
-
-	if ctx == nil {
+func appendContext(ctx context.Context, logger flamingo.Logger) flamingo.Logger {
+	request, ok := web.FromContext(ctx)
+	if !ok {
 		return logger
 	}
 
-	request := ctx.Request()
-	clientIP := request.Header.Get("X-Forwarded-For")
+	clientIP := request.Request().Header.Get("X-Forwarded-For")
 	if clientIP == "" {
-		clientIP = request.RemoteAddr
+		clientIP = request.Request().RemoteAddr
 	}
-	body, _ := ioutil.ReadAll(request.Body)
 
 	return logger.WithFields(
 		map[flamingo.LogKey]interface{}{
-			flamingo.LogKeyBusinessID:    request.Header.Get("X-Business-ID"),
-			flamingo.LogKeyClientIP:      clientIP,
-			flamingo.LogKeyCorrelationID: ctx.ID(),
-			flamingo.LogKeyMethod:        request.Method,
-			flamingo.LogKeyPath:          request.URL.Path,
-			flamingo.LogKeyReferer:       request.Referer(),
-			flamingo.LogKeyRequest:       string(body),
+			flamingo.LogKeyBusinessID: request.Request().Header.Get("X-Business-ID"),
+			flamingo.LogKeyClientIP:   clientIP,
+			flamingo.LogKeyMethod:     request.Request().Method,
+			flamingo.LogKeyPath:       request.Request().URL.Path,
+			flamingo.LogKeyReferer:    request.Request().Referer(),
 		},
 	)
 }

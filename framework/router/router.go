@@ -15,7 +15,6 @@ import (
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/opencensus"
-	"flamingo.me/flamingo/framework/profiler"
 	"flamingo.me/flamingo/framework/session"
 	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
@@ -37,8 +36,6 @@ const (
 )
 
 type (
-	// ProfilerProvider for profiler injection
-	ProfilerProvider func() profiler.Profiler
 	// EventRouterProvider for event injection
 	EventRouterProvider func() event.Router
 	// FilterProvider for filter injection
@@ -53,8 +50,6 @@ type (
 
 		Sessions               sessions.Store      `inject:",optional"` // Sessions storage, which are used to retrieve user-context session
 		SessionName            string              `inject:"config:session.name"`
-		ContextFactory         web.ContextFactory  `inject:""` // ContextFactory for new contexts
-		ProfilerProvider       ProfilerProvider    `inject:""`
 		EventRouterProvider    EventRouterProvider `inject:""`
 		eventrouter            event.Router
 		Injector               *dingo.Injector  `inject:""`
@@ -116,40 +111,7 @@ func (router *Router) Init(routingConfig *config.Area) *Router {
 	}
 	routes.routes = append(routes.routes, routerroutes...)
 
-	// inject router instances
-	// deprecated: only used for legacy controllers
 	for name, ha := range router.RouterRegistry.handler {
-		c := ha.legacyController
-		if c != nil {
-			switch c.(type) {
-			case http.Handler, func(web.Context) web.Response, func(web.Context) interface{}:
-				break
-
-			case GETController, POSTController, HEADController, PUTController, DELETEController, DataController:
-				c = router.Injector.GetInstance(reflect.TypeOf(c))
-
-			default:
-				var rv = reflect.ValueOf(c)
-				if !rv.IsValid() {
-					panic(fmt.Sprintf("Invalid Controller bound! %s: %#v", name, c))
-				}
-				// Check if we have a Receiver Function of the type
-				// func(c Controller, ctx web.Context) web.Response
-				// If so, we instantiate c Controller and convert it to
-				// c.func(ctx web.Context) web.Response
-				if rv.Type().Kind() == reflect.Func &&
-					rv.Type().NumIn() == 2 &&
-					rv.Type().NumOut() == 1 &&
-					rv.Type().In(1).AssignableTo(reflect.TypeOf((*web.Context)(nil)).Elem()) &&
-					rv.Type().Out(0).AssignableTo(reflect.TypeOf((*web.Response)(nil)).Elem()) {
-					var ci = reflect.ValueOf(router.Injector.GetInstance(rv.Type().In(0).Elem()))
-					c = func(ctx web.Context) web.Response {
-						return rv.Call([]reflect.Value{ci, reflect.ValueOf(ctx)})[0].Interface().(web.Response)
-					}
-				}
-			}
-		}
-		ha.legacyController = c
 		routes.handler[name] = ha
 	}
 
@@ -272,26 +234,19 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(session.Context(req.Context(), s))
 
 	// retrieve a new context
-	ctx := router.ContextFactory(router.ProfilerProvider(), router.eventrouter, rw, req, s)
-
-	// assign context to request
-	req = req.WithContext(context.WithValue(req.Context(), web.CONTEXT, ctx))
+	ctx := req.Context()
 
 	// dispatch OnRequest event, the request might be changed
-	e := &OnRequestEvent{rw, req, ctx}
+	e := &OnRequestEvent{rw, req}
 	router.eventrouter.Dispatch(ctx, e)
 	req = e.Request
 
 	span.End()
 
-	done := ctx.Profile("matchRequest", req.RequestURI)
 	_, span = trace.StartSpan(req.Context(), "router/matchRequest")
 	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
-	ctx.LoadParams(params)
 	if handler != nil {
-		ctx.WithValue("HandlerName", handler.GetHandlerName())
-
 		start := time.Now()
 		defer func() {
 			ctx, _ := tag.New(req.Context(), tag.Upsert(controllerKey, handler.GetHandlerName()))
@@ -299,21 +254,16 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}()
 	}
 
-	done()
 	span.End()
-
-	defer ctx.Profile("request", req.RequestURI)()
 
 	tracectx, span := trace.StartSpan(req.Context(), "router/request")
 	req = req.WithContext(tracectx)
 	defer span.End()
 
 	webRequest := web.RequestFromRequest(req, s).WithVars(params)
-	ctx.WithValue("__req", webRequest)
 
 	chain := &FilterChain{
-		Filters:    make([]Filter, len(router.filters)),
-		Controller: controller,
+		Filters: make([]Filter, len(router.filters)),
 	}
 	copy(chain.Filters, router.filters)
 
@@ -327,7 +277,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 				router.recover(ctx, r, rw, err)
 			}
 			// fire finish event
-			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err, web.ToContext(ctx)})
+			router.eventrouter.Dispatch(ctx, &OnFinishEvent{rw, req, err})
 		}()
 
 		var response web.Response
@@ -337,36 +287,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		} else if controller.any != nil {
 			response = controller.any(ctx, webRequest)
 		} else {
-			// deprecated: refactored in favor of proper controller actions
-			if cc, ok := controller.legacyController.(GETController); ok && req.Method == http.MethodGet {
-				response = cc.Get(web.ToContext(ctx))
-			} else if cc, ok := controller.legacyController.(POSTController); ok && req.Method == http.MethodPost {
-				response = cc.Post(web.ToContext(ctx))
-			} else if cc, ok := controller.legacyController.(PUTController); ok && req.Method == http.MethodPut {
-				response = cc.Put(web.ToContext(ctx))
-			} else if cc, ok := controller.legacyController.(DELETEController); ok && req.Method == http.MethodDelete {
-				response = cc.Delete(web.ToContext(ctx))
-			} else if cc, ok := controller.legacyController.(HEADController); ok && req.Method == http.MethodHead {
-				response = cc.Head(web.ToContext(ctx))
-			} else {
-				switch c := controller.legacyController.(type) {
-				case DataController:
-					response = &web.JSONResponse{Data: c.Data(web.ToContext(ctx))}
-
-				case func(web.Context) web.Response:
-					response = c(web.ToContext(ctx))
-
-				case func(web.Context) interface{}:
-					response = &web.JSONResponse{Data: c(web.ToContext(ctx))}
-
-				case http.Handler:
-					response = &web.ServeHTTPResponse{VerboseResponseWriter: rw.(*web.VerboseResponseWriter)}
-					c.ServeHTTP(response.(http.ResponseWriter), req)
-
-				default:
-					response = router.RouterRegistry.handler[router.NotFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("legacy controller type unknown/unset: %T", c)), r)
-				}
-			}
+			response = router.RouterRegistry.handler[router.NotFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("legacy controller type unknown/unset: %T", c)), r)
 		}
 
 		if response, ok := response.(web.OnResponse); ok {
@@ -374,7 +295,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		}
 
 		// fire response event
-		router.eventrouter.Dispatch(ctx, &OnResponseEvent{controller, response, req, rw, web.ToContext(ctx)})
+		router.eventrouter.Dispatch(ctx, &OnResponseEvent{response, req, rw})
 
 		return response
 	}))
@@ -383,7 +304,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if router.Sessions != nil {
 		_, span := trace.StartSpan(ctx, "router/sessions/safe")
-		if err := router.Sessions.Save(req, rw, ctx.Session()); err != nil {
+		if err := router.Sessions.Save(req, rw, webRequest.Session()); err != nil {
 			log.Println(err)
 		}
 		span.End()
@@ -394,58 +315,6 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		response.Apply(ctx, rw)
 		span.End()
 	}
-}
-
-// Get is the ServeHTTP's equivalent for DataController and DataHandler.
-// TODO refactor
-// deprecated: use Data instead
-func (router *Router) Get(handler string, ctx web.Context, params ...map[interface{}]interface{}) interface{} {
-	defer ctx.Profile("get", handler)()
-
-	// reformat data to map[string]string, just as in normal request vars would look like
-	// dataController might be called via Ajax (instead of right via template) so this should be unified
-	vars := reformatParams(ctx, params...)
-	getCtx := ctx.WithVars(vars)
-
-	if c, ok := router.RouterRegistry.handler[handler]; ok {
-		if c, ok := c.legacyController.(DataController); ok {
-			return router.Injector.GetInstance(c).(DataController).Data(getCtx)
-		}
-		if c, ok := c.legacyController.(func(web.Context) interface{}); ok {
-			return c(getCtx)
-		}
-		if c.data != nil {
-			return c.data(web.ToRequest(getCtx))
-		}
-		panic(errors.Errorf("%q is not a data Controller", handler))
-	}
-	panic(errors.Errorf("data Controller %q not found", handler))
-}
-
-// deprecated: uses web.Context :(
-func reformatParams(ctx web.Context, params ...map[interface{}]interface{}) map[string]string {
-	vars := make(map[string]string)
-	for k, v := range ctx.ParamAll() {
-		vars[k] = v
-	}
-
-	if len(params) == 1 {
-		for k, v := range params[0] {
-			if k, ok := k.(string); ok {
-				switch v := v.(type) {
-				case string:
-					vars[k] = v
-				case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
-					vars[k] = strconv.Itoa(int(reflect.ValueOf(v).Int()))
-				case float32:
-					vars[k] = strconv.FormatFloat(float64(v), 'f', -1, 32)
-				case float64:
-					vars[k] = strconv.FormatFloat(v, 'f', -1, 64)
-				}
-			}
-		}
-	}
-	return vars
 }
 
 func dataParams(r *web.Request, params map[interface{}]interface{}) map[string]string {
@@ -474,7 +343,7 @@ func dataParams(r *web.Request, params map[interface{}]interface{}) map[string]s
 
 // Data calls a flamingo data controller
 func (router *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
-	r, ok := ctx.Value("__req").(*web.Request)
+	r, ok := web.FromContext(ctx)
 	if !ok {
 		r = web.RequestFromRequest(nil, sessions.NewSession(router.Sessions, "-"))
 	}
@@ -484,13 +353,6 @@ func (router *Router) Data(ctx context.Context, handler string, params map[inter
 	if c, ok := router.RouterRegistry.handler[handler]; ok {
 		if c.data != nil {
 			return c.data(ctx, r)
-		}
-
-		if _, ok := c.legacyController.(DataController); ok {
-			return router.Get(handler, web.ToContext(ctx), params)
-		}
-		if _, ok := c.legacyController.(func(web.Context) interface{}); ok {
-			return router.Get(handler, web.ToContext(ctx), params)
 		}
 		panic(errors.Errorf("%q is not a data Controller", handler))
 	}

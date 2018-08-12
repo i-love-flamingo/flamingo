@@ -30,14 +30,14 @@ func (l *Logger) WithCorrelationID(cid string) flamingo.Logger {
 // path:          URL path from request
 // referer:       referer from request
 // request:       received payload from request
-func (l *Logger) WithContext(ctx_ context.Context) flamingo.Logger {
-	ctx := web.ToContext(ctx_)
+func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
+	req, ok := web.FromContext(ctx)
 
-	if ctx == nil {
+	if !ok {
 		return l
 	}
 
-	request := ctx.Request()
+	request := req.Request()
 	clientIP := request.RemoteAddr
 	if request.Header.Get("X-Forwarded-For") != "" {
 		clientIP += ", " + request.Header.Get("X-Forwarded-For")
@@ -46,12 +46,12 @@ func (l *Logger) WithContext(ctx_ context.Context) flamingo.Logger {
 
 	return l.WithFields(
 		map[flamingo.LogKey]interface{}{
-			flamingo.LogKeyBusinessID:    request.Header.Get("X-Business-ID"),
-			flamingo.LogKeyClientIP:      clientIP,
-			flamingo.LogKeyCorrelationID: ctx.ID(),
-			flamingo.LogKeyMethod:        request.Method,
-			flamingo.LogKeyPath:          request.URL.Path,
-			flamingo.LogKeyReferer:       request.Referer(),
+			flamingo.LogKeyBusinessID: request.Header.Get("X-Business-ID"),
+			flamingo.LogKeyClientIP:   clientIP,
+			//flamingo.LogKeyCorrelationID: ctx.ID(),
+			flamingo.LogKeyMethod:  request.Method,
+			flamingo.LogKeyPath:    request.URL.Path,
+			flamingo.LogKeyReferer: request.Referer(),
 			//flamingo.LogKeyRequest:       string(body),
 		},
 	)

@@ -33,11 +33,11 @@ func (f *csrfFilter) Filter(ctx context.Context, r *web.Request, w http.Response
 	if r.Request().Method == "POST" {
 
 		// checks if controller doesn't want to check csrf (for example the profiler)
-		if options, ok := chain.Controller.(router.ControllerOptionAware); ok {
-			if options.CheckOption(Ignore) {
-				return chain.Next(ctx, r, w)
-			}
-		}
+		//if options, ok := chain.Controller.(router.ControllerOptionAware); ok {
+		//	if options.CheckOption(Ignore) {
+		//		return chain.Next(ctx, r, w)
+		//	}
+		//}
 
 		// session list of csrfNonces
 		list, err := getNonceList(ctx, r)

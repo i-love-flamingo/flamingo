@@ -29,7 +29,10 @@ func init() {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(new(bytes.Buffer))
 	enable := fs.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
-	fs.Parse(os.Args[1:])
+	if err := fs.Parse(os.Args[1:]); err == flag.ErrHelp {
+		fs.SetOutput(os.Stderr)
+		fs.PrintDefaults()
+	}
 	if *enable {
 		EnableCircularTracing()
 	}

@@ -29,9 +29,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			Name string `inject:"config:cmd.name"`
 		}) *cobra.Command {
 			rootCmd := &cobra.Command{
-				Use:   config.Name,
-				Short: "Flamingo " + config.Name,
+				Use:              config.Name,
+				Short:            "Flamingo " + config.Name,
+				TraverseChildren: true,
 			}
+			rootCmd.FParseErrWhitelist.UnknownFlags = true
 
 			rootCmd.AddCommand(commands...)
 

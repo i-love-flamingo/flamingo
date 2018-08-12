@@ -1,6 +1,7 @@
 package dingo
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -26,6 +27,7 @@ func EnableCircularTracing() {
 
 func init() {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.SetOutput(new(bytes.Buffer))
 	enable := fs.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
 	fs.Parse(os.Args[1:])
 	if *enable {

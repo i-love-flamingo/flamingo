@@ -29,17 +29,13 @@ type (
 	Module struct {
 		RootCmd        *cobra.Command   `inject:"flamingo"`
 		RouterRegistry *router.Registry `inject:""`
-		Basedir        string           `inject:"config:pug_template.basedir"`
 		DefaultMux     *http.ServeMux   `inject:",optional"`
-	}
-
-	// TemplateFunctionInterceptor to use fixtype
-	TemplateFunctionInterceptor struct {
-		template.ContextFunction
+		Basedir        string           `inject:"config:pug_template.basedir"`
 	}
 
 	routes struct {
 		controller *DebugController
+		Basedir    string `inject:"config:pug_template.basedir"`
 	}
 )
 
@@ -50,18 +46,32 @@ func (r *routes) Inject(controller *DebugController) {
 func (r *routes) Routes(registry *router.Registry) {
 	registry.Route("/_pugtpl/debug", "pugtpl.debug")
 	registry.HandleGet("pugtpl.debug", r.controller.Get)
+
+	registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.FileServer(http.Dir(r.Basedir)))))
+	registry.Route("/static/*n", "_static")
+
+	registry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {
+		return ctx.Value("page.template")
+	})
+
+	registry.Route("/assets/*f", "_pugtemplate.assets")
+	registry.HandleAny("_pugtemplate.assets", router.HTTPAction(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		origin := req.Header.Get("Origin")
+		if origin != "" {
+			//TODO - configure whitelist
+			rw.Header().Add("Access-Control-Allow-Origin", origin)
+		}
+		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
+			copyHeaders(r, rw)
+			io.Copy(rw, r.Body)
+		} else {
+			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+		}
+	})))
 }
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-
-	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
-	m.RouterRegistry.Route("/static/*n", "_static")
-
-	m.RouterRegistry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {
-		return ctx.Value("page.template")
-	})
-
 	// We bind the Template Engine to the ChildSingleton level (in case there is different config handling
 	// We use the provider to make sure both are always the same injected type
 	injector.Bind(pugjs.Engine{}).In(dingo.ChildSingleton).ToProvider(pugjs.NewEngine)
@@ -87,21 +97,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		})
 	}
 
-	m.RouterRegistry.Route("/assets/*f", "_pugtemplate.assets")
-	m.RouterRegistry.Handle("_pugtemplate.assets", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		origin := req.Header.Get("Origin")
-		if origin != "" {
-			//TODO - configure whitelist
-			rw.Header().Add("Access-Control-Allow-Origin", origin)
-		}
-		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
-			copyHeaders(r, rw)
-			io.Copy(rw, r.Body)
-		} else {
-			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
-		}
-	}))
-
 	injector.BindMap((*template.Func)(nil), "Math").To(templatefunctions.JsMath{})
 	injector.BindMap((*template.Func)(nil), "Object").To(templatefunctions.JsObject{})
 	injector.BindMap((*template.Func)(nil), "debug").To(templatefunctions.DebugFunc{})
@@ -126,7 +121,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	m.loadmock("../src/mock")
 
 	injector.BindMulti(new(cobra.Command)).ToProvider(templatecheckCmd)
-
+	router.Bind(injector, new(routes))
 }
 
 func templatecheckCmd() *cobra.Command {
@@ -220,16 +215,17 @@ func (m *Module) loadmock(where string) (interface{}, error) {
 		var res interface{}
 		json.Unmarshal(b, &res)
 		name := strings.Replace(filepath.Base(match), ".mock.json", "", 1)
-		if m.RouterRegistry.HandleIfNotSet(name, mockcontroller(name, res)) {
+		if !m.RouterRegistry.HasData(name) {
+			m.RouterRegistry.HandleData(name, mockcontroller(name, res))
 			log.Println("mocking because not set:", name)
 		}
 	}
+
 	return nil, nil
 }
 
-func mockcontroller(name string, data interface{}) func(web.Context) interface{} {
-	return func(ctx web.Context) interface{} {
-		defer ctx.Profile("pugmock", name)()
+func mockcontroller(name string, data interface{}) router.DataAction {
+	return func(context.Context, *web.Request) interface{} {
 		return data
 	}
 }

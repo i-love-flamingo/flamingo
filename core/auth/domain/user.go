@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"flamingo.me/flamingo/framework/web"
 	"github.com/coreos/go-oidc"
+	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 )
 
@@ -20,12 +20,12 @@ type (
 
 	// LoginEvent
 	LoginEvent struct {
-		Context web.Context
+		Session *sessions.Session
 	}
 
 	// LogoutEvent
 	LogoutEvent struct {
-		Context web.Context
+		Session *sessions.Session
 	}
 
 	Auth struct {

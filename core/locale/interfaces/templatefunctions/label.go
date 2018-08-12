@@ -18,12 +18,7 @@ func (tf *Label) Inject(service application.TranslationServiceInterface) {
 	tf.translationService = service
 }
 
-// Name alias for use in template
-func (tf Label) Name() string {
-	return "__"
-}
-
-func (tf Label) Func() interface{} {
+func (tf *Label) Func() interface{} {
 
 	// Usage:  __("key")
 	// __("key","default")

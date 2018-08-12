@@ -90,14 +90,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b544fa9dba8ea8e819d9cd22e98d4eb127c2cdd8cdb2cb0f800569aa7285de00"
-  name = "github.com/gojuno/minimock"
-  packages = ["."]
-  pruneopts = ""
-  revision = "b9abc15077091c4f94d03b0007d7109e304c58ee"
-
-[[projects]]
-  branch = "master"
   digest = "1:1d8a57fce1f68298ce54967c0752a2ab54bf55dff261d245b8f3440a217700cb"
   name = "github.com/golang/groupcache"
   packages = ["singleflight"]
@@ -574,7 +566,6 @@
     "github.com/coreos/go-oidc",
     "github.com/dgrijalva/jwt-go",
     "github.com/ghodss/yaml",
-    "github.com/gojuno/minimock",
     "github.com/golang/groupcache/singleflight",
     "github.com/gorilla/sessions",
     "github.com/hashicorp/golang-lru",

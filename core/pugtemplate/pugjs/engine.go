@@ -41,22 +41,18 @@ type (
 		eventRouter  event.Router
 	}
 
-	TemplateFunctionRegistryProvider func() *template.FunctionRegistry
-
 	// Engine is the one and only javascript template engine for go ;)
 	Engine struct {
 		*sync.Mutex
-		Basedir                   string `inject:"config:pug_template.basedir"`
-		Debug                     bool   `inject:"config:debug.mode"`
-		Assetrewrites             map[string]string
-		templates                 map[string]*Template
-		TemplateCode              map[string]string
-		Webpackserver             bool
-		TemplateFunctions         *template.FunctionRegistry
-		TemplateFunctionsProvider TemplateFunctionRegistryProvider `inject:""`
-		EventRouter               event.Router                     `inject:""`
-		FuncProvider              template.FuncProvider            `inject:""`
-		CtxFuncProvider           template.CtxFuncProvider         `inject:""`
+		Basedir         string `inject:"config:pug_template.basedir"`
+		Debug           bool   `inject:"config:debug.mode"`
+		Assetrewrites   map[string]string
+		templates       map[string]*Template
+		TemplateCode    map[string]string
+		Webpackserver   bool
+		EventRouter     event.Router             `inject:""`
+		FuncProvider    template.FuncProvider    `inject:""`
+		CtxFuncProvider template.CtxFuncProvider `inject:""`
 	}
 )
 
@@ -98,7 +94,6 @@ func (e *Engine) LoadTemplates(filtername string) error {
 		json.Unmarshal(manifest, &e.Assetrewrites)
 	}
 
-	e.TemplateFunctions = e.TemplateFunctionsProvider()
 	e.templates, err = e.compileDir(path.Join(e.Basedir, "template", "page"), "", filtername)
 	if err != nil {
 		return err
@@ -151,7 +146,7 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 				}
 
 				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug, e.EventRouter)
-				renderState.funcs = FuncMap(e.TemplateFunctions.Populate())
+				renderState.funcs = FuncMap{}
 
 				for k, f := range e.FuncProvider() {
 					renderState.funcs[k] = f.Func()

@@ -61,7 +61,7 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 		cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
-	cc.eventPublisher.PublishLoginEvent(web.ToContext(c), &domain.LoginEvent{Context: web.ToContext(c)})
+	cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session()})
 	cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
 	request.Session().AddFlash("successful logged in", "info")
 

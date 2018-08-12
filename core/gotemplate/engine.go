@@ -14,7 +14,6 @@ import (
 
 	"flamingo.me/flamingo/framework/router"
 	flamingotemplate "flamingo.me/flamingo/framework/template"
-	"flamingo.me/flamingo/framework/web"
 	"go.opencensus.io/trace"
 )
 
@@ -25,7 +24,8 @@ type (
 		templatesBasePath  string
 		layoutTemplatesDir string
 		debug              bool
-		templateFunctions  *flamingotemplate.FunctionRegistry
+		tplFuncs           flamingotemplate.FuncProvider
+		tplCtxFuncs        flamingotemplate.CtxFuncProvider
 		templates          map[string]*template.Template
 	}
 
@@ -53,14 +53,16 @@ var (
 
 // Inject engine dependencies
 func (e *engine) Inject(
-	templateFunctions *flamingotemplate.FunctionRegistry,
+	tplFuncs flamingotemplate.FuncProvider,
+	tplCtxFuncs flamingotemplate.CtxFuncProvider,
 	config *struct {
 		TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
 		LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
 		Debug              bool   `inject:"config:debug.mode"`
 	},
 ) {
-	e.templateFunctions = templateFunctions
+	e.tplFuncs = tplFuncs
+	e.tplCtxFuncs = tplCtxFuncs
 	e.templatesBasePath = config.TemplatesBasePath
 	e.layoutTemplatesDir = config.LayoutTemplatesDir
 	e.debug = config.Debug
@@ -78,14 +80,26 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 
 	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}
-	err := e.templates[name+".html"].Execute(buf, data)
+
+	tpl, err := e.templates[name+".html"].Clone()
+	if err != nil {
+		return nil, err
+	}
+
+	tplFuncs := template.FuncMap{}
+	for k, f := range e.tplCtxFuncs() {
+		tplFuncs[k] = f.Func(ctx)
+	}
+	tpl.Funcs(tplFuncs)
+
+	err = tpl.Execute(buf, data)
+
 	defer span.End()
 
 	return buf, err
 }
 
 func (e *engine) loadTemplates(ctx context.Context) {
-	//done := context.Profile("template engine", "load templates")
 	ctx, span := trace.StartSpan(ctx, "gotemplate/loadTemplates")
 	defer span.End()
 
@@ -105,19 +119,20 @@ func (e *engine) loadTemplates(ctx context.Context) {
 		},
 	}
 
-	funcs := e.templateFunctions.Populate()
-	for k, f := range e.templateFunctions.ContextAware {
-		funcs[k] = f(web.ToContext(ctx))
+	tplFuncs := template.FuncMap{}
+	for k, f := range e.tplFuncs() {
+		tplFuncs[k] = f.Func()
+	}
+	for k, f := range e.tplCtxFuncs() {
+		tplFuncs[k] = f.Func(ctx)
 	}
 
-	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, funcs))
+	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, tplFuncs))
 
 	err := e.parseSiteTemplateDirectory(layoutTemplate, e.templatesBasePath)
 	if err != nil {
 		panic(err)
 	}
-
-	//done()
 }
 
 // parses all layout templates in a template instance which is the base instance for all other templates

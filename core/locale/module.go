@@ -18,12 +18,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*application.TranslationServiceInterface)(nil)).To(application.TranslationService{})
 	injector.Bind((*application.DateTimeServiceInterface)(nil)).To(application.DateTimeService{})
 
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.Label{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.PriceFormatLongFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.NumberFormatFunc{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromIso{})
-	injector.BindMulti((*template.Function)(nil)).To(templatefunctions.DateTimeFormatFromTime{})
+	template.BindFunc(injector, "__", new(templatefunctions.Label))
+	template.BindFunc(injector, "priceFormat", new(templatefunctions.PriceFormatFunc))
+	template.BindFunc(injector, "priceFormatLong", new(templatefunctions.PriceFormatLongFunc))
+	template.BindFunc(injector, "numberFormat", new(templatefunctions.NumberFormatFunc))
+	template.BindFunc(injector, "dateTimeFormatFromIso", new(templatefunctions.DateTimeFormatFromIso))
+	template.BindFunc(injector, "dateTimeFormat", new(templatefunctions.DateTimeFormatFromTime))
 }
 
 // DefaultConfig for this module

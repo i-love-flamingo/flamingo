@@ -94,7 +94,7 @@ func (l *LogoutController) Get(c context.Context, request *web.Request) web.Resp
 		return l.RedirectURL(l.myHost)
 	}
 
-	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectUrl(web.ToContext(c), endURL)
+	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectUrl(c, endURL)
 	if redirectURLError != nil {
 		logout(request)
 		l.logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectURLError.Error())
@@ -104,8 +104,8 @@ func (l *LogoutController) Get(c context.Context, request *web.Request) web.Resp
 	logout(request)
 
 	request.Session().AddFlash("successful logged out", "warning")
-	l.eventPublisher.PublishLogoutEvent(web.ToContext(c), &domain.LogoutEvent{
-		Context: web.ToContext(c),
+	l.eventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{
+		Session: request.Session(),
 	})
 
 	return l.RedirectURL(redirectURL)

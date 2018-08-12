@@ -33,10 +33,9 @@ type (
 	}
 
 	handlerAction struct {
-		method           map[string]Action
-		any              Action
-		data             DataAction
-		legacyController Controller
+		method map[string]Action
+		any    Action
+		data   DataAction
 	}
 
 	param struct {
@@ -70,27 +69,12 @@ func (ha *handlerAction) set(method string, action Action) {
 	ha.method[method] = action
 }
 
-func (ha *handlerAction) setLegacyController(legacyController Controller) {
-	ha.legacyController = legacyController
-}
-
 func (ha *handlerAction) setAny(any Action) {
 	ha.any = any
 }
 
 func (ha *handlerAction) setData(data DataAction) {
 	ha.data = data
-}
-
-// Handle assigns a Controller to a name
-// deprecated: use explicit handler
-func (registry *Registry) Handle(name string, controller Controller) {
-	if hf, ok := controller.(http.HandlerFunc); ok {
-		controller = http.Handler(hf)
-	}
-	la := registry.handler[name]
-	la.setLegacyController(controller)
-	registry.handler[name] = la
 }
 
 // HandleAny serves as a fallback to handle HTTP requests which are not taken care of by other handlers
@@ -161,32 +145,6 @@ func (registry *Registry) HasAny(name string) bool {
 func (registry *Registry) HasData(name string) bool {
 	la, ok := registry.handler[name]
 	return ok && la.data != nil
-}
-
-// HasLegacy checks if a legacy handler is set for a given name
-func (registry *Registry) HasLegacy(name string) bool {
-	la, ok := registry.handler[name]
-	return ok && la.legacyController != nil
-}
-
-// HandleIfNotSet assigns a Controller to a name if not already set
-// deprecated: do not use if not necessary
-func (registry *Registry) HandleIfNotSet(name string, controller Controller) bool {
-	if _, ok := registry.handler[name]; ok {
-		return false
-	}
-	la := registry.handler[name]
-	la.setLegacyController(controller)
-	registry.handler[name] = la
-	return true
-}
-
-// GetControllerForHandle returns Controller for a Handle Name
-func (registry *Registry) GetControllerForHandle(name string) (Controller, error) {
-	if val, ok := registry.handler[name]; ok {
-		return val, nil
-	}
-	return nil, errors.New("Handle not found")
 }
 
 // Route assigns a route to a Handler
@@ -404,12 +362,12 @@ catchallrouteloop:
 }
 
 // Match a request path
-func (registry *Registry) Match(path string) (controller Controller, params map[string]string) {
-	for _, handler := range registry.routes {
-		if match := handler.path.Match(path); match != nil {
-			controller = registry.handler[handler.handler]
+func (registry *Registry) match(path string) (handler handlerAction, params map[string]string) {
+	for _, route := range registry.routes {
+		if match := route.path.Match(path); match != nil {
+			handler = registry.handler[route.handler]
 			params = make(map[string]string)
-			for k, param := range handler.params {
+			for k, param := range route.params {
 				params[k] = param.value
 			}
 			for k, v := range match.Values {

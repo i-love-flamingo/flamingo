@@ -72,10 +72,10 @@ func (r *routesHelper) printRoutes() {
 	fmt.Println("    Route-Name:            Route-Path                 (Registered Handler)")
 	fmt.Println("--------------------------------------------------------------------------")
 
-	for _, routePath := range getSortedMapKeys(routes) {
-		controller, _ := r.RouterRegistry.GetControllerForHandle(routes[routePath])
-		printRoute(routes[routePath], routePath, controller)
-	}
+	//for _, routePath := range getSortedMapKeys(routes) {
+	//controller, _ := r.RouterRegistry.GetControllerForHandle(routes[routePath])
+	//printRoute(routes[routePath], routePath, controller)
+	//}
 }
 
 // printDataHandlers prints Registered Routes and Theire Handle

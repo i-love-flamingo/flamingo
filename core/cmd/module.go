@@ -10,12 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Name for the default command
-// deprecated: do not use
-var Name = "flamingo"
-
 // Module for DI
 type Module struct{}
+
+var dingoTrace *bool
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {

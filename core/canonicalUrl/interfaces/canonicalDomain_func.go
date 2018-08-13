@@ -1,24 +1,21 @@
 package interfaces
 
-import (
-	"flamingo.me/flamingo/core/canonicalUrl/application"
-)
-
 type (
 	// CanonicalDomainFunc is exported as a template function
 	CanonicalDomainFunc struct {
-		service *application.Service
+		service ApplicationService
 	}
 )
 
 // Inject CanonicalDomainFunc dependencies
-func (c *CanonicalDomainFunc) Inject(service *application.Service) {
+func (c *CanonicalDomainFunc) Inject(service ApplicationService) *CanonicalDomainFunc {
 	c.service = service
+	return c
 }
 
 // Func returns the canonicalDomain func
 func (c *CanonicalDomainFunc) Func() interface{} {
-	return func() interface{} {
+	return func() string {
 		return c.service.GetBaseDomain()
 	}
 }

@@ -26,16 +26,17 @@ type (
 
 func NewAtomicDesignAnalyser(baseDir string) AtomicDesignAnalyser {
 	return AtomicDesignAnalyser{
-		baseDir:        baseDir,
-		AllowedPugLibs: []string{"/", "/shared"},
+		baseDir: baseDir,
+		//Allow Elements from: private ("") project shared (/)  and from shared lib (/shared)
+		AllowedPugLibs: []string{"", "/", "/shared"},
 	}
 }
 
 func (a *AtomicDesignAnalyser) CheckPugImports() {
 
-	a.checkPugsInDir(filepath.Join(a.baseDir, "atom"), false, nil)
+	a.checkPugsInDir(filepath.Join(a.baseDir, "atom"), false, []string{"atom"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "molecule"), false, []string{"atom"})
-	a.checkPugsInDir(filepath.Join(a.baseDir, "organism"), false, []string{"atom", "molecule"})
+	a.checkPugsInDir(filepath.Join(a.baseDir, "organism"), false, []string{"atom", "molecule", "organism"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "template"), true, []string{"atom", "molecule", "organism", "template"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "page"), true, []string{"atom", "molecule", "organism", "template"})
 }
@@ -43,7 +44,7 @@ func (a *AtomicDesignAnalyser) CheckPugImports() {
 func (a *AtomicDesignAnalyser) checkPugsInDir(dir string, checkExtends bool, allowed []string) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Warning - checking %v Failed: (%v)", dir, err))
+		//fmt.Println(fmt.Sprintf("checking %v Failed: (%v)", dir, err))
 		return
 	}
 
@@ -139,7 +140,7 @@ func (a *JsDependencyAnalyser) checkJsDep(dir string) {
 				importPath := match[2]
 				importPathRelativeBackCount := strings.Count(importPath, "../")
 				if importPathRelativeBackCount > relativeDeep {
-					fmt.Println(fmt.Sprintf("🐛  ERROR File %v (%v) Contains import outside basePath! %v (%v)", relFilePath, relativeDeep, importPath, importPathRelativeBackCount))
+					fmt.Println(fmt.Sprintf("🐛  WARNING File %v (%v) Contains import outside basePath! %v (%v)", relFilePath, relativeDeep, importPath, importPathRelativeBackCount))
 				}
 			}
 		}

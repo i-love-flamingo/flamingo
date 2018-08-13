@@ -35,14 +35,27 @@ func (a *appmodule) Inject(root *config.Area, router *router.Router, eventRouter
 
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
-	injector.BindMulti(new(cobra.Command)).ToInstance(&cobra.Command{
+	injector.BindMulti(new(cobra.Command)).ToProvider(serveProvider)
+}
+
+func serveProvider(a *appmodule, logger Logger) *cobra.Command {
+	var addr string
+
+	cmd := &cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.handleShutdown()
 			a.router.Init(a.root)
-			http.ListenAndServe(":3322", a.router)
+			err := http.ListenAndServe(addr, a.router)
+			if err != nil {
+				logger.Fatal("unexpected error in serving:", err)
+			}
+			logger.Info("Starting HTTP Server at %s .....", addr)
 		},
-	})
+	}
+	cmd.Flags().StringVarP(&addr, "addr", "a", ":3322", "addr on which flamingo runs")
+
+	return cmd
 }
 
 func (a *appmodule) OverrideConfig(config.Map) config.Map {

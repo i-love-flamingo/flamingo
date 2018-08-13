@@ -5,24 +5,28 @@ import (
 	"net/url"
 	"strings"
 
-	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
 )
 
 type (
+	RouterRouter interface {
+		Base() *url.URL
+	}
+
 	// Service exposes helper methods to handle canonical base urls
 	Service struct {
-		router  *router.Router
+		router  RouterRouter
 		baseURL string
 	}
 )
 
 // Inject Service dependencies
-func (s *Service) Inject(router *router.Router, config *struct {
+func (s *Service) Inject(router RouterRouter, config *struct {
 	BaseURL string `inject:"config:canonicalurl.baseurl"`
-}) {
+}) *Service {
 	s.router = router
 	s.baseURL = config.BaseURL
+	return s
 }
 
 // GetBaseDomain returns the canonical base domain

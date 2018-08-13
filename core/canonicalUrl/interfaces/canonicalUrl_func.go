@@ -2,25 +2,24 @@ package interfaces
 
 import (
 	"context"
-
-	"flamingo.me/flamingo/core/canonicalUrl/application"
 )
 
 type (
 	// CanonicalUrlFunc is exported as a template function
 	CanonicalUrlFunc struct {
-		service *application.Service
+		service ApplicationService
 	}
 )
 
 // Inject CanonicalUrlFunc dependencies
-func (c *CanonicalUrlFunc) Inject(service *application.Service) {
+func (c *CanonicalUrlFunc) Inject(service ApplicationService) *CanonicalUrlFunc {
 	c.service = service
+	return c
 }
 
 // Func returns the CanonicalUrlFunc function
 func (c *CanonicalUrlFunc) Func(ctx context.Context) interface{} {
-	return func() interface{} {
+	return func() string {
 		return c.service.GetCanonicalUrlForCurrentRequest(ctx)
 	}
 }

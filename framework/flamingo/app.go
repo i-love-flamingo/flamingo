@@ -10,14 +10,16 @@ import (
 
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/router"
 	"github.com/spf13/cobra"
 )
 
 type (
 	appmodule struct {
-		Root   *config.Area   `inject:""`
-		Router *router.Router `inject:""`
+		root        *config.Area
+		router      *router.Router
+		eventRouter event.Router
 	}
 	// AppShutdownEvent is dispatched on app shutdown
 	AppShutdownEvent struct {
@@ -25,16 +27,29 @@ type (
 	}
 )
 
+func (a *appmodule) Inject(root *config.Area, router *router.Router, eventRouter event.Router) {
+	a.router = router
+	a.root = root
+	a.eventRouter = eventRouter
+}
+
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToInstance(&cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.handleShutdown()
-			a.Router.Init(a.Root)
-			http.ListenAndServe(":3322", a.Router)
+			a.router.Init(a.root)
+			http.ListenAndServe(":3322", a.router)
 		},
 	})
+}
+
+func (a *appmodule) OverrideConfig(config.Map) config.Map {
+	return config.Map{
+		"flamingo.template.err404": "404",
+		"flamingo.template.err503": "503",
+	}
 }
 
 func (a *appmodule) handleShutdown() {
@@ -42,7 +57,7 @@ func (a *appmodule) handleShutdown() {
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	go func(m *appmodule) {
 		<-signals
-		m.Router.EventRouterProvider().Dispatch(context.Background(), &AppShutdownEvent{AppModule: m})
+		a.eventRouter.Dispatch(context.Background(), &AppShutdownEvent{AppModule: m})
 	}(a)
 }
 

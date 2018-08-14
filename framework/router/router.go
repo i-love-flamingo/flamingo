@@ -69,12 +69,13 @@ type (
 )
 
 var (
-	rt               = stats.Int64("flamingo/router/controller", "controller request times", stats.UnitMilliseconds)
-	controllerKey, _ = tag.NewKey("controller")
+	rt = stats.Int64("flamingo/router/controller", "controller request times", stats.UnitMilliseconds)
+	// ControllerKey exposes the current controller/handler key
+	ControllerKey, _ = tag.NewKey("controller")
 )
 
 func init() {
-	opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), controllerKey)
+	opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey)
 }
 
 // NewRouter factory
@@ -247,10 +248,11 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
 	if handler != nil {
+		ctx, _ = tag.New(req.Context(), tag.Upsert(ControllerKey, handler.GetHandlerName()))
+		req = req.WithContext(ctx)
 		start := time.Now()
 		defer func() {
-			ctx, _ := tag.New(req.Context(), tag.Upsert(controllerKey, handler.GetHandlerName()))
-			stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
+			stats.Record(req.Context(), rt.M(time.Since(start).Nanoseconds()/1000000))
 		}()
 	}
 

@@ -37,13 +37,6 @@ func (a *appmodule) Configure(injector *dingo.Injector) {
 	})
 }
 
-func (a *appmodule) OverrideConfig(config.Map) config.Map {
-	return config.Map{
-		"flamingo.template.err404": "404",
-		"flamingo.template.err503": "503",
-	}
-}
-
 func (a *appmodule) handleShutdown() {
 	signals := make(chan os.Signal)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)

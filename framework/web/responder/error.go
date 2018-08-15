@@ -63,7 +63,7 @@ func (ee EmptyError) Error() string {
 // ErrorNotFound returns a web.ContentResponse with status 404 and ContentType text/html
 func (r *FlamingoErrorAware) ErrorNotFound(context context.Context, error error) web.Response {
 	var response web.Response
-
+	r.Logger.WithField("category", "error_aware").WithField("errorTemplate", r.Tpl404).Info("ErrorNotFound", error)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
@@ -87,7 +87,7 @@ func (r *FlamingoErrorAware) ErrorNotFound(context context.Context, error error)
 // ErrorWithCode returns a web.ContentResponse with give status code and ContentType text/html
 func (r *FlamingoErrorAware) ErrorWithCode(context context.Context, error error, httpStatus int) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").Error("Error with code ", httpStatus, error)
+	r.Logger.WithField("category", "error_aware").WithField("errorTemplate", r.TplErrorWithCode).Error("Error with code ", httpStatus, error)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,
@@ -110,7 +110,7 @@ func (r *FlamingoErrorAware) ErrorWithCode(context context.Context, error error,
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
 func (r *FlamingoErrorAware) Error(context context.Context, err error) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").Error("Error ", err.Error())
+	r.Logger.WithField("category", "error_aware").WithField("errorTemplate", r.Tpl503).Error("Error ", err.Error())
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,

@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
+	"time"
 
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
@@ -17,24 +16,31 @@ import (
 
 type (
 	appmodule struct {
-		root        *config.Area
-		router      *router.Router
-		eventRouter event.Router
+		root   *config.Area
+		router *router.Router
+		server *http.Server
+		logger Logger
 	}
+
 	// AppShutdownEvent is dispatched on app shutdown
 	AppShutdownEvent struct {
 		AppModule dingo.Module
 	}
 )
 
-func (a *appmodule) Inject(root *config.Area, router *router.Router, eventRouter event.Router) {
-	a.router = router
+func (a *appmodule) Inject(root *config.Area, router *router.Router, logger Logger) {
 	a.root = root
-	a.eventRouter = eventRouter
+	a.router = router
+	a.logger = logger
+	a.server = &http.Server{
+		Addr:    ":3322",
+		Handler: a.router,
+	}
 }
 
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
+	injector.BindMulti((*event.Subscriber)(nil)).ToInstance(a)
 	injector.BindMulti(new(cobra.Command)).ToProvider(serveProvider)
 }
 
@@ -44,34 +50,30 @@ func serveProvider(a *appmodule, logger Logger) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "serve",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.handleShutdown()
 			a.router.Init(a.root)
-			err := http.ListenAndServe(addr, a.router)
+			err := a.server.ListenAndServe()
 			if err != nil {
 				logger.Fatal("unexpected error in serving:", err)
 			}
 			logger.Info("Starting HTTP Server at %s .....", addr)
 		},
 	}
-	cmd.Flags().StringVarP(&addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	cmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
 
 	return cmd
 }
 
-func (a *appmodule) OverrideConfig(config.Map) config.Map {
-	return config.Map{
-		"flamingo.template.err404": "404",
-		"flamingo.template.err503": "503",
-	}
-}
+func (a *appmodule) Notify(event event.Event) {
+	switch event.(type) {
+	case *AppShutdownEvent:
+		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		a.logger.Info("Shutdown server on ", a.server.Addr)
 
-func (a *appmodule) handleShutdown() {
-	signals := make(chan os.Signal)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	go func(m *appmodule) {
-		<-signals
-		a.eventRouter.Dispatch(context.Background(), &AppShutdownEvent{AppModule: m})
-	}(a)
+		err := a.server.Shutdown(ctx)
+		if err != nil {
+			a.logger.Error("unexpected error on server shutdown: ", err)
+		}
+	}
 }
 
 // App is a simple app-runner for flamingo

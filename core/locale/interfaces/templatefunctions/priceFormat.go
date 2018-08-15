@@ -27,7 +27,7 @@ func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServi
 // Func as implementation of debug method
 func (pff *PriceFormatFunc) Func() interface{} {
 	return func(value interface{}, currency string) string {
-		currency = pff.translationService.Translate(currency, "", "", 1, nil)
+		currency = pff.translationService.Translate(currency, currency, "", 1, nil)
 		ac := accounting.Accounting{
 			Symbol:    currency,
 			Precision: 2,

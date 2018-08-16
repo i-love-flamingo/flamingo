@@ -54,7 +54,7 @@ func (fb *FileBackend) Get(key string) (entry *Entry, found bool) {
 }
 
 // Set writes a cache entry
-func (fb *FileBackend) Set(key string, entry *Entry) {
+func (fb *FileBackend) Set(key string, entry *Entry) error {
 	key = escape.ReplaceAllString(key, ".")
 
 	gob.Register(entry)
@@ -63,20 +63,24 @@ func (fb *FileBackend) Set(key string, entry *Entry) {
 	b := new(bytes.Buffer)
 	err := gob.NewEncoder(b).Encode(entry)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	ioutil.WriteFile(filepath.Join(fb.baseDir, key), b.Bytes(), os.ModePerm)
+
+	return nil
 }
 
 // Purge deletes a cache entry
-func (fb *FileBackend) Purge(key string) {
+func (fb *FileBackend) Purge(key string) error {
 	key = escape.ReplaceAllString(key, ".")
 	os.Remove(filepath.Join(fb.baseDir, key))
+
+	return nil
 }
 
 // PurgeTags is not supported by FileBackend and does nothing
-func (*FileBackend) PurgeTags(tags []string) {}
+func (*FileBackend) PurgeTags(tags []string) error { return nil }
 
 // Flush is not supported by FileBackend and does nothing
-func (*FileBackend) Flush() {}
+func (*FileBackend) Flush() error { return nil }

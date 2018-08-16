@@ -5,23 +5,39 @@ import (
 	"encoding/gob"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 )
 
 type (
-	FileBackend struct{}
+	// FileBackend is a cache backend which saves the data in files
+	FileBackend struct {
+		baseDir string
+	}
 )
 
-var (
-	_ Backend = &FileBackend{}
+const defaultBaseDir = "/tmp/cache"
 
+var (
 	escape = regexp.MustCompile(`[^a-zA-Z0-9.]`)
 )
 
-func (*FileBackend) Get(key string) (entry *Entry, found bool) {
+// NewFileBackend returns a FileBackend operating in the given baseDir
+func NewFileBackend(baseDir string) *FileBackend {
+	if baseDir == "" {
+		baseDir = defaultBaseDir
+	}
+
+	return &FileBackend{
+		baseDir: baseDir,
+	}
+}
+
+// Get reads a cache entry
+func (fb *FileBackend) Get(key string) (entry *Entry, found bool) {
 	key = escape.ReplaceAllString(key, ".")
 
-	b, err := ioutil.ReadFile("/tmp/cache/" + key)
+	b, err := ioutil.ReadFile(filepath.Join(fb.baseDir, key))
 	if err != nil {
 		return nil, false
 	}
@@ -29,25 +45,38 @@ func (*FileBackend) Get(key string) (entry *Entry, found bool) {
 	bb := bytes.NewBuffer(b)
 	d := gob.NewDecoder(bb)
 	entry = new(Entry)
-	d.Decode(&entry)
+	err = d.Decode(&entry)
+	if err != nil {
+		return nil, false
+	}
+
 	return entry, true
 }
 
-func (*FileBackend) Set(key string, entry *Entry) {
+// Set writes a cache entry
+func (fb *FileBackend) Set(key string, entry *Entry) {
 	key = escape.ReplaceAllString(key, ".")
 
 	gob.Register(entry)
+	gob.Register(entry.Data)
 
 	b := new(bytes.Buffer)
-	gob.NewEncoder(b).Encode(entry)
+	err := gob.NewEncoder(b).Encode(entry)
+	if err != nil {
+		panic(err)
+	}
 
-	ioutil.WriteFile("/tmp/cache/"+key, b.Bytes(), os.ModePerm)
+	ioutil.WriteFile(filepath.Join(fb.baseDir, key), b.Bytes(), os.ModePerm)
 }
 
-func (*FileBackend) Purge(key string) {
+// Purge deletes a cache entry
+func (fb *FileBackend) Purge(key string) {
 	key = escape.ReplaceAllString(key, ".")
-	os.Remove("/tmp/cache/" + key)
+	os.Remove(filepath.Join(fb.baseDir, key))
 }
 
+// PurgeTags is not supported by FileBackend and does nothing
 func (*FileBackend) PurgeTags(tags []string) {}
-func (*FileBackend) Flush()                  {}
+
+// Flush is not supported by FileBackend and does nothing
+func (*FileBackend) Flush() {}

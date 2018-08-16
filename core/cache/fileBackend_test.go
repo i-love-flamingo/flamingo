@@ -103,8 +103,9 @@ func TestFileBackendSet(t *testing.T) {
 		entry *cache.Entry
 	}
 	tests := []struct {
-		name string
-		args args
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "string",
@@ -115,6 +116,7 @@ func TestFileBackendSet(t *testing.T) {
 					Data: "bar",
 				},
 			},
+			wantErr: false,
 		},
 		{
 			name: "struct",
@@ -129,6 +131,7 @@ func TestFileBackendSet(t *testing.T) {
 					},
 				},
 			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -137,7 +140,10 @@ func TestFileBackendSet(t *testing.T) {
 			defer func() { os.Remove(expectedCacheFileName) }()
 
 			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
-			f.Set(tt.args.key, tt.args.entry)
+			err := f.Set(tt.args.key, tt.args.entry)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FileBackend.Set() error = %v, wantErr %v", err, tt.wantErr)
+			}
 
 			written, err := ioutil.ReadFile(expectedCacheFileName)
 			if err != nil {
@@ -160,19 +166,21 @@ func TestFileBackendSet(t *testing.T) {
 	}
 }
 
-func TestFileBackend_Purge(t *testing.T) {
+func TestFileBackendPurge(t *testing.T) {
 	type args struct {
 		key string
 	}
 	tests := []struct {
-		name string
-		args args
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "purge",
 			args: args{
 				key: "purge.string",
 			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -182,7 +190,10 @@ func TestFileBackend_Purge(t *testing.T) {
 				Meta: cache.Meta{},
 				Data: "bar",
 			})
-			f.Purge(tt.args.key)
+			err := f.Purge(tt.args.key)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FileBackend.Purge() error = %v, wantErr %v", err, tt.wantErr)
+			}
 
 			if _, err := os.Stat(filepath.Join("testdata", "file_backend", tt.args.key)); err == nil {
 				t.Error("cache entry was not deleted")

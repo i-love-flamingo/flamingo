@@ -2,6 +2,7 @@ package cache
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,11 +12,12 @@ import (
 	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/golang/groupcache/singleflight"
 	"github.com/pkg/errors"
+	"go.opencensus.io/trace"
 )
 
 type (
 	// HTTPLoader returns a response. it will be cached unless there is an error. this means 400/500 responses are cached too!
-	HTTPLoader func() (*http.Response, *Meta, error)
+	HTTPLoader func(context.Context) (*http.Response, *Meta, error)
 
 	// HTTPFrontend stores and caches http responses
 	HTTPFrontend struct {
@@ -69,10 +71,15 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 
 // Get a http response, with tags and a loader
 // the tags will be used when the entry is stored
-func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, error) {
+func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) (*http.Response, error) {
 	if hf.backend == nil {
 		return nil, errors.New("NO backend in Cache")
 	}
+
+	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/Get")
+	span.Annotate(nil, key)
+	defer span.End()
+
 	if entry, ok := hf.backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Serving from cache", key)
@@ -80,17 +87,30 @@ func (hf *HTTPFrontend) Get(key string, loader HTTPLoader) (*http.Response, erro
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
-			go hf.load(key, loader)
+			go hf.load(context.Background(), key, loader)
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
 	hf.logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
-	return copyResponse(hf.load(key, loader))
+
+	return copyResponse(hf.load(ctx, key, loader))
 }
 
-func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, error) {
+func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader) (cachedResponse, error) {
+	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/load")
+	span.Annotate(nil, key)
+	defer span.End()
+
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
+		//_, fetchSpan := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/fetch")
+		//fetchSpan.Annotate(nil, key)
+		//defer fetchSpan.End()
+
+		ctx, fetchRoutineSpan := trace.StartSpan(context.Background(), "flamingo/cache/httpFrontend/fetchRoutine")
+		fetchRoutineSpan.Annotate(nil, key)
+		defer fetchRoutineSpan.End()
+
 		defer func() {
 			if err := recover(); err != nil {
 				//resultErr = errors.WithStack(fmt.Errorf("%#v", err))
@@ -102,7 +122,7 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 			}
 		}()
 
-		data, meta, err := loader()
+		data, meta, err := loader(ctx)
 		if meta == nil {
 			meta = &Meta{
 				Lifetime:  30 * time.Second,
@@ -110,7 +130,7 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 			}
 		}
 		if err != nil {
-			return loaderResponse{nil, meta}, err
+			return loaderResponse{nil, meta, fetchRoutineSpan.SpanContext()}, err
 		}
 
 		response := data
@@ -123,7 +143,7 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 			body: body,
 		}
 
-		return loaderResponse{cached, meta}, err
+		return loaderResponse{cached, meta, fetchRoutineSpan.SpanContext()}, err
 	})
 
 	//if err != nil {
@@ -143,6 +163,7 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 				Lifetime:  30 * time.Second,
 				Gracetime: 10 * time.Minute,
 			},
+			trace.SpanContext{},
 		}
 	}
 
@@ -161,6 +182,14 @@ func (hf *HTTPFrontend) load(key string, loader HTTPLoader) (cachedResponse, err
 			Tags:      data.(loaderResponse).meta.Tags,
 		},
 	})
+
+	span.AddAttributes(trace.StringAttribute("parenttrace", data.(loaderResponse).span.TraceID.String()))
+	span.AddAttributes(trace.StringAttribute("parentspan", data.(loaderResponse).span.SpanID.String()))
+	//span.AddLink(trace.Link{
+	//	SpanID:  data.(loaderResponse).span.SpanID,
+	//	TraceID: data.(loaderResponse).span.TraceID,
+	//	Type:    trace.LinkTypeChild,
+	//})
 
 	return cached, err
 }

@@ -198,20 +198,20 @@ func (e *Engine) Render(ctx context.Context, templateName string, data interface
 
 	// recompile
 	if e.templates == nil {
-		_, span := trace.StartSpan(ctx, "pug/loadAllTemplates")
+		_, spanLoad := trace.StartSpan(ctx, "pug/loadAllTemplates")
 		if err := e.LoadTemplates(""); err != nil {
-			span.End()
+			spanLoad.End()
 			return nil, err
 		}
-		span.End()
+		spanLoad.End()
 	} else if e.Debug {
-		_, span := trace.StartSpan(ctx, "pug/loadTemplate")
-		span.Annotate(nil, templateName)
+		_, spanLoad := trace.StartSpan(ctx, "pug/loadTemplate")
+		spanLoad.Annotate(nil, templateName)
 		if err := e.LoadTemplates(templateName); err != nil {
-			span.End()
+			spanLoad.End()
 			return nil, err
 		}
-		span.End()
+		spanLoad.End()
 	}
 
 	result := new(bytes.Buffer)
@@ -221,11 +221,11 @@ func (e *Engine) Render(ctx context.Context, templateName string, data interface
 		return nil, errors.Errorf(`Template %s not found!`, templateName)
 	}
 
-	ctx, span = trace.StartSpan(ctx, "pug/execute")
-	span.Annotate(nil, templateName)
+	ctx, execSpan := trace.StartSpan(ctx, "pug/execute")
+	execSpan.Annotate(nil, templateName)
 	start := time.Now()
 	err := templateInstance.ExecuteTemplate(ctx, result, templateName, convert(data))
-	span.End()
+	execSpan.End()
 	ctx, _ = tag.New(ctx, tag.Upsert(templateKey, templateName))
 	stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
 

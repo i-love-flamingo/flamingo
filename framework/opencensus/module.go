@@ -62,6 +62,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			exporter, err := jaeger.NewExporter(jaeger.Options{
 				Endpoint:    m.Endpoint,
 				ServiceName: m.ServiceName,
+				Tags: []jaeger.Tag{
+					jaeger.StringTag("ip", "127.0.0.1"),
+				},
 			})
 			if err != nil {
 				log.Fatal(err)

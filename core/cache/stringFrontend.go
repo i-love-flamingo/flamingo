@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/golang/groupcache/singleflight"
+	"go.opencensus.io/trace"
 )
 
 type (
@@ -47,7 +48,7 @@ func (sf *StringFrontend) load(key string, loader StringLoader) (string, error) 
 				Gracetime: 10 * time.Minute,
 			}
 		}
-		return loaderResponse{data, meta}, err
+		return loaderResponse{data, meta, trace.SpanContext{}}, err
 	})
 
 	if err != nil {

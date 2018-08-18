@@ -2,6 +2,8 @@ package cache
 
 import (
 	"time"
+
+	"go.opencensus.io/trace"
 )
 
 type (
@@ -31,5 +33,6 @@ type (
 	loaderResponse struct {
 		data interface{}
 		meta *Meta
+		span trace.SpanContext
 	}
 )

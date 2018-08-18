@@ -16,6 +16,7 @@ import (
 	"unicode/utf8"
 
 	"flamingo.me/flamingo/core/pugtemplate/pugjs/parse"
+	"go.opencensus.io/trace"
 )
 
 // maxExecDepth specifies the maximum stack depth of templates within
@@ -472,7 +473,10 @@ func (s *state) walkTemplate(dot reflect.Value, t *parse.TemplateNode) {
 		copy(newState.vars, s.globals)
 	}
 
-	newState.ctx = s.ctx
+	ctx, span := trace.StartSpan(s.ctx.Interface().(context.Context), "flamingo/pugtemplate/walkTemplate")
+	span.Annotate(nil, tmpl.name)
+	defer span.End()
+	newState.ctx = reflect.ValueOf(ctx)
 	newState.depth++
 	newState.tmpl = tmpl
 	// No dynamic scoping: template invocations inherit no variables.

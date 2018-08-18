@@ -207,7 +207,7 @@ func (router *Router) recover(ctx context.Context, r *web.Request, rw http.Respo
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 // TODO simplify and merge with `handle`
 func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	_, span := trace.StartSpan(req.Context(), "router/ServeHTTP")
+	serveCtx, span := trace.StartSpan(req.Context(), "router/ServeHTTP")
 
 	// shadow the response writer
 	rw = &web.VerboseResponseWriter{ResponseWriter: rw}
@@ -218,11 +218,11 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	// initialize the session
 	if router.Sessions != nil {
-		_, span := trace.StartSpan(req.Context(), "router/sessions/get")
+		ctx, span := trace.StartSpan(serveCtx, "router/sessions/get")
 		s, err = router.Sessions.Get(req, router.SessionName)
 		if err != nil {
 			log.Println(err)
-			_, span := trace.StartSpan(req.Context(), "router/sessions/new")
+			_, span := trace.StartSpan(ctx, "router/sessions/new")
 			s, err = router.Sessions.New(req, router.SessionName)
 			if err != nil {
 				log.Println(err)
@@ -258,8 +258,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	span.End()
 
-	tracectx, span := trace.StartSpan(req.Context(), "router/request")
-	req = req.WithContext(tracectx)
+	ctx, span = trace.StartSpan(req.Context(), "router/request")
+	req = req.WithContext(ctx)
 	defer span.End()
 
 	webRequest := web.RequestFromRequest(req, s).WithVars(params)
@@ -345,6 +345,10 @@ func dataParams(r *web.Request, params map[interface{}]interface{}) map[string]s
 
 // Data calls a flamingo data controller
 func (router *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
+	ctx, span := trace.StartSpan(ctx, "flamingo/router/data")
+	span.Annotate(nil, handler)
+	defer span.End()
+
 	r, ok := web.FromContext(ctx)
 	if !ok {
 		r = web.RequestFromRequest(nil, sessions.NewSession(router.Sessions, "-"))

@@ -91,7 +91,8 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		stats.Record(req.Context(), rt.M(time.Since(start).Nanoseconds()/1000000))
 	}()
 
-	_, span := trace.StartSpan(req.Context(), "prefixrouter/ServeHTTP")
+	ctx, span := trace.StartSpan(req.Context(), "prefixrouter/ServeHTTP")
+	req = req.WithContext(ctx)
 	defer span.End()
 
 	//process registered primaryHandlers - and if they are sucessfull exist

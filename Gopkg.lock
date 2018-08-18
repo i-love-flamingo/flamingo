@@ -385,7 +385,8 @@
   revision = "ecd57e5134f622ea7ebd8ae93ea00b4fe94741a5"
 
 [[projects]]
-  digest = "1:eb3da47361162f0ad991ddf391e6dc03e23889201d76046e2917687b84977aee"
+  branch = "jaeger_process_tags"
+  digest = "1:5a6d8808e53ad447d04a225bb91839c2fd0640f4859b9bb39b33b007d2ac9b1a"
   name = "go.opencensus.io"
   packages = [
     ".",
@@ -405,8 +406,8 @@
     "trace/propagation",
   ]
   pruneopts = ""
-  revision = "e262766cd0d230a1bb7c37281e345e465f19b41b"
-  version = "v0.14.0"
+  revision = "6ab92810e83f030f2b70c4756d54e7011d68291a"
+  source = "github.com/thebod/opencensus-go"
 
 [[projects]]
   digest = "1:74f86c458e82e1c4efbab95233e0cf51b7cc02dc03193be9f62cd81224e10401"

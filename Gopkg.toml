@@ -60,3 +60,8 @@ ignored = ["flamingo.me/flamingo"]
 [[constraint]]
   name = "github.com/nicksnyder/go-i18n"
   branch = "master"
+
+[[override]]
+  name = "go.opencensus.io"
+  source = "github.com/thebod/opencensus-go"
+  branch = "jaeger_process_tags"

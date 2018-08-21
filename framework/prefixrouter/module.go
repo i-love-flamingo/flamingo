@@ -29,6 +29,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*event.Subscriber)(nil)).ToInstance(m)
 }
 
+// Inject dependencies
 func (m *Module) Inject(l flamingo.Logger) {
 	m.logger = l
 }
@@ -101,8 +102,8 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 	}
 }
 
+// Notify handles the app shutdown event
 func (m *Module) Notify(event event.Event) {
-	time.Sleep(50 * time.Second)
 	switch event.(type) {
 	case *flamingo.AppShutdownEvent:
 		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)

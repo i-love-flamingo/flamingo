@@ -3,11 +3,11 @@ package session
 import (
 	"os"
 
+	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/dingo"
 	"github.com/boj/redistore"
 	"github.com/gorilla/sessions"
 	"github.com/zemirco/memorystore"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
 )
 
 // Module for session management
@@ -21,6 +21,7 @@ type Module struct {
 	StoreLength          float64 `inject:"config:session.store.length"`
 	MaxAge               float64 `inject:"config:session.max.age"`
 	RedisHost            string  `inject:"config:session.redis.host"`
+	RedisPassword        string  `inject:"config:session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:session.redis.idle.connections"`
 }
 
@@ -28,7 +29,7 @@ type Module struct {
 func (m *Module) Configure(injector *dingo.Injector) {
 	switch m.Backend {
 	case "redis":
-		sessionStore, err := redistore.NewRediStore(int(m.RedisIdleConnections), "tcp", m.RedisHost, "", []byte(m.Secret))
+		sessionStore, err := redistore.NewRediStore(int(m.RedisIdleConnections), "tcp", m.RedisHost, m.RedisPassword, []byte(m.Secret))
 		if err != nil {
 			panic(err)
 		}
@@ -65,6 +66,7 @@ func (m *Module) DefaultConfig() config.Map {
 		"session.max.age":                float64(60 * 60 * 24 * 30),
 		"session.cookie.secure":          true,
 		"session.redis.host":             "redis",
+		"session.redis.password":         "",
 		"session.redis.idle.connections": float64(10),
 	}
 }

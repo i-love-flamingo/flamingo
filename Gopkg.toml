@@ -38,12 +38,14 @@ ignored = ["flamingo.me/flamingo"]
 
 [[constraint]]
   name = "github.com/spf13/cobra"
+  version = "0.0.3"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
 
 [[constraint]]
   name = "golang.org/x/oauth2"
+  revision = "d2e6202438beef2727060aa7cabdd924d92ebfd9"
 
 [[constraint]]
   branch = "master"

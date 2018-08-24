@@ -13,14 +13,30 @@ build docker env:
   only:
   - master
 
-test flamingo:
+.dep: &dep
   stage: test
   image: iloveflamingo/buildenv:1.10
-  script:
+  before_script:
   - mkdir -p "${GOPATH}/src/flamingo.me/"
   - export GODIR="${GOPATH}/src/flamingo.me/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - /pact/pact-go_linux_amd64 daemon &
   - cd "${GODIR}"
   - dep ensure
-  - go test ./...
+
+cover flamingo:
+  <<: *dep
+  script:
+  - go test -coverprofile cover.out ./...
+  - go tool cover -func cover.out
+
+test flamingo:
+  <<: *dep
+  script:
+  - go test -race ./...
+
+#vet flamingo:
+#  <<: *dep
+#  script:
+#  - go test -vet 'all' -race ./...
+#  allow_failure: true

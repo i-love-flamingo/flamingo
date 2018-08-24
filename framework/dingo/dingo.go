@@ -53,16 +53,6 @@ type (
 		delayed       []interface{}                        // delayed bindings
 	}
 
-	// Module is provided by packages to generate the DI tree
-	Module interface {
-		Configure(injector *Injector)
-	}
-
-	// Depender defines a dependency-aware module
-	Depender interface {
-		Depends() []Module
-	}
-
 	// overrides are evaluated lazy, so they are scheduled here
 	override struct {
 		typ           reflect.Type

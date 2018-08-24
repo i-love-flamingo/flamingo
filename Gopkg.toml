@@ -63,5 +63,4 @@ ignored = ["flamingo.me/flamingo"]
 
 [[override]]
   name = "go.opencensus.io"
-  source = "github.com/thebod/opencensus-go"
-  branch = "jaeger_process_tags"
+  revision = "71e2e3e3082a525f158c187a70a4dbb59aa522b9"

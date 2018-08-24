@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"sync"
 
+	"fmt"
+	"math/rand"
+
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"go.opencensus.io/exporter/jaeger"
@@ -57,13 +60,18 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {
+			// generate a random IP in 127.0.0.0/8 network to trick jaegers clock skew detection
+			randomIp := fmt.Sprintf("127.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255))
+
 			// Register the Jaeger exporter to be able to retrieve
 			// the collected spans.
 			exporter, err := jaeger.NewExporter(jaeger.Options{
-				Endpoint:    m.Endpoint,
-				ServiceName: m.ServiceName,
-				Tags: []jaeger.Tag{
-					jaeger.StringTag("ip", "127.0.0.1"),
+				Endpoint: m.Endpoint,
+				Process: jaeger.Process{
+					ServiceName: m.ServiceName,
+					Tags: []jaeger.Tag{
+						jaeger.StringTag("ip", randomIp),
+					},
 				},
 			})
 			if err != nil {

@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func TryModule(module Module) (resultingError error) {
+func TryModule(module ...Module) (resultingError error) {
 	defer func() {
 		if err := recover(); err != nil {
 			if err, ok := err.(error); ok {

@@ -1,10 +1,12 @@
-## Form Package
+# Form Package
 
 This package provides helper to use forms in your interfaces.
 
-### Usage
+## Usage
 
-* Add your Data Representation of your form to your package ("/interfaces/controller/form")
+### Define a Datatransfer object (DTO) for your form:
+
+Add your Data Representation of your form to your package ("/interfaces/controller/form")
 
   Example *(Example contains already annotations for the suggested libs - see below)*
 ```go
@@ -28,6 +30,10 @@ This package provides helper to use forms in your interfaces.
     }
   )
 ```
+
+* To process your form use "SimpleProcessFormRequest" or "ProcessFormRequest"
+
+### Implementing a FormService
 
 * Write an implementation of the interface domain.FormService.
   This interface describes two methods:
@@ -99,3 +105,5 @@ This package provides helper to use forms in your interfaces.
       }      
     }
 ``` 
+
+ * Optional your implementation can also implement the interface "domain.GetDefaultFormData", to be able to prepopulate your form data

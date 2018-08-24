@@ -5,13 +5,15 @@ import (
 	"time"
 )
 
+//ValidateDate  validates a string representing a date from a input field type date (see https://www.w3.org/TR/2011/WD-html-markup-20110405/input.date.html)
 func ValidateDate(date string) bool {
-	if matched, _ := regexp.MatchString(`\d{4}-\d{2}-\d{2}`, date); matched {
+	if matched, _ := regexp.MatchString(`\d{4}-(0[1-9]|1[012])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])`, date); matched {
 		return true
 	}
 	return false
 }
 
+//ValidateAge - validates a date and checks if the date is older than given age - used for birthday validations for example
 func ValidateAge(date string, age int) bool {
 	if !ValidateDate(date) {
 		return false

@@ -8,6 +8,7 @@ import (
 )
 
 type (
+	//Form represents a Form - its intended usage is to pass to your view
 	Form struct {
 		//Data  the form Data Struct (Forms DTO)
 		Data interface{}
@@ -21,26 +22,34 @@ type (
 		OriginalPostValues url.Values
 	}
 
+	//ValidationInfo - represents the complete Validation Informations of your form. It can contain GeneralErrors and form field related errors.
 	ValidationInfo struct {
-		FieldErrors   map[string][]Error
+		//FieldErrors list of errors per form field.
+		FieldErrors map[string][]Error
+		//GeneralErrors list of general form errors, that are not related to any field
 		GeneralErrors []Error
 		//IsValid  flag if data was valid
 		IsValid bool
 	}
 
+	//Error - representation of an Error Message - intented usage is to display errors in the view to the end user
 	Error struct {
-		Tag          string
-		MessageKey   string
+		//Tag - contains the validation tag that failed. if the
+		Tag string
+		//MessageKey - a key of the error message. Often used to pass to translation func in the template
+		MessageKey string
+		//DefaultLabel - a speaking error label. OFten used to show to end user - in case no translation exists
 		DefaultLabel string
 	}
 
-	// FormService interface
+	// FormService interface that need to be implemented, in case you want to use "application.ProcessFormRequest"
 	FormService interface {
-		//ParseFormData is responsible of mapping the passed formValues to your FormData Struct
+		//ParseFormData is responsible of mapping the passed formValues to your FormData Struct (Forms DTO)
 		ParseFormData(ctx context.Context, r *web.Request, formValues url.Values) (interface{}, error)
 		//ValidateFormData is responsible to run validations on the Data, the returned error type can be a slice of errors. each error is converted to a validation Error
 		ValidateFormData(data interface{}) (ValidationInfo, error)
 	}
+
 	// GetDefaultFormData interface
 	GetDefaultFormData interface {
 		//GetDefaultFormData
@@ -48,24 +57,27 @@ type (
 	}
 )
 
+//AddGeneralUnknownError - adds a general unknown error to the validation infos
 func (vi *ValidationInfo) AddGeneralUnknownError(err error) {
 	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: "unknown_error", DefaultLabel: "An error occured!"})
 	vi.IsValid = false
 }
 
-func (vi *ValidationInfo) AddError(key string, defaultLabel string) {
-	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: key, DefaultLabel: defaultLabel})
+//AddError adds a general error with the passed MessageKey and DefaultLabel
+func (vi *ValidationInfo) AddError(messageKey string, defaultLabel string) {
+	vi.GeneralErrors = append(vi.GeneralErrors, Error{MessageKey: messageKey, DefaultLabel: defaultLabel})
 	vi.IsValid = false
 }
 
-func (vi *ValidationInfo) AddFieldError(fieldName string, key string, defaultLabel string) {
+//AddFieldError -adds a Error with the passed messageKey and defaultLabel - for a (form)field with the given name
+func (vi *ValidationInfo) AddFieldError(fieldName string, messageKey string, defaultLabel string) {
 	if vi.FieldErrors == nil {
 		vi.FieldErrors = make(map[string][]Error)
 	}
 	if _, ok := vi.FieldErrors[fieldName]; !ok {
 		vi.FieldErrors[fieldName] = make([]Error, 0)
 	}
-	vi.FieldErrors[fieldName] = append(vi.FieldErrors[fieldName], Error{MessageKey: key, DefaultLabel: defaultLabel})
+	vi.FieldErrors[fieldName] = append(vi.FieldErrors[fieldName], Error{MessageKey: messageKey, DefaultLabel: defaultLabel})
 	vi.IsValid = false
 }
 

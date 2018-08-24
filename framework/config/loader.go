@@ -14,11 +14,26 @@ import (
 )
 
 var debugLog bool
+var additionalConfig stringFlags
+
+type stringFlags []string
+
+func (s *stringFlags) String() string {
+	return strings.Join(*s, ", ")
+}
+
+func (s *stringFlags) Set(value string) error {
+	*s = append(*s, value)
+	return nil
+}
 
 func init() {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
 	fs.SetOutput(new(bytes.Buffer))
+
 	fs.BoolVar(&debugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
+	fs.Var(&additionalConfig, "flamingo-config", "add multiple flamingo config additions")
+
 	if err := fs.Parse(os.Args[1:]); err == flag.ErrHelp {
 		fs.SetOutput(os.Stderr)
 		fs.PrintDefaults()
@@ -34,7 +49,14 @@ func Load(root *Area, basedir string) error {
 		if file == "" {
 			continue
 		}
-		loadConfig(root, file)
+		loadConfigFile(root, file)
+	}
+
+	for _, add := range additionalConfig {
+		if debugLog {
+			log.Printf("Loading %q", add)
+		}
+		loadConfig(root, []byte(add))
 	}
 
 	root.GetFlatContexts()
@@ -44,22 +66,22 @@ func Load(root *Area, basedir string) error {
 
 // LoadConfigFile loads a config
 func LoadConfigFile(area *Area, file string) error {
-	err := loadConfig(area, file)
+	err := loadConfigFile(area, file)
 	area.GetFlatContexts()
 	return err
 }
 
 func load(area *Area, basedir, curdir string) error {
-	loadConfig(area, filepath.Join(basedir, curdir, "config.yml"))
+	loadConfigFile(area, filepath.Join(basedir, curdir, "config.yml"))
 	loadRoutes(area, filepath.Join(basedir, curdir, "routes.yml"))
 	for _, context := range strings.Split(os.Getenv("CONTEXT"), ":") {
 		if context == "" {
 			continue
 		}
-		loadConfig(area, filepath.Join(basedir, curdir, "config_"+context+".yml"))
+		loadConfigFile(area, filepath.Join(basedir, curdir, "config_"+context+".yml"))
 		loadRoutes(area, filepath.Join(basedir, curdir, "routes_"+context+".yml"))
 	}
-	loadConfig(area, filepath.Join(basedir, curdir, "config_local.yml"))
+	loadConfigFile(area, filepath.Join(basedir, curdir, "config_local.yml"))
 	loadRoutes(area, filepath.Join(basedir, curdir, "routes_local.yml"))
 
 	for _, child := range area.Childs {
@@ -71,7 +93,7 @@ func load(area *Area, basedir, curdir string) error {
 
 var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
 
-func loadConfig(area *Area, filename string) error {
+func loadConfigFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename)
 	if err != nil {
 		if debugLog {
@@ -79,23 +101,25 @@ func loadConfig(area *Area, filename string) error {
 		}
 		return err
 	}
+	if debugLog {
+		log.Println(area.Name, "loading", filename)
+	}
+	return loadConfig(area, config)
+}
 
+func loadConfig(area *Area, config []byte) error {
 	config = []byte(regex.ReplaceAllFunc(
 		config,
 		func(a []byte) []byte { return []byte(os.Getenv(string(regex.FindSubmatch(a)[1]))) },
 	))
 
 	cfg := make(Map)
-	err = yaml.Unmarshal(config, &cfg)
+	err := yaml.Unmarshal(config, &cfg)
 	if err != nil {
 		if debugLog {
 			log.Println(err)
 		}
 		return err
-	}
-
-	if debugLog {
-		log.Println(area.Name, "loading", filename)
 	}
 
 	if area.LoadedConfig == nil {

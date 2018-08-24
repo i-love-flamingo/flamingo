@@ -61,6 +61,6 @@ ignored = ["flamingo.me/flamingo"]
   name = "github.com/nicksnyder/go-i18n"
   branch = "master"
 
-[[override]]
+[[constraint]]
   name = "go.opencensus.io"
   revision = "71e2e3e3082a525f158c187a70a4dbb59aa522b9"

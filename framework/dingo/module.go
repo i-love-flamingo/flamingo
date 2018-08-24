@@ -17,7 +17,7 @@ type (
 	}
 )
 
-func TryModule(module ...Module) (resultingError error) {
+func TryModule(modules ...Module) (resultingError error) {
 	defer func() {
 		if err := recover(); err != nil {
 			if err, ok := err.(error); ok {
@@ -29,6 +29,6 @@ func TryModule(module ...Module) (resultingError error) {
 	}()
 
 	injector := NewInjector()
-	injector.InitModules(module)
+	injector.InitModules(modules...)
 	return nil
 }

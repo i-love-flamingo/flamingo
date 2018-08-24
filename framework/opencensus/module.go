@@ -56,7 +56,7 @@ type Module struct {
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
-		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+		trace.ApplyConfig(trace.Config{DefaultSampler: trace.NeverSample()})
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {

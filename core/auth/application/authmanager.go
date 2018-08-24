@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"net/http"
 	"net/url"
-	"time"
 
 	"flamingo.me/flamingo/core/auth/domain"
 	"flamingo.me/flamingo/framework/flamingo"
@@ -45,8 +44,6 @@ type (
 
 		openIDProvider *oidc.Provider
 		oauth2Config   *oauth2.Config
-
-		NotBefore time.Time // todo: is this used?
 	}
 )
 

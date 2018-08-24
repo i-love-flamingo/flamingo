@@ -1,26 +1,8 @@
 package dingo
 
 import (
-	"errors"
-	"fmt"
 	"testing"
 )
-
-func TryModule(module Module) (resultingError error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				resultingError = err
-				return
-			}
-			resultingError = errors.New(fmt.Sprint(err))
-		}
-	}()
-
-	injector := NewInjector()
-	injector.InitModules(module)
-	return nil
-}
 
 type (
 	tryModuleOk   struct{}

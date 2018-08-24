@@ -11,6 +11,7 @@ import (
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/framework/opencensus"
 	"flamingo.me/flamingo/framework/router"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
@@ -93,7 +94,7 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server at ", *addr, ".....")
 		m.server = &http.Server{
 			Addr:    *addr,
-			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter, StartOptions: trace.StartOptions{Sampler: trace.AlwaysSample()}},
+			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter, StartOptions: trace.StartOptions{Sampler: opencensus.Sampler}},
 		}
 
 		e := m.server.ListenAndServe()

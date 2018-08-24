@@ -22,6 +22,7 @@ import (
 var (
 	registerOnce = new(sync.Once)
 	KeyArea, _   = tag.NewKey("area")
+	Sampler      = trace.NeverSample()
 )
 
 func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) {
@@ -57,6 +58,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.NeverSample()})
+		Sampler = trace.AlwaysSample()
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {

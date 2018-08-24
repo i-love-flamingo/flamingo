@@ -14,6 +14,7 @@ import (
 	"flamingo.me/flamingo/framework/router"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
 )
 
 // Module for core/prefix_router
@@ -92,7 +93,7 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server at ", *addr, ".....")
 		m.server = &http.Server{
 			Addr:    *addr,
-			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter},
+			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter, StartOptions: trace.StartOptions{Sampler: trace.AlwaysSample()}},
 		}
 
 		e := m.server.ListenAndServe()

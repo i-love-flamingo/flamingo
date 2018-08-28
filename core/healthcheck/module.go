@@ -1,3 +1,10 @@
+/*
+Flamingo Package that provides a healthcheck endpoint under the default route /status/healthcheck
+Usage:
+ Register your own Status via Dingo:
+ injector.BindMap((*healthcheck.Status)(nil), "yourServiceName").To(yourServiceNameApi.Status{})
+
+*/
 package healthcheck
 
 import (

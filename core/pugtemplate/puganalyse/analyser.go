@@ -35,7 +35,7 @@ func NewAtomicDesignAnalyser(baseDir string) AtomicDesignAnalyser {
 func (a *AtomicDesignAnalyser) CheckPugImports() {
 
 	a.checkPugsInDir(filepath.Join(a.baseDir, "atom"), false, []string{"atom"})
-	a.checkPugsInDir(filepath.Join(a.baseDir, "molecule"), false, []string{"atom"})
+	a.checkPugsInDir(filepath.Join(a.baseDir, "molecule"), false, []string{"atom", "molecule"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "organism"), false, []string{"atom", "molecule", "organism"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "template"), true, []string{"atom", "molecule", "organism", "template"})
 	a.checkPugsInDir(filepath.Join(a.baseDir, "page"), true, []string{"atom", "molecule", "organism", "template"})

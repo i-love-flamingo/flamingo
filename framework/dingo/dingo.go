@@ -42,15 +42,16 @@ type (
 	// Injector defines bindings and multibindings
 	// it is possible to have a parent-injector, which can be asked if no resolution is available
 	Injector struct {
-		bindings      map[reflect.Type][]*Binding          // list of available bindings for a concrete type
-		multibindings map[reflect.Type][]*Binding          // list of multi-bindings for a concrete type
-		mapbindings   map[reflect.Type]map[string]*Binding // list of map-bindings for a concrete type
-		interceptor   map[reflect.Type][]reflect.Type      // list of interceptors for a type
-		overrides     []*override                          // list of overrides for a binding
-		parent        *Injector                            // parent injector reference
-		scopes        map[reflect.Type]Scope               // scope-bindings
-		stage         uint                                 // current stage
-		delayed       []interface{}                        // delayed bindings
+		bindings             map[reflect.Type][]*Binding          // list of available bindings for a concrete type
+		multibindings        map[reflect.Type][]*Binding          // list of multi-bindings for a concrete type
+		mapbindings          map[reflect.Type]map[string]*Binding // list of map-bindings for a concrete type
+		interceptor          map[reflect.Type][]reflect.Type      // list of interceptors for a type
+		overrides            []*override                          // list of overrides for a binding
+		parent               *Injector                            // parent injector reference
+		scopes               map[reflect.Type]Scope               // scope-bindings
+		stage                uint                                 // current stage
+		delayed              []interface{}                        // delayed bindings
+		buildEagerSingletons bool                                 // weather to build singletons
 	}
 
 	// overrides are evaluated lazy, so they are scheduled here
@@ -69,12 +70,13 @@ type (
 // NewInjector builds up a new Injector out of a list of Modules
 func NewInjector(modules ...Module) *Injector {
 	injector := &Injector{
-		bindings:      make(map[reflect.Type][]*Binding),
-		multibindings: make(map[reflect.Type][]*Binding),
-		mapbindings:   make(map[reflect.Type]map[string]*Binding),
-		interceptor:   make(map[reflect.Type][]reflect.Type),
-		scopes:        make(map[reflect.Type]Scope),
-		stage:         DEFAULT,
+		bindings:             make(map[reflect.Type][]*Binding),
+		multibindings:        make(map[reflect.Type][]*Binding),
+		mapbindings:          make(map[reflect.Type]map[string]*Binding),
+		interceptor:          make(map[reflect.Type][]reflect.Type),
+		scopes:               make(map[reflect.Type]Scope),
+		stage:                DEFAULT,
+		buildEagerSingletons: true,
 	}
 
 	// bind current injector
@@ -162,10 +164,12 @@ func (injector *Injector) InitModules(modules ...Module) {
 	injector.delayed = nil
 
 	// build eager singletons
-	for _, bindings := range injector.bindings {
-		for _, binding := range bindings {
-			if binding.eager {
-				injector.getInstance(binding.typeof, binding.annotatedWith, traceCircular)
+	if injector.buildEagerSingletons {
+		for _, bindings := range injector.bindings {
+			for _, binding := range bindings {
+				if binding.eager {
+					injector.getInstance(binding.typeof, binding.annotatedWith, traceCircular)
+				}
 			}
 		}
 	}

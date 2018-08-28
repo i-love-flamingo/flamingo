@@ -29,6 +29,7 @@ func TryModule(modules ...Module) (resultingError error) {
 	}()
 
 	injector := NewInjector()
+	injector.buildEagerSingletons = false
 	injector.InitModules(modules...)
 	return nil
 }

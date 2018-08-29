@@ -51,6 +51,8 @@ func (m *Mixin) renderDefinition(p *renderState, wr *bytes.Buffer) error {
 }
 
 func (m *Mixin) renderCall(p *renderState, wr *bytes.Buffer) error {
+	p.mixincalls[string(m.Name)] = struct{}{}
+
 	attributes := `__op__map_params `
 	for _, a := range m.Attrs {
 		attributes += ` "` + a.Name + `" ` + p.JsExpr(a.Val, false, false)

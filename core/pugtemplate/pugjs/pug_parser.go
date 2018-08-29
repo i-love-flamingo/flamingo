@@ -124,6 +124,16 @@ func (p *renderState) TokenToTemplate(name string, t *Token) (*Template, string,
 		return nil, "", errors.New(e)
 	}
 
+	for call := range p.mixincalls {
+		if _, ok := p.mixin[call]; !ok {
+			if p.debug {
+				return nil, "", fmt.Errorf("mixin %q called but not found", call)
+			} else {
+				p.logger.Warn(fmt.Sprintf("mixin %q called but not found", call))
+			}
+		}
+	}
+
 	return template, wr.String(), nil
 }
 

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/opencensus"
 	"flamingo.me/flamingo/framework/template"
 	"github.com/pkg/errors"
@@ -30,6 +31,7 @@ type (
 	renderState struct {
 		path         string
 		mixin        map[string]string
+		mixincalls   map[string]struct{}
 		mixinorder   []string
 		mixincounter int
 		mixinblocks  []string
@@ -39,6 +41,7 @@ type (
 		doctype      string
 		debug        bool
 		eventRouter  event.Router
+		logger       flamingo.Logger
 	}
 
 	// Engine is the one and only javascript template engine for go ;)
@@ -53,6 +56,7 @@ type (
 		EventRouter     event.Router             `inject:""`
 		FuncProvider    template.FuncProvider    `inject:""`
 		CtxFuncProvider template.CtxFuncProvider `inject:""`
+		Logger          flamingo.Logger          `inject:""`
 	}
 )
 
@@ -73,12 +77,14 @@ func NewEngine() *Engine {
 	}
 }
 
-func newRenderState(path string, debug bool, eventRouter event.Router) *renderState {
+func newRenderState(path string, debug bool, eventRouter event.Router, logger flamingo.Logger) *renderState {
 	return &renderState{
 		path:        path,
 		mixin:       make(map[string]string),
+		mixincalls:  make(map[string]struct{}),
 		debug:       debug,
 		eventRouter: eventRouter,
+		logger:      logger,
 	}
 }
 
@@ -145,7 +151,7 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 					continue
 				}
 
-				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug, e.EventRouter)
+				renderState := newRenderState(path.Join(e.Basedir, "template", "page"), e.Debug, e.EventRouter, e.Logger)
 				renderState.funcs = FuncMap{}
 
 				for k, f := range e.FuncProvider() {

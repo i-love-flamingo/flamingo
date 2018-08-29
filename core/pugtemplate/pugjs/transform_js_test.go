@@ -3,11 +3,12 @@ package pugjs
 import (
 	"testing"
 
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestJsExpr(t *testing.T) {
-	var s = newRenderState("/", true, nil)
+	var s = newRenderState("/", true, nil, flamingo.NullLogger{})
 
 	t.Run("JsExpr modes", func(t *testing.T) {
 		t.Run("With raw, wrap", func(t *testing.T) {

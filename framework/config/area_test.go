@@ -3,6 +3,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -245,4 +246,89 @@ func TestParents(t *testing.T) {
 
 	_, ok = child.Config("key3")
 	assert.False(t, ok)
+}
+
+func TestMap_Flat(t *testing.T) {
+	tests := []struct {
+		name      string
+		m         Map
+		overwrite Map
+		want      Map
+	}{
+		{
+			name: "overwrite",
+			m: Map{
+				"tri.tra":     "tral",
+				"foo.bar.baz": "DEFAULT",
+				"foo.bar.bam": "",
+			},
+			overwrite: Map{"foo.bar.baz": "OVERWRITE"},
+			want: Map{
+				"foo":         Map{"bar": Map{"baz": "OVERWRITE"}},
+				"foo.bar":     Map{"baz": "OVERWRITE"},
+				"foo.bar.baz": "OVERWRITE",
+				"foo.bar.bam": "",
+				"tri.tra":     "tral",
+			},
+		},
+	}
+	for _, tt := range tests {
+		// run each case multiple times
+		for i := 0; i < 20; i++ {
+			t.Run(tt.name, func(t *testing.T) {
+				tt.m.Add(tt.overwrite)
+
+				got := tt.m.Flat()
+
+				if len(got) != len(tt.want) {
+					t.Errorf("number of entries different, got %d, want %d", len(got), len(tt.want))
+				}
+
+				for key, value := range got {
+					want, found := tt.want[key]
+					if !found {
+						t.Errorf("Key %v is missing in expected data", key)
+					}
+					if !reflect.DeepEqual(value, want) {
+						t.Errorf("key %v is %v, want %v", key, value, want)
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestMap_Add(t *testing.T) {
+	tests := []struct {
+		name string
+		m    Map
+		add  Map
+		want Map
+	}{
+		{
+			name: "overwrite",
+			m: Map{
+				"tri.tra":     "tral",
+				"foo.bar.baz": "DEFAULT",
+				"foo.bar.bam": "",
+			},
+			add: Map{"foo.bar.baz": "OVERWRITE"},
+			want: Map{
+				"foo":         Map{"bar": Map{"baz": "OVERWRITE"}},
+				"foo.bar":     Map{"baz": "OVERWRITE"},
+				"foo.bar.baz": "OVERWRITE",
+				"foo.bar.bam": "",
+				"tri.tra":     "tral",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.m.Add(tt.add)
+
+			if !reflect.DeepEqual(tt.m, tt.want) {
+				t.Errorf("got %v, want %v", tt.m, tt.want)
+			}
+		})
+	}
 }

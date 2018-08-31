@@ -2,20 +2,31 @@ stages:
 - prepare
 - test
 
-build docker env:
+docker 1.10:
   stage: prepare
   image: docker:latest
   script:
   - cd build/docker
   - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
-  - docker build --pull -t iloveflamingo/buildenv:1.10 .
+  - docker build --pull -t iloveflamingo/buildenv:1.10 -f Dockerfile-1.10 .
   - docker push iloveflamingo/buildenv:1.10
+  only:
+  - master
+
+docker 1.11:
+  stage: prepare
+  image: docker:latest
+  script:
+  - cd build/docker
+  - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
+  - docker build --pull -t iloveflamingo/buildenv:1.11 -f Dockerfile-1.11 .
+  - docker push iloveflamingo/buildenv:1.11
   only:
   - master
 
 .dep: &dep
   stage: test
-  image: iloveflamingo/buildenv:1.10
+  image: iloveflamingo/buildenv:1.11
   before_script:
   - mkdir -p "${GOPATH}/src/flamingo.me/"
   - export GODIR="${GOPATH}/src/flamingo.me/flamingo"
@@ -32,6 +43,12 @@ cover flamingo:
 
 test flamingo:
   <<: *dep
+  script:
+  - go test -race ./...
+
+test flamingo 1.10:
+  <<: *dep
+  image: iloveflamingo/buildenv:1.10
   script:
   - go test -race ./...
 

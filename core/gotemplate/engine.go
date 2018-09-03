@@ -14,6 +14,7 @@ import (
 
 	"flamingo.me/flamingo/framework/router"
 	flamingotemplate "flamingo.me/flamingo/framework/template"
+	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -81,6 +82,9 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}
 
+	if _, ok := e.templates[name+".html"]; !ok {
+		return nil, errors.New("Could not find the template " + name + ".html")
+	}
 	tpl, err := e.templates[name+".html"].Clone()
 	if err != nil {
 		return nil, err

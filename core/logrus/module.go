@@ -19,9 +19,10 @@ type (
 	// Module for logrus logging
 	// deprecated: old and unstable, upgrade to zap please
 	Module struct {
-		Area     string `inject:"config:area"`
-		JSON     bool   `inject:"config:logrus.json,optional"`
-		LogLevel string `inject:"config:logrus.loglevel,optional"`
+		Area        string `inject:"config:area"`
+		JSON        bool   `inject:"config:logrus.json,optional"`
+		LogLevel    string `inject:"config:logrus.loglevel,optional"`
+		ForceColors bool   `inject:"config:logrus.forceColors,optional"`
 	}
 
 	// LogrusEntry is a Wrapper for the logrus.Entry logger fulfilling the flamingo.Logger interface
@@ -98,6 +99,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			Out: os.Stderr,
 			Formatter: &logrus.TextFormatter{
 				TimestampFormat: "2006-01-02T15:04:05.000Z07:00",
+				ForceColors:     m.ForceColors,
 			},
 			Hooks: make(logrus.LevelHooks),
 		}

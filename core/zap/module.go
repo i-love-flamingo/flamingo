@@ -2,6 +2,7 @@ package zap
 
 import (
 	"flamingo.me/flamingo/core/zap/domain"
+	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/flamingo"
@@ -125,5 +126,11 @@ func (subscriber *ShutdownEventSubscriber) Notify(event event.Event) {
 			logger.Debug("Zap Logger shutdown event")
 			logger.Sync()
 		}
+	}
+}
+
+func (m *Module) DefaultConfig() config.Map {
+	return config.Map{
+		"zap.loglevel": "Debug",
 	}
 }

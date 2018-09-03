@@ -48,7 +48,8 @@ func serveProvider(a *appmodule, logger Logger) *cobra.Command {
 	var addr string
 
 	cmd := &cobra.Command{
-		Use: "serve",
+		Use:   "serve",
+		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.router.Init(a.root)
 			err := a.server.ListenAndServe()

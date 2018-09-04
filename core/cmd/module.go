@@ -92,6 +92,7 @@ func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flaming
 		os.Exit(130)
 	case <-stopper:
 		logger.Info("graceful shutdown complete")
+		os.Exit(0)
 	}
 }
 

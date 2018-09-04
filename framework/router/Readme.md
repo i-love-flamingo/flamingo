@@ -1,98 +1,114 @@
-# Routing
+# Router Module
+Provides basic routing functionality for flamingo
 
-## Routing concept
+You can use this package either standalone, or together with the `prefixrouter` 
 
-The URL structure in flamingo consists of a baseurl + the rest of the url.
-The baseurl is matched against the configured contexts and determines the context that should be loaded.
+## Basic Routing concept
 
-For the part of the url behind the baseurl (=path) a standard routing concept is applied, where at the end the URL is matched to a controller.
+For the path of an url a standard routing concept is applied, where at the end the URL is matched to a controller.
 
 * a route is assigned to a handle. (A handle is a string that represents a unique name). A handle can be something like "cms.page.view"
 * for a handle a Controller can be registered. The indirection through handles allows us to register different controllers for certain handlers in different contexts.
 
-Routes can be configured the following ways:
-* Via `router.Registry` in `module.go`
+Routes can be configured the following ways (See Basic Usage below):
+* Via `router.Registry` in your modules initialisation (typical in `module.go`)
 * As part of the project configuration. This again allows us to have different routing paths configured for different contexts.
+
+## Basic Usage:
+
+### Registering Routes in Modules
+Routes are registered normaly during initialisation of your flamingo module.
+
+In order to register new Routes you need to bind a new Router Module
+```
+router.Bind(injector, new(routes))
+```
+
+routes need to implement the type:
+```
+// Module defines a router Module, which is able to register routes
+Module interface {
+  Routes(registry *Registry)
+}
+```
+
+Insides the `Routes` method you can then use the `Registry` to register new Routes.
+
+For example:
+```go
+func (r *routes) Routes(registry *router.Registry) {
+	registry.Route("/hello", "hello")
+	registry.HandleGet("hello", r.helloController.Get)
+}
+```
+
+### Registering Routes via Configuration
+Add a `routes.yml` in your config folder like this:
+
+```yaml
+- path: /
+  name: index
+  controller: flamingo.render(tpl="index")
+
+- path: /anotherPath
+  controller: flamingo.render(tpl="index")
+
+- path: /redirect
+  controller: flamingo.redirect(to="index")
+```
+
+You can use the flamingo default controllers (see below)
+
+# Routing Details
+
 
 ## Route
 
-A route defines a mapping from a path to an handler identifier.
+A route defines a mapping from a path to a "handler identifier".
 
 The handler identifier is used to easily support reverse routing and rewriting mechanisms.
 
 ## Handler
 
-A handler is defined by mapping a path to a `http.Handler` or a controller.
+A "handler identifier" can be mapped to one or more `Action`s, e.g.:
+```go
+registry.HandleGet("hello", r.helloController.Get)
+registry.HandlePost("hello", r.helloController.Get)
+```
 
-### Controller types
-
-- `http.Handler`: will call `ServeHTTP` for requests matching the route
-- `GETController`: will call `Get(web.Context) web.Response` for `GET` Requests
-- `POSTController`: will call `Post(web.Context) web.Response` for `POST` Requests
-- `HEADController`: will call `Head(web.Context) web.Response` for `HEAD` Requests
-- `DELETEController`: will call `Delete(web.Context) web.Response` for `DELETE` Requests
-- `PUTController`: will call `Put(web.Context) web.Response` for `PUT` Requests
-- `func(web.Context) web.Response`: called for any Request
-- `DataController`: will call `Data(web.Context) interface{}` for Data requests
-- `func(web.Context) interface{}`: for Data requests
 
 ## Data Controller
 
-Views can request arbitrary data via the `get` template function.
+Views can request arbitrary data via the `data` template function.
 
-Flamingo exposes these data controllers via their logical name at `/_flamingo/json?name=...`.
-This is a default feature for Ajax-based cache holepunching etc.
 
-Data Controller usually don't have a route, but can be mapped to a dedicated route, that makes Flamingo return data as JSON content type.
-
-# Examples
-
-As always an example illustrates the routing concept best, so here we have it:
-(`module.go`)
-
-```go
-func (m *Module) Configure(injector *dingo.Injector) {
-    // Register the controller
-    m.RouterRegistry.Handle("search.search", new(interfaces.ViewController))
-    
-    // Map `/search` to ViewController with `type` set to `product`
-    m.RouterRegistry.Route("/search", `search.search(type="product")`)
-    
-    // Map `/search/:type` to ViewController with `type` retrieved from the path
-    m.RouterRegistry.Route("/search/:type", `search.search(type)`)
-    
-    // Map a controller action to a router (no METHOD specific handling)
-    m.RouterRegistry.Handle("flamingo.redirect", (*controller.Redirect).Redirect)
-}
-```
-
-# Route Format
+## Route Format
 
 The route format is based on the format the [Play Framework](https://www.playframework.com/documentation/2.5.x/ScalaRouting) is using.
 
 Essentially there are 4 types of parts, of which the route is constructed
 
-## Static
+### Static
 
 A piece which is just static, such as `/foo/bar/asd`.
 
-## Parameter
+### Parameter
 
 A part with a named parameter, `/foo/:param/` which spans the request up to the next `/` or `.` (e.g. `.html`).
 
-## Regex
+### Regex
 
 A (optionally named) regex parameter such as `/foo/$param<[0-9]+>` which captures everything the regex captures, where `param` in this example is the name of the parameter.
 
-## Wildcard
+### Wildcard
 
 A wildcard which captures everything, such as `/foo/bar/*param`. Note that slashes are not escaped here!
 
-## Router Target
+### Router Target
 
 The target of a route is a controller name and optional attributes.
 
-## Parameters
+### Parameters
 
 Parameters are comma-separated identifiers.
 
@@ -104,7 +120,7 @@ If no parameters are specified and not brackets are used every route parameter i
 
 If specified parameters don't have a value or optional value and are not part of the path, then they are taken from GET parameters.
 
-## Catchall
+### Catchall
 
 It is possible to specify a catchall address, which gets all parameters and applies all "leftover" as GET parameters, use `*` to indicate a catchall.
 
@@ -114,30 +130,6 @@ Example:
 
 This is quite helpful for reverse-routing.
 
-# Registering routes and controllers
-
-Routes and controllers are registered at the `router.Registry`.
-
-## Map a name to a controller
-```go
-registry.Handle("controller.name", new(controllers.ControllerName))
-```
-
-## Map a name to a controller action
-
-This is necessary if you don't want a controller with Method-based matching, and instead register an action for all requests to this controller.
-Flamingo takes care of injecting dependencies in the new-generated controller instance.
-```go
-registry.Handle("controller.Name", (*controllers.ControllerName).Action)
-```
-
-## Map a route to a controller
-
-```go
-registry.Route("/path/to/something", "controller.name")
-```
-
-The name will be `path.to.something` (outer slashes are stripped, then slashes will be converted to dots).
 
 # Default Controller
 
@@ -148,11 +140,11 @@ Currently Flamingo registers the following controller:
 - `flamingo.redirectPermanent(to, ...)` Redirects permanently to `to`. All other parameters (but `to`) are passed on as URL parameters 
 - `flamingo.redirectPermanentUrl(url)` Redirects permanently to `url` 
 
-# Context routes
+# Configured routes
 
-Beside registering routes in the code it is also possible to register them in your context.yml.
+Beside registering routes in the code it is also possible to register them in your routes.yml.
 
-The root node `routes` consists of an array of objects with:
+The root node consists of an array of objects with:
 
 - `controller`: must name a controller to execute
 - `path`: optional path where this is accessable
@@ -163,14 +155,13 @@ Context routes always take precedence over normal routes!
 ## Example
 
 ```yml
-routes:
-  - path: /
-    controller: flamingo.redirect(to="cms.page.view", name="home")
-    name: home
-  - path: /home
-    controller: cms.page.view(name="home")
-  - path: /special
-    controller: cms.page.view(name?="special")
+- path: /
+  controller: flamingo.redirect(to="cms.page.view", name="home")
+  name: home
+- path: /home
+  controller: cms.page.view(name="home")
+- path: /special
+  controller: cms.page.view(name?="special")
 ```
 
 This will result in the following accessable routes:

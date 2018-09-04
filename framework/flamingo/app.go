@@ -55,11 +55,15 @@ func serveProvider(a *appmodule, logger Logger) *cobra.Command {
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.router.Init(a.root)
+			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
 			err := a.server.ListenAndServe()
 			if err != nil {
-				logger.Fatal("unexpected error in serving:", err)
+				if err == http.ErrServerClosed {
+					logger.Error(err)
+				} else {
+					logger.Fatal("unexpected error in serving:", err)
+				}
 			}
-			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
 		},
 	}
 	cmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")

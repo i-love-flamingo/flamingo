@@ -41,7 +41,10 @@ func (a *appmodule) Inject(root *config.Area, router *router.Router, logger Logg
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*event.Subscriber)(nil)).ToInstance(a)
-	injector.BindMulti(new(cobra.Command)).ToProvider(serveProvider)
+	//pass a function that returns the Command
+	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
+		return serveProvider(a, a.logger)
+	})
 }
 
 func serveProvider(a *appmodule, logger Logger) *cobra.Command {
@@ -56,7 +59,7 @@ func serveProvider(a *appmodule, logger Logger) *cobra.Command {
 			if err != nil {
 				logger.Fatal("unexpected error in serving:", err)
 			}
-			logger.Info("Starting HTTP Server at %s .....", addr)
+			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
 		},
 	}
 	cmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")

@@ -2,6 +2,7 @@ package flamingo
 
 import (
 	"context"
+	"log"
 )
 
 //go:generate mockery -name "Logger"
@@ -58,6 +59,49 @@ type (
 		Flush()
 	}
 )
+
+var _ Logger = new(NullLogger)
+var _ Logger = new(StdLogger)
+
+type StdLogger struct {
+	log.Logger
+}
+
+func (l *StdLogger) Debug(args ...interface{}) {
+	l.Print(args...)
+}
+
+func (l *StdLogger) Debugf(f string, args ...interface{}) {
+	l.Printf(f, args...)
+}
+
+func (l *StdLogger) Info(args ...interface{}) {
+	l.Print(args...)
+}
+
+func (l *StdLogger) Warn(args ...interface{}) {
+	l.Print(args...)
+}
+
+func (l *StdLogger) WithContext(ctx context.Context) Logger {
+	return l
+}
+
+func (l *StdLogger) WithField(key LogKey, value interface{}) Logger {
+	log.Println("WithField", key, value)
+	return l
+}
+
+func (l *StdLogger) WithFields(fields map[LogKey]interface{}) Logger {
+	log.Println("WithFields", fields)
+	return l
+}
+
+func (l *StdLogger) Error(args ...interface{}) {
+	l.Print(args...)
+}
+
+func (l *StdLogger) Flush() {}
 
 // NullLogger does not log
 type NullLogger struct{}

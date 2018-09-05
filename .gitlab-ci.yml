@@ -27,7 +27,11 @@ docker 1.11:
 .dep: &dep
   stage: test
   image: iloveflamingo/buildenv:1.11
+  cache:
+    paths:
+    - .dep
   before_script:
+  - export DEPCACHEDIR=$(pwd -P)/.dep
   - mkdir -p "${GOPATH}/src/flamingo.me/"
   - export GODIR="${GOPATH}/src/flamingo.me/flamingo"
   - ln -sfv "$(pwd -P)" "${GODIR}"

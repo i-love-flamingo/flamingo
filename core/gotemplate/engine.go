@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	flamingotemplate "flamingo.me/flamingo/framework/template"
 	"github.com/pkg/errors"
@@ -28,6 +29,7 @@ type (
 		tplFuncs           flamingotemplate.FuncProvider
 		tplCtxFuncs        flamingotemplate.CtxFuncProvider
 		templates          map[string]*template.Template
+		logger             flamingo.Logger
 	}
 
 	// urlFunc allows templates to access the routers `URL` helper method
@@ -56,6 +58,7 @@ var (
 func (e *engine) Inject(
 	tplFuncs flamingotemplate.FuncProvider,
 	tplCtxFuncs flamingotemplate.CtxFuncProvider,
+	logger flamingo.Logger,
 	config *struct {
 		TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
 		LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
@@ -67,6 +70,7 @@ func (e *engine) Inject(
 	e.templatesBasePath = config.TemplatesBasePath
 	e.layoutTemplatesDir = config.LayoutTemplatesDir
 	e.debug = config.Debug
+	e.logger = logger
 }
 
 func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.Reader, error) {
@@ -186,7 +190,12 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 		}
 
 		templateName := strings.TrimPrefix(fullName, e.templatesBasePath+pathSeparatorString)
-		e.templates[templateName] = template.Must(t.Parse(string(tContent)))
+		parsedTemplate, err := t.Parse(string(tContent))
+		if err != nil {
+			e.logger.WithField("category", "gotemplate").Error(err)
+			continue
+		}
+		e.templates[templateName] = template.Must(parsedTemplate, err)
 	}
 
 	return nil

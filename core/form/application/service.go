@@ -44,13 +44,20 @@ func ProcessFormRequest(ctx context.Context, r *web.Request, formService domain.
 	//Run Validation only if form was submitted
 	if urlValues.Get("novalidate") != "true" && r.Request().Method == "POST" {
 		form.IsSubmitted = true
-		form.ValidationInfo, err = formService.ValidateFormData(form.Data)
+		err = nil
+		if validatingFormService, ok := formService.(domain.ValidateFormData); ok {
+			form.ValidationInfo, err = validatingFormService.ValidateFormData(form.Data)
+		} else if validatingFormServiceWithContext, ok := formService.(domain.ValidateFormDataWithContext); ok {
+			form.ValidationInfo, err = validatingFormServiceWithContext.ValidateFormDataWithContext(ctx, form.Data)
+		}
 		if err != nil {
 			form.ValidationInfo = ValidationErrorsToValidationInfo(err)
 		}
 	} else {
 		if getDefaultFormDataType, ok := formService.(domain.GetDefaultFormData); ok {
 			form.Data = getDefaultFormDataType.GetDefaultFormData(form.Data)
+		} else if getDefaultFormDataType, ok := formService.(domain.GetDefaultFormDataWithContext); ok {
+			form.Data = getDefaultFormDataType.GetDefaultFormDataWithContext(ctx, form.Data)
 		}
 	}
 	return form, nil
@@ -62,6 +69,8 @@ func GetUnsubmittedForm(ctx context.Context, r *web.Request, service domain.Form
 
 	if defaultFormDataService, ok := service.(domain.GetDefaultFormData); ok {
 		form.Data = defaultFormDataService.GetDefaultFormData(form.Data)
+	} else if defaultFormDataService, ok := service.(domain.GetDefaultFormDataWithContext); ok {
+		form.Data = defaultFormDataService.GetDefaultFormDataWithContext(ctx, form.Data)
 	}
 	return form, nil
 }

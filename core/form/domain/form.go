@@ -46,14 +46,30 @@ type (
 	FormService interface {
 		//ParseFormData is responsible of mapping the passed formValues to your FormData Struct (Forms DTO)
 		ParseFormData(ctx context.Context, r *web.Request, formValues url.Values) (interface{}, error)
+	}
+
+	// ValidateFormData interface that need to be implemented, in case you want to use "application.ProcessFormRequest" with validation that doesn't include context
+	ValidateFormData interface {
 		//ValidateFormData is responsible to run validations on the Data, the returned error type can be a slice of errors. each error is converted to a validation Error
 		ValidateFormData(data interface{}) (ValidationInfo, error)
+	}
+
+	// ValidateFormDataWithContext interface that need to be implemented, in case you want to use "application.ProcessFormRequest" with validation that include context
+	ValidateFormDataWithContext interface {
+		//ValidateFormDataWithContext is responsible to run validations on the Data, with provided context, the returned error type can be a slice of errors. each error is converted to a validation Error
+		ValidateFormDataWithContext(ctx context.Context, data interface{}) (ValidationInfo, error)
 	}
 
 	// GetDefaultFormData interface
 	GetDefaultFormData interface {
 		//GetDefaultFormData
 		GetDefaultFormData(parsedData interface{}) interface{}
+	}
+
+	// GetDefaultFormDataWithContext interface
+	GetDefaultFormDataWithContext interface {
+		//GetDefaultFormDataWithContext
+		GetDefaultFormDataWithContext(ctx context.Context, parsedData interface{}) interface{}
 	}
 )
 

@@ -21,9 +21,16 @@ Dingo then knowns how to dereference it properly and derive the correct type `So
 This is not necessary for structs, where we can just use the null value via `Something{}`.
 
 ```go
+package example
+
 type BillingService struct {
-	Processor CreditCardProcessor `inject:""`
-	TransactionLog TransactionLog `inject:""`
+	processor CreditCardProcessor
+	transactionLog TransactionLog
+}
+
+func (billingservice *BillingService) Inject(processor CreditCardProcessor, transactionLog TransactionLog) {
+	billingservice.processor = processor
+	billingservice.transactionLog = transactionLog
 }
 
 func (billingservice *BillingService) ChargeOrder(order PizzaOrder, creditCard CreditCard) Receipt {
@@ -35,6 +42,8 @@ We want the BillingService to get certain dependencies, and configure this in a 
 which implements `dingo.Module`:
 
 ```go
+package example
+
 type BillingModule struct {}
 
 func (module *BillingModule) Configure(injector *dingo.Injector) {
@@ -42,17 +51,16 @@ func (module *BillingModule) Configure(injector *dingo.Injector) {
       * This tells Dingo that whenever it sees a dependency on a TransactionLog,
       * it should satisfy the dependency using a DatabaseTransactionLog.
       */
-    injector.Bind((*TransactionLog)(nil)).To(DatabaseTransactionLog{})
+    injector.Bind(new(TransactionLog)).To(DatabaseTransactionLog{})
 
      /*
       * Similarly, this binding tells Dingo that when CreditCardProcessor is used in
       * a dependency, that should be satisfied with a PaypalCreditCardProcessor.
       */
-    injector.Bind((*CreditCardProcessor)(nil)).To(PaypalCreditCardProcessor{})
+    injector.Bind(new(CreditCardProcessor)).To(PaypalCreditCardProcessor{})
   }
 }
 ```
-
 
 ## Requesting injection
 
@@ -76,8 +84,10 @@ For every requested injection (unless an exception applies) Dingo does the follo
 *Example:*
 Here is another example using the Inject method for private fields
 ```go
+package example
+
 type MyBillingService struct {
-	processor CreditCardProcessor `inject:""`
+	processor CreditCardProcessor
 	accountId string
 }
 
@@ -98,8 +108,12 @@ Dingo allows to request the injection of provider instead of instances.
 A "Provider" for dingo is a function that return a new Instance of a certain type.
 
 ```go
-struct {
-    PizzaProvider func() Pizza `inject:""`
+package example
+
+type pizzaProvider func() Pizza
+
+func (s *Service) Inject(provider pizzaProvider) {
+	s.provider = provider
 }
 ```
 
@@ -134,14 +148,18 @@ MyService struct {
 
 *Example 2:*
 ```go
-func createSomething(factoryDependency SomethingElse) Something{
-    return &MyType{}
+package example
+
+func createSomething(thing SomethingElse) Something{
+    return &MySomething{somethingElse: thing}
 }
 
-injector.Bind((*Something)(nil)).ToProvider(createSomething)
+injector.Bind(new(Something)).ToProvider(createSomething)
 
-struct {
-    SomethingProvider func() Something `inject:""`
+type somethingProvider func() Something
+
+type service struct {
+    provider somethingProvider
 }
 ```
 
@@ -185,7 +203,7 @@ Bind creates a new binding, and tells Dingo how to resolve the type when it enco
 Bindings can chain, but need to implement the correct interfaces.
 
 ```go
-injector.Bind((*Something)(nil))
+injector.Bind(new(Something))
 ```
 
 ### AnnotatedWith
@@ -213,7 +231,7 @@ This can be an Interface which implements to one it is bound to, or a concrete t
 The type is then created via `reflect.New`.
 
 ```go
-injector.Bind((*Something)(nil)).To(MyType{})
+injector.Bind(new(Something)).To(MyType{})
 ```
 
 ### ToProvider
@@ -234,7 +252,7 @@ func MyTypeProvider(se SomethingElse) *MyType {
     }
 }
 
-injector.Bind((*Something)(nil)).ToProvider(MyTypeProvider)
+injector.Bind(new(Something)).ToProvider(MyTypeProvider)
 ```
 
 This example will make Dingo call `MyTypeProvider` and pass in an instance of `SomethingElse` as it's first argument,
@@ -251,7 +269,7 @@ something to the concrete instance. This is not the same as a Singleton!
 ```go
 var myInstance = new(MyType)
 myInstance.Connect(somewhere)
-injector.Bind((*Something)(nil)).ToInstance(myInstance)
+injector.Bind(new(Something)).ToInstance(myInstance)
 ```
 
 You can also bind an instance it to a struct obviously, not only to interfaces.
@@ -272,7 +290,7 @@ If really necessary it is possible to use singletons
 Currently Dingo only allows to bind to `dingo.Singleton` and `dingo.ChildSingleton`.
 
 ```go
-injector.Bind((*Something)(nil)).In(dingo.Singleton).To(MyType{})
+injector.Bind(new(Something)).In(dingo.Singleton).To(MyType{})
 ```
 
 #### dingo.Singleton
@@ -311,7 +329,7 @@ This makes sure the Singleton is created as soon as possible, before the rest of
 runs. `AsEagerSingleton` implies `In(dingo.Singleton)`.
 
 ```go
-injector.Bind((*Something)(nil)).To(MyType{}).AsEagerSingleton()
+injector.Bind(new(Something)).To(MyType{}).AsEagerSingleton()
 ```
 
 It is also possible to bind a concrete type without `To`:
@@ -327,7 +345,7 @@ Binding this type as an eager singleton inject the singleton instance whenever `
 In rare cases you might have to override an existing binding, which can be done with `Override`:
 
 ```go
-injector.Override((*Something)(nil), "").To(MyBetterType{})
+injector.Override(new(Something), "").To(MyBetterType{})
 ```
 
 `Override` also returns a binding such as `Bind`, but removes the original binding.
@@ -343,8 +361,8 @@ Essentially this means that multiple modules are able to register for a type, an
 type can request an injection of a slice `[]T` to get a list of all registered bindings.
 
 ```go
-injector.BindMulti((*Something)(nil)).To(MyType1{})
-injector.BindMulti((*Something)(nil)).To(MyType2{})
+injector.BindMulti(new(Something)).To(MyType1{})
+injector.BindMulti(new(Something)).To(MyType2{})
 
 struct {
     List []Something `inject:""`  // List is a slice of []Something{MyType1{}, MyType2{}}
@@ -362,15 +380,13 @@ Usually it is easier to request some kind of a registry in your module, and then
 ### Bind maps
 
 Similiar to Multibindings, but with a key instead of a list
-```
+```go
 MyService struct {
   Ifaces map[string]Iface `inject:""`
 }
-```
 
-```
-injector.BindMap("impl1", (*Iface)(nil)).To(IfaceImpl{}) injector.BindMap("impl2", (*Iface)(nil)).To(IfaceImpl2{})
-
+injector.BindMap(new(Iface), "impl1").To(IfaceImpl{})
+injector.BindMap(new(Iface), "impl2").To(IfaceImpl2{})
 ```
 
 ### Binding basic types

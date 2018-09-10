@@ -46,7 +46,7 @@ type (
 
 	// Engine is the one and only javascript template engine for go ;)
 	Engine struct {
-		*sync.Mutex
+		*sync.RWMutex
 		Basedir         string `inject:"config:pug_template.basedir"`
 		Debug           bool   `inject:"config:debug.mode"`
 		Assetrewrites   map[string]string
@@ -72,7 +72,7 @@ func init() {
 // NewEngine constructor
 func NewEngine() *Engine {
 	return &Engine{
-		Mutex:        new(sync.Mutex),
+		RWMutex:      new(sync.RWMutex),
 		TemplateCode: make(map[string]string),
 	}
 }

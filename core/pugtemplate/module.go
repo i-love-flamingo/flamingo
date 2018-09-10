@@ -48,14 +48,14 @@ func (r *routes) Routes(registry *router.Registry) {
 	registry.HandleGet("pugtpl.debug", r.controller.Get)
 
 	//registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.FileServer(http.Dir(r.Basedir)))))
-	registry.HandleAny("_static", router.HTTPAction(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		origin := req.Header.Get("Origin")
 		if origin != "" {
 			//TODO - configure whitelist
 			rw.Header().Add("Access-Control-Allow-Origin", origin)
 		}
-		http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/static/", "frontend/dist/", 1))
-	})))
+		http.ServeFile(rw, req, r.Basedir+"/"+req.URL.Path)
+	}))))
 	registry.Route("/static/*n", "_static")
 
 	registry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {

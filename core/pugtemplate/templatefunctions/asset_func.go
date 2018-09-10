@@ -26,27 +26,27 @@ func (af *AssetFunc) Func(ctx context.Context) interface{} {
 			return template.URL("/assets/" + asset)
 		}
 
-		// get the _static URL
-		url := af.Router.URL("_static", router.P{"n": ""})
 		var result string
 
 		assetSplitted := strings.Split(string(asset), "/")
 		assetName := assetSplitted[len(assetSplitted)-1]
 
-		af.Engine.Lock()
+		af.Engine.RLock()
 		if af.Engine.Assetrewrites[assetName] != "" {
-			result = url.String() + "/" + af.Engine.Assetrewrites[assetName]
+			result = af.Engine.Assetrewrites[assetName]
 		} else if af.Engine.Assetrewrites[strings.TrimSpace(string(asset))] != "" {
-			result = url.String() + "/" + af.Engine.Assetrewrites[strings.TrimSpace(string(asset))]
+			result = af.Engine.Assetrewrites[strings.TrimSpace(string(asset))]
 		} else {
-			result = url.String() + "/" + string(asset)
+			result = string(asset)
 		}
-		af.Engine.Unlock()
+		af.Engine.RUnlock()
 
-		result = strings.Replace(result, "//", "/", -1)
+		result = strings.TrimLeft(result, "/")
 
-		baseUrl := strings.TrimRight(af.BaseUrl, "/")
-		if baseUrl != "" {
+		result = af.Router.URL("_static", router.P{"n": result}).String()
+
+		if af.BaseUrl != "" {
+			baseUrl := strings.TrimRight(af.BaseUrl, "/")
 			result = baseUrl + result
 		}
 

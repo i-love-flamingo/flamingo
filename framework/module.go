@@ -14,6 +14,7 @@ import (
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web/responder"
 )
 
@@ -55,6 +56,8 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*responder.RenderAware)(nil)).To(responder.FlamingoRenderAware{})
 	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})
 	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
+
+	template.BindFunc(injector, "config", new(config.ConfigTemplateFunc))
 
 	router.Bind(injector, new(routes))
 }

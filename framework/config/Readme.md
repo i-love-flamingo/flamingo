@@ -41,16 +41,16 @@ The following configuration files will be loaded from the given `config` folder:
 You can set different CONTEXT with the environment variable *CONTEXT* and this will cause flamingo to load additional configuration files.
 
 e.g. starting flamingo with
-```
-  export CONTEXT="dev" && go run project.go serve
+```bash
+export CONTEXT="dev" && go run project.go serve
 ```
 Will cause flamingo to additionaly load the configfile "config/config_dev.yml"
 
 
 Configuration values can also be read from environment variables with the syntax:
 
-```
-  auth.secret: '%%ENV:KEYCLOAK_SECRET%%'
+```yaml
+auth.secret: '%%ENV:KEYCLOAK_SECRET%%'
 ```
 
 

@@ -181,9 +181,7 @@ A router filter can be registered via dingo injection in `module.go`'s Configure
 
 ```go
 func (m *Module) Configure(injector *dingo.Injector) {
-	
-	injector.BindMulti((*router.Filter)(nil)).To(myFilter{})
-	
+	injector.BindMulti(new(router.Filter)).To(myFilter{})
 }
 ```
 

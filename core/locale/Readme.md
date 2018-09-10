@@ -1,6 +1,7 @@
 ## Locale Package
 
 This package provides localization features:
+
  * the template func `__()`  which uses https://github.com/nicksnyder/go-i18n
  * templatefuncs to format DateTime ISO Strings 
  * templatefunc to format prices
@@ -31,6 +32,7 @@ locale:
 ```
 
 Planned for later:
+
  * configure and load multiple translationFile
 
 ### Usage in Templates:
@@ -55,6 +57,7 @@ Planned for later:
 #### Formatting of dates:
 
 Two tenplatefunctions are provided:
+
  * dateTimeFormatFromIso - can get an ISO date format and returns the formatter object
  * dateTimeFormat - need to get a go time.Time object as input and returns the formatter
 

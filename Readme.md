@@ -2,50 +2,39 @@
 
 ## What is Flamingo
 
-Flamingo is a go based, opinionated framework for pluggable web projects.
+Flamingo is a go based, framework for pluggable web projects.
+It is used to build scalable and maintainable web-applications. 
+It's architecture is especially useful to build "frontends" for your headless microservice architecture.
 
-## Setup
 
-In order to work properly, Flamingo needs to be checked out at the following location: `$GOPATH/src/flamingo.me/flamingo`
-```sh
-git clone git@gitlab.aoe.com:shared/i-love-flamingo/flamingo.git $GOPATH/src/flamingo.me/flamingo
-```
+* open source 
+* written in go
+* easy to learn
+* fast and flexible
 
-## Necessary tooling
+Go as simple, powerful and typesafe language is great to implement and scale serverside logic.
+Flamingo has a clean architecture and uses "Domain Driven Design" and "Ports and Adapters" Layering - with clean and clear dependencies in mind.
 
-### dep
+# The Flamingo Ecosystem 
+With "Flamingo Commerce" and "Flamingo Carotene" you get your toolkit for building **Blazing fast commerce experience layers**
 
-Dependency manager:
+## Flamingo Commerce
 
-`go get -u github.com/golang/dep/cmd/dep`
+* Contains flamingo modules that provide „domain“, „application“ and „interface“ logic around commerce features
+* According to „ports and adapters“ these modules can be used with your own „Adapters“ to interact with any API or microservice you want.
 
-Usage
+## Flamingo Carotene
+Is the frontend build pipeline featuring pug and atomic design pattern
 
-`dep ensure` or `dep ensure -vendor-only`
+It can be used to implement modern and blazing fast commerce web applications.
 
-### go-bindata
+# Getting started
 
-Static file compiler for fakeservices, etc
-
-`go get -u github.com/jteeuwen/go-bindata/...`
-
-## Docs
-
-To read the documentation:
-
-```
-make docs
-```
-
-This will start building and previewing the mkdocs based documentation in a Docker container.
-
-To view the docs open  [Docs](http://localhost:8000)
-
------------------
-
-# Mockery (to create Mocks)
-
-https://github.com/vektra/mockery
-
-Usage:
-mockery -name <Name of Interface>
+You may want to start reading in the docs:
+* [Getting Started](docs/0. Introductions/1. Getting Started.md)
+* [Flamingo Feature Overview](docs/1. Flamingo Basics/1_Flamingo Feature Overview.md)
+      
+# External Links:
+* http://www.flamingo.me
+* http://doc.flamingo.me
+* http://godoc.flamingo.me

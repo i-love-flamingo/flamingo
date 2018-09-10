@@ -11,6 +11,7 @@ For the path of an url a standard routing concept is applied, where at the end t
 * for a handle a Controller can be registered. The indirection through handles allows us to register different controllers for certain handlers in different contexts.
 
 Routes can be configured the following ways (See Basic Usage below):
+
 * Via `router.Registry` in your modules initialisation (typical in `module.go`)
 * As part of the project configuration. This again allows us to have different routing paths configured for different contexts.
 
@@ -59,16 +60,16 @@ Add a `routes.yml` in your config folder like this:
 
 You can use the flamingo default controllers (see below)
 
-# Routing Details
+## Routing Details
 
 
-## Route
+### Route
 
 A route defines a mapping from a path to a "handler identifier".
 
 The handler identifier is used to easily support reverse routing and rewriting mechanisms.
 
-## Handler
+### Handler
 
 A "handler identifier" can be mapped to one or more `Action`s, e.g.:
 ```go
@@ -77,38 +78,38 @@ registry.HandlePost("hello", r.helloController.Get)
 ```
 
 
-## Data Controller
+### Data Controller
 
 Views can request arbitrary data via the `data` template function.
 
 
-## Route Format
+### Route Format
 
 The route format is based on the format the [Play Framework](https://www.playframework.com/documentation/2.5.x/ScalaRouting) is using.
 
 Essentially there are 4 types of parts, of which the route is constructed
 
-### Static
+#### Static
 
 A piece which is just static, such as `/foo/bar/asd`.
 
-### Parameter
+#### Parameter
 
 A part with a named parameter, `/foo/:param/` which spans the request up to the next `/` or `.` (e.g. `.html`).
 
-### Regex
+#### Regex
 
 A (optionally named) regex parameter such as `/foo/$param<[0-9]+>` which captures everything the regex captures, where `param` in this example is the name of the parameter.
 
-### Wildcard
+#### Wildcard
 
 A wildcard which captures everything, such as `/foo/bar/*param`. Note that slashes are not escaped here!
 
-### Router Target
+#### Router Target
 
 The target of a route is a controller name and optional attributes.
 
-### Parameters
+#### Parameters
 
 Parameters are comma-separated identifiers.
 
@@ -120,7 +121,7 @@ If no parameters are specified and not brackets are used every route parameter i
 
 If specified parameters don't have a value or optional value and are not part of the path, then they are taken from GET parameters.
 
-### Catchall
+#### Catchall
 
 It is possible to specify a catchall address, which gets all parameters and applies all "leftover" as GET parameters, use `*` to indicate a catchall.
 
@@ -131,7 +132,7 @@ Example:
 This is quite helpful for reverse-routing.
 
 
-# Default Controller
+## Default Controller
 
 Currently Flamingo registers the following controller:
 
@@ -140,7 +141,7 @@ Currently Flamingo registers the following controller:
 - `flamingo.redirectPermanent(to, ...)` Redirects permanently to `to`. All other parameters (but `to`) are passed on as URL parameters 
 - `flamingo.redirectPermanentUrl(url)` Redirects permanently to `url` 
 
-# Configured routes
+## Configured routes
 
 Beside registering routes in the code it is also possible to register them in your routes.yml.
 
@@ -152,7 +153,7 @@ The root node consists of an array of objects with:
 
 Context routes always take precedence over normal routes!
 
-## Example
+### Example
 
 ```yml
 - path: /
@@ -173,7 +174,7 @@ This will result in the following accessable routes:
 
 The `/` route is now also available as a controller named `home`, which is just an alias for calling the `flamingo.redirect` controller with the parameters `to="cms.page.view"` and `name="home"`.
 
-# Router filter
+## Router filter
 
 Router filters can be used as middleware in the dispatching process. The filters are executed before the controller action.
 A router filter can be registered via dingo injection in `module.go`'s Configure function:

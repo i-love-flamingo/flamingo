@@ -1,6 +1,9 @@
 package config
 
-import "flamingo.me/flamingo/framework/dingo"
+import (
+	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/template"
+)
 
 type Module struct {
 	Map
@@ -14,4 +17,5 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 	}
+	template.BindFunc(injector, "config", new(ConfigTemplateFunc))
 }

@@ -93,7 +93,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			CallerKey:      flamingo.LogKeySource,
 			StacktraceKey:  flamingo.LogKeyTrace,
 			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.CapitalLevelEncoder,
+			EncodeLevel:    zapcore.CapitalColorLevelEncoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
 			EncodeCaller:   zapcore.FullCallerEncoder,

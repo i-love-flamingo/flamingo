@@ -91,7 +91,7 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 			frontRouter.Add(bu.Path, routerHandler{area: area.Name, handler: areaRouter})
 		}
 
-		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server at ", *addr, ".....")
+		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server (Prefixrouter) at ", *addr, ".....")
 		m.server = &http.Server{
 			Addr:    *addr,
 			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter, StartOptions: trace.StartOptions{Sampler: opencensus.Sampler}},

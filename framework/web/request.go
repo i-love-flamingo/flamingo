@@ -36,7 +36,7 @@ func Context_(ctx context.Context, session *Request) context.Context {
 	return context.WithValue(ctx, requestKey, session)
 }
 
-// FromContext retrieves the session from the context
+// FromContext retrieves the Request from the context
 func FromContext(ctx context.Context) (*Request, bool) {
 	r, ok := ctx.Value(requestKey).(*Request)
 	return r, ok

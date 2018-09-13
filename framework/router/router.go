@@ -289,7 +289,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		} else if controller.any != nil {
 			response = controller.any(ctx, webRequest)
 		} else {
-			response = router.RouterRegistry.handler[router.NotFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("legacy controller type unknown/unset: %T", c)), r)
+			response = router.RouterRegistry.handler[router.NotFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("action for method %q not found and no any fallback", req.Method)), r)
 		}
 
 		if response, ok := response.(web.OnResponse); ok {

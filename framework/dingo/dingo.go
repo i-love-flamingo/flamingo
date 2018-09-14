@@ -97,7 +97,7 @@ func (injector *Injector) Child() *Injector {
 	newInjector := NewInjector()
 	newInjector.parent = injector
 	newInjector.Bind(Injector{}).ToInstance(newInjector)
-	newInjector.BindScope(new(ChildSingletonScope)) // bind a new child-singleton
+	newInjector.BindScope(NewChildSingletonScope()) // bind a new child-singleton
 
 	return newInjector
 }

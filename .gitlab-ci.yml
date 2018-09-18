@@ -50,6 +50,14 @@ test flamingo:
   script:
   - go test -race ./...
 
+static-check flamingo:
+  <<: *dep
+  allow_failure: true
+  script:
+  - golint -set_exit_status $(go list ./...)
+  - go vet ./...
+  - gocritic check-project .
+
 test flamingo 1.10:
   <<: *dep
   image: iloveflamingo/buildenv:1.10

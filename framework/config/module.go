@@ -4,10 +4,12 @@ import (
 	"flamingo.me/flamingo/framework/dingo"
 )
 
+// Module defines a dingo module which automatically binds available config
 type Module struct {
 	Map
 }
 
+// Configure the Module
 func (m *Module) Configure(injector *dingo.Injector) {
 	for k, v := range m.Flat() {
 		if v == nil {

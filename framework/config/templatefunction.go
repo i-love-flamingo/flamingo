@@ -1,18 +1,19 @@
 package config
 
 type (
-	// ConfigTemplateFunc allows to retrieve config variables
-	ConfigTemplateFunc struct {
+	// TemplateFunc allows to retrieve config variables
+	TemplateFunc struct {
 		area *Area
 	}
 )
 
-func (c *ConfigTemplateFunc) Inject(area *Area) {
+// Inject dependencies
+func (c *TemplateFunc) Inject(area *Area) {
 	c.area = area
 }
 
-// Func as implementation of url method
-func (c *ConfigTemplateFunc) Func() interface{} {
+// Func returns the template function
+func (c *TemplateFunc) Func() interface{} {
 	return func(what string) interface{} {
 		val, _ := c.area.Config(what)
 		return val

@@ -63,44 +63,54 @@ type (
 var _ Logger = new(NullLogger)
 var _ Logger = new(StdLogger)
 
+// StdLogger uses the go stdlib logger for logging
 type StdLogger struct {
 	log.Logger
 }
 
+// Debug logs output
 func (l *StdLogger) Debug(args ...interface{}) {
 	l.Print(args...)
 }
 
+// Debugf outputs the formatted debug string
 func (l *StdLogger) Debugf(f string, args ...interface{}) {
 	l.Printf(f, args...)
 }
 
+// Info log output
 func (l *StdLogger) Info(args ...interface{}) {
 	l.Print(args...)
 }
 
+// Warn log output
 func (l *StdLogger) Warn(args ...interface{}) {
 	l.Print(args...)
 }
 
+// WithContext currently does nothing
 func (l *StdLogger) WithContext(ctx context.Context) Logger {
 	return l
 }
 
+// WithField currently logs the field
 func (l *StdLogger) WithField(key LogKey, value interface{}) Logger {
 	log.Println("WithField", key, value)
 	return l
 }
 
+// WithFields currently logs the fields
 func (l *StdLogger) WithFields(fields map[LogKey]interface{}) Logger {
 	log.Println("WithFields", fields)
 	return l
 }
 
+// Error log
 func (l *StdLogger) Error(args ...interface{}) {
 	l.Print(args...)
 }
 
+// Flush does nothing
 func (l *StdLogger) Flush() {}
 
 // NullLogger does not log
@@ -118,7 +128,7 @@ func (n NullLogger) WithFields(fields map[LogKey]interface{}) Logger { return n 
 // Debug null-implementation
 func (NullLogger) Debug(args ...interface{}) {}
 
-// Debug null-implementation
+// Debugf null-implementation
 func (NullLogger) Debugf(log string, args ...interface{}) {}
 
 // Info null-implementation

@@ -57,7 +57,7 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*responder.ErrorAware)(nil)).To(responder.FlamingoErrorAware{})
 	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
 
-	template.BindFunc(injector, "config", new(config.ConfigTemplateFunc))
+	template.BindFunc(injector, "config", new(config.TemplateFunc))
 
 	router.Bind(injector, new(routes))
 }

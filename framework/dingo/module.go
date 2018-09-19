@@ -17,6 +17,7 @@ type (
 	}
 )
 
+// TryModule tests if modules are properly bound
 func TryModule(modules ...Module) (resultingError error) {
 	defer func() {
 		if err := recover(); err != nil {

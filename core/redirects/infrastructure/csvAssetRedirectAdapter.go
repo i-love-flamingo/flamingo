@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"log"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (
@@ -18,23 +18,40 @@ type (
 		OriginalPath   string
 		RedirectTarget string
 	}
+
+	// RedirectData loads redirect data from csv
+	RedirectData struct {
+		filePath   string
+		logger     flamingo.Logger
+		csvContent []CsvContent
+	}
 )
 
-var csvContent []CsvContent
+// NewRedirectData provides a new dataset with autoload from csv
+func NewRedirectData(
+	cfg *struct {
+		RedirectsCsv string `inject:"config:redirects.csv"`
+	},
+	logger flamingo.Logger,
+) *RedirectData {
+	rd := &RedirectData{
+		filePath: cfg.RedirectsCsv,
+		logger:   logger,
+	}
+	rd.csvContent, _ = rd.readCSV()
 
-func init() {
-	csvContent, _ = readCSV()
+	return rd
 }
 
-// GetRedirectData getter
-func GetRedirectData() []CsvContent {
-	return csvContent
+// Get returns the Redirect data
+func (rd *RedirectData) Get() []CsvContent {
+	return rd.csvContent
 }
 
-func readCSV() ([]CsvContent, error) {
-	f, err := os.Open("resources/redirects.csv")
+func (rd *RedirectData) readCSV() ([]CsvContent, error) {
+	f, err := os.Open(rd.filePath)
 	if err != nil {
-		log.Printf("Error - CsvAssetRedirectAdapter %v", err)
+		rd.logger.Error("Error - CsvAssetRedirectAdapter ", err)
 		return nil, err
 	}
 
@@ -61,20 +78,20 @@ func readCSV() ([]CsvContent, error) {
 
 		if len(record) != 3 {
 			// invalid row
-			log.Printf("Redirect load - Error - Invalid Row (wrong amount) %v in Row: %v", record, rowCount)
+			rd.logger.Error("Redirect load - Error - Invalid Row (wrong amount) %v in Row: %v", record, rowCount)
 			continue
 		}
 
 		if isAlpha(record[0]) {
 			// invalid row
-			log.Printf("Redirect load - Error - Invalid Row (no int status) %v in Row: %v", record, rowCount)
+			rd.logger.Error("Redirect load - Error - Invalid Row (no int status) %v in Row: %v", record, rowCount)
 			continue
 		}
 
 		statusCode, err := strconv.Atoi(record[0])
 
 		if err != nil {
-			log.Printf("Error - CsvAssetRedirectAdapter %v", err)
+			rd.logger.Error("Error - CsvAssetRedirectAdapter %v", err)
 			continue
 		}
 

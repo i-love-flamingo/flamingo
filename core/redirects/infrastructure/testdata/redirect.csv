@@ -1,0 +1,6 @@
+code,tri,tra
+301,foo,bar
+302,baz,bam
++,strconv,error
+invalid,in,valid
+200,too,much,columns

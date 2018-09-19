@@ -1,12 +1,9 @@
 package redirects
 
 import (
+	"context"
 	"errors"
 	"net/http"
-
-	"log"
-
-	"context"
 
 	"flamingo.me/flamingo/core/redirects/infrastructure"
 	"flamingo.me/flamingo/framework/flamingo"
@@ -19,41 +16,47 @@ type (
 	redirector struct {
 		responder.RedirectAware
 		responder.ErrorAware
-		logger flamingo.Logger
+		logger          flamingo.Logger
+		redirectDataMap map[string]infrastructure.CsvContent
 	}
 )
 
-var redirectDataMap map[string]infrastructure.CsvContent
-
-func init() {
-	redirectData := infrastructure.GetRedirectData()
-
-	redirectDataMap = make(map[string]infrastructure.CsvContent)
-
-	for i := range redirectData {
-		redirectDataMap[redirectData[i].OriginalPath] = redirectData[i]
+func newRedirector(
+	redirectAware responder.RedirectAware,
+	errorAware responder.ErrorAware,
+	logger flamingo.Logger,
+	redirectData *infrastructure.RedirectData,
+) *redirector {
+	r := &redirector{
+		RedirectAware:   redirectAware,
+		ErrorAware:      errorAware,
+		logger:          logger,
+		redirectDataMap: make(map[string]infrastructure.CsvContent),
 	}
 
-	for _, entry := range redirectDataMap {
-		foundEntry, err := findEntryInRedirectMap(entry.RedirectTarget)
+	rd := redirectData.Get()
+
+	for i := range rd {
+		r.redirectDataMap[rd[i].OriginalPath] = rd[i]
+	}
+
+	for _, entry := range r.redirectDataMap {
+		foundEntry, err := r.findEntryInRedirectMap(entry.RedirectTarget)
 		if err == nil {
-			log.Printf("ERROR: found a chained redirect for %#v to %#v   Rejecting redirects because of loop risk", entry, foundEntry)
-			redirectDataMap = nil
+			logger.Error("ERROR: found a chained redirectData for ", foundEntry, " to ", foundEntry, " Rejecting redirects because of loop risk")
+			r.redirectDataMap = nil
+
+			break
 		}
 	}
 
+	return r
 }
 
-func (r *redirector) Inject(redirectAware responder.RedirectAware, errorAware responder.ErrorAware, logger flamingo.Logger) {
-	r.RedirectAware = redirectAware
-	r.ErrorAware = errorAware
-	r.logger = logger
-}
-
-//TryServeHTTP - implementation of OptionalHandler (from prefixrouter package)
+// TryServeHTTP - implementation of OptionalHandler (from prefixrouter package)
 func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bool, error) {
 	contextPath := req.RequestURI
-	//r.Logger.Debug("TryServeHTTP called with %v", contextPath)
+	// r.Logger.Debug("TryServeHTTP called with %v", contextPath)
 	status, location, err := r.processRedirects(contextPath)
 	if err != nil {
 		return true, errors.New("no redirect found")
@@ -67,7 +70,7 @@ func (r *redirector) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bo
 
 var _ router.Filter = (*redirector)(nil)
 
-//Filter - implementation of Filter interface (from router package)
+// Filter - implementation of Filter interface (from router package)
 func (r *redirector) Filter(ctx context.Context, req *web.Request, w http.ResponseWriter, chain *router.FilterChain) web.Response {
 
 	contextPath := req.Request().RequestURI
@@ -83,20 +86,20 @@ func (r *redirector) Filter(ctx context.Context, req *web.Request, w http.Respon
 	case http.StatusFound:
 		return r.RedirectURL(location)
 	case http.StatusGone:
-		return r.ErrorAware.ErrorWithCode(ctx, errors.New("page is gone"), http.StatusGone)
+		return r.ErrorWithCode(ctx, errors.New("page is gone"), http.StatusGone)
 	case http.StatusNotFound:
-		return r.ErrorAware.ErrorNotFound(ctx, errors.New("page not found"))
+		return r.ErrorNotFound(ctx, errors.New("page not found"))
 	}
 
-	return chain.Next(ctx, req, w)
+	return chain.Next(ctx, req, w) // never reached
 }
 
-//processRedirects - if a redirect is existing for given contextPath it returns the desired HTTP Response status and location (if relevant for the status) - if nothing is found it return 0
-func (r *redirector) processRedirects(contextPath string) (status int, location string, error error) {
+// processRedirects - if a redirect is existing for given contextPath it returns the desired HTTP Response status and location (if relevant for the status) - if nothing is found it return 0
+func (r *redirector) processRedirects(contextPath string) (int, string, error) {
 
-	entry, err := findEntryInRedirectMap(contextPath)
+	entry, err := r.findEntryInRedirectMap(contextPath)
 	if err != nil {
-		//nothing found for contextPath
+		// nothing found for contextPath
 		return 0, "", errors.New("contextPath not found")
 	}
 
@@ -107,18 +110,17 @@ func (r *redirector) processRedirects(contextPath string) (status int, location 
 		return code, entry.RedirectTarget, nil
 	case http.StatusGone:
 		return http.StatusGone, "", nil
-	default:
-		//unsupported status - return 404 status
-		return 404, "", nil
 	}
 
+	// unsupported status - return 404 status
+	return http.StatusNotFound, "", nil
 }
 
-func findEntryInRedirectMap(contextPath string) (*infrastructure.CsvContent, error) {
-	if redirectDataMap == nil {
+func (r *redirector) findEntryInRedirectMap(contextPath string) (*infrastructure.CsvContent, error) {
+	if r.redirectDataMap == nil {
 		return nil, errors.New("no redirects loaded")
 	}
-	if currentRedirect, ok := redirectDataMap[contextPath]; ok {
+	if currentRedirect, ok := r.redirectDataMap[contextPath]; ok {
 		return &currentRedirect, nil
 	}
 	return nil, errors.New("not found")

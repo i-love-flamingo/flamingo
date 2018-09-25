@@ -87,6 +87,21 @@ func (area *Area) GetFlatContexts() []*Area {
 
 // Add to the map (deep merge)
 func (m Map) Add(cfg Map) {
+	// so we can not deep merge if we have `.` in our own keys, we need to ensure our keys are clean first
+	for k, v := range m {
+		var toClean Map
+		if strings.Contains(k, ".") {
+			if toClean == nil {
+				toClean = make(Map)
+			}
+			toClean[k] = v
+			delete(m, k)
+		}
+		if toClean != nil {
+			m.Add(toClean)
+		}
+	}
+
 	for k, v := range cfg {
 		if vv, ok := v.(map[string]interface{}); ok {
 			v = Map(vv)

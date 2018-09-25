@@ -264,10 +264,11 @@ func TestMap_Flat(t *testing.T) {
 			},
 			overwrite: Map{"foo.bar.baz": "OVERWRITE"},
 			want: Map{
-				"foo":         Map{"bar": Map{"baz": "OVERWRITE"}},
-				"foo.bar":     Map{"baz": "OVERWRITE"},
+				"foo":         Map{"bar": Map{"bam": "", "baz": "OVERWRITE"}},
+				"foo.bar":     Map{"bam": "", "baz": "OVERWRITE"},
 				"foo.bar.baz": "OVERWRITE",
 				"foo.bar.bam": "",
+				"tri":         Map{"tra": "tral"},
 				"tri.tra":     "tral",
 			},
 		},
@@ -314,11 +315,8 @@ func TestMap_Add(t *testing.T) {
 			},
 			add: Map{"foo.bar.baz": "OVERWRITE"},
 			want: Map{
-				"foo":         Map{"bar": Map{"baz": "OVERWRITE"}},
-				"foo.bar":     Map{"baz": "OVERWRITE"},
-				"foo.bar.baz": "OVERWRITE",
-				"foo.bar.bam": "",
-				"tri.tra":     "tral",
+				"foo": Map{"bar": Map{"bam": "", "baz": "OVERWRITE"}},
+				"tri": Map{"tra": "tral"},
 			},
 		},
 	}

@@ -55,6 +55,7 @@ type (
 		Injector               *dingo.Injector  `inject:""`
 		RouterRegistryProvider RegistryProvider `inject:""`
 		RouterRegistry         *Registry        `inject:""`
+		RouterTimeout          float64          `inject:"config:flamingo.router.timeout"`
 		NotFoundHandler        string           `inject:"config:flamingo.router.notfound"`
 		ErrorHandler           string           `inject:"config:flamingo.router.error"`
 		FilterProvider         FilterProvider   `inject:",optional"`
@@ -160,7 +161,7 @@ func (router *Router) TryURL(name string, params map[string]string) (u *url.URL,
 func (router *Router) URL(name string, params map[string]string) *url.URL {
 	var resultURL = new(url.URL)
 
-	// todo: this is deprecated
+	// TODO: this is deprecated
 	parts := strings.SplitN(name, "?", 2)
 	name = parts[0]
 
@@ -205,13 +206,20 @@ func (router *Router) recover(ctx context.Context, r *web.Request, rw http.Respo
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
-// TODO simplify and merge with `handle`
 func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	// TODO simplify and merge with `handle`
 	serveCtx, span := trace.StartSpan(req.Context(), "router/ServeHTTP")
 
 	// shadow the response writer
 	rw = &web.VerboseResponseWriter{ResponseWriter: rw}
-	req = req.WithContext(context.WithValue(req.Context(), "rw", rw))
+
+	deadlineContext, cancelContext := context.WithDeadline(
+		context.WithValue(req.Context(), "rw", rw),
+		time.Now().Add(time.Duration(router.RouterTimeout)*time.Millisecond),
+	)
+	req = req.WithContext(deadlineContext)
+
+	defer cancelContext()
 
 	var s *sessions.Session
 	var err error

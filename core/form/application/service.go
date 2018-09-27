@@ -8,6 +8,7 @@ package application
 import (
 	"context"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"flamingo.me/flamingo/core/form/domain"
@@ -41,6 +42,8 @@ func ProcessFormRequest(ctx context.Context, r *web.Request, formService domain.
 		return form, err
 	}
 
+	form.ValidationRules = extractValidationRules(form)
+
 	//Run Validation only if form was submitted
 	if urlValues.Get("novalidate") != "true" && r.Request().Method == "POST" {
 		form.IsSubmitted = true
@@ -72,6 +75,9 @@ func GetUnsubmittedForm(ctx context.Context, r *web.Request, service domain.Form
 	} else if defaultFormDataService, ok := service.(domain.GetDefaultFormDataWithContext); ok {
 		form.Data = defaultFormDataService.GetDefaultFormDataWithContext(ctx, form.Data)
 	}
+
+	form.ValidationRules = extractValidationRules(form)
+
 	return form, nil
 }
 
@@ -174,4 +180,50 @@ func parseFormData(ctx context.Context, r *web.Request, values url.Values, servi
 		return formData, err
 	}
 	return formData, nil
+}
+
+func extractValidationRules(form domain.Form) map[string][]domain.ValidationRule {
+	result := map[string][]domain.ValidationRule{}
+
+	if form.Data == nil {
+		return result
+	}
+
+	typeOf := reflect.TypeOf(form.Data)
+
+	for i := 0; i < typeOf.NumField(); i++ {
+		field := typeOf.Field(i)
+
+		validation := field.Tag.Get("validate")
+		if validation == "" {
+			continue
+		}
+
+		name := field.Tag.Get("form")
+		if name == "-" {
+			continue
+		}
+
+		rules := strings.Split(validation, ",")
+		for _, rule := range rules {
+			values := strings.Split(rule, "=")
+			if len(values) == 0 {
+				continue
+			}
+			if values[0] == "omitempty" {
+				continue
+			}
+
+			validationRule := domain.ValidationRule{
+				Name: values[0],
+			}
+			if len(values)  > 1 {
+				validationRule.Value = values[1]
+			}
+
+			result[name] = append(result[name], validationRule)
+		}
+	}
+
+	return result
 }

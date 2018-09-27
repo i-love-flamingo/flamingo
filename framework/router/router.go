@@ -213,13 +213,13 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	// shadow the response writer
 	rw = &web.VerboseResponseWriter{ResponseWriter: rw}
 
-	deadlineContext, cancelContext := context.WithDeadline(
+	deadlineContext, cancelFunc := context.WithTimeout(
 		context.WithValue(req.Context(), "rw", rw),
-		time.Now().Add(time.Duration(router.RouterTimeout)*time.Millisecond),
+		time.Duration(router.RouterTimeout)*time.Millisecond,
 	)
 	req = req.WithContext(deadlineContext)
 
-	defer cancelContext()
+	defer cancelFunc()
 
 	var s *sessions.Session
 	var err error

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	eventMocks "flamingo.me/flamingo/framework/event/mocks"
 	"flamingo.me/flamingo/framework/web"
@@ -136,26 +136,6 @@ func TestRouter(t *testing.T) {
 	})
 }
 
-// Example
-func TestTest(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello, client")
-	}))
-	defer ts.Close()
-
-	res, err := http.Get(ts.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
-	greeting, err := ioutil.ReadAll(res.Body)
-	res.Body.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%s", greeting)
-}
-
 func TestRouterTestify(t *testing.T) {
 	router := new(Router)
 
@@ -179,12 +159,12 @@ func TestRouterTestify(t *testing.T) {
 	defaultClient := &http.Client{}
 	res, err := defaultClient.Do(request)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	greeting, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
 	fmt.Printf("%s", greeting)
@@ -218,4 +198,78 @@ func TestRouterMiniMocks(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Printf("%s", greeting)
+}
+
+func TestRouterTimeout(t *testing.T) {
+	tests := []struct {
+		name            string
+		exceededTimeout float64
+		controller      func(context context.Context, req *web.Request) web.Response
+	}{
+		{
+			name:            "Timeout enforced",
+			exceededTimeout: float64(10),
+			controller: testControllerFactory(t, 18*time.Millisecond, func(t *testing.T, ctx context.Context) {
+				t.Helper()
+				select {
+				case <-ctx.Done():
+				default:
+					t.Error("Timeout was not caught")
+				}
+			}),
+		},
+		{
+			name:            "Timeout not enforced",
+			exceededTimeout: float64(10),
+			controller: testControllerFactory(t, 0, func(t *testing.T, ctx context.Context) {
+				t.Helper()
+				select {
+				case <-ctx.Done():
+					t.Error("Timeout was caught but shouldn't have")
+				default:
+				}
+			}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			routerVar := &Router{
+				RouterTimeout: tt.exceededTimeout,
+			}
+
+			routerVar.eventrouter = new(eventMocks.Router)
+			routerVar.eventrouter.(*eventMocks.Router).On("Dispatch", mock.Anything, mock.Anything).Return()
+
+			registry := NewRegistry()
+			registry.Route("/test", "test")
+
+			registry.HandleAny("test", tt.controller)
+
+			routerVar.RouterRegistry = registry
+
+			server := httptest.NewServer(routerVar)
+			defer server.Close()
+
+			request, err := http.NewRequest("GET", "/test", nil)
+
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			responseRecorder := httptest.NewRecorder()
+
+			routerVar.ServeHTTP(responseRecorder, request)
+		})
+	}
+}
+
+func testControllerFactory(t *testing.T, timeout time.Duration, validator func(*testing.T, context.Context)) func(context context.Context, req *web.Request) web.Response {
+	t.Helper()
+	return func(context context.Context, req *web.Request) web.Response {
+		time.Sleep(timeout)
+
+		validator(t, context)
+
+		return nil
+	}
 }

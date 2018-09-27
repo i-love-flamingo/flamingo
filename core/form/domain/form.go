@@ -20,6 +20,8 @@ type (
 		IsSuccess bool
 		//OriginalPostValues contain the original posted values
 		OriginalPostValues url.Values
+		//ValidationRules contains map with validation rules for all validatable fields
+		ValidationRules map[string][]ValidationRule
 	}
 
 	//ValidationInfo - represents the complete Validation Informations of your form. It can contain GeneralErrors and form field related errors.
@@ -30,6 +32,12 @@ type (
 		GeneralErrors []Error
 		//IsValid  flag if data was valid
 		IsValid bool
+	}
+
+	//ValidationRule - contains single validation rule for field. Name is mandatory (required|email|max|len|...), Value is optional and adds additional info (like "128" for "max=128" rule)
+	ValidationRule struct {
+		Name  string
+		Value string
 	}
 
 	//Error - representation of an Error Message - intented usage is to display errors in the view to the end user
@@ -132,4 +140,9 @@ func (f Form) GetOriginalPostValue1(key string) string {
 		return values[0]
 	}
 	return ""
+}
+
+//GetValidationRulesForField adds option to extract validation rules for desired field in templates
+func (f Form) GetValidationRulesForField(name string) []ValidationRule {
+	return f.ValidationRules[name]
 }

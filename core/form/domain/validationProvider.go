@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"time"
 
-	"go.aoe.com/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/config"
 	"gopkg.in/go-playground/validator.v9"
 )
 

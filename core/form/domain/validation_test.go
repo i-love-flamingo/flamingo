@@ -19,7 +19,7 @@ func TestValidateDate(t *testing.T) {
 		{
 			"valid date 2",
 			args{"1981-02-30"},
-			true,
+			false, // this would be expectable? 30th of february should be false
 		},
 		{
 			"valid date 3",
@@ -68,7 +68,7 @@ func TestValidateAge(t *testing.T) {
 	}{
 		{
 			"too young",
-			args{"2000-19-11", 1000},
+			args{"2000-11-19", 1000},
 			false,
 		},
 		{

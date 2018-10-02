@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/framework/config"
 	"github.com/stretchr/testify/suite"
-	"go.aoe.com/flamingo/framework/config"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -33,7 +33,7 @@ func (t *ValidationProviderTestSuite) SetupTest() {
 		MaximumAge: 150.0,
 		CustomRegex: config.Map{
 			"onlynumber": "^[0-9]{1}$",
-			"justthis": "^justthis$",
+			"justthis":   "^justthis$",
 		},
 	}
 	t.validate = ValidatorProvider(&config)
@@ -239,7 +239,6 @@ func (t *ValidationProviderTestSuite) TestRegexOne() {
 		}
 	}
 }
-
 
 func (t *ValidationProviderTestSuite) TestRegexTwo() {
 	formData := struct {

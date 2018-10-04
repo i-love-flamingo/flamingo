@@ -8,13 +8,13 @@ Added date and regex validators:
 
 FormData struct {
 	...
-	DateOfBirth string `form:"dateOfBirth" validate:"required,dateformat,minimumage,maximumage"`
+	DateOfBirth string `form:"dateOfBirth" validate:"required,dateformat,minimumage=18,maximumage=150"`
 	Password 	string `form:"password" validate:"required,password"`
 	...
 }
 
-Additional date validators: dateformat (default 2006-01-02), minimumage (default 18), maximumage (default 150),
-minimumnow (date must be at least today), maximumnow (date must be at most today).
+Additional date validators: dateformat (default 2006-01-02), minimumage (by specifying age value)
+and maximumage (by specifying age value).
 
 Regex validators can be specified as part of "customRegex" map. Each name defines validator tag, each value defines
 actual regex.
@@ -23,8 +23,6 @@ To setup up specific config, use:
 form:
 	validator:
 		dateFormat: 02.01.2006
-		minimumAge: 16.0
-		maximumAge: 120.0
 		customRegex:
 			password: ^[a-z]*$
 

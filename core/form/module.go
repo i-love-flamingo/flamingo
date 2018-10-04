@@ -20,8 +20,6 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"form.validator": config.Map{
 			"dateFormat": "2006-01-02",
-			"minimumAge": 18.0,
-			"maximumAge": 150.0,
 		},
 	}
 }

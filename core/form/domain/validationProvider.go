@@ -1,7 +1,9 @@
 package domain
 
 import (
+	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	"flamingo.me/flamingo/framework/config"
@@ -34,6 +36,15 @@ func yearsFromNow(years int) time.Time {
 		0,
 		date.Location(),
 	)
+}
+
+func extractAgeParam(name string, param string) int {
+	age, err := strconv.ParseInt(param, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("wrong format for %s parameter: %s", name, param))
+	}
+
+	return int(age)
 }
 
 func validateDateFormat(value string, dateFormat string) bool {
@@ -73,15 +84,15 @@ func dateFormatValidatorProvider(dateFormat string) validator.Func {
 	}
 }
 
-func maximumAgeValidatorProvider(dateFormat string, maximumAge int) validator.Func {
+func maximumAgeValidatorProvider(dateFormat string) validator.Func {
 	return func(fl validator.FieldLevel) bool {
-		return validateMaximumAge(fl.Field().String(), dateFormat, maximumAge)
+		return validateMaximumAge(fl.Field().String(), dateFormat, extractAgeParam("maximumage", fl.Param()))
 	}
 }
 
-func minimumAgeValidatorProvider(dateFormat string, minimumAge int) validator.Func {
+func minimumAgeValidatorProvider(dateFormat string) validator.Func {
 	return func(fl validator.FieldLevel) bool {
-		return validateMinimumAge(fl.Field().String(), dateFormat, minimumAge)
+		return validateMinimumAge(fl.Field().String(), dateFormat, extractAgeParam("minimumage", fl.Param()))
 	}
 }
 
@@ -94,17 +105,13 @@ func regexValidatorProvider(regexString string) validator.Func {
 
 func ValidatorProvider(config *struct {
 	DateFormat  string     `inject:"config:form.validator.dateFormat"`
-	MinimumAge  float64    `inject:"config:form.validator.minimumAge"`
-	MaximumAge  float64    `inject:"config:form.validator.maximumAge"`
 	CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 }) *validator.Validate {
 	validate := validator.New()
 
 	validate.RegisterValidation("dateformat", dateFormatValidatorProvider(config.DateFormat))
-	validate.RegisterValidation("minimumage", minimumAgeValidatorProvider(config.DateFormat, int(config.MinimumAge)))
-	validate.RegisterValidation("maximumage", maximumAgeValidatorProvider(config.DateFormat, int(config.MaximumAge)))
-	validate.RegisterValidation("minimumnow", minimumAgeValidatorProvider(config.DateFormat, 0))
-	validate.RegisterValidation("maximumnow", maximumAgeValidatorProvider(config.DateFormat, 0))
+	validate.RegisterValidation("minimumage", minimumAgeValidatorProvider(config.DateFormat))
+	validate.RegisterValidation("maximumage", maximumAgeValidatorProvider(config.DateFormat))
 
 	for name, value := range config.CustomRegex {
 		regex, ok := value.(string)

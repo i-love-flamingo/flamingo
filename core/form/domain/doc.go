@@ -21,12 +21,12 @@ actual regex.
 
 To setup up specific config, use:
 form:
-  validator:
-    dateFormat: 02.01.2006
-	minimumage: 16.0
-	maximumage: 120.0
-	customRegex:
-	  password: ^[a-z]*$
+	validator:
+		dateFormat: 02.01.2006
+		minimumAge: 16.0
+		maximumAge: 120.0
+		customRegex:
+			password: ^[a-z]*$
 
 To initiate validator use:
 

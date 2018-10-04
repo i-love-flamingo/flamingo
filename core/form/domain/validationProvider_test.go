@@ -24,13 +24,9 @@ func TestRunValidationProviderTestSuite(t *testing.T) {
 func (t *ValidationProviderTestSuite) SetupTest() {
 	config := struct {
 		DateFormat  string     `inject:"config:form.validator.dateFormat"`
-		MinimumAge  float64    `inject:"config:form.validator.minimumAge"`
-		MaximumAge  float64    `inject:"config:form.validator.maximumAge"`
 		CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 	}{
 		DateFormat: "2006-01-02",
-		MinimumAge: 18.0,
-		MaximumAge: 150.0,
 		CustomRegex: config.Map{
 			"onlynumber": "^[0-9]{1}$",
 			"justthis":   "^justthis$",
@@ -108,7 +104,7 @@ func (t *ValidationProviderTestSuite) TestMinimumAge() {
 	almostAdult := justAdult.Add(24 * time.Hour)
 
 	formData := struct {
-		Date string `validate:"minimumage"`
+		Date string `validate:"minimumage=18"`
 	}{}
 
 	testCases := []struct {
@@ -152,7 +148,7 @@ func (t *ValidationProviderTestSuite) TestMaximumAge() {
 	walkingDead := time.Date(now.Year()-200, now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	formData := struct {
-		Date string `validate:"maximumage"`
+		Date string `validate:"maximumage=150"`
 	}{}
 
 	testCases := []struct {

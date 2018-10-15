@@ -10,7 +10,8 @@ import (
 type (
 	// userService helps to use the authenticated user information
 	UserService struct {
-		authManager *AuthManager
+		authManager    *AuthManager
+		mappingService *domain.UserMappingService
 	}
 
 	// UserServiceInterface to mock in tests
@@ -20,8 +21,9 @@ type (
 	}
 )
 
-func (us *UserService) Inject(manager *AuthManager) {
+func (us *UserService) Inject(manager *AuthManager, ums *domain.UserMappingService) {
 	us.authManager = manager
+	us.mappingService = ums
 }
 
 // GetUser returns the current user information
@@ -31,7 +33,12 @@ func (us *UserService) GetUser(c context.Context, session *sessions.Session) *do
 		return domain.Guest
 	}
 
-	return domain.UserFromIDToken(id)
+	user, err := us.mappingService.UserFromIDToken(id)
+	if err != nil {
+		return domain.Guest
+	}
+
+	return user
 }
 
 // IsLoggedIn determines the user's login status

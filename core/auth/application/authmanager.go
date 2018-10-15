@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"github.com/coreos/go-oidc"
@@ -39,6 +40,9 @@ type (
 		clientID            string
 		myHost              string
 		disableOfflineToken bool
+		scopes              config.Slice
+		idTokenMapping      config.Slice
+		userInfoMapping     config.Slice
 		logger              flamingo.Logger
 		router              *router.Router
 
@@ -49,11 +53,14 @@ type (
 
 // Inject authManager dependencies
 func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, config *struct {
-	Server              string `inject:"config:auth.server"`
-	Secret              string `inject:"config:auth.secret"`
-	ClientID            string `inject:"config:auth.clientid"`
-	MyHost              string `inject:"config:auth.myhost"`
-	DisableOfflineToken bool   `inject:"config:auth.disableOfflineToken"`
+	Server              string       `inject:"config:auth.server"`
+	Secret              string       `inject:"config:auth.secret"`
+	ClientID            string       `inject:"config:auth.clientid"`
+	MyHost              string       `inject:"config:auth.myhost"`
+	DisableOfflineToken bool         `inject:"config:auth.disableOfflineToken"`
+	Scopes              config.Slice `inject:"config:auth.scopes"`
+	IdTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
+	UserInfoMapping     config.Slice `inject:"config:auth.claims.userInfo"`
 }) {
 	am.logger = logger
 	am.router = router
@@ -62,6 +69,9 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	am.clientID = config.ClientID
 	am.myHost = config.MyHost
 	am.disableOfflineToken = config.DisableOfflineToken
+	am.scopes = config.Scopes
+	am.idTokenMapping = config.IdTokenMapping
+	am.userInfoMapping = config.UserInfoMapping
 }
 
 // Auth tries to retrieve the authentication context for a active session
@@ -109,7 +119,14 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 	}
 	callbackURL.Host = myhost.Host
 	callbackURL.Scheme = myhost.Scheme
-	scopes := []string{oidc.ScopeOpenID, "profile", "email"}
+
+	var scopes []string
+	err = am.scopes.MapInto(&scopes)
+	if err != nil {
+		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not parse scopes from config", am.scopes, err)
+	}
+
+	scopes = append([]string{oidc.ScopeOpenID}, scopes...)
 	if !am.disableOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
@@ -125,7 +142,10 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
+
+		ClaimSet: am.getClaimsRequestParameter(),
 	}
+
 	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
 	return am.oauth2Config
 }
@@ -208,6 +228,32 @@ func (am *AuthManager) getNewIdToken(c context.Context, session *sessions.Sessio
 	}
 
 	return idtoken, raw, err
+}
+
+func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
+	var claimSet *oauth2.ClaimSet
+
+	claimSet = am.createClaimSetFromMapping(oauth2.IdTokenClaim, am.idTokenMapping, claimSet)
+	claimSet = am.createClaimSetFromMapping(oauth2.UserInfoClaim, am.userInfoMapping, claimSet)
+
+	return claimSet
+}
+
+func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth2.ClaimSet) *oauth2.ClaimSet {
+	var mapping []string
+	configuration.MapInto(&mapping)
+
+	for _, name := range mapping {
+		if name == "" {
+			continue
+		}
+		if claimSet == nil {
+			claimSet = &oauth2.ClaimSet{}
+		}
+		claimSet.AddVoluntaryClaim(topLevelName, name)
+	}
+
+	return claimSet
 }
 
 // ExtractRawIDToken from the provided (fresh) oatuh2token

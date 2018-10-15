@@ -12,10 +12,19 @@ type (
 
 	// User is a basic authenticated user
 	User struct {
-		Sub   string
-		Name  string
-		Email string
-		Type  UserType
+		Sub          string
+		Name         string
+		Email        string
+		Salutation   string
+		FirstName    string
+		LastName     string
+		Street       string
+		ZipCode      string
+		City         string
+		DateOfBirth  string
+		Country      string
+		customFields map[string]string
+		Type         UserType
 	}
 
 	// LoginEvent
@@ -34,6 +43,13 @@ type (
 	}
 )
 
+func (u User) Get(name string) string {
+	if u.customFields == nil {
+		return ""
+	}
+	return u.customFields[name]
+}
+
 const (
 	// GUEST user
 	GUEST UserType = "guest"
@@ -46,22 +62,4 @@ const (
 var Guest = &User{
 	Name: "Guest",
 	Type: GUEST,
-}
-
-// UserFromIDToken fills the user struct with the token information
-func UserFromIDToken(idtoken *oidc.IDToken) *User {
-	var claim struct {
-		Sub   string `json:"sub"`
-		Email string `json:"email"`
-		Name  string `json:"name"`
-	}
-
-	idtoken.Claims(&claim)
-
-	return &User{
-		Sub:   claim.Sub,
-		Name:  claim.Name,
-		Email: claim.Email,
-		Type:  USER,
-	}
 }

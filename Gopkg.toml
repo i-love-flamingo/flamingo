@@ -45,7 +45,8 @@ ignored = ["flamingo.me/flamingo"]
 
 [[constraint]]
   name = "golang.org/x/oauth2"
-  revision = "d2e6202438beef2727060aa7cabdd924d92ebfd9"
+  source = "https://github.com/ompluscator/oauth2"
+  branch = "claims-request-parameter-squashed"
 
 [[constraint]]
   branch = "master"

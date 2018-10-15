@@ -112,6 +112,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMap((*template.Func)(nil), "startsWith").To(templatefunctions.StartsWithFunc{})
 	injector.BindMap((*template.Func)(nil), "truncate").To(templatefunctions.TruncateFunc{})
 	injector.BindMap((*template.Func)(nil), "stripTags").To(templatefunctions.StriptagsFunc{})
+	injector.BindMap((*template.Func)(nil), "capitalize").To(templatefunctions.CapitalizeFunc{})
+	injector.BindMap((*template.Func)(nil), "trim").To(templatefunctions.TrimFunc{})
 
 	injector.BindMap((*template.CtxFunc)(nil), "asset").To(templatefunctions.AssetFunc{})
 	injector.BindMap((*template.CtxFunc)(nil), "data").To(templatefunctions.DataFunc{})

@@ -206,6 +206,26 @@ func (e *Engine) compileDir(root, dirname, filtername string) (map[string]*Templ
 
 var renderChan = make(chan struct{}, 8)
 
+// RenderPartials is used for progressive enhancements / rendering of partial template areas
+// usually this is requested via the appropriate javascript headers and taken care of in the framework renderer
+func (e *Engine) RenderPartials(ctx context.Context, templateName string, data interface{}, partials []string) (map[string]string, error) {
+	res := make(map[string]string, len(partials))
+
+	for _, partial := range partials {
+		buf, err := e.Render(ctx, templateName+"_partial/"+partial, data)
+		if err != nil {
+			return nil, err
+		}
+		str, err := ioutil.ReadAll(buf)
+		if err != nil {
+			return nil, err
+		}
+		res[partial] = string(str)
+	}
+
+	return res, nil
+}
+
 // Render via html/pug_template
 func (e *Engine) Render(ctx context.Context, templateName string, data interface{}) (io.Reader, error) {
 	ctx, span := trace.StartSpan(ctx, "pug/render")

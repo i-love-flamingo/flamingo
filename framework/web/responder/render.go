@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"strings"
+
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
@@ -41,6 +43,24 @@ func (r *FlamingoRenderAware) Render(context context.Context, tpl string, data i
 	//		Data: pugjs.Convert(data),
 	//	}
 	//}
+
+	if req, ok := web.FromContext(context); ok && r.Engine != nil {
+		partialRenderer, ok := r.Engine.(template.PartialEngine)
+		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
+			content, err := partialRenderer.RenderPartials(context, tpl, data, strings.Split(partials, ","))
+			body, err := json.Marshal(content)
+			if err != nil {
+				panic(err)
+			}
+			return &web.ContentResponse{
+				BasicResponse: web.BasicResponse{
+					Status: statusCode,
+				},
+				Body:        bytes.NewReader(body),
+				ContentType: "application/json; charset=utf-8",
+			}
+		}
+	}
 
 	if r.Engine != nil {
 		body, err := r.Engine.Render(context, tpl, data)

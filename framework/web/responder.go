@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"strings"
+
 	"flamingo.me/flamingo/framework/template"
 )
 
@@ -199,6 +201,21 @@ func (r *Responder) Render(tpl string, data interface{}) RenderResponse {
 // Apply response
 func (r RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	var err error
+
+	if req, ok := FromContext(c); ok && r.engine != nil {
+		partialRenderer, ok := r.engine.(template.PartialEngine)
+		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
+			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
+			body, err := json.Marshal(content)
+			if err != nil {
+				return err
+			}
+			r.Body = bytes.NewBuffer(body)
+			r.Header.Set("Content-Type", "application/json; charset=utf-8")
+			return r.HTTPResponse.Apply(c, w)
+		}
+	}
+
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
 		return err

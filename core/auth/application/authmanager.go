@@ -10,6 +10,7 @@ import (
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/framework/web"
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
@@ -39,6 +40,7 @@ type (
 		secret              string
 		clientID            string
 		myHost              string
+		allowHostFromReq    bool
 		disableOfflineToken bool
 		scopes              config.Slice
 		idTokenMapping      config.Slice
@@ -47,7 +49,7 @@ type (
 		router              *router.Router
 
 		openIDProvider *oidc.Provider
-		oauth2Config   *oauth2.Config
+		oauth2Config   map[string]*oauth2.Config
 	}
 )
 
@@ -57,6 +59,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	Secret              string       `inject:"config:auth.secret"`
 	ClientID            string       `inject:"config:auth.clientid"`
 	MyHost              string       `inject:"config:auth.myhost"`
+	AllowHostFromReq    bool         `inject:"config:auth.allowHostFromReq,optional"`
 	DisableOfflineToken bool         `inject:"config:auth.disableOfflineToken"`
 	Scopes              config.Slice `inject:"config:auth.scopes"`
 	IdTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
@@ -68,10 +71,32 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	am.secret = config.Secret
 	am.clientID = config.ClientID
 	am.myHost = config.MyHost
+	am.allowHostFromReq = config.AllowHostFromReq
 	am.disableOfflineToken = config.DisableOfflineToken
 	am.scopes = config.Scopes
 	am.idTokenMapping = config.IdTokenMapping
 	am.userInfoMapping = config.UserInfoMapping
+	am.oauth2Config = make(map[string]*oauth2.Config)
+}
+
+func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
+	u := am.router.Base()
+	if path != "" {
+		u.Path = path
+	}
+
+	myhost, err := url.Parse(am.myHost)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Host = myhost.Host
+	if r, ok := web.FromContext(ctx); ok && am.allowHostFromReq {
+		u.Host = r.Request().Host
+	}
+	u.Scheme = myhost.Scheme
+
+	return u, nil
 }
 
 // Auth tries to retrieve the authentication context for a active session
@@ -104,21 +129,17 @@ func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 }
 
 // OAuth2Config is lazy setup oauth2config
-func (am *AuthManager) OAuth2Config() *oauth2.Config {
-	if am.oauth2Config != nil {
-		return am.oauth2Config
+func (am *AuthManager) OAuth2Config(ctx context.Context) *oauth2.Config {
+	callbackURL, err := am.URL(ctx, am.router.URL("auth.callback", nil).Path)
+	if err != nil {
+		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not get url", err)
 	}
 
-	callbackURL := am.router.URL("auth.callback", nil)
+	if cfg, ok := am.oauth2Config[callbackURL.String()]; ok {
+		return cfg
+	}
 
 	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am Callback", am, callbackURL)
-
-	myhost, err := url.Parse(am.myHost)
-	if err != nil {
-		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("Url parse failed", am.myHost, err)
-	}
-	callbackURL.Host = myhost.Host
-	callbackURL.Scheme = myhost.Scheme
 
 	var scopes []string
 	err = am.scopes.MapInto(&scopes)
@@ -131,7 +152,7 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
-	am.oauth2Config = &oauth2.Config{
+	am.oauth2Config[callbackURL.String()] = &oauth2.Config{
 		ClientID:     am.clientID,
 		ClientSecret: am.secret,
 		RedirectURL:  callbackURL.String(),
@@ -147,7 +168,7 @@ func (am *AuthManager) OAuth2Config() *oauth2.Config {
 	}
 
 	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
-	return am.oauth2Config
+	return am.oauth2Config[callbackURL.String()]
 }
 
 // Verifier creates an OID verifier
@@ -274,7 +295,7 @@ func (am *AuthManager) TokenSource(c context.Context, session *sessions.Session)
 		return nil, err
 	}
 
-	return am.OAuth2Config().TokenSource(c, oauth2Token), nil
+	return am.OAuth2Config(c).TokenSource(c, oauth2Token), nil
 }
 
 // HTTPClient to retrieve a client with automatic tokensource

@@ -80,7 +80,8 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 }
 
 func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
-	u := am.router.Base()
+	ubase := *am.router.Base()
+	u := &ubase
 	if path != "" {
 		u.Path = path
 	}

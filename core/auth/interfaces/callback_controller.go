@@ -47,7 +47,7 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
-	oauth2Token, err := cc.authManager.OAuth2Config().Exchange(c, request.MustQuery1("code"))
+	oauth2Token, err := cc.authManager.OAuth2Config(c).Exchange(c, request.MustQuery1("code"))
 	if err != nil {
 		cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 		return cc.Error(c, errors.WithStack(err))

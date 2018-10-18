@@ -19,13 +19,11 @@ type (
 		authManager    *application.AuthManager
 		eventPublisher *application.EventPublisher
 		logoutRedirect LogoutRedirectAware
-		myHost         string
 	}
 
 	// DefaultLogoutRedirect helper
 	DefaultLogoutRedirect struct {
 		authManager *application.AuthManager
-		myHost      string
 	}
 
 	LogoutRedirectAware interface {
@@ -36,17 +34,15 @@ type (
 var _ LogoutRedirectAware = new(DefaultLogoutRedirect)
 
 // Inject DefaultLogoutRedirect dependencies
-func (d *DefaultLogoutRedirect) Inject(manager *application.AuthManager, config *struct {
-	MyHost string `inject:"config:auth.myhost"`
-}) {
+func (d *DefaultLogoutRedirect) Inject(manager *application.AuthManager) {
 	d.authManager = manager
-	d.myHost = config.MyHost
 }
 
 // GetRedirectUrl builds default redirect URL for logout
-func (d *DefaultLogoutRedirect) GetRedirectUrl(_ context.Context, u *url.URL) (string, error) {
+func (d *DefaultLogoutRedirect) GetRedirectUrl(c context.Context, u *url.URL) (string, error) {
 	query := url.Values{}
-	query.Set("redirect_uri", d.myHost)
+	ru, _ := d.authManager.URL(c, "")
+	query.Set("redirect_uri", ru.String())
 	u.RawQuery = query.Encode()
 	return u.String(), nil
 }
@@ -68,16 +64,12 @@ func (l *LogoutController) Inject(
 	authManager *application.AuthManager,
 	eventPublisher *application.EventPublisher,
 	logoutRedirect LogoutRedirectAware,
-	config *struct {
-		MyHost string `inject:"config:auth.myhost"`
-	},
 ) {
 	l.RedirectAware = redirectAware
 	l.logger = logger
 	l.authManager = authManager
 	l.eventPublisher = eventPublisher
 	l.logoutRedirect = logoutRedirect
-	l.myHost = config.MyHost
 }
 
 // Get handler for logout
@@ -86,19 +78,21 @@ func (l *LogoutController) Get(c context.Context, request *web.Request) web.Resp
 		EndSessionEndpoint string `json:"end_session_endpoint"`
 	}
 
+	ru, _ := l.authManager.URL(c, "")
+
 	l.authManager.OpenIDProvider().Claims(&claims)
 	endURL, parseError := url.Parse(claims.EndSessionEndpoint)
 	if parseError != nil {
 		logout(request)
 		l.logger.Error("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP", parseError.Error())
-		return l.RedirectURL(l.myHost)
+		return l.RedirectURL(ru.String())
 	}
 
 	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectUrl(c, endURL)
 	if redirectURLError != nil {
 		logout(request)
 		l.logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectURLError.Error())
-		return l.RedirectURL(l.myHost)
+		return l.RedirectURL(ru.String())
 	}
 
 	logout(request)

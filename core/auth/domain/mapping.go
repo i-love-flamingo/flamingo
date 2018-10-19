@@ -40,7 +40,7 @@ func (ums *UserMappingService) UserFromIDToken(idToken *oidc.IDToken) (*User, er
 		return nil, err
 	}
 
-	return ums.mapToUser(claims), nil
+	return ums.MapToUser(claims), nil
 }
 
 func (ums *UserMappingService) GetMapping(config.Map) (UserMapping, error) {
@@ -50,7 +50,7 @@ func (ums *UserMappingService) GetMapping(config.Map) (UserMapping, error) {
 	return mapping, err
 }
 
-func (ums *UserMappingService) mapToUser(claims map[string]interface{}) *User {
+func (ums *UserMappingService) MapToUser(claims map[string]interface{}) *User {
 	mapping, err := ums.GetMapping(ums.idTokenMapping)
 	if err != nil {
 		panic(err)

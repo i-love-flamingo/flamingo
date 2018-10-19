@@ -12,6 +12,10 @@ import (
 )
 
 type (
+	CallbackControllerInterface interface {
+		Get(context.Context, *web.Request) web.Response
+	}
+
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
 		responder.RedirectAware

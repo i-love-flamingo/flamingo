@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"encoding/gob"
+
 	"github.com/coreos/go-oidc"
 	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
@@ -42,6 +44,10 @@ type (
 		IDToken     *oidc.IDToken
 	}
 )
+
+func init() {
+	gob.Register(User{})
+}
 
 func (u User) Get(name string) string {
 	if u.customFields == nil {

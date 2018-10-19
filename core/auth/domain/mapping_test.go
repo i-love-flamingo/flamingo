@@ -44,7 +44,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_Default() {
 		Email:        "email@domain.com",
 		customFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.mapToUser(claims))
+	}, t.mappingService.MapToUser(claims))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
@@ -91,7 +91,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		Country:      "Mars",
 		customFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.mapToUser(claims))
+	}, t.mappingService.MapToUser(claims))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
@@ -108,7 +108,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.mapToUser(claims))
+	}, t.mappingService.MapToUser(claims))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
@@ -158,5 +158,5 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.mapToUser(claims))
+	}, t.mappingService.MapToUser(claims))
 }

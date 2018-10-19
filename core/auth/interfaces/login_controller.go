@@ -11,6 +11,10 @@ import (
 )
 
 type (
+	LoginControllerInterface interface {
+		Get(context.Context, *web.Request) web.Response
+	}
+
 	// LoginController handles the login redirect
 	LoginController struct {
 		responder.RedirectAware

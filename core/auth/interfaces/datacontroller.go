@@ -10,12 +10,12 @@ import (
 type (
 	// UserController uc
 	UserController struct {
-		userService *application.UserService
+		userService application.UserServiceInterface
 	}
 )
 
 // Inject UserController dependencies
-func (u *UserController) Inject(service *application.UserService) {
+func (u *UserController) Inject(service application.UserServiceInterface) {
 	u.userService = service
 }
 

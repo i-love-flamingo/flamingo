@@ -70,3 +70,25 @@ auth:
     - someField1
     - someField2
 ```
+
+# Use fakes
+
+For testing purposes it's possible to use fakes. In this case, login/logout process
+is simulated and it doesn't use any real SSO service. Still, all login and logout
+links are valid and clickable, and user data provided from UserService is still
+present, after "login". Whole process simply redirects to internal pages and handle
+session user data.
+To specify using of fake services and user data, check configuration bellow.
+Attribute names used for fakeUserData are the same ones used for id_token mapping.
+
+```
+auth:
+  ...
+  useFake: true
+  fakeUserData:
+    sub: ID123456
+    email: email@domain.com
+    name: "Mr. Flamingo"
+    ...
+```
+

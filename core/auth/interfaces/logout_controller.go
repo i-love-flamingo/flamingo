@@ -12,6 +12,10 @@ import (
 )
 
 type (
+	LogoutControllerInterface interface {
+		Get(context.Context, *web.Request) web.Response
+	}
+
 	// LogoutController handles the logout
 	LogoutController struct {
 		responder.RedirectAware

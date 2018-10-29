@@ -27,12 +27,14 @@ type (
 )
 
 // Apply logger to request
-func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) {
+func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) error {
 	if l.Response != nil {
 		l.Response.Apply(ctx, rw)
 	}
 
 	l.logCallback()
+
+	return nil
 }
 
 func (r *logger) Inject(flogger flamingo.Logger) {

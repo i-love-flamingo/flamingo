@@ -15,6 +15,7 @@ import (
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
 )
 
@@ -47,7 +48,7 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
-
+	injector.Bind(new(web.ReverseRouter)).To(router.Router{})
 }
 
 // Configure the Module

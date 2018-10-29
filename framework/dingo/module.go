@@ -1,36 +1,21 @@
 package dingo
 
 import (
-	"errors"
-	"fmt"
+	"flamingo.me/dingo"
 )
 
 type (
 	// Module is provided by packages to generate the DI tree
-	Module interface {
-		Configure(injector *Injector)
-	}
+	// deprecated: use flamingo.me/dingo
+	Module = dingo.Module
 
 	// Depender defines a dependency-aware module
-	Depender interface {
-		Depends() []Module
-	}
+	// deprecated: use flamingo.me/dingo
+	Depender = dingo.Depender
 )
 
 // TryModule tests if modules are properly bound
+// deprecated: use flamingo.me/dingo
 func TryModule(modules ...Module) (resultingError error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				resultingError = err
-				return
-			}
-			resultingError = errors.New(fmt.Sprint(err))
-		}
-	}()
-
-	injector := NewInjector()
-	injector.buildEagerSingletons = false
-	injector.InitModules(modules...)
-	return nil
+	return dingo.TryModule(modules...)
 }

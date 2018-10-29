@@ -13,7 +13,7 @@ type (
 	// Response defines the generic web response
 	Response interface {
 		// Apply executes the response on the http.ResponseWriter
-		Apply(context.Context, http.ResponseWriter)
+		Apply(context.Context, http.ResponseWriter) error
 		GetStatus() int
 		GetContentLength() int
 		Hook(...ResponseHook) Response
@@ -92,8 +92,8 @@ func (response *VerboseResponseWriter) WriteHeader(h int) {
 }
 
 // Apply Response (empty, it has already been applied)
-func (shr *ServeHTTPResponse) Apply(c context.Context, rw http.ResponseWriter) {
-	shr.BasicResponse.Apply(c, rw)
+func (shr *ServeHTTPResponse) Apply(c context.Context, rw http.ResponseWriter) error {
+	return shr.BasicResponse.Apply(c, rw)
 }
 
 // Hook appends hooks to the response
@@ -113,11 +113,12 @@ func (br *BasicResponse) GetContentLength() int {
 }
 
 // Apply sets status and content size of the response
-func (br *BasicResponse) Apply(c context.Context, rw http.ResponseWriter) {
+func (br *BasicResponse) Apply(c context.Context, rw http.ResponseWriter) error {
 	if vrb, ok := rw.(*VerboseResponseWriter); ok {
 		br.Status = vrb.Status
 		br.contentSize = vrb.Size
 	}
+	return nil
 }
 
 // OnResponse callback to apply hooks
@@ -134,7 +135,7 @@ func (br *BasicResponse) Hook(hooks ...ResponseHook) Response {
 }
 
 // Apply Response
-func (rr *RedirectResponse) Apply(c context.Context, rw http.ResponseWriter) {
+func (rr *RedirectResponse) Apply(c context.Context, rw http.ResponseWriter) error {
 	if rr.Status == 0 {
 		rr.Status = http.StatusTemporaryRedirect
 	}
@@ -142,7 +143,7 @@ func (rr *RedirectResponse) Apply(c context.Context, rw http.ResponseWriter) {
 	rw.Header().Set("Location", rr.Location)
 	rw.WriteHeader(rr.Status)
 
-	rr.BasicResponse.Apply(c, rw)
+	return rr.BasicResponse.Apply(c, rw)
 }
 
 // OnResponse Hook
@@ -169,7 +170,7 @@ func (rr *RedirectResponse) Hook(hooks ...ResponseHook) Response {
 }
 
 // Apply ContentResponse
-func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) {
+func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) error {
 	if cr.ContentType == "" {
 		cr.ContentType = "text/plain; charset=utf-8"
 	}
@@ -184,7 +185,7 @@ func (cr *ContentResponse) Apply(c context.Context, rw http.ResponseWriter) {
 		io.Copy(rw, cr.Body)
 	}
 
-	cr.BasicResponse.Apply(c, rw)
+	return cr.BasicResponse.Apply(c, rw)
 }
 
 // Hook appends hooks to the response
@@ -194,7 +195,7 @@ func (cr *ContentResponse) Hook(hooks ...ResponseHook) Response {
 }
 
 // Apply JSONResponse
-func (jr *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) {
+func (jr *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) error {
 	if jr.Status == 0 {
 		jr.Status = http.StatusOK
 	}
@@ -204,11 +205,11 @@ func (jr *JSONResponse) Apply(c context.Context, rw http.ResponseWriter) {
 
 	p, err := json.Marshal(jr.Data)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	rw.Write(p)
 
-	jr.BasicResponse.Apply(c, rw)
+	return jr.BasicResponse.Apply(c, rw)
 }
 
 // Hook appends hooks to the response

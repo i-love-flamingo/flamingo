@@ -39,6 +39,7 @@ func (m *Module) DefaultConfig() config.Map {
 		"auth": config.Map{
 			"useFake": false,
 			"fakeUserData": config.Map{},
+			"fakeLoginTemplate": "",
 			"scopes":      config.Slice{"profile", "email"},
 			"claims": config.Map{
 				"idToken":  config.Slice{},

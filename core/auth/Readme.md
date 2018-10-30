@@ -85,6 +85,7 @@ Attribute names used for fakeUserData are the same ones used for id_token mappin
 auth:
   ...
   useFake: true
+  fakeLoginTemplate: "fake/login"
   fakeUserData:
     sub: ID123456
     email: email@domain.com
@@ -92,3 +93,14 @@ auth:
     ...
 ```
 
+It's possible to provide fake login page. In this case, template for fake login page
+would be shown. Expected behaviour would be to have login button that points
+to "auth.callback" handler, so it can finish login process. Fake user data is stored
+in session anyway, but with "fakeLoginTemplate" parameter it's allowed to
+add dummy login page in the middle of fake auth process.
+
+```
+html
+  ...
+  a(href=url("auth.callback")) Login
+```

@@ -12,16 +12,26 @@ import (
 type (
 	LoginController struct {
 		responder.RedirectAware
+		responder.RenderAware
+
 		authManager *application.AuthManager
+
+		loginTemplate string
 	}
 )
 
 func (l *LoginController) Inject(
 	redirectAware responder.RedirectAware,
+	renderAware responder.RenderAware,
 	authManager *application.AuthManager,
+	cfg *struct {
+		FakeLoginTemplate string `inject:"config:auth.fakeLoginTemplate"`
+	},
 ) {
 	l.RedirectAware = redirectAware
+	l.RenderAware = renderAware
 	l.authManager = authManager
+	l.loginTemplate = cfg.FakeLoginTemplate
 }
 
 func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Response {
@@ -37,6 +47,10 @@ func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Res
 
 	if redirectUrl != "" {
 		request.Session().Values["auth.redirect"] = redirectUrl
+	}
+
+	if l.loginTemplate != "" {
+		return l.Render(ctx, l.loginTemplate, nil)
 	}
 
 	return l.Redirect("auth.callback", nil)

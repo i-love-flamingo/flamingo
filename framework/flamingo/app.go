@@ -22,6 +22,11 @@ type (
 		logger Logger
 	}
 
+	// AppShutdownEvent is dispatched on app startup
+	AppStartupEvent struct {
+		AppModule dingo.Module
+	}
+
 	// AppShutdownEvent is dispatched on app shutdown
 	AppShutdownEvent struct {
 		AppModule dingo.Module

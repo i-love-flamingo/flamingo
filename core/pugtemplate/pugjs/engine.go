@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 	"sync"
 	"time"
+
+	"sync/atomic"
 
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/flamingo"
@@ -50,6 +51,7 @@ type (
 		Basedir         string `inject:"config:pug_template.basedir"`
 		Debug           bool   `inject:"config:debug.mode"`
 		Assetrewrites   map[string]string
+		templatesLoaded int32
 		templates       map[string]*Template
 		TemplateCode    map[string]string
 		Webpackserver   bool
@@ -57,6 +59,12 @@ type (
 		FuncProvider    template.FuncProvider    `inject:""`
 		CtxFuncProvider template.CtxFuncProvider `inject:""`
 		Logger          flamingo.Logger          `inject:""`
+	}
+
+	// EventSubscriber is the event subscriber for Engine
+	EventSubscriber struct {
+		engine *Engine
+		logger flamingo.Logger
 	}
 )
 
@@ -88,8 +96,26 @@ func newRenderState(path string, debug bool, eventRouter event.Router, logger fl
 	}
 }
 
+// Inject injects the EventSubscibers dependencies
+func (e *EventSubscriber) Inject(engine *Engine, logger flamingo.Logger) {
+	e.engine = engine
+	e.logger = logger
+}
+
+// Notify the event subscriper
+func (e *EventSubscriber) Notify(event event.Event) {
+	if _, ok := event.(*flamingo.AppStartupEvent); ok {
+		e.logger.Info("preloading templates on flamingo.AppStartupEvent")
+		go e.engine.LoadTemplates("")
+	}
+}
+
 // LoadTemplates with an optional filter
 func (e *Engine) LoadTemplates(filtername string) error {
+	if !atomic.CompareAndSwapInt32(&e.templatesLoaded, 0, 1) && filtername == "" {
+		return errors.New("Can not preload all templates again")
+	}
+
 	start := time.Now()
 
 	e.Lock()
@@ -102,6 +128,7 @@ func (e *Engine) LoadTemplates(filtername string) error {
 
 	e.templates, err = e.compileDir(path.Join(e.Basedir, "template", "page"), "", filtername)
 	if err != nil {
+		atomic.StoreInt32(&e.templatesLoaded, 0) // bail out :(
 		return err
 	}
 
@@ -111,7 +138,7 @@ func (e *Engine) LoadTemplates(filtername string) error {
 		e.Webpackserver = false
 	}
 
-	log.Println("Compiled templates in", time.Since(start))
+	e.Logger.Info("Compiled templates in", time.Since(start))
 	return nil
 }
 
@@ -202,8 +229,8 @@ func (e *Engine) Render(ctx context.Context, templateName string, data interface
 	}
 	ctx = context.WithValue(ctx, "page.template", "page"+page)
 
-	// recompile
-	if e.templates == nil {
+	// recompile, make sure to fully load only once!
+	if atomic.LoadInt32(&e.templatesLoaded) == 0 && !e.Debug {
 		_, spanLoad := trace.StartSpan(ctx, "pug/loadAllTemplates")
 		if err := e.LoadTemplates(""); err != nil {
 			spanLoad.End()
@@ -219,6 +246,10 @@ func (e *Engine) Render(ctx context.Context, templateName string, data interface
 		}
 		spanLoad.End()
 	}
+
+	// make sure template loading has finished by now!
+	e.RLock()
+	defer e.RUnlock()
 
 	result := new(bytes.Buffer)
 

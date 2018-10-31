@@ -45,6 +45,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			signals := make(chan os.Signal, 1)
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
+			eventRouterProvider().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: m})
 			once.Do(func() {
 				go shutdown(eventRouterProvider(), signals, logger, m)
 			})

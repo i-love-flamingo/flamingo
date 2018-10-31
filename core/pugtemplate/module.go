@@ -18,6 +18,7 @@ import (
 	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
 	"flamingo.me/flamingo/framework/web"
@@ -132,6 +133,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.BindMulti(new(cobra.Command)).ToProvider(templatecheckCmd)
 	router.Bind(injector, new(routes))
+	injector.BindMulti(new(event.Subscriber)).To(pugjs.EventSubscriber{})
 }
 
 func templatecheckCmd() *cobra.Command {

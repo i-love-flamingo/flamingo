@@ -12,9 +12,8 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"time"
-
 	"sync/atomic"
+	"time"
 
 	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/flamingo"
@@ -26,6 +25,8 @@ import (
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 )
+
+// BUG: the template loading is far from optimal, if debug is false and the loading fails we might end up in a broken situation
 
 type (
 	// RenderState holds information about the pug abstract syntax tree
@@ -112,14 +113,14 @@ func (e *EventSubscriber) Notify(event event.Event) {
 
 // LoadTemplates with an optional filter
 func (e *Engine) LoadTemplates(filtername string) error {
+	e.Lock()
+	defer e.Unlock()
+
 	if !atomic.CompareAndSwapInt32(&e.templatesLoaded, 0, 1) && filtername == "" {
 		return errors.New("Can not preload all templates again")
 	}
 
 	start := time.Now()
-
-	e.Lock()
-	defer e.Unlock()
 
 	manifest, err := ioutil.ReadFile(path.Join(e.Basedir, "manifest.json"))
 	if err == nil {

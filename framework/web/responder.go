@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-
 	"strings"
 
 	"flamingo.me/flamingo/framework/template"
@@ -110,6 +109,7 @@ func (r *Responder) HTTP(status uint, body io.Reader) HTTPResponse {
 	return HTTPResponse{
 		Status: status,
 		Body:   body,
+		Header: make(http.Header),
 	}
 }
 
@@ -121,6 +121,7 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) RouteRedire
 		router: r.router,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusSeeOther,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -145,6 +146,7 @@ func (r *Responder) URLRedirect(url *url.URL) URLRedirectResponse {
 		URL: url,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusSeeOther,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -168,6 +170,7 @@ func (r *Responder) Data(data interface{}) DataResponse {
 		Data: data,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusOK,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -237,6 +240,7 @@ func (r *Responder) ServerError(err error) ServerErrorResponse {
 		Error: err,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusInternalServerError,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -260,6 +264,7 @@ func (r *Responder) NotFound(err error) ServerErrorResponse {
 		Error: err,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusNotFound,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -268,5 +273,6 @@ func (r *Responder) NotFound(err error) ServerErrorResponse {
 func (r *Responder) TODO() HTTPResponse {
 	return HTTPResponse{
 		Status: http.StatusNotImplemented,
+		Header: make(http.Header),
 	}
 }

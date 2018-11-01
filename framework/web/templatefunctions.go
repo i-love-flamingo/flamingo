@@ -17,11 +17,14 @@ func (*SetPartialDataFunc) Func(c context.Context) interface{} {
 			return nil
 		}
 
-		if r.Values[ctxKey] == nil {
-			r.Values[ctxKey] = make(map[string]interface{})
+		data, ok := r.Values.Load(ctxKey)
+		if !ok || data == nil {
+			data = make(map[string]interface{})
 		}
 
-		r.Values[ctxKey].(map[string]interface{})[key] = val
+		data.(map[string]interface{})[key] = val
+
+		r.Values.Store(ctxKey, data)
 
 		return nil
 	}
@@ -36,10 +39,11 @@ func (*GetPartialDataFunc) Func(c context.Context) interface{} {
 			return nil
 		}
 
-		if r.Values[ctxKey] == nil {
+		data, ok := r.Values.Load(ctxKey)
+		if !ok || data == nil {
 			return nil
 		}
 
-		return r.Values[ctxKey].(map[string]interface{})
+		return data.(map[string]interface{})
 	}
 }

@@ -32,14 +32,14 @@ func (c *CsrfFunc) Func(ctx context.Context) interface{} {
 
 		s, _ := session.FromContext(ctx)
 
-		if ns, ok := s.Values[csrfNonces]; ok {
+		if ns, ok := s.G().Values[csrfNonces]; ok {
 			if list, ok := ns.([]string); ok {
-				s.Values[csrfNonces] = appendNonceToList(list, nonce, c.TokenLimit)
+				s.G().Values[csrfNonces] = appendNonceToList(list, nonce, c.TokenLimit)
 			} else {
-				s.Values[csrfNonces] = []string{nonce}
+				s.G().Values[csrfNonces] = []string{nonce}
 			}
 		} else {
-			s.Values[csrfNonces] = []string{nonce}
+			s.G().Values[csrfNonces] = []string{nonce}
 		}
 
 		return nonce

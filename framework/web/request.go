@@ -4,8 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-
-	"github.com/gorilla/sessions"
+	"sync"
 )
 
 type (
@@ -13,8 +12,8 @@ type (
 	Request struct {
 		request *http.Request
 		vars    map[string]string
-		session *sessions.Session
-		Values  map[interface{}]interface{}
+		session *Session
+		Values  *sync.Map
 	}
 
 	contextKey int
@@ -31,7 +30,7 @@ var (
 
 const requestKey contextKey = iota
 
-// Context_ saves the session in the context
+// Context_ saves the Session in the context
 func Context_(ctx context.Context, session *Request) context.Context {
 	return context.WithValue(ctx, requestKey, session)
 }
@@ -43,11 +42,11 @@ func FromContext(ctx context.Context) (*Request, bool) {
 }
 
 // RequestFromRequest wraps a http Request
-func RequestFromRequest(r *http.Request, session *sessions.Session) *Request {
+func RequestFromRequest(r *http.Request, session *Session) *Request {
 	return &Request{
 		request: r,
 		session: session,
-		Values:  make(map[interface{}]interface{}),
+		Values:  new(sync.Map),
 	}
 }
 
@@ -75,7 +74,7 @@ func (r *Request) LoadParams(p map[string]string) *Request {
 }
 
 // Session returns the ctx Session
-func (r *Request) Session() *sessions.Session {
+func (r *Request) Session() *Session {
 	return r.session
 }
 

@@ -221,17 +221,17 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	defer cancelFunc()
 
-	var s *sessions.Session
+	var gs *sessions.Session
 	var err error
 
 	// initialize the session
 	if router.Sessions != nil {
 		ctx, span := trace.StartSpan(serveCtx, "router/sessions/get")
-		s, err = router.Sessions.Get(req, router.SessionName)
+		gs, err = router.Sessions.Get(req, router.SessionName)
 		if err != nil {
 			log.Println(err)
 			_, span := trace.StartSpan(ctx, "router/sessions/new")
-			s, err = router.Sessions.New(req, router.SessionName)
+			gs, err = router.Sessions.New(req, router.SessionName)
 			if err != nil {
 				log.Println(err)
 			}
@@ -240,7 +240,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		span.End()
 	}
 
-	req = req.WithContext(session.Context(req.Context(), s))
+	req = req.WithContext(session.Context(req.Context(), web.NewSession(gs)))
 
 	// retrieve a new context
 	ctx := req.Context()
@@ -270,7 +270,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(ctx)
 	defer span.End()
 
-	webRequest := web.RequestFromRequest(req, s).WithVars(params)
+	webRequest := web.RequestFromRequest(req, web.NewSession(gs)).WithVars(params)
 
 	chain := &FilterChain{
 		Filters: make([]Filter, len(router.filters)),
@@ -314,7 +314,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if router.Sessions != nil {
 		_, span := trace.StartSpan(ctx, "router/sessions/safe")
-		if err := router.Sessions.Save(req, rw, webRequest.Session()); err != nil {
+		if err := router.Sessions.Save(req, rw, gs); err != nil {
 			log.Println(err)
 		}
 		span.End()
@@ -361,7 +361,7 @@ func (router *Router) Data(ctx context.Context, handler string, params map[inter
 
 	r, ok := web.FromContext(ctx)
 	if !ok {
-		r = web.RequestFromRequest(nil, sessions.NewSession(router.Sessions, "-"))
+		r = web.RequestFromRequest(nil, web.NewSession(sessions.NewSession(router.Sessions, "-")))
 	}
 
 	r.LoadParams(dataParams(r, params))

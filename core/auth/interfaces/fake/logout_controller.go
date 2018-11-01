@@ -26,7 +26,7 @@ func (l *LogoutController) Inject(
 }
 
 func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Response {
-	delete(request.Session().Values, fake.UserSessionKey)
+	request.Session().Delete(fake.UserSessionKey)
 
 	redirectUrl, _ := l.authManager.URL(ctx, "")
 

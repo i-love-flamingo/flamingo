@@ -68,7 +68,7 @@ func (f *csrfFilter) Filter(ctx context.Context, r *web.Request, w http.Response
 }
 
 func getNonceList(ctx context.Context, r *web.Request) ([]string, error) {
-	if ns, ok := r.Session().Values[csrfNonces]; ok {
+	if ns, ok := r.Session().G().Values[csrfNonces]; ok {
 		if list, ok := ns.([]string); ok {
 			return list, nil
 		}
@@ -91,7 +91,7 @@ func deleteNonceInSession(nonce string, ctx context.Context, r *web.Request) err
 			break
 		}
 	}
-	r.Session().Values[csrfNonces] = list
+	r.Session().G().Values[csrfNonces] = list
 	return nil
 }
 

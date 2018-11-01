@@ -178,7 +178,7 @@ func (r DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	if err := json.NewEncoder(buf).Encode(r.Data); err != nil {
 		return err
 	}
-	r.HTTPResponse.Header.Set("Content-Type", "application/json")
+	r.HTTPResponse.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return r.HTTPResponse.Apply(c, w)
 }
 
@@ -216,6 +216,7 @@ func (r RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		}
 	}
 
+	r.Header.Set("Content-Type", "text/html; charset=utf-8")
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
 		return err

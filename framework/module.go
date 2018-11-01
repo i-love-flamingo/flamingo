@@ -59,6 +59,8 @@ func (module *Module) Configure(injector *dingo.Injector) {
 	injector.Bind((*responder.JSONAware)(nil)).To(responder.FlamingoJSONAware{})
 
 	template.BindFunc(injector, "config", new(config.TemplateFunc))
+	template.BindCtxFunc(injector, "setPartialData", new(web.SetPartialDataFunc))
+	template.BindCtxFunc(injector, "getPartialData", new(web.GetPartialDataFunc))
 
 	router.Bind(injector, new(routes))
 }

@@ -27,7 +27,8 @@ func Do(ctx context.Context, r *web.Request, task func(ctx context.Context, r *w
 
 // TryDo tries to schedule an async task in the background
 func TryDo(ctx context.Context, r *web.Request, task func(ctx context.Context, r *web.Request)) error {
-	if wg, ok := r.Values[wg].(*sync.WaitGroup); ok {
+	wg, _ := r.Values.Load(wg)
+	if wg, ok := wg.(*sync.WaitGroup); ok {
 		wg.Add(1)
 
 		go func() {
@@ -45,11 +46,12 @@ func TryDo(ctx context.Context, r *web.Request, task func(ctx context.Context, r
 
 // Filter waits for running tasks to finish before the request processing is done
 func (f *filter) Filter(ctx context.Context, r *web.Request, w http.ResponseWriter, fc *router.FilterChain) web.Response {
-	r.Values[wg] = new(sync.WaitGroup)
+	r.Values.Store(wg, new(sync.WaitGroup))
 	response := fc.Next(ctx, r, w)
 
 	// wait for possible tasks to finish
-	if wg, ok := r.Values[wg].(*sync.WaitGroup); ok {
+	wg, _ := r.Values.Load(wg)
+	if wg, ok := wg.(*sync.WaitGroup); ok {
 		wg.Wait()
 	}
 

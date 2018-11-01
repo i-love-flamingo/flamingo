@@ -37,9 +37,9 @@ func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Re
 	if user == nil {
 		user = domain.Guest
 	}
-	request.Session().Values[fake.UserSessionKey] = user
+	request.Session().Store(fake.UserSessionKey, user)
 
-	value := request.Session().Values["auth.redirect"]
+	value, _ := request.Session().Load("auth.redirect")
 	redirectUrl, ok := value.(string)
 	if !ok || redirectUrl == "" {
 		return c.Redirect("home", nil)

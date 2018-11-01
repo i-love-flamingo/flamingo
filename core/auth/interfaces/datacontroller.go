@@ -21,5 +21,5 @@ func (u *UserController) Inject(service application.UserServiceInterface) {
 
 // Data controller to return userinfo
 func (u *UserController) Data(c context.Context, r *web.Request) interface{} {
-	return u.userService.GetUser(c, r.Session())
+	return u.userService.GetUser(c, r.Session().G())
 }

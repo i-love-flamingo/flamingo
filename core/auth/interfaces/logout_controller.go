@@ -53,12 +53,12 @@ func (d *DefaultLogoutRedirect) GetRedirectUrl(c context.Context, u *url.URL) (s
 
 // Logout locally
 func logout(r *web.Request) {
-	delete(r.Session().Values, application.KeyAuthstate)
-	delete(r.Session().Values, application.KeyToken)
-	delete(r.Session().Values, application.KeyRawIDToken)
+	r.Session().Delete(application.KeyAuthstate)
+	r.Session().Delete(application.KeyToken)
+	r.Session().Delete(application.KeyRawIDToken)
 
 	// kill session
-	r.Session().Options.MaxAge = -1
+	r.Session().G().Options.MaxAge = -1
 }
 
 // Inject LogoutController dependencies
@@ -103,7 +103,7 @@ func (l *LogoutController) Get(c context.Context, request *web.Request) web.Resp
 
 	request.Session().AddFlash("successful logged out", "warning")
 	l.eventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{
-		Session: request.Session(),
+		Session: request.Session().G(),
 	})
 
 	return l.RedirectURL(redirectURL)

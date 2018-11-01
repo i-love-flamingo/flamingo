@@ -46,7 +46,7 @@ func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Res
 	}
 
 	if redirectUrl != "" {
-		request.Session().Values["auth.redirect"] = redirectUrl
+		request.Session().Store("auth.redirect", redirectUrl)
 	}
 
 	if l.loginTemplate != "" {

@@ -44,10 +44,10 @@ func (cc *CallbackController) Inject(
 // Get handler for callbacks
 func (cc *CallbackController) Get(c context.Context, request *web.Request) web.Response {
 	// Verify state and errors.
-	defer delete(request.Session().Values, application.KeyAuthstate)
+	defer request.Session().Delete(application.KeyAuthstate)
 
-	if request.Session().Values[application.KeyAuthstate] != request.MustQuery1("state") {
-		cc.logger.Error("Invalid State", request.Session().Values[application.KeyAuthstate], request.MustQuery1("state"))
+	if request.Session().Try(application.KeyAuthstate) != request.MustQuery1("state") {
+		cc.logger.Error("Invalid State", request.Session().Try(application.KeyAuthstate), request.MustQuery1("state"))
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
@@ -57,18 +57,19 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 		return cc.Error(c, errors.WithStack(err))
 	}
 
-	request.Session().Values[application.KeyToken] = oauth2Token
-	request.Session().Values[application.KeyRawIDToken], err = cc.authManager.ExtractRawIDToken(oauth2Token)
+	request.Session().Store(application.KeyToken, oauth2Token)
+	rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
+	request.Session().Store(application.KeyRawIDToken, rawToken)
 	if err != nil {
 		cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 		return cc.Error(c, errors.WithStack(err))
 	}
-	cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session()})
+	cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
 	cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
 	request.Session().AddFlash("successful logged in", "info")
 
-	if redirect, ok := request.Session().Values["auth.redirect"]; ok {
-		delete(request.Session().Values, "auth.redirect")
+	if redirect, ok := request.Session().Load("auth.redirect"); ok {
+		request.Session().Delete("auth.redirect")
 		return cc.RedirectURL(redirect.(string))
 	}
 	return cc.Redirect("home", nil)

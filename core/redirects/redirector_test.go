@@ -328,7 +328,7 @@ func Test_redirector_Filter(t *testing.T) {
 
 			r.Filter(
 				context.Background(),
-				web.RequestFromRequest(&tt.args.req, &sessions.Session{}),
+				web.RequestFromRequest(&tt.args.req, web.NewSession(&sessions.Session{})),
 				rwMock,
 				chain,
 			)

@@ -206,7 +206,7 @@ func (r RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		partialRenderer, ok := r.engine.(template.PartialEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
 			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
-			body, err := json.Marshal(content)
+			body, err := json.Marshal(map[string]interface{}{"partials": content})
 			if err != nil {
 				return err
 			}

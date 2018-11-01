@@ -212,7 +212,7 @@ func (e *Engine) RenderPartials(ctx context.Context, templateName string, data i
 	res := make(map[string]string, len(partials))
 
 	for _, partial := range partials {
-		buf, err := e.Render(ctx, templateName+"_partial/"+partial, data)
+		buf, err := e.Render(ctx, templateName+".partial/"+partial, data)
 		if err != nil {
 			return nil, err
 		}

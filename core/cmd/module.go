@@ -45,7 +45,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			signals := make(chan os.Signal, 1)
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-			eventRouterProvider().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: m})
 			once.Do(func() {
 				go shutdown(eventRouterProvider(), signals, logger, m)
 			})
@@ -99,5 +98,8 @@ func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flaming
 
 // Run the root command
 func Run(injector *dingo.Injector) error {
-	return injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command).Execute()
+	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
+	injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})
+
+	return cmd.Execute()
 }

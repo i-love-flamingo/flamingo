@@ -48,7 +48,7 @@ func (r *FlamingoRenderAware) Render(context context.Context, tpl string, data i
 		partialRenderer, ok := r.Engine.(template.PartialEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
 			content, err := partialRenderer.RenderPartials(context, tpl, data, strings.Split(partials, ","))
-			body, err := json.Marshal(map[string]interface{}{"partials": content})
+			body, err := json.Marshal(map[string]interface{}{"partials": content, "data": new(web.GetPartialDataFunc).Func(context).(func() map[string]interface{})()})
 			if err != nil {
 				panic(err)
 			}

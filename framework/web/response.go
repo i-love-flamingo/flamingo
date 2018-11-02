@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	ResponseHook func(c context.Context, r *Request, rw http.ResponseWriter)
+	ResponseHook func(c context.Context, rw http.ResponseWriter)
 
 	// Response defines the generic web response
 	Response interface {
@@ -124,7 +124,7 @@ func (br *BasicResponse) Apply(c context.Context, rw http.ResponseWriter) error 
 // OnResponse callback to apply hooks
 func (br *BasicResponse) OnResponse(c context.Context, r *Request, rw http.ResponseWriter) {
 	for _, hook := range br.hooks {
-		hook(c, r, rw)
+		hook(c, rw)
 	}
 }
 

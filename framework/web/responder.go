@@ -29,7 +29,7 @@ type (
 		Status uint
 		Body   io.Reader
 		Header http.Header
-		hooks  *[]ResponseHook
+		hooks  []ResponseHook
 	}
 
 	// RouteRedirectResponse redirects to a certain route
@@ -73,22 +73,25 @@ func (r *Responder) Inject(engine template.Engine, router ReverseRouter) *Respon
 	return r
 }
 
-var _ Response = HTTPResponse{}
+var _ Response = &HTTPResponse{}
 
 // Apply response
-func (r HTTPResponse) Apply(c context.Context, w http.ResponseWriter) error {
-	w.WriteHeader(int(r.Status))
+func (r *HTTPResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	for _, hook := range r.hooks {
+		hook(c, w)
+	}
 	for name, vals := range r.Header {
 		for _, val := range vals {
 			w.Header().Add(name, val)
 		}
 	}
+	w.WriteHeader(int(r.Status))
 	_, err := io.Copy(w, r.Body)
 	return err
 }
 
 // GetStatus returns the HTTP status
-func (r HTTPResponse) GetStatus() int {
+func (r *HTTPResponse) GetStatus() int {
 	return int(r.Status)
 }
 
@@ -99,14 +102,14 @@ func (HTTPResponse) GetContentLength() int {
 
 // Hook helper
 // deprecated: to be removed
-func (r HTTPResponse) Hook(hooks ...ResponseHook) Response {
-	*r.hooks = append(*r.hooks, hooks...)
+func (r *HTTPResponse) Hook(hooks ...ResponseHook) Response {
+	r.hooks = append(r.hooks, hooks...)
 	return r
 }
 
 // HTTP Response generator
-func (r *Responder) HTTP(status uint, body io.Reader) HTTPResponse {
-	return HTTPResponse{
+func (r *Responder) HTTP(status uint, body io.Reader) *HTTPResponse {
+	return &HTTPResponse{
 		Status: status,
 		Body:   body,
 		Header: make(http.Header),
@@ -114,8 +117,8 @@ func (r *Responder) HTTP(status uint, body io.Reader) HTTPResponse {
 }
 
 // RouteRedirect generator
-func (r *Responder) RouteRedirect(to string, data map[string]string) RouteRedirectResponse {
-	return RouteRedirectResponse{
+func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedirectResponse {
+	return &RouteRedirectResponse{
 		To:     to,
 		Data:   data,
 		router: r.router,
@@ -127,7 +130,7 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) RouteRedire
 }
 
 // Apply response
-func (r RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	to := r.router.URL(r.To, r.Data)
 	w.Header().Set("Location", to.String())
 	return r.HTTPResponse.Apply(c, w)
@@ -135,14 +138,14 @@ func (r RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) e
 
 // Hook helper
 // deprecated: to be removed
-func (r RouteRedirectResponse) Hook(hooks ...ResponseHook) Response {
+func (r *RouteRedirectResponse) Hook(hooks ...ResponseHook) Response {
 	r.HTTPResponse.Hook(hooks...)
 	return r
 }
 
 // URLRedirect returns a 303 redirect to a given URL
-func (r *Responder) URLRedirect(url *url.URL) URLRedirectResponse {
-	return URLRedirectResponse{
+func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
+	return &URLRedirectResponse{
 		URL: url,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusSeeOther,
@@ -152,21 +155,21 @@ func (r *Responder) URLRedirect(url *url.URL) URLRedirectResponse {
 }
 
 // Apply response
-func (r URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	w.Header().Set("Location", r.URL.String())
 	return r.HTTPResponse.Apply(c, w)
 }
 
 // Hook helper
 // deprecated: to be removed
-func (r URLRedirectResponse) Hook(hooks ...ResponseHook) Response {
+func (r *URLRedirectResponse) Hook(hooks ...ResponseHook) Response {
 	r.HTTPResponse.Hook(hooks...)
 	return r
 }
 
 // Data returns a data response which can be serialized
-func (r *Responder) Data(data interface{}) DataResponse {
-	return DataResponse{
+func (r *Responder) Data(data interface{}) *DataResponse {
+	return &DataResponse{
 		Data: data,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusOK,
@@ -187,22 +190,22 @@ func (r DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 
 // Hook helper
 // deprecated: to be removed
-func (r DataResponse) Hook(hooks ...ResponseHook) Response {
+func (r *DataResponse) Hook(hooks ...ResponseHook) Response {
 	r.HTTPResponse.Hook(hooks...)
 	return r
 }
 
 // Render creates a render response, with the supplied template and data
-func (r *Responder) Render(tpl string, data interface{}) RenderResponse {
-	return RenderResponse{
+func (r *Responder) Render(tpl string, data interface{}) *RenderResponse {
+	return &RenderResponse{
 		Template:     tpl,
 		engine:       r.engine,
-		DataResponse: r.Data(data),
+		DataResponse: *r.Data(data),
 	}
 }
 
 // Apply response
-func (r RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	var err error
 
 	if req, ok := FromContext(c); ok && r.engine != nil {
@@ -229,14 +232,14 @@ func (r RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 
 // Hook helper
 // deprecated: to be removed
-func (r RenderResponse) Hook(hooks ...ResponseHook) Response {
+func (r *RenderResponse) Hook(hooks ...ResponseHook) Response {
 	r.HTTPResponse.Hook(hooks...)
 	return r
 }
 
 // ServerError creates a 500 error response
-func (r *Responder) ServerError(err error) ServerErrorResponse {
-	return ServerErrorResponse{
+func (r *Responder) ServerError(err error) *ServerErrorResponse {
+	return &ServerErrorResponse{
 		Error: err,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusInternalServerError,
@@ -246,14 +249,14 @@ func (r *Responder) ServerError(err error) ServerErrorResponse {
 }
 
 // Apply response
-func (r ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	r.Body = bytes.NewBufferString(r.Error.Error())
 	return r.HTTPResponse.Apply(c, w)
 }
 
 // Hook helper
 // deprecated: to be removed
-func (r ServerErrorResponse) Hook(hooks ...ResponseHook) Response {
+func (r *ServerErrorResponse) Hook(hooks ...ResponseHook) Response {
 	r.HTTPResponse.Hook(hooks...)
 	return r
 }

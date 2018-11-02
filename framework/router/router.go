@@ -322,7 +322,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 	if response != nil {
 		_, span := trace.StartSpan(ctx, "router/responseApply")
-		if err := response.Apply(ctx, rw); err != nil {
+		if err := response.Apply(web.Context_(ctx, webRequest), rw); err != nil {
 			panic(err) // bail out?
 		}
 		span.End()

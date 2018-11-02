@@ -86,6 +86,10 @@ func (r *HTTPResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		}
 	}
 	w.WriteHeader(int(r.Status))
+	if r.Body == nil {
+		return nil
+	}
+
 	_, err := io.Copy(w, r.Body)
 	return err
 }

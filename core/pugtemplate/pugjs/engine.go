@@ -270,11 +270,11 @@ func (e *Engine) Render(ctx context.Context, templateName string, data interface
 
 	// make sure template loading has finished by now!
 	e.RLock()
-	defer e.RUnlock()
 
 	result := new(bytes.Buffer)
 
 	templateInstance, ok := e.templates[templateName]
+	e.RUnlock()
 	if !ok {
 		return nil, errors.Errorf(`Template %s not found!`, templateName)
 	}

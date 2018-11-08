@@ -57,7 +57,7 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedIn(ctx, req.Session().G()) {
-			redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath)
+			redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
 			return m.responder.RouteRedirect("auth.login", map[string]string{
 				"redirecturl": redirectUrl.String(),
 			})
@@ -68,29 +68,29 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 
 func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsLoggedIn(ctx, req.Session().G()) {
-			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath)
+		if !m.securityService.IsLoggedOut(ctx, req.Session().G()) {
+			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
 			return m.responder.URLRedirect(redirectUrl)
 		}
 		return action(ctx, req)
 	}
 }
 
-func (m *SecurityMiddleware) HandleIfGranted(action router.Action, role string) router.Action {
+func (m *SecurityMiddleware) HandleIfGranted(action router.Action, permission string) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsGranted(ctx, req.Session().G(), role, nil) {
-			return m.responder.Forbidden(errors.Errorf("Missing role %s for path %s.", role, req.Request().URL.Path))
+		if !m.securityService.IsGranted(ctx, req.Session().G(), permission, nil) {
+			return m.responder.Forbidden(errors.Errorf("Missing permission %s for path %s.", permission, req.Request().URL.Path))
 		}
 		return action(ctx, req)
 	}
 }
 
-func (m *SecurityMiddleware) redirectUrl(ctx context.Context, req *web.Request, strategy string, path string) *url.URL {
+func (m *SecurityMiddleware) redirectUrl(ctx context.Context, req *web.Request, strategy string, path string, referrer string) *url.URL {
 	var err error
 	var generated *url.URL
 
 	if strategy == ReferrerRedirectStrategy {
-		generated, err = m.redirectUrlMaker.URL(ctx, req.Request().URL.String())
+		generated, err = m.redirectUrlMaker.URL(ctx, referrer)
 	} else if strategy == PathRedirectStrategy {
 		generated, err = m.redirectUrlMaker.URL(ctx, path)
 	}

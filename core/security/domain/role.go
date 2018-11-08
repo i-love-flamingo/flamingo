@@ -1,15 +1,15 @@
 package domain
 
 const (
-	RoleAnonymous = "RoleAnonymous"
-	RoleUser      = "RoleUser"
+	PermissionAnonymous = "RoleAnonymous"
+	PermissionUser      = "RoleUser"
 )
 
 type (
 	Role interface {
 		Id() string
 		Label() string
-		Role() string
+		Permission() string
 	}
 
 	RoleSet interface {
@@ -21,6 +21,9 @@ type (
 
 var (
 	_ Role = DefaultRole("")
+
+	RoleAnonymous = DefaultRole(PermissionAnonymous)
+	RoleUser      = DefaultRole(PermissionUser)
 )
 
 func (r DefaultRole) Id() string {
@@ -31,6 +34,6 @@ func (r DefaultRole) Label() string {
 	return string(r)
 }
 
-func (r DefaultRole) Role() string {
+func (r DefaultRole) Permission() string {
 	return string(r)
 }

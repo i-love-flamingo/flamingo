@@ -5,28 +5,28 @@ import (
 
 	"github.com/gorilla/sessions"
 
-	"flamingo.me/flamingo/core/security/application/provider"
+	"flamingo.me/flamingo/core/security/application/role"
 	"flamingo.me/flamingo/core/security/domain"
 )
 
 type (
 	IsLoggedOutVoter struct {
-		roleProvider provider.RoleProvider
+		roleService role.Service
 	}
 )
 
-func (v *IsLoggedOutVoter) Inject(rp provider.RoleProvider) {
-	v.roleProvider = rp
+func (v *IsLoggedOutVoter) Inject(rs role.Service) {
+	v.roleService = rs
 }
 
-func (v *IsLoggedOutVoter) Vote(ctx context.Context, session *sessions.Session, role string, _ interface{}) int {
-	if role != domain.RoleAnonymous {
+func (v *IsLoggedOutVoter) Vote(ctx context.Context, session *sessions.Session, permission string, _ interface{}) int {
+	if permission != domain.RoleAnonymous.Permission() {
 		return AccessAbstained
 	}
 
-	roles := v.roleProvider.All(ctx, session)
+	roles := v.roleService.All(ctx, session)
 	for index := range roles {
-		if roles[index].Role() == domain.RoleAnonymous {
+		if roles[index].Permission() == domain.RoleAnonymous.Permission() {
 			return AccessGranted
 		}
 	}

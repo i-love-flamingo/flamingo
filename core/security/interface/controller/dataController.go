@@ -26,6 +26,6 @@ func (c *DataController) IsLoggedOut(ctx context.Context, r *web.Request) interf
 }
 
 func (c *DataController) IsGranted(ctx context.Context, r *web.Request) interface{} {
-	role := r.MustParam1("role")
-	return c.securityService.IsGranted(ctx, r.Session().G(), role, nil)
+	permission := r.MustParam1("permission")
+	return c.securityService.IsGranted(ctx, r.Session().G(), permission, nil)
 }

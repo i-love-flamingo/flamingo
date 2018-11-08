@@ -44,17 +44,17 @@ func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, cfg *struct {
 }
 
 func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *sessions.Session) bool {
-	return s.IsGranted(ctx, session, domain.RoleUser, nil)
+	return s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
 }
 
 func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *sessions.Session) bool {
-	return s.IsGranted(ctx, session, domain.RoleAnonymous, nil)
+	return s.IsGranted(ctx, session, domain.RoleAnonymous.Permission(), nil)
 }
 
-func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *sessions.Session, role string, object interface{}) bool {
+func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *sessions.Session, permission string, object interface{}) bool {
 	var results []int
 	for index := range s.voters {
-		results = append(results, s.voters[index].Vote(ctx, session, role, object))
+		results = append(results, s.voters[index].Vote(ctx, session, permission, object))
 	}
 
 	return s.decide(results)

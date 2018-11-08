@@ -3,7 +3,8 @@ package security
 import (
 	authApplication "flamingo.me/flamingo/core/auth/application"
 	"flamingo.me/flamingo/core/security/application"
-	"flamingo.me/flamingo/core/security/application/provider"
+	"flamingo.me/flamingo/core/security/application/role"
+	"flamingo.me/flamingo/core/security/application/role/provider"
 	"flamingo.me/flamingo/core/security/application/voter"
 	"flamingo.me/flamingo/core/security/domain"
 	"flamingo.me/flamingo/core/security/interface/controller"
@@ -34,10 +35,11 @@ func (r *routes) Routes(registry *router.Registry) {
 func (m *Module) Configure(injector *dingo.Injector) {
 	router.Bind(injector, &routes{})
 
-	injector.Bind((*provider.RoleProvider)(nil)).To(provider.DefaultRoleProvider{})
+	injector.BindMulti((*provider.RoleProvider)(nil)).To(provider.DefaultRoleProvider{})
 	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.IsLoggedInVoter{})
 	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.IsLoggedOutVoter{})
 	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.RoleVoter{})
+	injector.Bind((*role.Service)(nil)).To(role.ServiceImpl{})
 	injector.Bind((*application.SecurityService)(nil)).To(application.SecurityServiceImpl{})
 	injector.Bind((*middleware.RedirectUrlMaker)(nil)).To(authApplication.AuthManager{})
 }
@@ -50,7 +52,7 @@ func (m *Module) DefaultConfig() config.Map {
 				"redirectStrategy": middleware.ReferrerRedirectStrategy,
 				"redirectPath":     "/",
 			},
-			"authorizedHomepage": config.Map{
+			"authenticatedHomepage": config.Map{
 				"strategy": middleware.ReferrerRedirectStrategy,
 				"path":     "/",
 			},

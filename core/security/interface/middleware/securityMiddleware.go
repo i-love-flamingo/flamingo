@@ -28,20 +28,20 @@ type (
 		redirectUrlMaker RedirectUrlMaker
 		logger           flamingo.Logger
 
-		loginPathHandler           string
-		loginPathRedirectStrategy  string
-		loginPathRedirectPath      string
-		authorizedHomepageStrategy string
-		authorizedHomepagePath     string
+		loginPathHandler              string
+		loginPathRedirectStrategy     string
+		loginPathRedirectPath         string
+		authenticatedHomepageStrategy string
+		authenticatedHomepagePath     string
 	}
 )
 
 func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityService, u RedirectUrlMaker, l flamingo.Logger, cfg *struct {
-	LoginPathHandler           string `inject:"config:security.loginPath.handler"`
-	LoginPathRedirectStrategy  string `inject:"config:security.loginPath.redirectStrategy"`
-	LoginPathRedirectPath      string `inject:"config:security.loginPath.redirectPath"`
-	AuthorizedHomepageStrategy string `inject:"config:security.authorizedHomepage.strategy"`
-	AuthorizedHomepagePath     string `inject:"config:security.authorizedHomepage.path"`
+	LoginPathHandler              string `inject:"config:security.loginPath.handler"`
+	LoginPathRedirectStrategy     string `inject:"config:security.loginPath.redirectStrategy"`
+	LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
+	AuthenticatedHomepageStrategy string `inject:"config:security.authenticatedHomepage.strategy"`
+	AuthenticatedHomepagePath     string `inject:"config:security.authenticatedHomepage.path"`
 }) {
 	m.responder = r
 	m.securityService = s
@@ -50,8 +50,8 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 	m.loginPathHandler = cfg.LoginPathHandler
 	m.loginPathRedirectStrategy = cfg.LoginPathRedirectStrategy
 	m.loginPathRedirectPath = cfg.LoginPathRedirectPath
-	m.authorizedHomepageStrategy = cfg.AuthorizedHomepageStrategy
-	m.authorizedHomepagePath = cfg.AuthorizedHomepagePath
+	m.authenticatedHomepageStrategy = cfg.AuthenticatedHomepageStrategy
+	m.authenticatedHomepagePath = cfg.AuthenticatedHomepagePath
 }
 
 func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
@@ -69,7 +69,7 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedIn(ctx, req.Session().G()) {
-			redirectUrl := m.redirectUrl(ctx, req, m.authorizedHomepageStrategy, m.authorizedHomepagePath)
+			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath)
 			return m.responder.URLRedirect(redirectUrl)
 		}
 		return action(ctx, req)

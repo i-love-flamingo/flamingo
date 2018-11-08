@@ -32,7 +32,7 @@ func (t *ValidationProviderTestSuite) SetupTest() {
 			"justthis":   "^justthis$",
 		},
 	}
-	t.validate = ValidatorProvider(&config)
+	t.validate = ValidatorProvider([]FormValidator{}, &config)
 }
 
 func (t *ValidationProviderTestSuite) TestDateFormat() {

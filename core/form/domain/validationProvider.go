@@ -10,6 +10,20 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
+type (
+	FormValidator interface {
+		ValidatorName() string
+	}
+
+	FormValidatorWithoutParam interface {
+		Validate(interface{}) bool
+	}
+
+	FormValidatorWithParam interface {
+		Validate(string, interface{}) bool
+	}
+)
+
 func toDate(value string, dateFormat string) *time.Time {
 	if value == "" {
 		return nil
@@ -103,7 +117,7 @@ func regexValidatorProvider(regexString string) validator.Func {
 	}
 }
 
-func ValidatorProvider(config *struct {
+func ValidatorProvider(formValidators []FormValidator, config *struct {
 	DateFormat  string     `inject:"config:form.validator.dateFormat"`
 	CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 }) *validator.Validate {
@@ -119,6 +133,20 @@ func ValidatorProvider(config *struct {
 			panic("wrong value passed as validation regex")
 		}
 		validate.RegisterValidation(name, regexValidatorProvider(regex))
+	}
+
+	for _, formValidator := range formValidators {
+		if withoutParam, ok := formValidator.(FormValidatorWithoutParam); ok {
+			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
+				return withoutParam.Validate(fl.Field().Interface())
+			})
+		} else if withParam, ok := formValidator.(FormValidatorWithParam); ok {
+			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
+				return withParam.Validate(fl.Param(), fl.Field().Interface())
+			})
+		} else {
+			panic("Validator must implement either FormValidatorWithoutParam or FormValidatorWithParam interface")
+		}
 	}
 
 	return validate

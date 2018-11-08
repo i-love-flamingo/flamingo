@@ -58,8 +58,8 @@ func (m *Module) DefaultConfig() config.Map {
 			},
 			"roles": config.Map{
 				"hierarchy": config.Map{
-					domain.RoleAnonymous: config.Slice{},
-					domain.RoleUser:      config.Slice{},
+					domain.RoleAnonymous.Permission(): config.Slice{},
+					domain.RoleUser.Permission():      config.Slice{},
 				},
 				"voters": config.Map{
 					"strategy":          application.VoterStrategyAffirmative,

@@ -8,6 +8,7 @@ import (
 	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
 	"github.com/satori/go.uuid"
+	"golang.org/x/oauth2"
 )
 
 type (
@@ -18,7 +19,12 @@ type (
 	// LoginController handles the login redirect
 	LoginController struct {
 		responder.RedirectAware
-		authManager *application.AuthManager
+		authManager    *application.AuthManager
+		parameterHooks []LoginGetParameterHook
+	}
+
+	LoginGetParameterHook interface {
+		Parameters(context.Context, *web.Request) []oauth2.AuthCodeOption
 	}
 )
 
@@ -26,9 +32,11 @@ type (
 func (l *LoginController) Inject(
 	redirectAware responder.RedirectAware,
 	authManager *application.AuthManager,
+	ph []LoginGetParameterHook,
 ) {
 	l.RedirectAware = redirectAware
 	l.authManager = authManager
+	l.parameterHooks = ph
 }
 
 // Get handler for logins (redirect)
@@ -47,5 +55,10 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Respo
 	request.Session().Store("auth.state", state)
 	request.Session().Store("auth.redirect", redirecturl)
 
-	return l.RedirectURL(l.authManager.OAuth2Config(c).AuthCodeURL(state))
+	var parameters []oauth2.AuthCodeOption
+	for _, hook := range l.parameterHooks {
+		parameters = append(parameters, hook.Parameters(c, request)...)
+	}
+
+	return l.RedirectURL(l.authManager.OAuth2Config(c).AuthCodeURL(state, parameters...))
 }

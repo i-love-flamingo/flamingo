@@ -266,8 +266,8 @@ func (r *ServerErrorResponse) Hook(hooks ...ResponseHook) Response {
 }
 
 // NotFound creates a 404 error response
-func (r *Responder) NotFound(err error) ServerErrorResponse {
-	return ServerErrorResponse{
+func (r *Responder) NotFound(err error) *ServerErrorResponse {
+	return &ServerErrorResponse{
 		Error: err,
 		HTTPResponse: HTTPResponse{
 			Status: http.StatusNotFound,
@@ -277,8 +277,8 @@ func (r *Responder) NotFound(err error) ServerErrorResponse {
 }
 
 // TODO creates a 501 Not Implemented response
-func (r *Responder) TODO() HTTPResponse {
-	return HTTPResponse{
+func (r *Responder) TODO() *HTTPResponse {
+	return &HTTPResponse{
 		Status: http.StatusNotImplemented,
 		Header: make(http.Header),
 	}

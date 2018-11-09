@@ -136,15 +136,20 @@ func ValidatorProvider(formValidators []FormValidator, config *struct {
 	}
 
 	for _, formValidator := range formValidators {
+		attached := false
 		if withoutParam, ok := formValidator.(FormValidatorWithoutParam); ok {
+			attached = true
 			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
 				return withoutParam.Validate(fl.Field().Interface())
 			})
-		} else if withParam, ok := formValidator.(FormValidatorWithParam); ok {
+		}
+		if withParam, ok := formValidator.(FormValidatorWithParam); ok {
+			attached = true
 			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
 				return withParam.Validate(fl.Param(), fl.Field().Interface())
 			})
-		} else {
+		}
+		if !attached {
 			panic("Validator must implement either FormValidatorWithoutParam or FormValidatorWithParam interface")
 		}
 	}

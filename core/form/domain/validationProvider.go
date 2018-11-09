@@ -11,16 +11,19 @@ import (
 )
 
 type (
-	FormValidator interface {
+	// FieldValidator as primary interface for defining custom field validation
+	FieldValidator interface {
 		ValidatorName() string
 	}
 
-	FormValidatorWithoutParam interface {
-		Validate(interface{}) bool
+	// FieldValidatorWithoutParam as additional interface for defining field validation without additional parameter
+	FieldValidatorWithoutParam interface {
+		ValidateWithoutParam(interface{}) bool
 	}
 
-	FormValidatorWithParam interface {
-		Validate(string, interface{}) bool
+	// FieldValidatorWithParam as additional interface for defining field validation without additional parameter
+	FieldValidatorWithParam interface {
+		ValidateWithParam(string, interface{}) bool
 	}
 )
 
@@ -117,7 +120,9 @@ func regexValidatorProvider(regexString string) validator.Func {
 	}
 }
 
-func ValidatorProvider(formValidators []FormValidator, config *struct {
+// ValidatorProvider as dingo provider
+// It creates instance of validator.Validate and inject all custom validators into it.
+func ValidatorProvider(fieldValidators []FieldValidator, config *struct {
 	DateFormat  string     `inject:"config:form.validator.dateFormat"`
 	CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 }) *validator.Validate {
@@ -135,22 +140,22 @@ func ValidatorProvider(formValidators []FormValidator, config *struct {
 		validate.RegisterValidation(name, regexValidatorProvider(regex))
 	}
 
-	for _, formValidator := range formValidators {
+	for _, fieldValidator := range fieldValidators {
 		attached := false
-		if withoutParam, ok := formValidator.(FormValidatorWithoutParam); ok {
+		if withoutParam, ok := fieldValidator.(FieldValidatorWithoutParam); ok {
 			attached = true
-			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
-				return withoutParam.Validate(fl.Field().Interface())
+			validate.RegisterValidation(fieldValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
+				return withoutParam.ValidateWithoutParam(fl.Field().Interface())
 			})
 		}
-		if withParam, ok := formValidator.(FormValidatorWithParam); ok {
+		if withParam, ok := fieldValidator.(FieldValidatorWithParam); ok {
 			attached = true
-			validate.RegisterValidation(formValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
-				return withParam.Validate(fl.Param(), fl.Field().Interface())
+			validate.RegisterValidation(fieldValidator.ValidatorName(), func(fl validator.FieldLevel) bool {
+				return withParam.ValidateWithParam(fl.Param(), fl.Field().Interface())
 			})
 		}
 		if !attached {
-			panic("Validator must implement either FormValidatorWithoutParam or FormValidatorWithParam interface")
+			panic("Validator must implement at least one of FormValidatorWithoutParam and FormValidatorWithParam interfaces")
 		}
 	}
 

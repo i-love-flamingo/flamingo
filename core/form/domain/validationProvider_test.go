@@ -22,7 +22,7 @@ func TestRunValidationProviderTestSuite(t *testing.T) {
 }
 
 func (t *ValidationProviderTestSuite) SetupTest() {
-	config := struct {
+	cfg := struct {
 		DateFormat  string     `inject:"config:form.validator.dateFormat"`
 		CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 	}{
@@ -32,7 +32,7 @@ func (t *ValidationProviderTestSuite) SetupTest() {
 			"justthis":   "^justthis$",
 		},
 	}
-	t.validate = ValidatorProvider([]FormValidator{}, &config)
+	t.validate = ValidatorProvider([]FieldValidator{}, &cfg)
 }
 
 func (t *ValidationProviderTestSuite) TestDateFormat() {

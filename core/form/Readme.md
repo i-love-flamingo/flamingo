@@ -108,3 +108,132 @@ Add your Data Representation of your form to your package ("/interfaces/controll
 ``` 
 
  * Optional your implementation can also implement the interface "domain.GetDefaultFormData", to be able to prepopulate your form data
+
+# Form validation
+
+Form module gives different ways to attach custom validation into validator.Validate.
+To use validator with injected custom validation, just define dingo provider which should
+returns instance of validator.Validate and later call it when it's needed.
+
+```go
+type (
+  validatorProvider func() *validator.Validate
+	
+  FormService struct {
+    validatorProvider     validatorProvider
+  }
+)
+
+func (fs *FormService) Inject(vp validatorProvider) {
+  fs.validatorProvider = vp
+}
+
+func (fs *FormService) ValidateFormData(data interface{}) (formDomain.ValidationInfo, error) {
+  validate := fs.validatorProvider()
+  validationInfo := application.ValidationErrorsToValidationInfo(validate.Struct(formData))
+  ...
+}
+```
+
+## Date field validators
+
+By using Validator Provider, date field validator are automatically injected so they can be
+used in the FormData as presented in example:
+
+```go
+type FormData struct {
+  ...
+  DateOfBirth string `form:"dateOfBirth" validate:"required,dateformat,minimumage=18,maximumage=150"`
+  ...
+}
+```
+
+Date format can be changed as part of configuration (default value is "2006-01-02"):
+
+```
+form:
+  validator:
+    dateFormat: 02.01.2006
+```
+
+## Custom regex field validators
+
+By using Validator Provider, it's possible to inject simple regex validators just by adapting
+configuration:
+
+```
+form:
+  validator:
+    customRegex:
+      password: ^[a-z]*$
+```
+
+By defining custom regex validator in configuration, it's further possible to use it as field validator,
+with same name as provided in configuration ("password"):
+
+```go
+type FormData struct {
+  ...
+  Password 	string `form:"password" validate:"required,password"`
+  ...
+}
+```
+
+## Complex custom field validators
+
+To inject complex field validators it's required to implement domain.FieldValidator interface and at least one
+of the following domain.FieldValidatorWithParam or domain.FieldValidatorWithoutParam interfaces.
+Following example shows custom field validator which implements both of the interfaces, but it's also enough
+to implement only one of them.
+
+```go
+type (
+  CustomMinValidator struct {
+  	logger flamingo.Logger
+  }
+)
+
+func (*CustomMinValidator) ValidatorName() string {
+  return "custommin"
+}
+
+func (v *CustomMinValidator) ValidateWithoutParam(value interface{}) bool {
+  number, ok := value.(int)
+  if !ok {
+    v.logger.WithField("customValidatorValue", fmt.Sprintf("%v", value))
+    return false
+  }
+  return number > 0
+}
+
+func (v *CustomMinValidator) ValidateWithParam(param string value interface{}) bool {
+  min, err := strconv.Atoi(param)
+  if err != nil {
+  	panic(err)
+  }
+  number, ok := value.(int)
+  if !ok {
+    v.logger.WithField("customValidatorValue", fmt.Sprintf("%v", value))
+    return false
+  }
+  return number > min
+}
+```
+
+To attach custom validator, simply inject it by using dingo injector:
+
+```go
+func (m *Module) Configure(injector *dingo.Injector) {
+	injector.BindMulti((*domain.FieldValidator)(nil)).To(&CustomMinValidator{})
+}
+```
+
+Final usage of this custom field validator is:
+```go
+type FormData struct {
+  ...
+  SomeField       string `form:"someField" validate:"custommin"` // calls method ValidateWithoutParam
+  SomeOtherField  string `form:"someOtherField" validate:"custommin=10"` // calls method ValidateWithParam, where param is 10
+  ...
+}
+```

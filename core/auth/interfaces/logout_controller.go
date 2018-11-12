@@ -56,6 +56,7 @@ func logout(r *web.Request) {
 	r.Session().Delete(application.KeyAuthstate)
 	r.Session().Delete(application.KeyToken)
 	r.Session().Delete(application.KeyRawIDToken)
+	r.Session().Delete(application.KeyTokenExtras)
 
 	// kill session
 	r.Session().G().Options.MaxAge = -1

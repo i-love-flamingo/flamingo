@@ -11,7 +11,7 @@ import (
 )
 
 // Module for core.auth
-type Module struct{
+type Module struct {
 	UseFake bool `inject:"config:auth.useFake"`
 }
 
@@ -37,14 +37,15 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
-			"useFake": false,
-			"fakeUserData": config.Map{},
+			"useFake":           false,
+			"fakeUserData":      config.Map{},
 			"fakeLoginTemplate": "",
-			"scopes":      config.Slice{"profile", "email"},
+			"scopes":            config.Slice{"profile", "email"},
 			"claims": config.Map{
 				"idToken":  config.Slice{},
 				"userInfo": config.Slice{},
 			},
+			"tokenExtras": config.Slice{},
 			"mapping": config.Map{
 				"idToken": config.Map{
 					"sub":   "sub",

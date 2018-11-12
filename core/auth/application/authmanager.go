@@ -26,11 +26,15 @@ const (
 
 	// KeyAuthstate defines the current internal authentication state
 	KeyAuthstate = "auth.state"
+
+	// KeyToken defines where the authentication token extras are saved
+	KeyTokenExtras = "auth.token.extras"
 )
 
 func init() {
 	gob.Register(&oauth2.Token{})
 	gob.Register(&oidc.IDToken{})
+	gob.Register(&domain.TokenExtras{})
 }
 
 type (

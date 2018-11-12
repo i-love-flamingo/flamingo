@@ -85,6 +85,7 @@ func (r *HTTPResponse) Apply(c context.Context, w http.ResponseWriter) error {
 			w.Header().Add(name, val)
 		}
 	}
+
 	w.WriteHeader(int(r.Status))
 	if r.Body == nil {
 		return nil

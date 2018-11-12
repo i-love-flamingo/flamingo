@@ -5,6 +5,7 @@ import (
 
 	"flamingo.me/flamingo/core/auth/application"
 	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
@@ -23,6 +24,7 @@ type (
 		authManager    *application.AuthManager
 		logger         flamingo.Logger
 		eventPublisher *application.EventPublisher
+		tokenExtras    config.Slice
 	}
 )
 
@@ -33,12 +35,16 @@ func (cc *CallbackController) Inject(
 	authManager *application.AuthManager,
 	logger flamingo.Logger,
 	eventPublisher *application.EventPublisher,
+	cfg *struct {
+		TokenExtras config.Slice `inject:"config:auth.tokenExtras"`
+	},
 ) {
 	cc.RedirectAware = redirectAware
 	cc.ErrorAware = errorAware
 	cc.authManager = authManager
 	cc.logger = logger
 	cc.eventPublisher = eventPublisher
+	cc.tokenExtras = cfg.TokenExtras
 }
 
 // Get handler for callbacks
@@ -57,9 +63,26 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 		return cc.Error(c, errors.WithStack(err))
 	}
 
+	var extras []string
+	err = cc.tokenExtras.MapInto(&extras)
+	if err != nil {
+		panic(err)
+	}
+	tokenExtras := &domain.TokenExtras{}
+	for _, extra := range extras {
+		value := oauth2Token.Extra(extra)
+		parsed, ok := value.(string)
+		if !ok {
+			cc.logger.Error("core.auth.callback invalid type for extras", value)
+			continue
+		}
+		tokenExtras.Add(extra, parsed)
+	}
+
 	request.Session().Store(application.KeyToken, oauth2Token)
 	rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
 	request.Session().Store(application.KeyRawIDToken, rawToken)
+	request.Session().Store(application.KeyTokenExtras, tokenExtras)
 	if err != nil {
 		cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 		return cc.Error(c, errors.WithStack(err))

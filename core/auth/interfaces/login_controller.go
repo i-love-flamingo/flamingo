@@ -24,7 +24,7 @@ type (
 	}
 
 	LoginGetParameterHook interface {
-		Parameters(context.Context, *web.Request) []oauth2.AuthCodeOption
+		Parameters(context.Context, *web.Request) map[string]string
 	}
 )
 
@@ -57,7 +57,10 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Respo
 
 	var parameters []oauth2.AuthCodeOption
 	for _, hook := range l.parameterHooks {
-		parameters = append(parameters, hook.Parameters(c, request)...)
+		keyValue := hook.Parameters(c, request)
+		for key, value := range keyValue {
+			parameters = append(parameters, oauth2.SetAuthURLParam(key, value))
+		}
 	}
 
 	return l.RedirectURL(l.authManager.OAuth2Config(c).AuthCodeURL(state, parameters...))

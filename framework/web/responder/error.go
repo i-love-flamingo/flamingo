@@ -110,7 +110,7 @@ func (r *FlamingoErrorAware) ErrorWithCode(context context.Context, error error,
 // Error returns a web.ContentResponse with status 503 and ContentType text/html
 func (r *FlamingoErrorAware) Error(context context.Context, err error) web.Response {
 	var response web.Response
-	r.Logger.WithField("category", "error_aware").WithField("errorTemplate", r.Tpl503).Error("Error ", err.Error())
+	r.Logger.WithField("category", "error_aware").WithField("errorTemplate", r.Tpl503).Error("Error ", err)
 	if !r.DebugMode {
 		response = r.RenderAware.Render(
 			context,

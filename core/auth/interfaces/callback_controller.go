@@ -57,39 +57,50 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
-	oauth2Token, err := cc.authManager.OAuth2Config(c).Exchange(c, request.MustQuery1("code"))
-	if err != nil {
-		cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
-		return cc.Error(c, errors.WithStack(err))
-	}
+	code, cOk := request.Query1("code")
+	errCode, eOk := request.Query1("error")
 
-	var extras []string
-	err = cc.tokenExtras.MapInto(&extras)
-	if err != nil {
-		panic(err)
-	}
-	tokenExtras := &domain.TokenExtras{}
-	for _, extra := range extras {
-		value := oauth2Token.Extra(extra)
-		parsed, ok := value.(string)
-		if !ok {
-			cc.logger.Error("core.auth.callback invalid type for extras", value)
-			continue
+	if !cOk && !eOk {
+		err := errors.New("missing both code and error get parameter")
+		cc.logger.Error("core.auth.callback Missing parameter", err)
+		return cc.Error(c, errors.WithStack(err))
+	} else if cOk {
+		oauth2Token, err := cc.authManager.OAuth2Config(c).Exchange(c, code)
+		if err != nil {
+			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
+			return cc.Error(c, errors.WithStack(err))
 		}
-		tokenExtras.Add(extra, parsed)
-	}
 
-	request.Session().Store(application.KeyToken, oauth2Token)
-	rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
-	request.Session().Store(application.KeyRawIDToken, rawToken)
-	request.Session().Store(application.KeyTokenExtras, tokenExtras)
-	if err != nil {
-		cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
-		return cc.Error(c, errors.WithStack(err))
+		var extras []string
+		err = cc.tokenExtras.MapInto(&extras)
+		if err != nil {
+			panic(err)
+		}
+		tokenExtras := &domain.TokenExtras{}
+		for _, extra := range extras {
+			value := oauth2Token.Extra(extra)
+			parsed, ok := value.(string)
+			if !ok {
+				cc.logger.Error("core.auth.callback invalid type for extras", value)
+				continue
+			}
+			tokenExtras.Add(extra, parsed)
+		}
+
+		request.Session().Store(application.KeyToken, oauth2Token)
+		rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
+		request.Session().Store(application.KeyRawIDToken, rawToken)
+		request.Session().Store(application.KeyTokenExtras, tokenExtras)
+		if err != nil {
+			cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
+			return cc.Error(c, errors.WithStack(err))
+		}
+		cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
+		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
+		request.Session().AddFlash("successful logged in", "info")
+	} else if eOk {
+		cc.logger.Error("core.auth.callback Error parameter", errCode)
 	}
-	cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
-	cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
-	request.Session().AddFlash("successful logged in", "info")
 
 	if redirect, ok := request.Session().Load("auth.redirect"); ok {
 		request.Session().Delete("auth.redirect")

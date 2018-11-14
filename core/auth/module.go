@@ -3,6 +3,7 @@ package auth
 import (
 	"flamingo.me/flamingo/core/auth/application"
 	fakeService "flamingo.me/flamingo/core/auth/application/fake"
+	"flamingo.me/flamingo/core/auth/application/store"
 	"flamingo.me/flamingo/core/auth/interfaces"
 	fakeController "flamingo.me/flamingo/core/auth/interfaces/fake"
 	"flamingo.me/flamingo/framework/config"
@@ -12,7 +13,9 @@ import (
 
 // Module for core.auth
 type Module struct {
-	UseFake bool `inject:"config:auth.useFake"`
+	UseFake        bool   `inject:"config:auth.useFake"`
+	OnlyOneDevice  bool   `inject:"config:auth.onlyOneDevice"`
+	SessionBackend string `inject:"config:session.backend"`
 }
 
 // Configure core.auth module
@@ -31,6 +34,18 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		injector.Bind((*interfaces.LogoutControllerInterface)(nil)).To(fakeController.LogoutController{})
 	}
 
+	if !m.OnlyOneDevice {
+		injector.Bind((*store.Store)(nil)).To(store.Nil{})
+	} else {
+		switch m.SessionBackend {
+		case "file":
+			injector.Bind((*store.Store)(nil)).To(store.File{})
+		default:
+			injector.Bind((*store.Store)(nil)).To(store.Nil{})
+		}
+	}
+	injector.Bind((*application.Synchronizer)(nil)).To(application.SynchronizerImpl{})
+
 	router.Bind(injector, new(routes))
 }
 
@@ -38,6 +53,7 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
 			"useFake":           false,
+			"onlyOneDevice":     false,
 			"fakeUserData":      config.Map{},
 			"fakeLoginTemplate": "",
 			"scopes":            config.Slice{"profile", "email"},

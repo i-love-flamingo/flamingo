@@ -25,6 +25,7 @@ type (
 		logger         flamingo.Logger
 		eventPublisher *application.EventPublisher
 		tokenExtras    config.Slice
+		userService    application.UserServiceInterface
 	}
 )
 
@@ -35,6 +36,7 @@ func (cc *CallbackController) Inject(
 	authManager *application.AuthManager,
 	logger flamingo.Logger,
 	eventPublisher *application.EventPublisher,
+	userService application.UserServiceInterface,
 	cfg *struct {
 		TokenExtras config.Slice `inject:"config:auth.tokenExtras"`
 	},
@@ -45,6 +47,7 @@ func (cc *CallbackController) Inject(
 	cc.logger = logger
 	cc.eventPublisher = eventPublisher
 	cc.tokenExtras = cfg.TokenExtras
+	cc.userService = userService
 }
 
 // Get handler for callbacks
@@ -95,6 +98,9 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 			cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 			return cc.Error(c, errors.WithStack(err))
 		}
+
+		cc.userService.InitUser(c, request.Session().G())
+
 		cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
 		request.Session().AddFlash("successful logged in", "info")

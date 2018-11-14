@@ -19,6 +19,10 @@ type (
 	}
 )
 
+var (
+	_ Store = &File{}
+)
+
 func (s *File) Inject(cfg *struct {
 	Path string `inject:"config:session.file"`
 }) {
@@ -34,11 +38,14 @@ func (s *File) DestroySessionsForUser(user domain.User) error {
 		return err
 	}
 
-	for _, id := range ids {
-		err := os.Remove(filepath.Join(s.path, "session_"+id))
-		if err != nil {
-			return err
-		}
+	err = s.destroyAllSessionsByIds(ids)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(s.getAllHashesFileName(user))
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -53,13 +60,12 @@ func (s *File) SetHashAndSessionIdForUser(user domain.User, hash string, id stri
 		return err
 	}
 
-	ids = append(ids, id)
-	data, err := json.Marshal(ids)
+	err = s.addSessionsId(user, ids, id)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(s.getAllHashesFileName(user), data, 0600)
+	err = s.addSessionsId(user, ids, id)
 	if err != nil {
 		return err
 	}
@@ -106,4 +112,30 @@ func (s *File) getAllSessionIds(user domain.User) ([]string, error) {
 	}
 
 	return ids, nil
+}
+
+func (s *File) destroyAllSessionsByIds(ids []string) error {
+	for _, id := range ids {
+		err := os.Remove(filepath.Join(s.path, "session_"+id))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *File) addSessionsId(user domain.User, ids []string, id string) error {
+	ids = append(ids, id)
+	data, err := json.Marshal(ids)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(s.getAllHashesFileName(user), data, 0600)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

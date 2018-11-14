@@ -9,11 +9,12 @@ import (
 
 	"flamingo.me/flamingo/core/auth/application/store"
 	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/gorilla/sessions"
 )
 
 const (
-	hashKey = "auth.onlyOneDevice.hash"
+	hashKey = "auth.preventSimultaneousSessions.hash"
 )
 
 type (
@@ -23,12 +24,14 @@ type (
 	}
 
 	SynchronizerImpl struct {
-		store store.Store
+		store  store.Store
+		logger flamingo.Logger
 	}
 )
 
-func (s *SynchronizerImpl) Inject(store store.Store) {
+func (s *SynchronizerImpl) Inject(store store.Store, logger flamingo.Logger) {
 	s.store = store
+	s.logger = logger
 }
 
 func (s *SynchronizerImpl) Insert(user *domain.User, session *sessions.Session) error {
@@ -38,7 +41,7 @@ func (s *SynchronizerImpl) Insert(user *domain.User, session *sessions.Session) 
 	session.Values[hashKey] = hash
 
 	if err := s.store.DestroySessionsForUser(*user); err != nil {
-		return err
+		s.logger.WithField("destroySession", "failed").Error(err.Error())
 	}
 
 	return s.store.SetHashAndSessionIdForUser(*user, hash, session.ID)

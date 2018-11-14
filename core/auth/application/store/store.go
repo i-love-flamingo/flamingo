@@ -6,7 +6,8 @@ import (
 
 type (
 	Store interface {
-		SetHashForUser(user domain.User, hash string) error
+		DestroySessionsForUser(user domain.User) error
+		SetHashAndSessionIdForUser(user domain.User, hash string, id string) error
 		GetHashByUser(user domain.User) (string, error)
 	}
 )

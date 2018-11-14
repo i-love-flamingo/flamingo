@@ -36,7 +36,12 @@ func (s *SynchronizerImpl) Insert(user *domain.User, session *sessions.Session) 
 	hashBytes := sha256.Sum256([]byte(concatenated))
 	hash := fmt.Sprintf("%x", hashBytes)
 	session.Values[hashKey] = hash
-	return s.store.SetHashForUser(*user, hash)
+
+	if err := s.store.DestroySessionsForUser(*user); err != nil {
+		return err
+	}
+
+	return s.store.SetHashAndSessionIdForUser(*user, hash, session.ID)
 }
 
 func (s *SynchronizerImpl) IsActive(user domain.User, session *sessions.Session) (bool, error) {

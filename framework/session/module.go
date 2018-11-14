@@ -6,6 +6,7 @@ import (
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"github.com/boj/redistore"
+	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/sessions"
 	"github.com/zemirco/memorystore"
 )
@@ -44,6 +45,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		sessionStore.DefaultMaxAge = int(m.RedisMaxAge)
 
 		injector.Bind((*sessions.Store)(nil)).ToInstance(sessionStore)
+		injector.Bind((*redis.Pool)(nil)).ToInstance(sessionStore.Pool)
 	case "file":
 		os.Mkdir(m.FileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.FileName, []byte(m.Secret))

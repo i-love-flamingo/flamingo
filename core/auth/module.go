@@ -13,9 +13,9 @@ import (
 
 // Module for core.auth
 type Module struct {
-	UseFake        bool   `inject:"config:auth.useFake"`
-	OnlyOneDevice  bool   `inject:"config:auth.onlyOneDevice"`
-	SessionBackend string `inject:"config:session.backend"`
+	UseFake                     bool   `inject:"config:auth.useFake"`
+	PreventSimultaneousSessions bool   `inject:"config:auth.preventSimultaneousSessions"`
+	SessionBackend              string `inject:"config:session.backend"`
 }
 
 // Configure core.auth module
@@ -34,14 +34,18 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		injector.Bind((*interfaces.LogoutControllerInterface)(nil)).To(fakeController.LogoutController{})
 	}
 
-	if !m.OnlyOneDevice {
+	if !m.PreventSimultaneousSessions {
 		injector.Bind((*store.Store)(nil)).To(store.Nil{})
 	} else {
 		switch m.SessionBackend {
+		case "redis":
+			injector.Bind((*store.Store)(nil)).To(store.Redis{}).AsEagerSingleton()
+		case "memory":
+			injector.Bind((*store.Store)(nil)).To(store.Memory{}).AsEagerSingleton()
 		case "file":
-			injector.Bind((*store.Store)(nil)).To(store.File{})
+			injector.Bind((*store.Store)(nil)).To(store.File{}).AsEagerSingleton()
 		default:
-			injector.Bind((*store.Store)(nil)).To(store.Nil{})
+			injector.Bind((*store.Store)(nil)).To(store.Nil{}).AsEagerSingleton()
 		}
 	}
 	injector.Bind((*application.Synchronizer)(nil)).To(application.SynchronizerImpl{})
@@ -52,11 +56,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
-			"useFake":           false,
-			"onlyOneDevice":     false,
-			"fakeUserData":      config.Map{},
-			"fakeLoginTemplate": "",
-			"scopes":            config.Slice{"profile", "email"},
+			"useFake":                     false,
+			"preventSimultaneousSessions": false,
+			"fakeUserData":                config.Map{},
+			"fakeLoginTemplate":           "",
+			"scopes":                      config.Slice{"profile", "email"},
 			"claims": config.Map{
 				"idToken":  config.Slice{},
 				"userInfo": config.Slice{},

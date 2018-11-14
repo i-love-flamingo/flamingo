@@ -10,10 +10,10 @@ import (
 type (
 	// userService helps to use the authenticated user information
 	UserService struct {
-		authManager    *AuthManager
-		mappingService *domain.UserMappingService
-		synchronizer   Synchronizer
-		onlyOneDevice  bool
+		authManager                 *AuthManager
+		mappingService              *domain.UserMappingService
+		synchronizer                Synchronizer
+		preventSimultaneousSessions bool
 	}
 
 	// UserServiceInterface to mock in tests
@@ -25,18 +25,18 @@ type (
 )
 
 func (us *UserService) Inject(manager *AuthManager, ums *domain.UserMappingService, s Synchronizer, cfg *struct {
-	OnlyOneDevice bool `inject:"config:auth.onlyOneDevice"`
+	PreventSimultaneousSessions bool `inject:"config:auth.preventSimultaneousSessions"`
 }) {
 	us.authManager = manager
 	us.mappingService = ums
 	us.synchronizer = s
-	us.onlyOneDevice = cfg.OnlyOneDevice
+	us.preventSimultaneousSessions = cfg.PreventSimultaneousSessions
 }
 
 func (us *UserService) InitUser(c context.Context, session *sessions.Session) {
 	user := us.getUser(c, session)
 
-	if us.onlyOneDevice && user != nil {
+	if us.preventSimultaneousSessions && user != nil {
 		us.synchronizer.Insert(user, session)
 	}
 }
@@ -71,7 +71,7 @@ func (us *UserService) getUser(c context.Context, session *sessions.Session) *do
 }
 
 func (us *UserService) syncCheck(user *domain.User, session *sessions.Session) *domain.User {
-	if us.onlyOneDevice && user != nil {
+	if us.preventSimultaneousSessions && user != nil {
 		isActive, err := us.synchronizer.IsActive(*user, session)
 		if !isActive || err != nil {
 			delete(session.Values, KeyToken)

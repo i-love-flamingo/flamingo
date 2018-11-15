@@ -143,9 +143,14 @@ func (s *Redis) addSessionsId(user domain.User, ids []string, id string) error {
 
 	key := s.getAllHashesKey(user)
 
+	maxAge := int(s.maxAge)
+	if maxAge == 0 {
+		maxAge = 20 * 60
+	}
+
 	conn := s.pool.Get()
 	defer conn.Close()
-	_, err = conn.Do("SETEX", key, int(s.maxAge), data)
+	_, err = conn.Do("SETEX", key, maxAge, data)
 
 	return err
 }

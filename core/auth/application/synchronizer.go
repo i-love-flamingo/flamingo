@@ -19,7 +19,7 @@ const (
 
 type (
 	Synchronizer interface {
-		Insert(user *domain.User, session *sessions.Session) error
+		Insert(user domain.User, session *sessions.Session) error
 		IsActive(user domain.User, session *sessions.Session) (bool, error)
 	}
 
@@ -34,17 +34,17 @@ func (s *SynchronizerImpl) Inject(store store.Store, logger flamingo.Logger) {
 	s.logger = logger
 }
 
-func (s *SynchronizerImpl) Insert(user *domain.User, session *sessions.Session) error {
+func (s *SynchronizerImpl) Insert(user domain.User, session *sessions.Session) error {
 	concatenated := strings.Join([]string{user.Sub, time.Now().Format(time.RFC3339Nano)}, "|")
 	hashBytes := sha256.Sum256([]byte(concatenated))
 	hash := fmt.Sprintf("%x", hashBytes)
 	session.Values[hashKey] = hash
 
-	if err := s.store.DestroySessionsForUser(*user); err != nil {
+	if err := s.store.DestroySessionsForUser(user); err != nil {
 		s.logger.WithField("destroySession", "failed").Error(err.Error())
 	}
 
-	return s.store.SetHashAndSessionIdForUser(*user, hash, session.ID)
+	return s.store.SetHashAndSessionIdForUser(user, hash, session.ID)
 }
 
 func (s *SynchronizerImpl) IsActive(user domain.User, session *sessions.Session) (bool, error) {

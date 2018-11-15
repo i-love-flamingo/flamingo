@@ -18,7 +18,7 @@ type (
 
 	// UserServiceInterface to mock in tests
 	UserServiceInterface interface {
-		InitUser(ctx context.Context, session *sessions.Session)
+		InitUser(ctx context.Context, session *sessions.Session) error
 		GetUser(ctx context.Context, session *sessions.Session) *domain.User
 		IsLoggedIn(ctx context.Context, session *sessions.Session) bool
 	}
@@ -33,12 +33,14 @@ func (us *UserService) Inject(manager *AuthManager, ums *domain.UserMappingServi
 	us.preventSimultaneousSessions = cfg.PreventSimultaneousSessions
 }
 
-func (us *UserService) InitUser(c context.Context, session *sessions.Session) {
+func (us *UserService) InitUser(c context.Context, session *sessions.Session) error {
 	user := us.getUser(c, session)
 
-	if us.preventSimultaneousSessions && user != nil {
-		us.synchronizer.Insert(user, session)
+	if us.preventSimultaneousSessions && user != nil && user.Type != domain.GUEST {
+		return us.synchronizer.Insert(*user, session)
 	}
+
+	return nil
 }
 
 // GetUser returns the current user information
@@ -71,7 +73,7 @@ func (us *UserService) getUser(c context.Context, session *sessions.Session) *do
 }
 
 func (us *UserService) syncCheck(user *domain.User, session *sessions.Session) *domain.User {
-	if us.preventSimultaneousSessions && user != nil {
+	if us.preventSimultaneousSessions && user != nil && user.Type != domain.GUEST {
 		isActive, err := us.synchronizer.IsActive(*user, session)
 		if !isActive || err != nil {
 			delete(session.Values, KeyToken)

@@ -99,7 +99,11 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 			return cc.Error(c, errors.WithStack(err))
 		}
 
-		cc.userService.InitUser(c, request.Session().G())
+		err = cc.userService.InitUser(c, request.Session().G())
+		if err != nil {
+			cc.logger.Error("core.auth.callback Error init user", err)
+			return cc.Error(c, errors.WithStack(err))
+		}
 
 		cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)

@@ -116,7 +116,11 @@ func (s *File) getAllSessionIds(user domain.User) ([]string, error) {
 
 func (s *File) destroyAllSessionsByIds(ids []string) error {
 	for _, id := range ids {
-		err := os.Remove(filepath.Join(s.path, "session_"+id))
+		filename := filepath.Join(s.path, "session_"+id)
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			continue
+		}
+		err := os.Remove(filename)
 		if err != nil {
 			return err
 		}

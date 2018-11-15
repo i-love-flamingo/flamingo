@@ -14,9 +14,12 @@ const (
 
 type (
 	UserService struct {
-
 	}
 )
+
+func (us *UserService) InitUser(c context.Context, session *sessions.Session) error {
+	return nil
+}
 
 func (u *UserService) GetUser(ctx context.Context, session *sessions.Session) *domain.User {
 	value := session.Values[UserSessionKey]

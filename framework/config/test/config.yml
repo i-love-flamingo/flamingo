@@ -1,1 +1,5 @@
 foo.bar.test: 1
+env.var.test1: %%ENV:TEST1%%
+env.var.test2: %%ENV:TEST2%%
+env.var.test3: %%ENV:TEST3%%default%%
+env.var.test4: %%ENV:TEST4%%default%%

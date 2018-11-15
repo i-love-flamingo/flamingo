@@ -91,7 +91,7 @@ func load(area *Area, basedir, curdir string) error {
 	return nil
 }
 
-var regex = regexp.MustCompile(`%%ENV:([^%]+)%%`)
+var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
 
 func loadConfigFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename)
@@ -110,7 +110,13 @@ func loadConfigFile(area *Area, filename string) error {
 func loadConfig(area *Area, config []byte) error {
 	config = []byte(regex.ReplaceAllFunc(
 		config,
-		func(a []byte) []byte { return []byte(os.Getenv(string(regex.FindSubmatch(a)[1]))) },
+		func(a []byte) []byte {
+			value := os.Getenv(string(regex.FindSubmatch(a)[1]))
+			if value == "" {
+				value = string(regex.FindSubmatch(a)[3])
+			}
+			return []byte(value)
+		},
 	))
 
 	cfg := make(Map)

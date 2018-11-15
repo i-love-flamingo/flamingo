@@ -36,7 +36,9 @@ func TestNilValuesRemoveData(t *testing.T) {
 	cfg = readConfig(t, "test/config_dev.yml")
 	config.Add(cfg)
 
-	assert.Equal(t, Map{"foo": nil}, config)
+	fooValue, present := config.Get("foo")
+	assert.Equal(t, nil, fooValue)
+	assert.Equal(t, true, present)
 }
 
 func readConfig(t *testing.T, configName string) Map {

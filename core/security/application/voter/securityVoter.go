@@ -3,7 +3,7 @@ package voter
 import (
 	"context"
 
-	"github.com/gorilla/sessions"
+	"flamingo.me/flamingo/framework/web"
 )
 
 const (
@@ -14,6 +14,6 @@ const (
 
 type (
 	SecurityVoter interface {
-		Vote(context.Context, *sessions.Session, string, interface{}) int
+		Vote(context.Context, *web.Session, string, interface{}) int
 	}
 )

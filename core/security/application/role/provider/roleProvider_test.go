@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gorilla/sessions"
+	"github.com/stretchr/testify/suite"
+
 	"flamingo.me/flamingo/core/auth/application/fake"
 	authDomain "flamingo.me/flamingo/core/auth/domain"
 	securityDomain "flamingo.me/flamingo/core/security/domain"
-	"github.com/gorilla/sessions"
-	"github.com/stretchr/testify/suite"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -35,9 +37,10 @@ func (t *DefaultRoleProviderTestSuite) SetupSuite() {
 
 func (t *DefaultRoleProviderTestSuite) TestAll_RoleAnonymous() {
 	session := sessions.NewSession(nil, "-")
+	webSession := web.NewSession(session)
 	t.Equal([]securityDomain.Role{
 		securityDomain.RoleAnonymous,
-	}, t.provider.All(t.context, session))
+	}, t.provider.All(t.context, webSession))
 }
 
 func (t *DefaultRoleProviderTestSuite) TestAll_RoleUser() {
@@ -45,7 +48,8 @@ func (t *DefaultRoleProviderTestSuite) TestAll_RoleUser() {
 	session.Values[fake.UserSessionKey] = authDomain.User{
 		Type: authDomain.USER,
 	}
+	webSession := web.NewSession(session)
 	t.Equal([]securityDomain.Role{
 		securityDomain.RoleUser,
-	}, t.provider.All(t.context, session))
+	}, t.provider.All(t.context, webSession))
 }

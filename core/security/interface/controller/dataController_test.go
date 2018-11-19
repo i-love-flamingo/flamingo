@@ -20,9 +20,10 @@ type (
 		controller      *DataController
 		securityService *mocks.SecurityService
 
-		context context.Context
-		request *web.Request
-		session *sessions.Session
+		context    context.Context
+		request    *web.Request
+		session    *sessions.Session
+		webSession *web.Session
 	}
 )
 
@@ -33,6 +34,7 @@ func TestDataControllerTestSuite(t *testing.T) {
 func (t *DataControllerTestSuite) SetupSuite() {
 	t.context = context.Background()
 	t.session = sessions.NewSession(nil, "")
+	t.webSession = web.NewSession(t.session)
 	t.request = web.RequestFromRequest(&http.Request{}, web.NewSession(t.session))
 	t.request.LoadParams(map[string]string{
 		"permission": "SomePermission",
@@ -52,7 +54,7 @@ func (t *DataControllerTestSuite) TearDownTest() {
 }
 
 func (t *DataControllerTestSuite) TestIsLoggedIn() {
-	t.securityService.On("IsLoggedIn", t.context, t.session).Return(true).Once()
+	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(true).Once()
 	result := t.controller.IsLoggedIn(t.context, t.request)
 	isLoggedIn, ok := result.(bool)
 	t.True(isLoggedIn)
@@ -60,7 +62,7 @@ func (t *DataControllerTestSuite) TestIsLoggedIn() {
 }
 
 func (t *DataControllerTestSuite) TestIsLoggedOut() {
-	t.securityService.On("IsLoggedOut", t.context, t.session).Return(true).Once()
+	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(true).Once()
 	result := t.controller.IsLoggedOut(t.context, t.request)
 	isLoggedOut, ok := result.(bool)
 	t.True(isLoggedOut)
@@ -68,7 +70,7 @@ func (t *DataControllerTestSuite) TestIsLoggedOut() {
 }
 
 func (t *DataControllerTestSuite) TestIsGranted() {
-	t.securityService.On("IsGranted", t.context, t.session, "SomePermission", nil).Return(true).Once()
+	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
 	result := t.controller.IsGranted(t.context, t.request)
 	isGranted, ok := result.(bool)
 	t.True(isGranted)

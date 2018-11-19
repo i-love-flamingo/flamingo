@@ -3,10 +3,9 @@ package voter
 import (
 	"context"
 
-	"github.com/gorilla/sessions"
-
 	"flamingo.me/flamingo/core/security/application/role"
 	"flamingo.me/flamingo/core/security/domain"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (
@@ -19,7 +18,7 @@ func (v *RoleVoter) Inject(rs role.Service) {
 	v.roleService = rs
 }
 
-func (v *RoleVoter) Vote(ctx context.Context, session *sessions.Session, permission string, object interface{}) int {
+func (v *RoleVoter) Vote(ctx context.Context, session *web.Session, permission string, object interface{}) int {
 	if permission == domain.RoleAnonymous.Permission() || permission == domain.RoleUser.Permission() {
 		return AccessAbstained
 	}

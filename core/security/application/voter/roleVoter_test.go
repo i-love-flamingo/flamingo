@@ -7,6 +7,7 @@ import (
 	roleMocks "flamingo.me/flamingo/core/security/application/role/mocks"
 	"flamingo.me/flamingo/core/security/domain"
 	domainMocks "flamingo.me/flamingo/core/security/domain/mocks"
+	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )
@@ -19,8 +20,9 @@ type (
 		roleService *roleMocks.Service
 		object      *domainMocks.RoleSet
 
-		context context.Context
-		session *sessions.Session
+		context    context.Context
+		session    *sessions.Session
+		webSession *web.Session
 	}
 )
 
@@ -31,6 +33,7 @@ func TestRoleVoterTestSuite(t *testing.T) {
 func (t *RoleVoterTestSuite) SetupSuite() {
 	t.context = context.Background()
 	t.session = sessions.NewSession(nil, "-")
+	t.webSession = web.NewSession(t.session)
 }
 
 func (t *RoleVoterTestSuite) SetupTest() {
@@ -49,37 +52,36 @@ func (t *RoleVoterTestSuite) TearDownTest() {
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessAbstained() {
-	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.session, domain.RoleAnonymous.Permission(), nil))
-	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.session, domain.RoleUser.Permission(), nil))
+	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.webSession, domain.RoleAnonymous.Permission(), nil))
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithoutObject() {
-	t.roleService.On("All", t.context, t.session).Return([]domain.Role{
+	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
 		domain.RoleUser,
 		domain.DefaultRole("RoleAdministrator"),
 	}).Once()
-	t.Equal(AccessGranted, t.voter.Vote(t.context, t.session, "RoleAdministrator", nil))
+	t.Equal(AccessGranted, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", nil))
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithObject() {
-	t.roleService.On("All", t.context, t.session).Return([]domain.Role{
+	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
 		domain.RoleUser,
 		domain.DefaultRole("RoleAdministrator"),
 	}).Once()
 	t.object.On("Roles").Return([]domain.Role{
 		domain.DefaultRole("RoleAdministrator"),
 	}).Once()
-	t.Equal(AccessGranted, t.voter.Vote(t.context, t.session, "RoleAdministrator", t.object))
+	t.Equal(AccessGranted, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", t.object))
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessDeniedWithoutObject() {
-	t.roleService.On("All", t.context, t.session).Return([]domain.Role{
+	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
 		domain.RoleAnonymous,
 	}).Once()
-	t.Equal(AccessDenied, t.voter.Vote(t.context, t.session, "RoleAdministrator", nil))
+	t.Equal(AccessDenied, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", nil))
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessDeniedWithObject() {
 	t.object.On("Roles").Return([]domain.Role{}).Once()
-	t.Equal(AccessDenied, t.voter.Vote(t.context, t.session, "RoleAdministrator", t.object))
+	t.Equal(AccessDenied, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", t.object))
 }

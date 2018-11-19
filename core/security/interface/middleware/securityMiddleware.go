@@ -56,7 +56,7 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 
 func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsLoggedIn(ctx, req.Session().G()) {
+		if !m.securityService.IsLoggedIn(ctx, req.Session()) {
 			redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
 			return m.responder.RouteRedirect("auth.login", map[string]string{
 				"redirecturl": redirectUrl.String(),
@@ -68,7 +68,7 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 
 func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsLoggedOut(ctx, req.Session().G()) {
+		if !m.securityService.IsLoggedOut(ctx, req.Session()) {
 			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
 			return m.responder.URLRedirect(redirectUrl)
 		}
@@ -78,7 +78,7 @@ func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Acti
 
 func (m *SecurityMiddleware) HandleIfGranted(action router.Action, permission string) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsGranted(ctx, req.Session().G(), permission, nil) {
+		if !m.securityService.IsGranted(ctx, req.Session(), permission, nil) {
 			return m.responder.Forbidden(errors.Errorf("Missing permission %s for path %s.", permission, req.Request().URL.Path))
 		}
 		return action(ctx, req)

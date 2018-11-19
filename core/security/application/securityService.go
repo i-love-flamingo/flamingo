@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gorilla/sessions"
-
 	"flamingo.me/flamingo/core/security/application/voter"
 	"flamingo.me/flamingo/core/security/domain"
+	"flamingo.me/flamingo/framework/web"
 )
 
 const (
@@ -18,9 +17,9 @@ const (
 
 type (
 	SecurityService interface {
-		IsLoggedIn(context.Context, *sessions.Session) bool
-		IsLoggedOut(context.Context, *sessions.Session) bool
-		IsGranted(context.Context, *sessions.Session, string, interface{}) bool
+		IsLoggedIn(context.Context, *web.Session) bool
+		IsLoggedOut(context.Context, *web.Session) bool
+		IsGranted(context.Context, *web.Session, string, interface{}) bool
 	}
 
 	SecurityServiceImpl struct {
@@ -43,15 +42,15 @@ func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, cfg *struct {
 	s.allowIfAllAbstain = cfg.AllowIfAllAbstain
 }
 
-func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *sessions.Session) bool {
+func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *web.Session) bool {
 	return s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
 }
 
-func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *sessions.Session) bool {
+func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *web.Session) bool {
 	return s.IsGranted(ctx, session, domain.RoleAnonymous.Permission(), nil)
 }
 
-func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *sessions.Session, permission string, object interface{}) bool {
+func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *web.Session, permission string, object interface{}) bool {
 	var results []int
 	for index := range s.voters {
 		results = append(results, s.voters[index].Vote(ctx, session, permission, object))

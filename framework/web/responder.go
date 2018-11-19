@@ -22,6 +22,11 @@ type (
 	Responder struct {
 		engine template.Engine
 		router ReverseRouter
+
+		templateForbidden     string
+		templateNotFound      string
+		templateUnavailable   string
+		templateErrorWithCode string
 	}
 
 	// HTTPResponse contains a status and a body
@@ -61,15 +66,25 @@ type (
 
 	// ServerErrorResponse returns a server error, by default http 500
 	ServerErrorResponse struct {
-		HTTPResponse
+		RenderResponse
 		Error error
 	}
 )
 
 // Inject Responder dependencies
-func (r *Responder) Inject(engine template.Engine, router ReverseRouter) *Responder {
+func (r *Responder) Inject(engine template.Engine, router ReverseRouter, cfg *struct {
+	TemplateForbidden     string `inject:"config:flamingo.template.err403"`
+	TemplateNotFound      string `inject:"config:flamingo.template.err404"`
+	TemplateUnavailable   string `inject:"config:flamingo.template.err503"`
+	TemplateErrorWithCode string `inject:"config:flamingo.template.errWithCode"`
+}) *Responder {
 	r.engine = engine
 	r.router = router
+	r.templateForbidden = cfg.TemplateForbidden
+	r.templateNotFound = cfg.TemplateNotFound
+	r.templateUnavailable = cfg.TemplateUnavailable
+	r.templateErrorWithCode = cfg.TemplateErrorWithCode
+
 	return r
 }
 
@@ -184,7 +199,7 @@ func (r *Responder) Data(data interface{}) *DataResponse {
 }
 
 // Apply response
-func (r DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(r.Data); err != nil {
 		return err
@@ -242,21 +257,9 @@ func (r *RenderResponse) Hook(hooks ...ResponseHook) Response {
 	return r
 }
 
-// ServerError creates a 500 error response
-func (r *Responder) ServerError(err error) *ServerErrorResponse {
-	return &ServerErrorResponse{
-		Error: err,
-		HTTPResponse: HTTPResponse{
-			Status: http.StatusInternalServerError,
-			Header: make(http.Header),
-		},
-	}
-}
-
 // Apply response
 func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
-	r.Body = bytes.NewBufferString(r.Error.Error())
-	return r.HTTPResponse.Apply(c, w)
+	return r.RenderResponse.Apply(c, w)
 }
 
 // Hook helper
@@ -266,15 +269,42 @@ func (r *ServerErrorResponse) Hook(hooks ...ResponseHook) Response {
 	return r
 }
 
-// NotFound creates a 404 error response
-func (r *Responder) NotFound(err error) *ServerErrorResponse {
+// ServerErrorWithCodeAndTemplate error response with template and http status code
+func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status uint) *ServerErrorResponse {
 	return &ServerErrorResponse{
 		Error: err,
-		HTTPResponse: HTTPResponse{
-			Status: http.StatusNotFound,
-			Header: make(http.Header),
+		RenderResponse: RenderResponse{
+			Template: tpl,
+			engine:   r.engine,
+			DataResponse: DataResponse{
+				Data: nil,
+				HTTPResponse: HTTPResponse{
+					Status: status,
+					Header: make(http.Header),
+				},
+			},
 		},
 	}
+}
+
+// ServerError creates a 500 error response
+func (r *Responder) ServerError(err error) *ServerErrorResponse {
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
+}
+
+// Unavailable creates a 503 error response
+func (r *Responder) Unavailable(err error) *ServerErrorResponse {
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateUnavailable, http.StatusServiceUnavailable)
+}
+
+// NotFound creates a 404 error response
+func (r *Responder) NotFound(err error) *ServerErrorResponse {
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateNotFound, http.StatusNotFound)
+}
+
+// Forbidden creates a 403 error response
+func (r *Responder) Forbidden(err error) *ServerErrorResponse {
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
 }
 
 // TODO creates a 501 Not Implemented response

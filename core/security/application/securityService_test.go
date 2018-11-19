@@ -11,6 +11,7 @@ import (
 	"flamingo.me/flamingo/core/security/application/voter"
 	"flamingo.me/flamingo/core/security/application/voter/mocks"
 	"flamingo.me/flamingo/core/security/domain"
+	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 )
 
@@ -180,12 +181,13 @@ func (t *SecurityServiceTestSuite) TestIsLoggedIn() {
 
 	for index, testCase := range testCases {
 		session := sessions.NewSession(nil, fmt.Sprintf("%d", index))
+		webSession := web.NewSession(session)
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, session, domain.RoleUser.Permission(), nil).Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, session, domain.RoleUser.Permission(), nil).Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, session, domain.RoleUser.Permission(), nil).Return(testCase.thirdVote)
-		t.Equal(testCase.decision, t.service.IsLoggedIn(t.context, session))
+		t.firstVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.firstVote)
+		t.secondVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.secondVote)
+		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.thirdVote)
+		t.Equal(testCase.decision, t.service.IsLoggedIn(t.context, webSession))
 	}
 }
 
@@ -299,12 +301,13 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 
 	for index, testCase := range testCases {
 		session := sessions.NewSession(nil, fmt.Sprintf("%d", index))
+		webSession := web.NewSession(session)
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, session, domain.RoleAnonymous.Permission(), nil).Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, session, domain.RoleAnonymous.Permission(), nil).Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, session, domain.RoleAnonymous.Permission(), nil).Return(testCase.thirdVote)
-		t.Equal(testCase.decision, t.service.IsLoggedOut(t.context, session))
+		t.firstVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.firstVote)
+		t.secondVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.secondVote)
+		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.thirdVote)
+		t.Equal(testCase.decision, t.service.IsLoggedOut(t.context, webSession))
 	}
 }
 
@@ -418,11 +421,12 @@ func (t *SecurityServiceTestSuite) TestIsGranted() {
 
 	for index, testCase := range testCases {
 		session := sessions.NewSession(nil, fmt.Sprintf("%d", index))
+		webSession := web.NewSession(session)
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, session, "SomePermission", nil).Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, session, "SomePermission", nil).Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, session, "SomePermission", nil).Return(testCase.thirdVote)
-		t.Equal(testCase.decision, t.service.IsGranted(t.context, session, "SomePermission", nil))
+		t.firstVoter.On("Vote", t.context, webSession, "SomePermission", nil).Return(testCase.firstVote)
+		t.secondVoter.On("Vote", t.context, webSession, "SomePermission", nil).Return(testCase.secondVote)
+		t.thirdVoter.On("Vote", t.context, webSession, "SomePermission", nil).Return(testCase.thirdVote)
+		t.Equal(testCase.decision, t.service.IsGranted(t.context, webSession, "SomePermission", nil))
 	}
 }

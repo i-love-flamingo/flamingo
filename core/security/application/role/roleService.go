@@ -3,16 +3,15 @@ package role
 import (
 	"context"
 
-	"github.com/gorilla/sessions"
-
 	"flamingo.me/flamingo/core/security/application/role/provider"
 	"flamingo.me/flamingo/core/security/domain"
 	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/web"
 )
 
 type (
 	Service interface {
-		All(context.Context, *sessions.Session) []domain.Role
+		All(context.Context, *web.Session) []domain.Role
 	}
 
 	ServiceImpl struct {
@@ -28,7 +27,7 @@ func (s *ServiceImpl) Inject(p []provider.RoleProvider, cfg *struct {
 	s.rolesHierarchy = cfg.RolesHierarchy
 }
 
-func (s *ServiceImpl) All(ctx context.Context, session *sessions.Session) []domain.Role {
+func (s *ServiceImpl) All(ctx context.Context, session *web.Session) []domain.Role {
 	rolesChan := make(chan []domain.Role)
 
 	for index := range s.providers {

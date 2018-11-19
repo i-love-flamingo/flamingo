@@ -18,14 +18,14 @@ func (c *DataController) Inject(s application.SecurityService) {
 }
 
 func (c *DataController) IsLoggedIn(ctx context.Context, r *web.Request) interface{} {
-	return c.securityService.IsLoggedIn(ctx, r.Session().G())
+	return c.securityService.IsLoggedIn(ctx, r.Session())
 }
 
 func (c *DataController) IsLoggedOut(ctx context.Context, r *web.Request) interface{} {
-	return c.securityService.IsLoggedOut(ctx, r.Session().G())
+	return c.securityService.IsLoggedOut(ctx, r.Session())
 }
 
 func (c *DataController) IsGranted(ctx context.Context, r *web.Request) interface{} {
 	permission := r.MustParam1("permission")
-	return c.securityService.IsGranted(ctx, r.Session().G(), permission, nil)
+	return c.securityService.IsGranted(ctx, r.Session(), permission, nil)
 }

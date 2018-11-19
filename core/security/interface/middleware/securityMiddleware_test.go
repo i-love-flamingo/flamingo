@@ -25,11 +25,12 @@ type (
 		securityService  *applicationMocks.SecurityService
 		redirectUrlMaker *interfaceMocks.RedirectUrlMaker
 
-		context  context.Context
-		request  *web.Request
-		response web.Response
-		session  *sessions.Session
-		action   router.Action
+		context    context.Context
+		request    *web.Request
+		response   web.Response
+		session    *sessions.Session
+		webSession *web.Session
+		action     router.Action
 	}
 )
 
@@ -40,6 +41,7 @@ func TestSecurityMiddlewareTestSuite(t *testing.T) {
 func (t *SecurityMiddlewareTestSuite) SetupSuite() {
 	t.context = context.Background()
 	t.session = sessions.NewSession(nil, "")
+	t.webSession = web.NewSession(t.session)
 	t.request = web.RequestFromRequest(&http.Request{
 		URL: &url.URL{
 			Path: "/referrer",
@@ -89,7 +91,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithReferrer
 
 	action := t.middleware.HandleIfLoggedIn(t.action)
 	t.middleware.loginPathRedirectStrategy = ReferrerRedirectStrategy
-	t.securityService.On("IsLoggedIn", t.context, t.session).Return(false).Once()
+	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(false).Once()
 	t.redirectUrlMaker.On("URL", t.context, "/referrer").Return(redirectUrl, nil).Once()
 
 	result := action(t.context, t.request)
@@ -108,7 +110,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithPath() {
 
 	action := t.middleware.HandleIfLoggedIn(t.action)
 	t.middleware.loginPathRedirectStrategy = PathRedirectStrategy
-	t.securityService.On("IsLoggedIn", t.context, t.session).Return(false).Once()
+	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(false).Once()
 	t.redirectUrlMaker.On("URL", t.context, "/home").Return(redirectUrl, nil).Once()
 
 	result := action(t.context, t.request)
@@ -123,7 +125,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithPath() {
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_Allowed() {
 	action := t.middleware.HandleIfLoggedIn(t.action)
-	t.securityService.On("IsLoggedIn", t.context, t.session).Return(true).Once()
+	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(true).Once()
 
 	result := action(t.context, t.request)
 	t.Exactly(t.response, result)
@@ -135,7 +137,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithReferre
 
 	action := t.middleware.HandleIfLoggedOut(t.action)
 	t.middleware.authenticatedHomepageStrategy = ReferrerRedirectStrategy
-	t.securityService.On("IsLoggedOut", t.context, t.session).Return(false).Once()
+	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(false).Once()
 	t.redirectUrlMaker.On("URL", t.context, "/http-referrer").Return(redirectUrl, nil).Once()
 
 	result := action(t.context, t.request)
@@ -151,7 +153,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithPath() 
 
 	action := t.middleware.HandleIfLoggedOut(t.action)
 	t.middleware.authenticatedHomepageStrategy = PathRedirectStrategy
-	t.securityService.On("IsLoggedOut", t.context, t.session).Return(false).Once()
+	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(false).Once()
 	t.redirectUrlMaker.On("URL", t.context, "/authenticated").Return(redirectUrl, nil).Once()
 
 	result := action(t.context, t.request)
@@ -163,7 +165,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithPath() 
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_Allowed() {
 	action := t.middleware.HandleIfLoggedOut(t.action)
-	t.securityService.On("IsLoggedOut", t.context, t.session).Return(true).Once()
+	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(true).Once()
 
 	result := action(t.context, t.request)
 	t.Exactly(t.response, result)
@@ -171,7 +173,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_Allowed() {
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {
 	action := t.middleware.HandleIfGranted(t.action, "SomePermission")
-	t.securityService.On("IsGranted", t.context, t.session, "SomePermission", nil).Return(false).Once()
+	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(false).Once()
 
 	result := action(t.context, t.request)
 	response, ok := result.(*web.ServerErrorResponse)
@@ -183,7 +185,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Allowed() {
 	action := t.middleware.HandleIfGranted(t.action, "SomePermission")
-	t.securityService.On("IsGranted", t.context, t.session, "SomePermission", nil).Return(true).Once()
+	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
 
 	result := action(t.context, t.request)
 	t.Exactly(t.response, result)

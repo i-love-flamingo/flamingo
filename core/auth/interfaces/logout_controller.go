@@ -93,7 +93,7 @@ func (l *LogoutController) Get(c context.Context, request *web.Request) web.Resp
 		return l.RedirectURL(ru.String())
 	}
 
-	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectUrl(c, endURL)
+	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectURL(c, endURL)
 	if redirectURLError != nil {
 		logout(request)
 		l.logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectURLError.Error())

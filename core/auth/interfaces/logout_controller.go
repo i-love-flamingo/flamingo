@@ -31,7 +31,7 @@ type (
 	}
 
 	LogoutRedirectAware interface {
-		GetRedirectUrl(context context.Context, u *url.URL) (string, error)
+		GetRedirectURL(context context.Context, u *url.URL) (string, error)
 	}
 )
 
@@ -42,8 +42,8 @@ func (d *DefaultLogoutRedirect) Inject(manager *application.AuthManager) {
 	d.authManager = manager
 }
 
-// GetRedirectUrl builds default redirect URL for logout
-func (d *DefaultLogoutRedirect) GetRedirectUrl(c context.Context, u *url.URL) (string, error) {
+// GetRedirectURL builds default redirect URL for logout
+func (d *DefaultLogoutRedirect) GetRedirectURL(c context.Context, u *url.URL) (string, error) {
 	query := url.Values{}
 	ru, _ := d.authManager.URL(c, "")
 	query.Set("redirect_uri", ru.String())

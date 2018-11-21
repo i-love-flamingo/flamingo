@@ -26,6 +26,7 @@ func (r *routes) Routes(registry *router.Registry) {
   registry.HandleGet("register", r.securityMiddleware.HandleIfLoggedOut(r.someController.Register))
   registry.HandleGet("my.account", r.securityMiddleware.HandleIfLoggedIn(r.someController.MyAccount))
   registry.HandleGet("users.list", r.securityMiddleware.HandleIfGranted(r.someController.Users, "PermissionAdmin"))
+  registry.HandleGet("users.list", r.securityMiddleware.HandleIfNotGranted(r.someController.Users, "PermissionSuperAdmin"))
 }
 ```
 

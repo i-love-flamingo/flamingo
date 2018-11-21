@@ -77,11 +77,34 @@ func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Acti
 }
 
 func (m *SecurityMiddleware) HandleIfGranted(action router.Action, permission string) router.Action {
+	return m.handleForPermissionAndFallback(action, m.forbiddenAction(permission), true, permission)
+}
+
+func (m *SecurityMiddleware) HandleIfNotGranted(action router.Action, permission string) router.Action {
+	return m.handleForPermissionAndFallback(action, m.forbiddenAction(permission), false, permission)
+}
+
+func (m *SecurityMiddleware) HandleIfGrantedWithFallback(action router.Action, fallback router.Action, permission string) router.Action {
+	return m.handleForPermissionAndFallback(action, fallback, true, permission)
+}
+
+func (m *SecurityMiddleware) HandleIfNotGrantedWithFallback(action router.Action, fallback router.Action, permission string) router.Action {
+	return m.handleForPermissionAndFallback(action, fallback, false, permission)
+}
+
+func (m *SecurityMiddleware) handleForPermissionAndFallback(action router.Action, fallback router.Action, ifGranted bool, permission string) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
-		if !m.securityService.IsGranted(ctx, req.Session(), permission, nil) {
-			return m.responder.Forbidden(errors.Errorf("Missing permission %s for path %s.", permission, req.Request().URL.Path))
+		granted := m.securityService.IsGranted(ctx, req.Session(), permission, nil)
+		if (ifGranted && !granted) || (!ifGranted && granted) {
+			return fallback(ctx, req)
 		}
 		return action(ctx, req)
+	}
+}
+
+func (m *SecurityMiddleware) forbiddenAction(permission string) router.Action {
+	return func(ctx context.Context, req *web.Request) web.Response {
+		return m.responder.Forbidden(errors.Errorf("Permission %s for path %s.", permission, req.Request().URL.Path))
 	}
 }
 

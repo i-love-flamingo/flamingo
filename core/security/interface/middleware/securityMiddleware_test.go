@@ -180,12 +180,32 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {
 
 	t.True(ok)
 	t.Equal(uint(http.StatusForbidden), response.Status)
-	t.Equal("Missing permission SomePermission for path /referrer.", response.Error.Error())
+	t.Equal("Permission SomePermission for path /referrer.", response.Error.Error())
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Allowed() {
 	action := t.middleware.HandleIfGranted(t.action, "SomePermission")
 	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
+
+	result := action(t.context, t.request)
+	t.Exactly(t.response, result)
+}
+
+func (t *SecurityMiddlewareTestSuite) TestHandleIfNotGranted_Forbidden() {
+	action := t.middleware.HandleIfNotGranted(t.action, "SomePermission")
+	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
+
+	result := action(t.context, t.request)
+	response, ok := result.(*web.ServerErrorResponse)
+
+	t.True(ok)
+	t.Equal(uint(http.StatusForbidden), response.Status)
+	t.Equal("Permission SomePermission for path /referrer.", response.Error.Error())
+}
+
+func (t *SecurityMiddlewareTestSuite) TestHandleIfNotGranted_Allowed() {
+	action := t.middleware.HandleIfNotGranted(t.action, "SomePermission")
+	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(false).Once()
 
 	result := action(t.context, t.request)
 	t.Exactly(t.response, result)

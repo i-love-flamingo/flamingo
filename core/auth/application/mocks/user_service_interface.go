@@ -29,8 +29,17 @@ func (_m *UserServiceInterface) GetUser(ctx context.Context, session *sessions.S
 }
 
 // InitUser provides a mock function with given fields: ctx, session
-func (_m *UserServiceInterface) InitUser(ctx context.Context, session *sessions.Session) {
-	_m.Called(ctx, session)
+func (_m *UserServiceInterface) InitUser(ctx context.Context, session *sessions.Session) error {
+	ret := _m.Called(ctx, session)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *sessions.Session) error); ok {
+		r0 = rf(ctx, session)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // IsLoggedIn provides a mock function with given fields: ctx, session

@@ -392,6 +392,9 @@ matchloop:
 	for _, handler := range registry.routes {
 		if match := handler.path.Match(path); match != nil {
 			controller := registry.handler[handler.handler]
+			if _, ok := controller.method[req.Method]; !ok && len(controller.method) > 0 && controller.any == nil {
+				continue
+			}
 			params := make(map[string]string)
 			if len(handler.params) > 0 {
 				for k, param := range handler.params {

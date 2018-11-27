@@ -67,7 +67,7 @@ func (t *ServiceImplTestSuite) TearDownTest() {
 
 func (t *ServiceImplTestSuite) TestAll_RemoveDuplicates() {
 	roles := []domain.Role{
-		domain.DefaultRole("SomePermission"),
+		"SomePermission",
 	}
 	t.firstProvider.On("All", t.context, t.webSession).Return(roles).Once()
 	t.secondProvider.On("All", t.context, t.webSession).Return(roles).Once()
@@ -78,13 +78,13 @@ func (t *ServiceImplTestSuite) TestAll_RemoveDuplicates() {
 
 func (t *ServiceImplTestSuite) TestAll_UseHierarchy() {
 	firstRoles := []domain.Role{
-		domain.DefaultRole("Permission1"),
+		"Permission1",
 	}
 	secondRoles := []domain.Role{
-		domain.DefaultRole("Permission2"),
+		"Permission2",
 	}
 	thirdRoles := []domain.Role{
-		domain.DefaultRole("Permission3"),
+		"Permission3",
 	}
 
 	t.service.rolesHierarchy = config.Map{
@@ -98,27 +98,27 @@ func (t *ServiceImplTestSuite) TestAll_UseHierarchy() {
 	t.thirdProvider.On("All", t.context, t.webSession).Return(thirdRoles).Once()
 
 	t.ElementsMatch([]domain.Role{
-		domain.DefaultRole("Permission1"),
-		domain.DefaultRole("Permission11"),
-		domain.DefaultRole("Permission2"),
-		domain.DefaultRole("Permission21"),
-		domain.DefaultRole("Permission22"),
-		domain.DefaultRole("Permission3"),
-		domain.DefaultRole("Permission31"),
-		domain.DefaultRole("Permission32"),
-		domain.DefaultRole("Permission33"),
+		"Permission1",
+		"Permission11",
+		"Permission2",
+		"Permission21",
+		"Permission22",
+		"Permission3",
+		"Permission31",
+		"Permission32",
+		"Permission33",
 	}, t.service.All(t.context, t.webSession))
 }
 
 func (t *ServiceImplTestSuite) TestAll_Complete() {
 	firstRoles := []domain.Role{
-		domain.DefaultRole("Permission1"),
+		"Permission1",
 	}
 	secondRoles := []domain.Role{
-		domain.DefaultRole("Permission2"),
+		"Permission2",
 	}
 	thirdRoles := []domain.Role{
-		domain.DefaultRole("Permission3"),
+		"Permission3",
 	}
 
 	t.service.rolesHierarchy = config.Map{
@@ -132,14 +132,14 @@ func (t *ServiceImplTestSuite) TestAll_Complete() {
 	t.thirdProvider.On("All", t.context, t.webSession).Return(thirdRoles).Once()
 
 	t.ElementsMatch([]domain.Role{
-		domain.DefaultRole("Permission1"),
-		domain.DefaultRole("Permission11"),
-		domain.DefaultRole("Permission2"),
-		domain.DefaultRole("Permission21"),
-		domain.DefaultRole("Permission22"),
-		domain.DefaultRole("Permission3"),
-		domain.DefaultRole("Permission31"),
-		domain.DefaultRole("Permission32"),
-		domain.DefaultRole("Permission33"),
+		"Permission1",
+		"Permission11",
+		"Permission2",
+		"Permission21",
+		"Permission22",
+		"Permission3",
+		"Permission31",
+		"Permission32",
+		"Permission33",
 	}, t.service.All(t.context, t.webSession))
 }

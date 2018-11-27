@@ -58,7 +58,7 @@ func (t *RoleVoterTestSuite) TestVote_AccessAbstained() {
 func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithoutObject() {
 	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
 		domain.RoleUser,
-		domain.DefaultRole("RoleAdministrator"),
+		domain.Role("RoleAdministrator"),
 	}).Once()
 	t.Equal(AccessGranted, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", nil))
 }
@@ -66,10 +66,10 @@ func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithoutObject() {
 func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithObject() {
 	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
 		domain.RoleUser,
-		domain.DefaultRole("RoleAdministrator"),
+		domain.Role("RoleAdministrator"),
 	}).Once()
 	t.object.On("Roles").Return([]domain.Role{
-		domain.DefaultRole("RoleAdministrator"),
+		domain.Role("RoleAdministrator"),
 	}).Once()
 	t.Equal(AccessGranted, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", t.object))
 }

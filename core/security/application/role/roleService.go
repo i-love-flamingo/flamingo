@@ -64,7 +64,7 @@ func (s *ServiceImpl) extractRoles(role domain.Role) []domain.Role {
 	}
 
 	for index := range hierarchy {
-		roles = append(roles, domain.DefaultRole(hierarchy[index]))
+		roles = append(roles, domain.Role(hierarchy[index]))
 	}
 
 	return roles

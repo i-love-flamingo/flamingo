@@ -6,34 +6,26 @@ const (
 )
 
 type (
-	Role interface {
-		Id() string
-		Label() string
-		Permission() string
-	}
-
 	RoleSet interface {
 		Roles() []Role
 	}
 
-	DefaultRole string
+	Role string
 )
 
 var (
-	_ Role = DefaultRole("")
-
-	RoleAnonymous = DefaultRole(PermissionAnonymous)
-	RoleUser      = DefaultRole(PermissionUser)
+	RoleAnonymous = Role(PermissionAnonymous)
+	RoleUser      = Role(PermissionUser)
 )
 
-func (r DefaultRole) Id() string {
+func (r Role) Id() string {
 	return string(r)
 }
 
-func (r DefaultRole) Label() string {
+func (r Role) Label() string {
 	return string(r)
 }
 
-func (r DefaultRole) Permission() string {
+func (r Role) Permission() string {
 	return string(r)
 }

@@ -20,9 +20,6 @@ import (
 func TestRouter(t *testing.T) {
 	router := new(Router)
 
-	registry := NewRegistry()
-	router.RouterRegistry = registry
-
 	eventRouter := new(eventMocks.Router)
 	eventRouter.On("Dispatch", mock.Anything, mock.Anything)
 	router.eventrouter = eventRouter
@@ -46,6 +43,9 @@ func TestRouter(t *testing.T) {
 	var method string
 
 	t.Run("Test Legacy Fallback", func(t *testing.T) {
+		registry := NewRegistry()
+		router.RouterRegistry = registry
+
 		registry.Route("/test", "test")
 		registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { method = "Handle"; return nil })
 
@@ -73,6 +73,9 @@ func TestRouter(t *testing.T) {
 	})
 
 	t.Run("Test Any", func(t *testing.T) {
+		registry := NewRegistry()
+		router.RouterRegistry = registry
+
 		registry.Route("/test", "test")
 		registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { method = "HandleAny"; return nil })
 
@@ -100,6 +103,9 @@ func TestRouter(t *testing.T) {
 	})
 
 	t.Run("Test HTTP Methods", func(t *testing.T) {
+		registry := NewRegistry()
+		router.RouterRegistry = registry
+
 		registry.Route("/test", "test")
 		registry.HandleGet("test", func(context context.Context, req *web.Request) web.Response { method = "HandleGet"; return nil })
 		registry.HandlePost("test", func(context context.Context, req *web.Request) web.Response { method = "HandlePost"; return nil })
@@ -108,6 +114,7 @@ func TestRouter(t *testing.T) {
 		registry.HandleHead("test", func(context context.Context, req *web.Request) web.Response { method = "HandleHead"; return nil })
 		registry.HandleDelete("test", func(context context.Context, req *web.Request) web.Response { method = "HandleDelete"; return nil })
 		registry.HandleMethod("CUSTOM", "test", func(context context.Context, req *web.Request) web.Response { method = "HandleCustom"; return nil })
+		registry.HandleAny("test", func(context context.Context, req *web.Request) web.Response { method = "HandleAny"; return nil })
 
 		method = ""
 		assert.NoError(t, testReq(http.MethodGet, "/test"))

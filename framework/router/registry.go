@@ -38,6 +38,14 @@ type (
 		data   DataAction
 	}
 
+	matchedHandler struct {
+		handlerAction handlerAction
+		handler       *Handler
+		match         *Match
+	}
+
+	matchedHandlers []*matchedHandler
+
 	param struct {
 		value    string
 		optional bool
@@ -75,6 +83,26 @@ func (ha *handlerAction) setAny(any Action) {
 
 func (ha *handlerAction) setData(data DataAction) {
 	ha.data = data
+}
+
+func (mh matchedHandlers) getHandleAny() *matchedHandler {
+	for _, matched := range mh {
+		if matched.handlerAction.any != nil {
+			return matched
+		}
+	}
+
+	return nil
+}
+
+func (mh matchedHandlers) hasMethod(method string) bool {
+	for _, matched := range mh {
+		if _, ok := matched.handlerAction.method[method]; ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 // HandleAny serves as a fallback to handle HTTP requests which are not taken care of by other handlers
@@ -388,35 +416,63 @@ func (registry *Registry) matchRequest(req *http.Request) (handlerAction, map[st
 
 	path = "/" + strings.TrimLeft(path, "/")
 
-matchloop:
+	var matchedHandlers matchedHandlers
 	for _, handler := range registry.routes {
 		if match := handler.path.Match(path); match != nil {
 			controller := registry.handler[handler.handler]
-			if _, ok := controller.method[req.Method]; !ok && len(controller.method) > 0 && controller.any == nil {
-				continue
+			matchedHandler := &matchedHandler{
+				handlerAction: controller,
+				handler:       handler,
+				match:         match,
 			}
-			params := make(map[string]string)
-			if len(handler.params) > 0 {
-				for k, param := range handler.params {
-					if !param.optional && param.value != "" {
-						params[k] = param.value
-					} else if v, ok := match.Values[k]; ok {
-						params[k] = v
-					} else if val := req.URL.Query().Get(k); val != "" {
-						params[k] = val
-					} else if !param.optional && param.value == "" {
-						continue matchloop
-					} else {
-						params[k] = param.value
-					}
-				}
-			} else {
-				params = match.Values
-			}
-			return controller, params, handler
+			matchedHandlers = append(matchedHandlers, matchedHandler)
 		}
 	}
+
+	if any := matchedHandlers.getHandleAny(); any != nil && !matchedHandlers.hasMethod(req.Method) {
+		return registry.makeHandler(req, *any)
+	}
+
+	for _, matched := range matchedHandlers {
+		if matched == nil {
+			continue
+		}
+
+		controller := matched.handlerAction
+		if _, ok := controller.method[req.Method]; !ok && len(controller.method) > 0 {
+			continue
+		}
+
+		controller, params, handler := registry.makeHandler(req, *matched)
+		if handler == nil {
+			continue
+		}
+
+		return controller, params, handler
+	}
 	return handlerAction{}, nil, nil
+}
+
+func (registry *Registry) makeHandler(req *http.Request, matched matchedHandler) (handlerAction, map[string]string, *Handler) {
+	params := make(map[string]string)
+	if len(matched.handler.params) > 0 {
+		for k, param := range matched.handler.params {
+			if !param.optional && param.value != "" {
+				params[k] = param.value
+			} else if v, ok := matched.match.Values[k]; ok {
+				params[k] = v
+			} else if val := req.URL.Query().Get(k); val != "" {
+				params[k] = val
+			} else if !param.optional && param.value == "" {
+				return handlerAction{}, nil, nil
+			} else {
+				params[k] = param.value
+			}
+		}
+	} else {
+		params = matched.match.Values
+	}
+	return matched.handlerAction, params, matched.handler
 }
 
 // GetPath getter

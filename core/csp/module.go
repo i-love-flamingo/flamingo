@@ -1,7 +1,6 @@
 package csp
 
 import (
-	"flamingo.me/flamingo/core/csrfPreventionFilter"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/router"
@@ -17,7 +16,7 @@ type (
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti((*router.Filter)(nil)).To(cspFilter{})
-	injector.Bind((*csrfPreventionFilter.NonceGenerator)(nil)).To(csrfPreventionFilter.UuidGenerator{})
+	injector.Bind((*NonceGenerator)(nil)).To(UuidGenerator{})
 }
 
 // DefaultConfig for this module

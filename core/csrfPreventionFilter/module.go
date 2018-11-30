@@ -1,29 +1,38 @@
 package csrfPreventionFilter
 
 import (
+	"flamingo.me/flamingo/core/csrfPreventionFilter/application"
+	"flamingo.me/flamingo/core/csrfPreventionFilter/interfaces"
+	"flamingo.me/flamingo/core/csrfPreventionFilter/interfaces/templatefunctions"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/event"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/template"
 )
 
 // Module for core/csrfPreventionFilter
 type (
-	Module struct{}
+	Module struct {
+		All bool `inject:"config:csrf.all"`
+	}
 )
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*router.Filter)(nil)).To(csrfFilter{})
-	injector.BindMulti((*event.Subscriber)(nil)).To(hiddenCsrfTagCreator{})
-	template.BindCtxFunc(injector, "csrftoken", new(CsrfFunc))
-	injector.Bind((*NonceGenerator)(nil)).To(UuidGenerator{})
+	injector.Bind((*application.Service)(nil)).To(application.ServiceImpl{})
+	template.BindCtxFunc(injector, "csrfToken", new(templatefunctions.CsrfTokenFunc))
+	template.BindCtxFunc(injector, "csrfInput", new(templatefunctions.CsrfInputFunc))
+
+	if m.All {
+		injector.BindMulti((*router.Filter)(nil)).To(interfaces.CsrfFilter{})
+	}
 }
 
 // DefaultConfig for this module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"csrfPreventionFilter.tokenLimit": 10,
+		"csrf.all":    false,
+		"csrf.secret": "6368616e676520746869732070617373776f726420746f206120736563726574",
+		"csrf.ttl":    900.0,
 	}
 }

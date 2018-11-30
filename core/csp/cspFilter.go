@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"flamingo.me/flamingo/core/csrfPreventionFilter"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
 	"flamingo.me/flamingo/framework/web/responder"
@@ -15,9 +14,9 @@ import (
 type (
 	cspFilter struct {
 		responder.ErrorAware `inject:""`
-		Router               *router.Router                      `inject:""`
-		NonceGenerator       csrfPreventionFilter.NonceGenerator `inject:""`
-		ReportMode           bool                                `inject:"config:cspFilter.reportMode"`
+		Router               *router.Router `inject:""`
+		NonceGenerator       NonceGenerator `inject:""`
+		ReportMode           bool           `inject:"config:cspFilter.reportMode"`
 	}
 )
 

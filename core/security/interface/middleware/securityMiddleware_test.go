@@ -71,6 +71,7 @@ func (t *SecurityMiddlewareTestSuite) SetupTest() {
 		LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
 		AuthenticatedHomepageStrategy string `inject:"config:security.authenticatedHomepage.strategy"`
 		AuthenticatedHomepagePath     string `inject:"config:security.authenticatedHomepage.path"`
+		EventLogging                  bool   `inject:"config:security.eventLogging"`
 	}{
 		LoginPathRedirectPath:     "/home",
 		AuthenticatedHomepagePath: "/authenticated",

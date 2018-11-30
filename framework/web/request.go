@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -191,4 +192,22 @@ func (r *Request) QueryAll() map[string][]string {
 // Request get the requests request
 func (r *Request) Request() *http.Request {
 	return r.request
+}
+
+// RemoteAddress get the requests real remote address
+func (r *Request) RemoteAddress() []string {
+	var remoteAddress []string
+
+	forwardFor := strings.TrimSpace(r.request.Header.Get("X-Forwarded-For"))
+	ips := strings.Split(forwardFor, ",")
+	if len(forwardFor) > 0 {
+		for _, ip := range ips {
+			remoteAddress = append(remoteAddress, strings.TrimSpace(ip))
+		}
+
+	}
+
+	remoteAddress = append(remoteAddress, strings.TrimSpace(r.request.RemoteAddr))
+
+	return remoteAddress
 }

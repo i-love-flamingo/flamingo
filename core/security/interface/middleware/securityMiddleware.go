@@ -6,6 +6,11 @@ import (
 
 	"github.com/pkg/errors"
 
+	"fmt"
+	"time"
+
+	"strings"
+
 	"flamingo.me/flamingo/core/security/application"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
@@ -33,6 +38,7 @@ type (
 		loginPathRedirectPath         string
 		authenticatedHomepageStrategy string
 		authenticatedHomepagePath     string
+		eventLogging                  bool
 	}
 )
 
@@ -42,6 +48,7 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 	LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
 	AuthenticatedHomepageStrategy string `inject:"config:security.authenticatedHomepage.strategy"`
 	AuthenticatedHomepagePath     string `inject:"config:security.authenticatedHomepage.path"`
+	EventLogging                  bool   `inject:"config:security.eventLogging"`
 }) {
 	m.responder = r
 	m.securityService = s
@@ -52,11 +59,13 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 	m.loginPathRedirectPath = cfg.LoginPathRedirectPath
 	m.authenticatedHomepageStrategy = cfg.AuthenticatedHomepageStrategy
 	m.authenticatedHomepagePath = cfg.AuthenticatedHomepagePath
+	m.eventLogging = cfg.EventLogging
 }
 
 func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedIn(ctx, req.Session()) {
+			m.logIfNeeded(req, "request to only-authenticated page as unauthenticated user")
 			redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
 			return m.responder.RouteRedirect("auth.login", map[string]string{
 				"redirecturl": redirectUrl.String(),
@@ -69,6 +78,7 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedOut(ctx, req.Session()) {
+			m.logIfNeeded(req, "request to only-unauthenticated page as authenticated user")
 			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
 			return m.responder.URLRedirect(redirectUrl)
 		}
@@ -96,6 +106,11 @@ func (m *SecurityMiddleware) handleForPermissionAndFallback(action router.Action
 	return func(ctx context.Context, req *web.Request) web.Response {
 		granted := m.securityService.IsGranted(ctx, req.Session(), permission, nil)
 		if (ifGranted && !granted) || (!ifGranted && granted) {
+			explanation := "without"
+			if !ifGranted {
+				explanation = "with"
+			}
+			m.logIfNeeded(req, fmt.Sprintf("request to protected page %s permission %s", explanation, permission))
 			return fallback(ctx, req)
 		}
 		return action(ctx, req)
@@ -123,4 +138,14 @@ func (m *SecurityMiddleware) redirectUrl(ctx context.Context, req *web.Request, 
 	}
 
 	return generated
+}
+
+func (m *SecurityMiddleware) logIfNeeded(r *web.Request, message string) {
+	if m.eventLogging {
+		m.logger.WithField("security", "middleware").
+			WithField("Date", time.Now().Format(time.RFC3339)).
+			WithField("Path", r.Request().URL.Path).
+			WithField("RemoteAddress", strings.Join(r.RemoteAddress(), ", ")).
+			Info(message)
+	}
 }

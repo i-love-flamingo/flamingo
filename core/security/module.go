@@ -66,6 +66,7 @@ func (m *Module) DefaultConfig() config.Map {
 					"allowIfAllAbstain": false,
 				},
 			},
+			"eventLogging": false,
 		},
 	}
 }

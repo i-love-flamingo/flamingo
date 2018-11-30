@@ -5,10 +5,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"flamingo.me/flamingo/core/csrfPreventionFilter"
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"flamingo.me/flamingo/framework/web"
+)
+
+const (
+	// Ignore is an option which can be set to ignore the csrfFilter
+	Ignore router.ControllerOption = "csrf.ignore"
 )
 
 type (
@@ -51,5 +55,5 @@ func (dc *cspReportController) Post(ctx context.Context, r *web.Request) web.Res
 
 // CheckOption takes care that the csrfPreventionFilter will be ignored
 func (dc *cspReportController) CheckOption(option router.ControllerOption) bool {
-	return option == csrfPreventionFilter.Ignore
+	return option == Ignore
 }

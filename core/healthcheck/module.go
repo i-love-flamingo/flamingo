@@ -40,16 +40,20 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 type routes struct {
+	path        string
 	healthcheck *controllers.Healthcheck
 }
 
-func (r *routes) Inject(healthcheck *controllers.Healthcheck) {
+func (r *routes) Inject(healthcheck *controllers.Healthcheck, cfg *struct {
+	Path string `inject:"config:healthcheck.path"`
+}) {
 	r.healthcheck = healthcheck
+	r.path = cfg.Path
 }
 
 func (r *routes) Routes(registry *router.Registry) {
 	registry.HandleGet("healthcheck", r.healthcheck.Get)
-	registry.Route("/status/healthcheck", "healthcheck")
+	registry.Route(r.path, "healthcheck")
 }
 
 func (m *Module) DefaultConfig() config.Map {
@@ -57,6 +61,7 @@ func (m *Module) DefaultConfig() config.Map {
 		"healthcheck": config.Map{
 			"checkSession": false,
 			"checkAuth":    false,
+			"path":         "/status/healthcheck",
 		},
 	}
 }

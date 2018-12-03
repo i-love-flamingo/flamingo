@@ -204,6 +204,7 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	if err := json.NewEncoder(buf).Encode(r.Data); err != nil {
 		return err
 	}
+	r.Body = buf
 	r.HTTPResponse.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return r.HTTPResponse.Apply(c, w)
 }

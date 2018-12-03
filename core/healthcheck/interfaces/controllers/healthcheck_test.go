@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
+	"strings"
 
 	"flamingo.me/flamingo/core/healthcheck/domain/healthcheck"
-	"flamingo.me/flamingo/framework/web/responder/mocks"
+	"flamingo.me/flamingo/framework/web"
+	"github.com/stretchr/testify/assert"
 )
 
 type (
@@ -22,9 +22,8 @@ func (t *testStatus) Status() (alive bool, details string) {
 	return t.alive, t.text
 }
 
-func TestHealthcheck_Get(t *testing.T) {
+func TestController_Healthcheck(t *testing.T) {
 	type fields struct {
-		jsonAware      responder.JSONAware
 		statusProvider StatusProvider
 	}
 	type args struct {
@@ -40,7 +39,6 @@ func TestHealthcheck_Get(t *testing.T) {
 		{
 			name: "alive",
 			fields: fields{
-				jsonAware: new(mocks.JSONAware),
 				statusProvider: func() map[string]healthcheck.Status {
 					return map[string]healthcheck.Status{
 						"test": &testStatus{true, "alive"},
@@ -58,7 +56,6 @@ func TestHealthcheck_Get(t *testing.T) {
 		{
 			name: "not alive",
 			fields: fields{
-				jsonAware: new(mocks.JSONAware),
 				statusProvider: func() map[string]healthcheck.Status {
 					return map[string]healthcheck.Status{
 						"test": &testStatus{false, "not alive"},
@@ -77,13 +74,22 @@ func TestHealthcheck_Get(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			controller := &Healthcheck{}
-			controller.Inject(tt.fields.jsonAware, tt.fields.statusProvider)
+			controller.Inject(&web.Responder{}, tt.fields.statusProvider)
 
-			tt.fields.jsonAware.(*mocks.JSONAware).On("JSON", tt.want).Once().Return(nil)
-
-			_ = controller.Get(tt.args.ctx, tt.args.request)
-
-			tt.fields.jsonAware.(*mocks.JSONAware).AssertExpectations(t)
+			result := controller.Healthcheck(tt.args.ctx, tt.args.request)
+			response, ok := result.(*web.DataResponse)
+			assert.True(t, ok)
+			assert.Equal(t, tt.want, response.Data)
 		})
 	}
+}
+
+func TestController_Ping(t *testing.T) {
+	controller := &Healthcheck{}
+	controller.Inject(&web.Responder{}, nil)
+
+	result := controller.Ping(nil, nil)
+	response, ok := result.(*web.HTTPResponse)
+	assert.True(t, ok)
+	assert.Equal(t, strings.NewReader("OK"), response.Body)
 }

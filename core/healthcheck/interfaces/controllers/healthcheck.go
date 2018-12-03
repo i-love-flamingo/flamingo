@@ -3,16 +3,18 @@ package controllers
 import (
 	"context"
 
+	"net/http"
+	"strings"
+
 	"flamingo.me/flamingo/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
 )
 
 type (
 	StatusProvider func() map[string]healthcheck.Status
 
 	Healthcheck struct {
-		responder.JSONAware
+		responder      *web.Responder
 		statusProvider StatusProvider
 	}
 
@@ -28,12 +30,12 @@ type (
 )
 
 // Inject Healthcheck dependencies
-func (controller *Healthcheck) Inject(aware responder.JSONAware, provider StatusProvider) {
-	controller.JSONAware = aware
+func (controller *Healthcheck) Inject(responder *web.Responder, provider StatusProvider) {
+	controller.responder = responder
 	controller.statusProvider = provider
 }
 
-func (controller *Healthcheck) Get(context.Context, *web.Request) web.Response {
+func (controller *Healthcheck) Healthcheck(context.Context, *web.Request) web.Response {
 	var resp response
 
 	for name, status := range controller.statusProvider() {
@@ -46,5 +48,9 @@ func (controller *Healthcheck) Get(context.Context, *web.Request) web.Response {
 		})
 	}
 
-	return controller.JSON(resp)
+	return controller.responder.Data(resp)
+}
+
+func (controller *Healthcheck) Ping(context.Context, *web.Request) web.Response {
+	return controller.responder.HTTP(uint(http.StatusOK), strings.NewReader("OK"))
 }

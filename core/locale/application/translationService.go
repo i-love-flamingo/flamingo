@@ -20,6 +20,7 @@ type (
 		translationFile   string
 		translationFiles  config.Slice
 		logger            flamingo.Logger
+		devmode           bool
 	}
 )
 
@@ -39,6 +40,7 @@ func (ts *TranslationService) Inject(
 	logger flamingo.Logger,
 	config *struct {
 		DefaultLocaleCode string       `inject:"config:locale.locale"`
+		DevMode           bool         `inject:"config:debug.mode"`
 		TranslationFile   string       `inject:"config:locale.translationFile,optional"`
 		TranslationFiles  config.Slice `inject:"config:locale.translationFiles,optional"`
 	},
@@ -47,6 +49,7 @@ func (ts *TranslationService) Inject(
 	ts.defaultLocaleCode = config.DefaultLocaleCode
 	ts.translationFile = config.TranslationFile
 	ts.translationFiles = config.TranslationFiles
+	ts.devmode = config.DevMode
 }
 
 func (ts *TranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
@@ -56,7 +59,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	if translationArguments == nil {
 		translationArguments = make(map[string]interface{})
 	}
-	if !filesLoaded {
+	if !filesLoaded || ts.devmode {
 		ts.loadFiles()
 		filesLoaded = true
 	}

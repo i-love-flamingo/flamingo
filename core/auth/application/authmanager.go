@@ -87,7 +87,12 @@ func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
 	ubase := *am.router.Base()
 	u := &ubase
 	if path != "" {
-		u.Path = path
+		parsed, err := url.Parse(path)
+		if err != nil {
+			return nil, err
+		}
+		u.Path = parsed.Path
+		u.RawQuery = parsed.RawQuery
 	}
 
 	myhost, err := url.Parse(am.myHost)

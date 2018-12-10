@@ -16,6 +16,7 @@ type (
 		area               string
 		json               bool
 		logLevel           string
+		coloredOutput      bool
 		developmentMode    bool
 		samplingEnabled    bool
 		samplingInitial    float32
@@ -42,6 +43,7 @@ func (m *Module) Inject(config *struct {
 	Area               string  `inject:"config:area"`
 	JSON               bool    `inject:"config:zap.json,optional"`
 	LogLevel           string  `inject:"config:zap.loglevel,optional"`
+	ColoredOutput      bool    `inject:"config:zap.colored,optional"`
 	DevelopmentMode    bool    `inject:"config:zap.devmode,optional"`
 	SamplingEnabled    bool    `inject:"config:zap.sampling.enabled,optional"`
 	SamplingInitial    float32 `inject:"config:zap.sampling.initial,optional"`
@@ -50,6 +52,7 @@ func (m *Module) Inject(config *struct {
 	m.area = config.Area
 	m.json = config.JSON
 	m.logLevel = config.LogLevel
+	m.coloredOutput = config.ColoredOutput
 	m.developmentMode = config.DevelopmentMode
 	m.samplingEnabled = config.SamplingEnabled
 	m.samplingInitial = config.SamplingInitial
@@ -77,7 +80,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	if m.json {
 		output = "json"
 	}
-
+	encoder := zapcore.CapitalLevelEncoder
+	if m.coloredOutput {
+		encoder = zapcore.CapitalColorLevelEncoder
+	}
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
 		Development:       m.developmentMode,
@@ -93,7 +99,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			CallerKey:      flamingo.LogKeySource,
 			StacktraceKey:  flamingo.LogKeyTrace,
 			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+			EncodeLevel:    encoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
 			EncodeCaller:   zapcore.FullCallerEncoder,

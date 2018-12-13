@@ -37,7 +37,7 @@ docker 1.11:
   - ln -sfv "$(pwd -P)" "${GODIR}"
   - /pact/pact-go_linux_amd64 daemon &
   - cd "${GODIR}"
-  - dep ensure
+  - dep ensure -vendor-only
 
 cover flamingo:
   <<: *dep

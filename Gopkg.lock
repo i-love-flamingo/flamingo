@@ -113,6 +113,14 @@
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:a25a2c5ae694b01713fb6cd03c3b1ac1ccc1902b9f0a922680a88ec254f968e1"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = ""
+  revision = "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:dbbeb8ddb0be949954c8157ee8439c2adfd8dc1c9510eb44a6e58cb68c3dce28"
   name = "github.com/gorilla/context"
   packages = ["."]
@@ -576,8 +584,10 @@
     "github.com/boj/redistore",
     "github.com/coreos/go-oidc",
     "github.com/dgrijalva/jwt-go",
+    "github.com/garyburd/redigo/redis",
     "github.com/ghodss/yaml",
     "github.com/golang/groupcache/singleflight",
+    "github.com/google/uuid",
     "github.com/gorilla/sessions",
     "github.com/hashicorp/golang-lru",
     "github.com/labstack/gommon/color",

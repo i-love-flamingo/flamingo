@@ -28,18 +28,19 @@ func WithPact(t *testing.T, from, to string, fs ...func(*testing.T, *dsl.Pact)) 
 	}
 
 	pact, err := pactSetup(from, to)
-
 	if err != nil {
 		t.Skip(err)
 		return
 	}
+	// defer the pact teardown
+	defer func() {
+		if err := pactTeardown(pact); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	for i, f := range fs {
 		t.Run("Pact-"+strconv.Itoa(i), func(t *testing.T) { f(t, pact) })
-	}
-
-	if err := pactTeardown(pact); err != nil {
-		t.Error(err)
 	}
 }
 
@@ -81,6 +82,7 @@ func pactSetup(consumer, provider string) (*dsl.Pact, error) {
 
 // pactTeardown tears down the pact instance
 func pactTeardown(pact *dsl.Pact) error {
+	defer pact.Teardown()
 	if pactbroker := os.Getenv("PACT_BROKER_HOST"); pactbroker != "" {
 		// Write pact to file `<pact-go>/pacts/my_consumer-my_provider.json`
 		if err := pact.WritePact(); err != nil {
@@ -103,7 +105,6 @@ func pactTeardown(pact *dsl.Pact) error {
 		}
 	}
 
-	pact.Teardown()
 	return nil
 }
 

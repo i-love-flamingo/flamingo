@@ -3,6 +3,7 @@ package router
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -67,6 +68,8 @@ type (
 
 	// errorKey for context errors
 	errorKey uint
+
+	emptyResponseWriter struct{}
 )
 
 var (
@@ -313,7 +316,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	response := chain.Next(web.Context_(ctx, webRequest), webRequest, rw)
 
 	if router.Sessions != nil {
-		_, span := trace.StartSpan(ctx, "router/sessions/safe")
+		_, span := trace.StartSpan(ctx, "router/sessions/save")
 		if err := router.Sessions.Save(req, rw, gs); err != nil {
 			log.Println(err)
 		}
@@ -324,6 +327,15 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 		_, span := trace.StartSpan(ctx, "router/responseApply")
 		if err := response.Apply(web.Context_(ctx, webRequest), rw); err != nil {
 			panic(err) // bail out?
+		}
+		span.End()
+	}
+
+	// ensure that the session has been saved in the backend
+	if router.Sessions != nil {
+		_, span := trace.StartSpan(ctx, "router/sessions/persist")
+		if err := router.Sessions.Save(req, emptyResponseWriter{}, gs); err != nil {
+			log.Println(err)
 		}
 		span.End()
 	}
@@ -374,3 +386,13 @@ func (router *Router) Data(ctx context.Context, handler string, params map[inter
 	}
 	panic(errors.Errorf("data Controller %q not found", handler))
 }
+
+func (emptyResponseWriter) Header() http.Header {
+	return http.Header{}
+}
+
+func (emptyResponseWriter) Write([]byte) (int, error) {
+	return 0, io.ErrUnexpectedEOF
+}
+
+func (emptyResponseWriter) WriteHeader(statusCode int) {}

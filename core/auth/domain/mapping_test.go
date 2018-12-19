@@ -3,9 +3,10 @@ package domain
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/web"
+	"github.com/gorilla/sessions"
+	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -44,7 +45,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_Default() {
 		Email:        "email@domain.com",
 		customFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.MapToUser(claims))
+	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
@@ -91,7 +92,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		Country:      "Mars",
 		customFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.MapToUser(claims))
+	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
@@ -108,14 +109,14 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.MapToUser(claims))
+	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 	claims := map[string]interface{}{
 		"someSub":         "ID123456",
-		"someName":       "Mr. Awesome",
-		"someEmail":        "email@domain.com",
+		"someName":        "Mr. Awesome",
+		"someEmail":       "email@domain.com",
 		"someSalutation":  "mister",
 		"someFirstName":   "Mr.",
 		"someLastName":    "Awesome",
@@ -128,17 +129,17 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 	}
 
 	t.mappingService.idTokenMapping = config.Map{
-		"sub":         "someSub",
-		"email":       "someEmail",
-		"name":        "someName",
-		"salutation":  "someSalutation",
-		"firstName":   "someFirstName",
-		"lastName":    "someLastName",
-		"street":      "someStreet",
-		"zipCode":     "someZipCode",
-		"city":        "someCity",
-		"dateOfBirth": "someDateOfBirth",
-		"country":     "someCountry",
+		"sub":          "someSub",
+		"email":        "someEmail",
+		"name":         "someName",
+		"salutation":   "someSalutation",
+		"firstName":    "someFirstName",
+		"lastName":     "someLastName",
+		"street":       "someStreet",
+		"zipCode":      "someZipCode",
+		"city":         "someCity",
+		"dateOfBirth":  "someDateOfBirth",
+		"country":      "someCountry",
 		"customFields": config.Slice{"whatever"},
 	}
 
@@ -158,5 +159,5 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.MapToUser(claims))
+	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }

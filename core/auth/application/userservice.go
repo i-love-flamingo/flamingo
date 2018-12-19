@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/framework/web"
 	"github.com/gorilla/sessions"
 )
 
@@ -64,7 +65,8 @@ func (us *UserService) getUser(c context.Context, session *sessions.Session) *do
 		return domain.Guest
 	}
 
-	user, err := us.mappingService.UserFromIDToken(id)
+	r, _ := web.FromContext(c)
+	user, err := us.mappingService.UserFromIDToken(id, r.Session())
 	if user == nil || err != nil {
 		return domain.Guest
 	}

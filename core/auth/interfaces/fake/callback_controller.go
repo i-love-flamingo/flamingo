@@ -33,7 +33,7 @@ func (c *CallbackController) Inject(
 }
 
 func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Response {
-	user := c.mappingService.MapToUser(c.userData)
+	user := c.mappingService.MapToUser(c.userData, request.Session())
 	if user == nil {
 		user = domain.Guest
 	}

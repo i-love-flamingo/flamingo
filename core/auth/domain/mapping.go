@@ -1,9 +1,11 @@
 package domain
 
 import (
-	"github.com/coreos/go-oidc"
+	"encoding/gob"
 
 	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/framework/web"
+	"github.com/coreos/go-oidc"
 )
 
 type (
@@ -33,14 +35,14 @@ func (ums *UserMappingService) Inject(config *struct {
 	ums.idTokenMapping = config.IdTokenMapping
 }
 
-func (ums *UserMappingService) UserFromIDToken(idToken *oidc.IDToken) (*User, error) {
+func (ums *UserMappingService) UserFromIDToken(idToken *oidc.IDToken, session *web.Session) (*User, error) {
 	var claims map[string]interface{}
 	err := idToken.Claims(&claims)
 	if err != nil {
 		return nil, err
 	}
 
-	return ums.MapToUser(claims), nil
+	return ums.MapToUser(claims, session), nil
 }
 
 func (ums *UserMappingService) GetMapping(config.Map) (UserMapping, error) {
@@ -50,11 +52,13 @@ func (ums *UserMappingService) GetMapping(config.Map) (UserMapping, error) {
 	return mapping, err
 }
 
-func (ums *UserMappingService) MapToUser(claims map[string]interface{}) *User {
+func (ums *UserMappingService) MapToUser(claims map[string]interface{}, session *web.Session) *User {
 	mapping, err := ums.GetMapping(ums.idTokenMapping)
 	if err != nil {
 		panic(err)
 	}
+
+	claims = ensureClaims(claims, session)
 
 	return &User{
 		Sub:          ums.mapField(mapping.Sub, claims),
@@ -71,6 +75,32 @@ func (ums *UserMappingService) MapToUser(claims map[string]interface{}) *User {
 		customFields: ums.mapCustomFields(mapping.CustomFields, claims),
 		Type:         USER,
 	}
+}
+
+type cachedClaims string
+
+const sessionkey cachedClaims = "cachedClaims"
+
+func init() {
+	gob.Register(sessionkey)
+	gob.Register(map[string]interface{}{})
+}
+
+func ensureClaims(claims map[string]interface{}, session *web.Session) map[string]interface{} {
+	var cached map[string]interface{}
+	if raw, ok := session.Load(sessionkey); ok {
+		cached, _ = raw.(map[string]interface{})
+	}
+
+	for k, v := range cached {
+		if _, known := claims[k]; !known {
+			claims[k] = v
+		}
+	}
+
+	session.Store(sessionkey, claims)
+
+	return claims
 }
 
 func (ums *UserMappingService) mapCustomFields(mapping []string, claims map[string]interface{}) map[string]string {

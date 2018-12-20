@@ -3,14 +3,17 @@ package flamingo
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
+	"flamingo.me/flamingo/core/cmd"
+	"flamingo.me/flamingo/core/zap"
+	"flamingo.me/flamingo/framework"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
 	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/router"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +23,7 @@ type (
 		root   *config.Area
 		router *router.Router
 		server *http.Server
-		logger Logger
+		logger flamingo.Logger
 	}
 
 	// AppShutdownEvent is dispatched on app startup
@@ -34,7 +37,7 @@ type (
 	}
 )
 
-func (a *appmodule) Inject(root *config.Area, router *router.Router, logger Logger) {
+func (a *appmodule) Inject(root *config.Area, router *router.Router, logger flamingo.Logger) {
 	a.root = root
 	a.router = router
 	a.logger = logger
@@ -53,7 +56,7 @@ func (a *appmodule) Configure(injector *dingo.Injector) {
 	})
 }
 
-func serveProvider(a *appmodule, logger Logger) *cobra.Command {
+func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 	var addr string
 
 	cmd := &cobra.Command{
@@ -90,18 +93,43 @@ func (a *appmodule) Notify(event event.Event) {
 	}
 }
 
-// App is a simple app-runner for flamingo
-func App(root *config.Area, configdir string) {
-	log.Println("Please migrate to flamingo.me/flamingo.App")
+type option func(config *appconfig)
 
-	app := new(appmodule)
-	root.Modules = append(root.Modules, app)
-	if configdir == "" {
-		configdir = "config"
+func ConfigDir(configdir string) option {
+	return func(config *appconfig) {
+		config.configDir = configdir
 	}
-	config.Load(root, configdir)
+}
 
-	if err := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command).Execute(); err != nil {
+type appconfig struct {
+	configDir string
+}
+
+// App is a simple app-runner for flamingo
+func App(modules []dingo.Module, options ...option) {
+	app := new(appmodule)
+	root := config.NewArea("root", modules)
+
+	root.Modules = append([]dingo.Module{
+		new(framework.InitModule),
+		new(framework.Module),
+		new(zap.Module),
+		new(cmd.Module),
+	}, root.Modules...)
+
+	root.Modules = append(root.Modules, app)
+	cfg := &appconfig{
+		configDir: "config",
+	}
+	for _, option := range options {
+		option(cfg)
+	}
+	config.Load(root, cfg.configDir)
+
+	cmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
+	root.Injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})
+
+	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

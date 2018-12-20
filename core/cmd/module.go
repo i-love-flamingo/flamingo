@@ -96,7 +96,7 @@ func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flaming
 	}
 }
 
-// Run the root command
+// Run the root command todo: still in use?
 func Run(injector *dingo.Injector) error {
 	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
 	injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})

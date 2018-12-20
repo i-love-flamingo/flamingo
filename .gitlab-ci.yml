@@ -2,17 +2,6 @@ stages:
 - prepare
 - test
 
-docker 1.10:
-  stage: prepare
-  image: docker:latest
-  script:
-  - cd build/docker
-  - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
-  - docker build --pull -t iloveflamingo/buildenv:1.10 -f Dockerfile-1.10 .
-  - docker push iloveflamingo/buildenv:1.10
-  only:
-  - master
-
 docker 1.11:
   stage: prepare
   image: docker:latest
@@ -29,15 +18,10 @@ docker 1.11:
   image: iloveflamingo/buildenv:1.11
   cache:
     paths:
-    - .dep
+    - __gopath/pkg/mod
   before_script:
-  - export DEPCACHEDIR=$(pwd -P)/.dep
-  - mkdir -p "${GOPATH}/src/flamingo.me/"
-  - export GODIR="${GOPATH}/src/flamingo.me/flamingo"
-  - ln -sfv "$(pwd -P)" "${GODIR}"
+  - export GOPATH="$(pwd -P)/__gopath"
   - /pact/pact-go_linux_amd64 daemon &
-  - cd "${GODIR}"
-  - dep ensure -vendor-only
 
 cover flamingo:
   <<: *dep
@@ -58,14 +42,9 @@ static-check flamingo:
   - go vet ./...
   - gocritic check-project .
 
-test flamingo 1.10:
-  <<: *dep
-  image: iloveflamingo/buildenv:1.10
-  script:
-  - go test -race ./...
-
 #vet flamingo:
 #  <<: *dep
 #  script:
 #  - go test -vet 'all' -race ./...
 #  allow_failure: true
+

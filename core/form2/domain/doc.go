@@ -1,3 +1,3 @@
-package provider
+package domain
 
 //go:generate mockery -all -case=underscore

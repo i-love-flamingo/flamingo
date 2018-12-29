@@ -1,4 +1,4 @@
-package provider
+package application
 
 import (
 	"context"
@@ -10,22 +10,6 @@ import (
 )
 
 type (
-	// FieldValidator as interface for defining custom field validation
-	FieldValidator interface {
-		// ValidatorName defines validator name used in fields' tags inside structs
-		ValidatorName() string
-		// ValidateField defines validation method called when field is validated
-		ValidateField(ctx context.Context, fl validator.FieldLevel) bool
-	}
-
-	// StructValidator as interface for defining custom struct validation
-	StructValidator interface {
-		// StructType defines struct type which should be validated
-		StructType() interface{}
-		// ValidateStruct defines validation method called when struct is validated
-		ValidateStruct(ctx context.Context, sl validator.StructLevel)
-	}
-
 	// ValidatorProvider as interface for defining main validator provider
 	ValidatorProvider interface {
 		// Validate method which validates any struct and returns domain.ValidationInfo as a result of validation
@@ -38,12 +22,12 @@ type (
 
 	// ValidatorProviderImpl as struct which implements interface ValidatorProvider
 	ValidatorProviderImpl struct {
-		fieldValidators  []FieldValidator
-		structValidators []StructValidator
+		fieldValidators  []domain.FieldValidator
+		structValidators []domain.StructValidator
 	}
 )
 
-func (p *ValidatorProviderImpl) Inject(fieldValidators []FieldValidator, structValidators []StructValidator) {
+func (p *ValidatorProviderImpl) Inject(fieldValidators []domain.FieldValidator, structValidators []domain.StructValidator) {
 	p.fieldValidators = fieldValidators
 	p.structValidators = structValidators
 }

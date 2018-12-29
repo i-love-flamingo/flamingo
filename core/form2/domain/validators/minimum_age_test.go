@@ -1,27 +1,29 @@
 package validators
 
 import (
-	"flamingo.me/flamingo/core/form2/application/provider/validators/mocks"
-	"github.com/stretchr/testify/suite"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/suite"
+
+	"flamingo.me/flamingo/core/form2/domain/mocks"
 )
 
 type (
-	MaximumAgeValidatorTestSuite struct {
+	MinimumAgeValidatorTestSuite struct {
 		suite.Suite
 
-		validator *MaximumAgeValidator
+		validator *MinimumAgeValidator
 	}
 )
 
-func TestMaximumAgeValidatorTestSuite(t *testing.T) {
-	suite.Run(t, &MaximumAgeValidatorTestSuite{})
+func TestMinimumAgeValidatorTestSuite(t *testing.T) {
+	suite.Run(t, &MinimumAgeValidatorTestSuite{})
 }
 
-func (t *MaximumAgeValidatorTestSuite) SetupTest() {
-	t.validator = &MaximumAgeValidator{}
+func (t *MinimumAgeValidatorTestSuite) SetupTest() {
+	t.validator = &MinimumAgeValidator{}
 	t.validator.Inject(&struct {
 		DateFormat string `inject:"config:form.validator.dateFormat"`
 	}{
@@ -29,15 +31,16 @@ func (t *MaximumAgeValidatorTestSuite) SetupTest() {
 	})
 }
 
-func (t *MaximumAgeValidatorTestSuite) TestValidatorName() {
-	t.Equal("maximumage", t.validator.ValidatorName())
+func (t *MinimumAgeValidatorTestSuite) TestValidatorName() {
+	t.Equal("minimumage", t.validator.ValidatorName())
 }
 
-func (t *MaximumAgeValidatorTestSuite) TestValidateField() {
+func (t *MinimumAgeValidatorTestSuite) TestValidateField() {
 	now := time.Now()
 	child := time.Date(now.Year()-7, now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	justAdult := time.Date(now.Year()-18, now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	almostAdult := justAdult.Add(24 * time.Hour)
 	adult := time.Date(now.Year()-40, now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	walkingDead := time.Date(now.Year()-150, now.Month(), now.Day() - 1, 0, 0, 0, 0, now.Location())
 
 	testCases := []struct {
 		Date   string
@@ -57,26 +60,26 @@ func (t *MaximumAgeValidatorTestSuite) TestValidateField() {
 		},
 		{
 			Date:  child.Format("2006-01-02"),
+			Result: false,
+		},
+		{
+			Date:  almostAdult.Format("2006-01-02"),
+			Result: false,
+		},
+		{
+			Date:  justAdult.Format("2006-01-02"),
 			Result: true,
 		},
 		{
 			Date:  adult.Format("2006-01-02"),
 			Result: true,
 		},
-		{
-			Date:  walkingDead.Add(24 * time.Hour).Format("2006-01-02"),
-			Result: true,
-		},
-		{
-			Date:  walkingDead.Format("2006-01-02"),
-			Result: false,
-		},
 	}
 
 	for _, testCase := range testCases {
 		fieldLevel := &mocks.FieldLevel{}
 		fieldLevel.On("Field").Return(reflect.ValueOf(testCase.Date)).Once()
-		fieldLevel.On("Param").Return("150").Once()
+		fieldLevel.On("Param").Return("18").Once()
 		t.Equal(testCase.Result, t.validator.ValidateField(nil, fieldLevel))
 		fieldLevel.AssertExpectations(t.T())
 	}

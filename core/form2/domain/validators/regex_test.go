@@ -1,10 +1,12 @@
 package validators
 
 import (
-	"flamingo.me/flamingo/core/form2/application/provider/validators/mocks"
-	"github.com/stretchr/testify/suite"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
+
+	"flamingo.me/flamingo/core/form2/domain/mocks"
 )
 
 type (

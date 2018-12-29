@@ -1,4 +1,4 @@
-package provider
+package application
 
 import (
 	"context"
@@ -9,9 +9,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/go-playground/validator.v9"
 
-	providerMocks "flamingo.me/flamingo/core/form2/application/provider/mocks"
-	validatorMocks "flamingo.me/flamingo/core/form2/application/provider/validators/mocks"
 	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/core/form2/domain/mocks"
 )
 
 type (
@@ -20,10 +19,10 @@ type (
 
 		provider *ValidatorProviderImpl
 
-		firstFieldValidator  *providerMocks.FieldValidator
-		secondFieldValidator *providerMocks.FieldValidator
+		firstFieldValidator  *mocks.FieldValidator
+		secondFieldValidator *mocks.FieldValidator
 
-		structValidator *providerMocks.StructValidator
+		structValidator *mocks.StructValidator
 	}
 
 	ValidatorProviderTestData struct {
@@ -37,14 +36,14 @@ func TestValidatorProviderTestSuite(t *testing.T) {
 }
 
 func (t *ValidatorProviderTestSuite) SetupTest() {
-	t.firstFieldValidator = &providerMocks.FieldValidator{}
-	t.secondFieldValidator = &providerMocks.FieldValidator{}
-	t.structValidator = &providerMocks.StructValidator{}
+	t.firstFieldValidator = &mocks.FieldValidator{}
+	t.secondFieldValidator = &mocks.FieldValidator{}
+	t.structValidator = &mocks.StructValidator{}
 	t.provider = &ValidatorProviderImpl{}
-	t.provider.Inject([]FieldValidator{
+	t.provider.Inject([]domain.FieldValidator{
 		t.firstFieldValidator,
 		t.secondFieldValidator,
-	}, []StructValidator{
+	}, []domain.StructValidator{
 		t.structValidator,
 	})
 }
@@ -73,7 +72,7 @@ func (t *ValidatorProviderTestSuite) TestErrorsToValidationInfo_Empty() {
 }
 
 func (t *ValidatorProviderTestSuite) TestErrorsToValidationInfo_FieldError() {
-	err := &validatorMocks.FieldError{}
+	err := &mocks.FieldError{}
 	err.On("Namespace").Return("formData.fieldName1").Once()
 	err.On("Tag").Return("firstfield").Twice()
 	err.On("Field").Return("FieldName1").Once()
@@ -126,7 +125,7 @@ func (t *ValidatorProviderTestSuite) TestGetRelativeFieldNameFromValidationError
 	}
 
 	for _, testCase := range testCases {
-		err := &validatorMocks.FieldError{}
+		err := &mocks.FieldError{}
 		err.On("Namespace").Return(testCase.Namespace).Once()
 		t.Equal(testCase.Result, t.provider.getRelativeFieldNameFromValidationError(err))
 		err.AssertExpectations(t.T())

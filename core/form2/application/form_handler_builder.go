@@ -20,7 +20,7 @@ type (
 		Build() domain.FormHandler
 	}
 
-	FormHandlerBuilderImpl struct {
+	formHandlerBuilderImpl struct {
 		formServices             []domain.FormServiceWithName
 		formDataProviders        []domain.FormDataProviderWithName
 		formDataDecoders         []domain.FormDataDecoderWithName
@@ -29,6 +29,7 @@ type (
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
+		validatorProvider        domain.ValidatorProvider
 
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
@@ -37,7 +38,7 @@ type (
 	}
 )
 
-func (b *FormHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBuilder {
 	for _, service := range b.formServices {
 		if name == service.Name() {
 			return b.SetFormService(service)
@@ -47,7 +48,7 @@ func (b *FormHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBui
 	panic(fmt.Sprintf(`there is no FormService with name "%s"`, name))
 }
 
-func (b *FormHandlerBuilderImpl) SetFormService(formService interface{}) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormService(formService interface{}) FormHandlerBuilder {
 	set := false
 	if provider, ok := formService.(domain.FormDataProvider); ok {
 		b.SetFormDataProvider(provider)
@@ -67,7 +68,7 @@ func (b *FormHandlerBuilderImpl) SetFormService(formService interface{}) FormHan
 	return b
 }
 
-func (b *FormHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandlerBuilder {
 	for _, provider := range b.formDataProviders {
 		if name == provider.Name() {
 			return b.SetFormDataProvider(provider)
@@ -77,13 +78,13 @@ func (b *FormHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandl
 	panic(fmt.Sprintf(`there is no FormDataProvider with name "%s"`, name))
 }
 
-func (b *FormHandlerBuilderImpl) SetFormDataProvider(formDataProvider domain.FormDataProvider) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormDataProvider(formDataProvider domain.FormDataProvider) FormHandlerBuilder {
 	b.formDataProvider = formDataProvider
 
 	return b
 }
 
-func (b *FormHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandlerBuilder {
 	for _, decoder := range b.formDataDecoders {
 		if name == decoder.Name() {
 			return b.SetFormDataDecoder(decoder)
@@ -93,13 +94,13 @@ func (b *FormHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandle
 	panic(fmt.Sprintf(`there is no FormDataDecoder with name "%s"`, name))
 }
 
-func (b *FormHandlerBuilderImpl) SetFormDataDecoder(formDataDecoder domain.FormDataDecoder) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormDataDecoder(formDataDecoder domain.FormDataDecoder) FormHandlerBuilder {
 	b.formDataDecoder = formDataDecoder
 
 	return b
 }
 
-func (b *FormHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHandlerBuilder {
 	for _, validator := range b.formDataValidators {
 		if name == validator.Name() {
 			return b.SetFormDataValidator(validator)
@@ -109,13 +110,13 @@ func (b *FormHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHand
 	panic(fmt.Sprintf(`there is no FormDataValidator with name "%s"`, name))
 }
 
-func (b *FormHandlerBuilderImpl) SetFormDataValidator(formDataValidator domain.FormDataValidator) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormDataValidator(formDataValidator domain.FormDataValidator) FormHandlerBuilder {
 	b.formDataValidator = formDataValidator
 
 	return b
 }
 
-func (b *FormHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerBuilder {
 	for _, extension := range b.formExtensions {
 		if name == extension.Name() {
 			return b.AddFormExtension(extension)
@@ -125,7 +126,7 @@ func (b *FormHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerB
 	panic(fmt.Sprintf(`there is no FormExtension with name "%s"`, name))
 }
 
-func (b *FormHandlerBuilderImpl) AddFormExtension(formExtension interface{}) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) AddFormExtension(formExtension interface{}) FormHandlerBuilder {
 	implements := false
 	if _, ok := formExtension.(domain.FormDataProvider); ok {
 		implements = true
@@ -145,7 +146,7 @@ func (b *FormHandlerBuilderImpl) AddFormExtension(formExtension interface{}) For
 	return b
 }
 
-func (b *FormHandlerBuilderImpl) Build() domain.FormHandler {
+func (b *formHandlerBuilderImpl) Build() domain.FormHandler {
 	formDataProvider := b.formDataProvider
 	if formDataProvider == nil {
 		formDataProvider = b.defaultFormDataProvider
@@ -161,10 +162,11 @@ func (b *FormHandlerBuilderImpl) Build() domain.FormHandler {
 		formDataValidator = b.defaultFormDataValidator
 	}
 
-	return &FormHandlerImpl{
+	return &formHandlerImpl{
 		formDataProvider:  formDataProvider,
 		formDataDecoder:   formDataDecoder,
 		formDataValidator: formDataValidator,
 		formExtensionList: b.formExtensionList,
+		validatorProvider: b.validatorProvider,
 	}
 }

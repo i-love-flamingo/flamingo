@@ -19,6 +19,7 @@ type (
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
+		validatorProvider        domain.ValidatorProvider
 	}
 )
 
@@ -31,6 +32,7 @@ func (f *FormHandlerFactoryImpl) Inject(
 	dp domain.DefaultFormDataProvider,
 	dd domain.DefaultFormDataDecoder,
 	dv domain.DefaultFormDataValidator,
+	vp domain.ValidatorProvider,
 ) {
 	f.formServices = s
 	f.formDataProviders = p
@@ -40,6 +42,7 @@ func (f *FormHandlerFactoryImpl) Inject(
 	f.defaultFormDataProvider = dp
 	f.defaultFormDataDecoder = dd
 	f.defaultFormDataValidator = dv
+	f.validatorProvider = vp
 }
 
 func (f *FormHandlerFactoryImpl) CreateSimpleFormHandler() domain.FormHandler {
@@ -62,7 +65,7 @@ func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvi
 }
 
 func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() FormHandlerBuilder {
-	return &FormHandlerBuilderImpl{
+	return &formHandlerBuilderImpl{
 		formServices:             f.formServices,
 		formDataProviders:        f.formDataProviders,
 		formDataDecoders:         f.formDataDecoders,
@@ -71,6 +74,7 @@ func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() FormHandlerBuilder {
 		defaultFormDataProvider:  f.defaultFormDataProvider,
 		defaultFormDataDecoder:   f.defaultFormDataDecoder,
 		defaultFormDataValidator: f.defaultFormDataValidator,
+		validatorProvider:        f.validatorProvider,
 	}
 }
 

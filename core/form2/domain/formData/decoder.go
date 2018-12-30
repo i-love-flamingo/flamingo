@@ -42,10 +42,15 @@ func (p *DefaultFormDataDecoderImpl) decodeStringMap(values url.Values) map[stri
 }
 
 func (p *DefaultFormDataDecoderImpl) decodeUnknownInterface(values url.Values, formData interface{}) (interface{}, error) {
-	zeroFormData := reflect.Zero(reflect.ValueOf(formData).Type()).Interface()
+	typeOf := reflect.TypeOf(formData)
+	if typeOf.Kind() == reflect.Ptr {
+		typeOf = typeOf.Elem()
+	}
+
+	zeroFormData := reflect.New(typeOf).Interface()
 
 	if values == nil {
-		return zeroFormData, nil
+		values = url.Values{}
 	}
 
 	decoder := form.NewDecoder()
@@ -54,9 +59,14 @@ func (p *DefaultFormDataDecoderImpl) decodeUnknownInterface(values url.Values, f
 		return nil, err
 	}
 
-	err = conform.Strings(&zeroFormData)
+	err = conform.Strings(zeroFormData)
 	if err != nil {
 		return nil, err
+	}
+
+	finalFormData := reflect.ValueOf(zeroFormData)
+	if finalFormData.Kind() == reflect.Ptr {
+		return finalFormData.Elem().Interface(), nil
 	}
 
 	return zeroFormData, nil

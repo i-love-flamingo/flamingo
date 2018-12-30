@@ -25,7 +25,7 @@ type (
 		structValidator *mocks.StructValidator
 	}
 
-	ValidatorProviderTestData struct {
+	validatorProviderTestData struct {
 		First  string `validate:"firstfield"`
 		Second string `validate:"secondfield"`
 	}
@@ -61,7 +61,7 @@ func (t *ValidatorProviderTestSuite) TearDownTest() {
 func (t *ValidatorProviderTestSuite) TestGetValidator() {
 	t.firstFieldValidator.On("ValidatorName").Return("firstfield").Once()
 	t.secondFieldValidator.On("ValidatorName").Return("secondfield").Once()
-	t.structValidator.On("StructType").Return(ValidatorProviderTestData{}).Once()
+	t.structValidator.On("StructType").Return(validatorProviderTestData{}).Once()
 
 	t.IsType(&validator.Validate{}, t.provider.GetValidator())
 }
@@ -138,14 +138,14 @@ func (t *ValidatorProviderTestSuite) TestValidate() {
 	t.firstFieldValidator.On("ValidatorName").Return("firstfield").Once()
 	t.secondFieldValidator.On("ValidatorName").Return("secondfield").Once()
 
-	t.structValidator.On("StructType").Return(ValidatorProviderTestData{}).Once()
+	t.structValidator.On("StructType").Return(validatorProviderTestData{}).Once()
 
 	t.firstFieldValidator.On("ValidateField", ctx, mock.Anything).Return(false).Once()
 	t.secondFieldValidator.On("ValidateField", ctx, mock.Anything).Return(true).Once()
 
 	t.structValidator.On("ValidateStruct", ctx, mock.Anything).Return().Once()
 
-	validationInfo := t.provider.Validate(ctx, ValidatorProviderTestData{
+	validationInfo := t.provider.Validate(ctx, validatorProviderTestData{
 		First:  "first",
 		Second: "second",
 	})

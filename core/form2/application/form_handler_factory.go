@@ -11,11 +11,11 @@ type (
 	}
 
 	FormHandlerFactoryImpl struct {
-		formServices             []domain.FormServiceWithName
-		formDataProviders        []domain.FormDataProviderWithName
-		formDataDecoders         []domain.FormDataDecoderWithName
-		formDataValidators       []domain.FormDataValidatorWithName
-		formExtensions           []domain.FormExtensionWithName
+		namedFormServices        []domain.FormServiceWithName
+		namedFormDataProviders   []domain.FormDataProviderWithName
+		namedFormDataDecoders    []domain.FormDataDecoderWithName
+		namedFormDataValidators  []domain.FormDataValidatorWithName
+		namedFormExtensions      []domain.FormExtensionWithName
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
@@ -34,11 +34,11 @@ func (f *FormHandlerFactoryImpl) Inject(
 	dv domain.DefaultFormDataValidator,
 	vp domain.ValidatorProvider,
 ) {
-	f.formServices = s
-	f.formDataProviders = p
-	f.formDataDecoders = d
-	f.formDataValidators = v
-	f.formExtensions = e
+	f.namedFormServices = s
+	f.namedFormDataProviders = p
+	f.namedFormDataDecoders = d
+	f.namedFormDataValidators = v
+	f.namedFormExtensions = e
 	f.defaultFormDataProvider = dp
 	f.defaultFormDataDecoder = dd
 	f.defaultFormDataValidator = dv
@@ -66,11 +66,11 @@ func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvi
 
 func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() FormHandlerBuilder {
 	return &formHandlerBuilderImpl{
-		formServices:             f.formServices,
-		formDataProviders:        f.formDataProviders,
-		formDataDecoders:         f.formDataDecoders,
-		formDataValidators:       f.formDataValidators,
-		formExtensions:           f.formExtensions,
+		namedFormServices:        f.namedFormServices,
+		namedFormDataProviders:   f.namedFormDataProviders,
+		namedFormDataDecoders:    f.namedFormDataDecoders,
+		namedFormDataValidators:  f.namedFormDataValidators,
+		namedFormExtensions:      f.namedFormExtensions,
 		defaultFormDataProvider:  f.defaultFormDataProvider,
 		defaultFormDataDecoder:   f.defaultFormDataDecoder,
 		defaultFormDataValidator: f.defaultFormDataValidator,

@@ -21,11 +21,11 @@ type (
 	}
 
 	formHandlerBuilderImpl struct {
-		formServices             []domain.FormServiceWithName
-		formDataProviders        []domain.FormDataProviderWithName
-		formDataDecoders         []domain.FormDataDecoderWithName
-		formDataValidators       []domain.FormDataValidatorWithName
-		formExtensions           []domain.FormExtensionWithName
+		namedFormServices        []domain.FormServiceWithName
+		namedFormDataProviders   []domain.FormDataProviderWithName
+		namedFormDataDecoders    []domain.FormDataDecoderWithName
+		namedFormDataValidators  []domain.FormDataValidatorWithName
+		namedFormExtensions      []domain.FormExtensionWithName
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
@@ -34,12 +34,12 @@ type (
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
 		formDataValidator domain.FormDataValidator
-		formExtensionList []interface{}
+		formExtensions    []interface{}
 	}
 )
 
 func (b *formHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBuilder {
-	for _, service := range b.formServices {
+	for _, service := range b.namedFormServices {
 		if name == service.Name() {
 			return b.SetFormService(service)
 		}
@@ -69,7 +69,7 @@ func (b *formHandlerBuilderImpl) SetFormService(formService interface{}) FormHan
 }
 
 func (b *formHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandlerBuilder {
-	for _, provider := range b.formDataProviders {
+	for _, provider := range b.namedFormDataProviders {
 		if name == provider.Name() {
 			return b.SetFormDataProvider(provider)
 		}
@@ -85,7 +85,7 @@ func (b *formHandlerBuilderImpl) SetFormDataProvider(formDataProvider domain.For
 }
 
 func (b *formHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandlerBuilder {
-	for _, decoder := range b.formDataDecoders {
+	for _, decoder := range b.namedFormDataDecoders {
 		if name == decoder.Name() {
 			return b.SetFormDataDecoder(decoder)
 		}
@@ -101,7 +101,7 @@ func (b *formHandlerBuilderImpl) SetFormDataDecoder(formDataDecoder domain.FormD
 }
 
 func (b *formHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHandlerBuilder {
-	for _, validator := range b.formDataValidators {
+	for _, validator := range b.namedFormDataValidators {
 		if name == validator.Name() {
 			return b.SetFormDataValidator(validator)
 		}
@@ -117,7 +117,7 @@ func (b *formHandlerBuilderImpl) SetFormDataValidator(formDataValidator domain.F
 }
 
 func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerBuilder {
-	for _, extension := range b.formExtensions {
+	for _, extension := range b.namedFormExtensions {
 		if name == extension.Name() {
 			return b.AddFormExtension(extension)
 		}
@@ -141,7 +141,7 @@ func (b *formHandlerBuilderImpl) AddFormExtension(formExtension interface{}) For
 		panic("FormExtension doesn't implement any of FormDataProvider, FormDataDecoder or FormDataValidator interfaces")
 	}
 
-	b.formExtensionList = append(b.formExtensionList, formExtension)
+	b.formExtensions = append(b.formExtensions, formExtension)
 
 	return b
 }
@@ -166,7 +166,7 @@ func (b *formHandlerBuilderImpl) Build() domain.FormHandler {
 		formDataProvider:  formDataProvider,
 		formDataDecoder:   formDataDecoder,
 		formDataValidator: formDataValidator,
-		formExtensionList: b.formExtensionList,
+		formExtensions:    b.formExtensions,
 		validatorProvider: b.validatorProvider,
 	}
 }

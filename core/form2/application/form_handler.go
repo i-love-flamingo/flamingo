@@ -15,7 +15,7 @@ type (
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
 		formDataValidator domain.FormDataValidator
-		formExtensionList []interface{}
+		formExtensions    []interface{}
 		validatorProvider domain.ValidatorProvider
 	}
 )
@@ -127,7 +127,7 @@ func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
 }
 
 func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Request, values url.Values, form *domain.Form) (*domain.Form, error) {
-	for _, formExtension := range h.formExtensionList {
+	for _, formExtension := range h.formExtensions {
 		err := h.processExtension(ctx, req, values, formExtension, form)
 		if err != nil {
 			return nil, err

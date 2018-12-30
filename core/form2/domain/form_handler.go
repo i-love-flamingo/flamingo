@@ -39,7 +39,7 @@ type (
 	}
 
 	FormDataDecoder interface {
-		Decode(ctx context.Context, req *web.Request, values *url.Values, formData interface{}) (interface{}, error)
+		Decode(ctx context.Context, req *web.Request, values url.Values, formData interface{}) (interface{}, error)
 	}
 
 	DefaultFormDataDecoder interface {

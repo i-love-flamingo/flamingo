@@ -63,4 +63,15 @@ type (
 		NamedFormInstance
 		FormDataValidator
 	}
+
+	CompleteFormService interface {
+		FormDataProvider
+		FormDataDecoder
+		FormDataValidator
+	}
+
+	CompleteFormServiceWithName interface {
+		NamedFormInstance
+		CompleteFormService
+	}
 )

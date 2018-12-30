@@ -2,6 +2,7 @@ package validators
 
 import (
 	"context"
+	"flamingo.me/flamingo/core/form2/domain"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,8 @@ type (
 		dateFormat string
 	}
 )
+
+var _ domain.FieldValidator = &MaximumAgeValidator{}
 
 func (v *MaximumAgeValidator) Inject(cfg *struct {
 	DateFormat string `inject:"config:form.validator.dateFormat"`

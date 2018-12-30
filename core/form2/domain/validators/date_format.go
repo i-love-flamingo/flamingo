@@ -2,6 +2,7 @@ package validators
 
 import (
 	"context"
+	"flamingo.me/flamingo/core/form2/domain"
 	"strings"
 	"time"
 
@@ -20,6 +21,8 @@ type (
 		dateFormat string
 	}
 )
+
+var _ domain.FieldValidator = &DateFormatValidator{}
 
 func (v *DateFormatValidator) Inject(cfg *struct {
 	DateFormat string `inject:"config:form.validator.dateFormat"`

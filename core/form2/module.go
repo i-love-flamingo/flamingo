@@ -3,6 +3,7 @@ package form
 import (
 	"flamingo.me/flamingo/core/form2/application"
 	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/core/form2/domain/formData"
 	"flamingo.me/flamingo/core/form2/domain/validators"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/dingo"
@@ -27,7 +28,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(domain.FieldValidator)).To(validators.MinimumAgeValidator{})
 	injector.BindMulti(new(domain.FieldValidator)).To(validators.MaximumAgeValidator{})
 
-	injector.Bind(new(application.ValidatorProvider)).To(application.ValidatorProviderImpl{})
+	injector.Bind(new(domain.ValidatorProvider)).To(application.ValidatorProviderImpl{})
+
+	injector.BindMulti(new(domain.DefaultFormDataProvider)).To(formData.DefaultFormDataProviderImpl{})
+	injector.BindMulti(new(domain.DefaultFormDataDecoder)).To(formData.DefaultFormDataDecoderImpl{})
+	injector.BindMulti(new(domain.DefaultFormDataValidator)).To(formData.DefaultFormDataValidatorImpl{})
+	injector.Bind(new(application.FormHandlerFactory)).To(application.FormHandlerFactoryImpl{})
 }
 
 // DefaultConfig method which is responsible for setting up default module configuration

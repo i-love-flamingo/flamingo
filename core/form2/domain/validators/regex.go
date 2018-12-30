@@ -2,6 +2,7 @@ package validators
 
 import (
 	"context"
+	"flamingo.me/flamingo/core/form2/domain"
 	"gopkg.in/go-playground/validator.v9"
 	"regexp"
 )
@@ -23,6 +24,8 @@ type (
 		regex *regexp.Regexp
 	}
 )
+
+var _ domain.FieldValidator = &RegexValidator{}
 
 // NewRegexValidator creates new instance of RegexValidator by defining it's tag name and regex pattern
 func NewRegexValidator(name string, regex string) *RegexValidator {

@@ -17,6 +17,8 @@ type (
 	}
 )
 
+var _ domain.ValidatorProvider = &ValidatorProviderImpl{}
+
 func (p *ValidatorProviderImpl) Inject(fieldValidators []domain.FieldValidator, structValidators []domain.StructValidator) {
 	p.fieldValidators = fieldValidators
 	p.structValidators = structValidators

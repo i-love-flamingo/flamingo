@@ -9,9 +9,8 @@ import (
 
 type (
 	FormHandler interface {
-		GetForm(ctx context.Context, req *web.Request) Form
-		HandleRequest(ctx context.Context, req *web.Request) Form
-		MapFormData(formData interface{}, mappedData interface{})
+		GetForm(ctx context.Context, req *web.Request) (*Form, error)
+		HandleRequest(ctx context.Context, req *web.Request) (*Form, error)
 	}
 
 	NamedFormInstance interface {
@@ -27,7 +26,7 @@ type (
 	}
 
 	FormDataProvider interface {
-		GetFormData(ctx context.Context, req *web.Request) interface{}
+		GetFormData(ctx context.Context, req *web.Request) (interface{}, error)
 	}
 
 	DefaultFormDataProvider interface {
@@ -40,10 +39,10 @@ type (
 	}
 
 	FormDataDecoder interface {
-		Decode(ctx context.Context, req *web.Request, values *url.Values, formData interface{}) interface{}
+		Decode(ctx context.Context, req *web.Request, values *url.Values, formData interface{}) (interface{}, error)
 	}
 
-	DefaultFormDataDecode interface {
+	DefaultFormDataDecoder interface {
 		FormDataDecoder
 	}
 
@@ -53,7 +52,7 @@ type (
 	}
 
 	FormDataValidator interface {
-		Validate(ctx context.Context, req *web.Request, validatorProvider ValidatorProvider, formData interface{}) ValidationInfo
+		Validate(ctx context.Context, req *web.Request, validatorProvider ValidatorProvider, formData interface{}) (*ValidationInfo, error)
 	}
 
 	DefaultFormDataValidator interface {
@@ -63,14 +62,5 @@ type (
 	FormDataValidatorWithName interface {
 		NamedFormInstance
 		FormDataValidator
-	}
-
-	FormDataMapper interface {
-		Map(formData interface{}, mappedData interface{}) bool
-	}
-
-	FormDataMapperWithName interface {
-		NamedFormInstance
-		FormDataMapper
 	}
 )

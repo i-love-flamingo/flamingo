@@ -10,7 +10,7 @@ type (
 	// ValidatorProvider as interface for defining main validator provider
 	ValidatorProvider interface {
 		// Validate method which validates any struct and returns domain.ValidationInfo as a result of validation
-		Validate(value interface{}) ValidationInfo
+		Validate(ctx context.Context, value interface{}) ValidationInfo
 		// GetValidator method which returns instance of validator.Validate struct with all injected field and struct validations
 		GetValidator() *validator.Validate
 		// ErrorsToValidationInfo method which transforms errors into domain.ValidationInfo

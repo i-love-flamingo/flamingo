@@ -2,6 +2,7 @@
 
 package mocks
 
+import context "context"
 import domain "flamingo.me/flamingo/core/form2/domain"
 import mock "github.com/stretchr/testify/mock"
 import validator "gopkg.in/go-playground/validator.v9"
@@ -41,13 +42,13 @@ func (_m *ValidatorProvider) GetValidator() *validator.Validate {
 	return r0
 }
 
-// Validate provides a mock function with given fields: value
-func (_m *ValidatorProvider) Validate(value interface{}) domain.ValidationInfo {
-	ret := _m.Called(value)
+// Validate provides a mock function with given fields: ctx, value
+func (_m *ValidatorProvider) Validate(ctx context.Context, value interface{}) domain.ValidationInfo {
+	ret := _m.Called(ctx, value)
 
 	var r0 domain.ValidationInfo
-	if rf, ok := ret.Get(0).(func(interface{}) domain.ValidationInfo); ok {
-		r0 = rf(value)
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}) domain.ValidationInfo); ok {
+		r0 = rf(ctx, value)
 	} else {
 		r0 = ret.Get(0).(domain.ValidationInfo)
 	}

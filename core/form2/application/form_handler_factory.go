@@ -51,7 +51,7 @@ func (f *FormHandlerFactoryImpl) CreateSimpleFormHandler() domain.FormHandler {
 
 func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(formService interface{}, formExtensions ...interface{}) domain.FormHandler {
 	builder := f.GetFormHandlerBuilder().SetFormService(formService)
-	f.attachExtensions(builder, formExtensions)
+	f.attachExtensions(builder, formExtensions...)
 	return builder.Build()
 }
 
@@ -60,7 +60,7 @@ func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvi
 		SetFormDataProvider(formDataProvider).
 		SetFormDataDecoder(formDataDecoder).
 		SetFormDataValidator(formDataValidator)
-	f.attachExtensions(builder, formExtensions)
+	f.attachExtensions(builder, formExtensions...)
 	return builder.Build()
 }
 

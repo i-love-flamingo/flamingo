@@ -25,7 +25,7 @@ func (f Form) IsValidAndSubmitted() bool {
 }
 
 func (f Form) IsValid() bool {
-	return f.ValidationInfo.IsValid() && f.submitted
+	return f.ValidationInfo.IsValid()
 }
 
 func (f Form) IsSubmitted() bool {

@@ -6,15 +6,30 @@ type (
 		Data interface{}
 		//ValidationInfo for the form
 		ValidationInfo ValidationInfo
-		//IsSubmitted  flag if form was submitted and this is the result page
-		IsSubmitted bool
-		//ValidationRules contains map with validation rules for all validatable fields
-		ValidationRules map[string][]ValidationRule
+		//submitted  flag if form was submitted and this is the result page
+		submitted bool
+		//validationRules contains map with validation rules for all validatable fields
+		validationRules map[string][]ValidationRule
 	}
 )
 
+func NewForm(submitted bool, validationRules map[string][]ValidationRule) Form {
+	return Form{
+		submitted:       submitted,
+		validationRules: validationRules,
+	}
+}
+
 func (f Form) IsValidAndSubmitted() bool {
-	return f.ValidationInfo.IsValid() && f.IsSubmitted
+	return f.IsValid() && f.IsSubmitted()
+}
+
+func (f Form) IsValid() bool {
+	return f.ValidationInfo.IsValid() && f.submitted
+}
+
+func (f Form) IsSubmitted() bool {
+	return f.submitted
 }
 
 func (f Form) HasErrorForField(name string) bool {
@@ -30,10 +45,10 @@ func (f Form) HasGeneralErrors() bool {
 }
 
 func (f Form) GetErrorsForField(name string) []Error {
-	return f.ValidationInfo.GetFieldErrors(name)
+	return f.ValidationInfo.GetErrorsForField(name)
 }
 
 //GetValidationRulesForField adds option to extract validation rules for desired field in templates
 func (f Form) GetValidationRulesForField(name string) []ValidationRule {
-	return f.ValidationRules[name]
+	return f.validationRules[name]
 }

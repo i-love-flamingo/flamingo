@@ -9,8 +9,9 @@ import (
 
 type (
 	FormHandler interface {
-		GetForm(ctx context.Context, req *web.Request) (*Form, error)
-		HandleRequest(ctx context.Context, req *web.Request) (*Form, error)
+		HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*Form, error)
+		HandleSubmittedForm(ctx context.Context, req *web.Request) (*Form, error)
+		HandleForm(ctx context.Context, req *web.Request) (*Form, error)
 	}
 
 	NamedFormInstance interface {

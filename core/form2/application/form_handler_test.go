@@ -79,23 +79,24 @@ func (t *FormHandlerImplTestSuite) TearDownTest() {
 	t.validatorProvider.AssertExpectations(t.T())
 }
 
-func (t *FormHandlerImplTestSuite) TestGetForm_Error() {
+func (t *FormHandlerImplTestSuite) TestHandleUnsubmittedForm_Error() {
 	t.provider.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
 
-	result, err := t.handler.GetForm(t.context, t.request)
+	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
 	t.Error(err)
 	t.Nil(result)
 }
 
-func (t *FormHandlerImplTestSuite) TestGetForm_Success() {
+func (t *FormHandlerImplTestSuite) TestHandleUnsubmittedForm_Success() {
 	t.provider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
 
-	result, err := t.handler.GetForm(t.context, t.request)
+	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
 	t.NoError(err)
-	t.Equal(&domain.Form{
-		Data:            map[string]int{},
-		ValidationRules: map[string][]domain.ValidationRule{},
-	}, result)
+
+	form := domain.NewForm(false, map[string][]domain.ValidationRule{})
+	form.Data = map[string]int{}
+
+	t.Equal(&form, result)
 }
 
 func (t *FormHandlerImplTestSuite) TestExtractValidationRules_NotStruct() {
@@ -197,7 +198,7 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_ValidatorSuccess() {
 	t.NoError(err)
 }
 
-func (t *FormHandlerImplTestSuite) TestHandleRequest() {
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm() {
 	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
 
 	t.request.Request().Method = http.MethodPost
@@ -232,14 +233,73 @@ func (t *FormHandlerImplTestSuite) TestHandleRequest() {
 	}, nil).Return(map[string]int{}, nil).Once()
 	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, nil).Return(&domain.ValidationInfo{}, nil).Once()
 
-	result, err := t.handler.HandleRequest(t.context, t.request)
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
 	t.NoError(err)
-	t.Equal(&domain.Form{
-		Data: map[string]string{
-			"first":  "first",
-			"second": "second",
-		},
-		ValidationRules: map[string][]domain.ValidationRule{},
-		IsSubmitted:     true,
-	}, result)
+
+	form := domain.NewForm(true, map[string][]domain.ValidationRule{})
+	form.Data = map[string]string{
+		"first":  "first",
+		"second": "second",
+	}
+
+	t.Equal(&form, result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleForm_Unsubmitted() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+
+	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
+	t.NoError(err)
+
+	form := domain.NewForm(false, map[string][]domain.ValidationRule{})
+	form.Data = map[string]int{}
+
+	t.Equal(&form, result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleForm_Submitted() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodPost
+	t.request.Request().PostForm = url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}
+
+	t.decoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]string{}).Return(map[string]string{
+		"first":  "first",
+		"second": "second",
+	}, nil).Once()
+
+	t.validator.On("Validate", t.context, t.request, t.validatorProvider, map[string]string{
+		"first":  "first",
+		"second": "second",
+	}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(map[string]float64{}, nil).Once()
+	t.firstExtension.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]float64{}).Return(map[string]float64{}, nil).Once()
+	t.firstExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]float64{}).Return(&domain.ValidationInfo{}, nil).Once()
+	t.secondExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.thirdExtension.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, nil).Return(map[string]int{}, nil).Once()
+	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, nil).Return(&domain.ValidationInfo{}, nil).Once()
+
+	result, err := t.handler.HandleForm(t.context, t.request)
+	t.NoError(err)
+
+	form := domain.NewForm(true, map[string][]domain.ValidationRule{})
+	form.Data = map[string]string{
+		"first":  "first",
+		"second": "second",
+	}
+
+	t.Equal(&form, result)
 }

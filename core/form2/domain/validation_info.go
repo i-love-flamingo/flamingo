@@ -126,7 +126,7 @@ func (vi *ValidationInfo) AddFieldError(fieldName string, messageKey string, def
 }
 
 // GetGeneralErrors method which returns list of all field validation errors for all fields
-func (vi *ValidationInfo) GetAllFieldErrors() map[string][]Error {
+func (vi *ValidationInfo) GetErrorsForAllFields() map[string][]Error {
 	if vi.fieldErrors == nil {
 		return map[string][]Error{}
 	}
@@ -135,7 +135,7 @@ func (vi *ValidationInfo) GetAllFieldErrors() map[string][]Error {
 }
 
 // GetFieldErrors method which returns list of all general validation errors for specific field
-func (vi *ValidationInfo) GetFieldErrors(fieldName string) []Error {
+func (vi *ValidationInfo) GetErrorsForField(fieldName string) []Error {
 	if vi.fieldErrors == nil {
 		return []Error{}
 	}

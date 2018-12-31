@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
@@ -22,21 +23,51 @@ type (
 
 var _ domain.FormHandler = &formHandlerImpl{}
 
-func (h *formHandlerImpl) GetForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
-	return h.buildForm(ctx, req)
-}
+func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
+	submitted := req.Request().Method == http.MethodPost
 
-func (h *formHandlerImpl) HandleRequest(ctx context.Context, req *web.Request) (*domain.Form, error) {
-	form, err := h.buildForm(ctx, req)
+	form, err := h.buildForm(ctx, req, submitted)
 	if err != nil {
 		return nil, err
 	}
 
+	if submitted {
+		return h.handleSubmittedForm(ctx, req, form)
+	}
+
+	return form, nil
+}
+
+func (h *formHandlerImpl) HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
+	return h.buildForm(ctx, req, false)
+}
+
+func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
+	form, err := h.buildForm(ctx, req, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return h.handleSubmittedForm(ctx, req, form)
+}
+
+func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submitted bool) (*domain.Form, error) {
+	formData, err := h.formDataProvider.GetFormData(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	form := domain.NewForm(submitted, h.extractValidationRules(formData))
+	form.Data = formData
+
+	return &form, nil
+}
+
+func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Request, form *domain.Form) (*domain.Form, error) {
 	values, err := h.getPostValues(req)
 	if err != nil {
 		return nil, err
 	}
-	form.IsSubmitted = true
 
 	formData, err := h.formDataDecoder.Decode(ctx, req, *values, form.Data)
 	if err != nil {
@@ -56,18 +87,6 @@ func (h *formHandlerImpl) HandleRequest(ctx context.Context, req *web.Request) (
 	}
 
 	return form, nil
-}
-
-func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
-	formData, err := h.formDataProvider.GetFormData(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	return &domain.Form{
-		Data:            formData,
-		ValidationRules: h.extractValidationRules(formData),
-	}, nil
 }
 
 func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[string][]domain.ValidationRule {
@@ -168,7 +187,7 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 		}
 
 		form.ValidationInfo.AppendGeneralErrors(validationInfo.GetGeneralErrors())
-		form.ValidationInfo.AppendFieldErrors(validationInfo.GetAllFieldErrors())
+		form.ValidationInfo.AppendFieldErrors(validationInfo.GetErrorsForAllFields())
 	}
 
 	return nil

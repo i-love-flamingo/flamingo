@@ -36,6 +36,7 @@ func (h *formHandlerImpl) HandleRequest(ctx context.Context, req *web.Request) (
 	if err != nil {
 		return nil, err
 	}
+	form.IsSubmitted = true
 
 	formData, err := h.formDataDecoder.Decode(ctx, req, *values, form.Data)
 	if err != nil {
@@ -49,7 +50,12 @@ func (h *formHandlerImpl) HandleRequest(ctx context.Context, req *web.Request) (
 	}
 	form.ValidationInfo = *validationInfo
 
-	return h.processExtensions(ctx, req, *values, form)
+	err = h.processExtensions(ctx, req, *values, form)
+	if err != nil {
+		return nil, err
+	}
+
+	return form, nil
 }
 
 func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
@@ -89,7 +95,7 @@ func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[strin
 		}
 
 		name := field.Tag.Get("form")
-		if name == "-" {
+		if name == "-" || name == "" {
 			continue
 		}
 
@@ -99,7 +105,7 @@ func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[strin
 			if len(values) == 0 {
 				continue
 			}
-			if values[0] == "omitempty" {
+			if values[0] == "omitempty" || values[0] == "" {
 				continue
 			}
 
@@ -126,15 +132,15 @@ func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
 	return &r.Request().Form, nil
 }
 
-func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Request, values url.Values, form *domain.Form) (*domain.Form, error) {
+func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Request, values url.Values, form *domain.Form) error {
 	for _, formExtension := range h.formExtensions {
 		err := h.processExtension(ctx, req, values, formExtension, form)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return form, nil
+	return nil
 }
 
 func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request, values url.Values, formExtension interface{}, form *domain.Form) error {

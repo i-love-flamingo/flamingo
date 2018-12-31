@@ -88,7 +88,7 @@ func (t *ValidatorProviderTestSuite) TestErrorsToValidationInfo_FieldError() {
 				DefaultLabel: "FieldName1 firstfield",
 			},
 		},
-	}, validationInfo.GetAllFieldErrors())
+	}, validationInfo.GetErrorsForAllFields())
 
 	err.AssertExpectations(t.T())
 }
@@ -157,5 +157,5 @@ func (t *ValidatorProviderTestSuite) TestValidate() {
 				DefaultLabel: "First firstfield",
 			},
 		},
-	}, validationInfo.GetAllFieldErrors())
+	}, validationInfo.GetErrorsForAllFields())
 }

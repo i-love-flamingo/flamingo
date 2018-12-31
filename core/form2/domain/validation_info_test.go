@@ -27,9 +27,9 @@ func (t *ValidationInfoTestSuite) TestIsValid_Valid() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
 	t.False(t.validationInfo.HasErrorsForField("fieldName2"))
 	t.False(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName2"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetAllFieldErrors())
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
+	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
 	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
 }
 
@@ -46,8 +46,8 @@ func (t *ValidationInfoTestSuite) TestIsValid_FieldError() {
 			MessageKey:   "messageKey1",
 			DefaultLabel: "defaultLabel1",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName2"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -55,7 +55,7 @@ func (t *ValidationInfoTestSuite) TestIsValid_FieldError() {
 				DefaultLabel: "defaultLabel1",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
 }
 
@@ -67,9 +67,9 @@ func (t *ValidationInfoTestSuite) TestIsValid_GeneralError() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
 	t.False(t.validationInfo.HasErrorsForField("fieldName2"))
 	t.True(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName2"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetAllFieldErrors())
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
+	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
 	t.Equal([]Error{
 		{
 			MessageKey:   "messageKeyG",
@@ -166,8 +166,8 @@ func (t *ValidationInfoTestSuite) TestAppendGeneralErrors() {
 
 func (t *ValidationInfoTestSuite) TestAddFieldError() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName1"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetAllFieldErrors())
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
 
 	t.validationInfo.AddFieldError("fieldName1", "messageKey1", "defaultLabel1")
 	t.True(t.validationInfo.HasErrorsForField("fieldName1"))
@@ -176,7 +176,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 			MessageKey:   "messageKey1",
 			DefaultLabel: "defaultLabel1",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -184,7 +184,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 				DefaultLabel: "defaultLabel1",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 
 	t.validationInfo.AddFieldError("fieldName1", "messageKey2", "defaultLabel2")
 	t.True(t.validationInfo.HasErrorsForField("fieldName1"))
@@ -197,7 +197,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 			MessageKey:   "messageKey2",
 			DefaultLabel: "defaultLabel2",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -209,7 +209,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 				DefaultLabel: "defaultLabel2",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 
 	t.validationInfo.AddFieldError("fieldName1", "messageKey1", "defaultLabel1")
 	t.True(t.validationInfo.HasErrorsForField("fieldName1"))
@@ -222,7 +222,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 			MessageKey:   "messageKey2",
 			DefaultLabel: "defaultLabel2",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -234,12 +234,12 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 				DefaultLabel: "defaultLabel2",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 }
 
 func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetFieldErrors("fieldName1"))
+	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
 
 	t.validationInfo.AppendFieldErrors(map[string][]Error{
 		"fieldName1": {
@@ -255,7 +255,7 @@ func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 			MessageKey:   "messageKey1",
 			DefaultLabel: "defaultLabel1",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -263,7 +263,7 @@ func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 				DefaultLabel: "defaultLabel1",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 
 	t.validationInfo.AppendFieldErrors(map[string][]Error{
 		"fieldName1": {
@@ -287,7 +287,7 @@ func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 			MessageKey:   "messageKey2",
 			DefaultLabel: "defaultLabel2",
 		},
-	}, t.validationInfo.GetFieldErrors("fieldName1"))
+	}, t.validationInfo.GetErrorsForField("fieldName1"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -299,5 +299,5 @@ func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 				DefaultLabel: "defaultLabel2",
 			},
 		},
-	}, t.validationInfo.GetAllFieldErrors())
+	}, t.validationInfo.GetErrorsForAllFields())
 }

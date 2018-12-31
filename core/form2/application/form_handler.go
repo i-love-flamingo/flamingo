@@ -12,6 +12,7 @@ import (
 )
 
 type (
+	// formHandlerImpl as actual implementation of FormHandler interface
 	formHandlerImpl struct {
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
@@ -23,6 +24,7 @@ type (
 
 var _ domain.FormHandler = &formHandlerImpl{}
 
+// HandleForm as method for returning Form instance with state depending on fact if there was form submission or not
 func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	submitted := req.Request().Method == http.MethodPost
 
@@ -38,10 +40,12 @@ func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*do
 	return form, nil
 }
 
+// HandleUnsubmittedForm as method for returning Form instance which is not submitted
 func (h *formHandlerImpl) HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	return h.buildForm(ctx, req, false)
 }
 
+// HandleSubmittedForm as method for returning Form instance which is submitted
 func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	form, err := h.buildForm(ctx, req, true)
 	if err != nil {
@@ -51,6 +55,7 @@ func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Requ
 	return h.handleSubmittedForm(ctx, req, form)
 }
 
+// buildForm as method for creating new instance of Form domain
 func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submitted bool) (*domain.Form, error) {
 	formData, err := h.formDataProvider.GetFormData(ctx, req)
 	if err != nil {
@@ -63,6 +68,7 @@ func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submi
 	return &form, nil
 }
 
+// handleSubmittedForm as method for processing
 func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Request, form *domain.Form) (*domain.Form, error) {
 	values, err := h.getPostValues(req)
 	if err != nil {
@@ -89,6 +95,7 @@ func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Requ
 	return form, nil
 }
 
+// extractValidationRules as method for extracting form fields validation rules
 func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[string][]domain.ValidationRule {
 	validationRules := map[string][]domain.ValidationRule{}
 
@@ -142,6 +149,7 @@ func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[strin
 	return validationRules
 }
 
+// getPostValues as method for extracting http request body
 func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
 	err := r.Request().ParseForm()
 	if err != nil {
@@ -151,6 +159,7 @@ func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
 	return &r.Request().Form, nil
 }
 
+// processExtensions as method for processing list of form extensions
 func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Request, values url.Values, form *domain.Form) error {
 	for _, formExtension := range h.formExtensions {
 		err := h.processExtension(ctx, req, values, formExtension, form)
@@ -162,6 +171,7 @@ func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Reques
 	return nil
 }
 
+// processExtension as method for processing single form extensions
 func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request, values url.Values, formExtension interface{}, form *domain.Form) error {
 	var formData interface{}
 	var err error

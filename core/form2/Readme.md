@@ -377,6 +377,7 @@ it's possible to provide form service, which implements domain.FormDataValidator
   func (p *AddressFormDataValidator) Validate(ctx context.Context, req *web.Request, validatorProvider domain.ValidatorProvider, formData interface{}) (*domain.ValidationInfo, error) {
     // some code
   }
+```  
 
 ## Additional validators
 ### Date field validators
@@ -491,3 +492,23 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 Notice: Instance of validator.Validate allows only one struct validation per type. This means
 that only last defined struct validator for single type will be use in struct validation.
+
+# Unit tests
+
+For easier unit tests, it possible to use FormHandlerFactory from fake package:
+
+```go
+func TestControlllerAction(t *testing) {
+  mockedFormHandler := &mocks.FormHandler()
+  mockedFormFactory := fake.New(mockedFormHandler)
+  
+  controller := &MyController{}
+  controller.Inject(mockedFormFactory)
+  
+  // some code
+  
+  mockedFormHandler.On("HandleUnsubmittedForm", ctx, req).Return(&domain.Form{}, nil).Once()
+  
+  // some code
+}
+```

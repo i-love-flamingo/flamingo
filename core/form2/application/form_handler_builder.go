@@ -1,8 +1,10 @@
 package application
 
 import (
-	"flamingo.me/flamingo/core/form2/domain"
 	"fmt"
+
+	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 )
 
 type (
@@ -54,6 +56,7 @@ type (
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
 		validatorProvider        domain.ValidatorProvider
+		logger                   flamingo.Logger
 
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
@@ -214,5 +217,6 @@ func (b *formHandlerBuilderImpl) Build() domain.FormHandler {
 		formDataValidator: formDataValidator,
 		formExtensions:    b.formExtensions,
 		validatorProvider: b.validatorProvider,
+		logger:            b.logger,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 	"net/http"
 	"net/url"
 	"testing"
@@ -28,6 +29,7 @@ type (
 		thirdExtension    *mocks.FormDataDecoder
 		fourthExtension   *mocks.FormDataValidator
 		validatorProvider *mocks.ValidatorProvider
+		logger            *flamingo.NullLogger
 
 		context context.Context
 		request *web.Request
@@ -51,6 +53,7 @@ func (t *FormHandlerImplTestSuite) SetupTest() {
 	t.thirdExtension = &mocks.FormDataDecoder{}
 	t.fourthExtension = &mocks.FormDataValidator{}
 	t.validatorProvider = &mocks.ValidatorProvider{}
+	t.logger = &flamingo.NullLogger{}
 
 	t.handler = &formHandlerImpl{
 		formDataProvider:  t.provider,
@@ -63,6 +66,7 @@ func (t *FormHandlerImplTestSuite) SetupTest() {
 			t.fourthExtension,
 		},
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}
 
 	t.request = web.RequestFromRequest(&http.Request{}, nil)
@@ -83,7 +87,7 @@ func (t *FormHandlerImplTestSuite) TestHandleUnsubmittedForm_Error() {
 	t.provider.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
 
 	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
-	t.Error(err)
+	t.Equal(domain.FormError("error"), err)
 	t.Nil(result)
 }
 
@@ -198,7 +202,100 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_ValidatorSuccess() {
 	t.NoError(err)
 }
 
-func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm() {
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_GetFormDataError() {
+	t.provider.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
+
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
+	t.Equal(domain.FormError("error"), err)
+	t.Nil(result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_PostValueProcessingError() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodPost
+
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
+	t.Equal(domain.FormError("missing form body"), err)
+	t.Nil(result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_DecodeError() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodPost
+	t.request.Request().PostForm = url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}
+
+	t.decoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]string{}).Return(nil, errors.New("error")).Once()
+
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
+	t.Equal(domain.FormError("error"), err)
+	t.Nil(result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_ValidateError() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodPost
+	t.request.Request().PostForm = url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}
+
+	t.decoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]string{}).Return(map[string]string{
+		"first":  "first",
+		"second": "second",
+	}, nil).Once()
+
+	t.validator.On("Validate", t.context, t.request, t.validatorProvider, map[string]string{
+		"first":  "first",
+		"second": "second",
+	}).Return(nil, errors.New("error")).Once()
+
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
+	t.Equal(domain.FormError("error"), err)
+	t.Nil(result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_FormExtensionError() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodPost
+	t.request.Request().PostForm = url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}
+
+	t.decoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]string{}).Return(map[string]string{
+		"first":  "first",
+		"second": "second",
+	}, nil).Once()
+
+	t.validator.On("Validate", t.context, t.request, t.validatorProvider, map[string]string{
+		"first":  "first",
+		"second": "second",
+	}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
+
+	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
+	t.Equal(domain.FormError("error"), err)
+	t.Nil(result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_Success() {
 	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
 
 	t.request.Request().Method = http.MethodPost

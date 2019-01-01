@@ -1,5 +1,7 @@
 package domain
 
+import "fmt"
+
 type (
 	// Form as struct for storing form processing results
 	Form struct {
@@ -12,6 +14,8 @@ type (
 		// validationRules contains map with validation rules for all validatable fields
 		validationRules map[string][]ValidationRule
 	}
+
+	FormError string
 )
 
 // NewForm returns new instance of Form struct
@@ -60,4 +64,16 @@ func (f Form) GetErrorsForField(name string) []Error {
 //GetValidationRulesForField adds option to extract validation rules for desired field in templates
 func (f Form) GetValidationRulesForField(name string) []ValidationRule {
 	return f.validationRules[name]
+}
+
+func NewFormError(details string) FormError {
+	return FormError(details)
+}
+
+func NewFormErrorf(details string, args ...interface{}) FormError {
+	return FormError(fmt.Sprintf(details, args...))
+}
+
+func (e FormError) Error() string {
+	return fmt.Sprintf("FormError: %s", e)
 }

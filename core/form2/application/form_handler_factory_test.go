@@ -3,6 +3,7 @@ package application
 import (
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/core/form2/domain/mocks"
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -36,6 +37,8 @@ type (
 		secondNamedExtension *mocks.CompleteFormServiceWithName
 
 		validatorProvider *mocks.ValidatorProvider
+
+		logger *flamingo.NullLogger
 	}
 )
 
@@ -68,6 +71,8 @@ func (t *FormHandlerFactoryImplTestSuite) SetupTest() {
 
 	t.validatorProvider = &mocks.ValidatorProvider{}
 
+	t.logger = &flamingo.NullLogger{}
+
 	t.factory = &FormHandlerFactoryImpl{}
 	t.factory.Inject(
 		[]domain.FormServiceWithName{
@@ -94,6 +99,7 @@ func (t *FormHandlerFactoryImplTestSuite) SetupTest() {
 		t.defaultDecoder,
 		t.defaultValidator,
 		t.validatorProvider,
+		t.logger,
 	)
 }
 
@@ -130,6 +136,7 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateSimpleFormHandler() {
 		formDataValidator: t.defaultValidator,
 		formExtensions:    []interface{}(nil),
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}, t.factory.CreateSimpleFormHandler())
 }
 
@@ -138,11 +145,12 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormService()
 		formDataProvider:  t.service,
 		formDataDecoder:   t.service,
 		formDataValidator: t.service,
-		formExtensions:    []interface{}{
+		formExtensions: []interface{}{
 			t.validator,
 			t.secondNamedValidator,
 		},
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}, t.factory.CreateFormHandlerWithFormService(t.service, t.validator, t.secondNamedValidator))
 }
 
@@ -151,33 +159,34 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices(
 		formDataProvider:  t.provider,
 		formDataDecoder:   t.decoder,
 		formDataValidator: t.validator,
-		formExtensions:    []interface{}{
+		formExtensions: []interface{}{
 			t.service,
 			t.firstNamedService,
 		},
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}, t.factory.CreateFormHandlerWithFormServices(t.provider, t.decoder, t.validator, t.service, t.firstNamedService))
 }
 
 func (t *FormHandlerFactoryImplTestSuite) TestGetFormHandlerBuilder() {
 	t.Equal(&formHandlerBuilderImpl{
-		namedFormServices:        []domain.FormServiceWithName{
+		namedFormServices: []domain.FormServiceWithName{
 			t.firstNamedService,
 			t.secondNamedService,
 		},
-		namedFormDataProviders:   []domain.FormDataProviderWithName{
+		namedFormDataProviders: []domain.FormDataProviderWithName{
 			t.firstNamedProvider,
 			t.secondNamedProvider,
 		},
-		namedFormDataDecoders:    []domain.FormDataDecoderWithName{
+		namedFormDataDecoders: []domain.FormDataDecoderWithName{
 			t.firstNamedDecoder,
 			t.secondNamedDecoder,
 		},
-		namedFormDataValidators:  []domain.FormDataValidatorWithName{
+		namedFormDataValidators: []domain.FormDataValidatorWithName{
 			t.firstNamedValidator,
 			t.secondNamedValidator,
 		},
-		namedFormExtensions:      []domain.FormExtensionWithName{
+		namedFormExtensions: []domain.FormExtensionWithName{
 			t.firstNamedExtension,
 			t.secondNamedExtension,
 		},
@@ -185,5 +194,6 @@ func (t *FormHandlerFactoryImplTestSuite) TestGetFormHandlerBuilder() {
 		defaultFormDataDecoder:   t.defaultDecoder,
 		defaultFormDataValidator: t.defaultValidator,
 		validatorProvider:        t.validatorProvider,
+		logger:                   t.logger,
 	}, t.factory.GetFormHandlerBuilder())
 }

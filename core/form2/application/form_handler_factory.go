@@ -1,6 +1,9 @@
 package application
 
-import "flamingo.me/flamingo/core/form2/domain"
+import (
+	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/framework/flamingo"
+)
 
 type (
 	// FormHandlerFactory as interface for simpler creation of form handler instance
@@ -39,6 +42,7 @@ type (
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
 		validatorProvider        domain.ValidatorProvider
+		logger                   flamingo.Logger
 	}
 )
 
@@ -52,6 +56,7 @@ func (f *FormHandlerFactoryImpl) Inject(
 	dd domain.DefaultFormDataDecoder,
 	dv domain.DefaultFormDataValidator,
 	vp domain.ValidatorProvider,
+	l flamingo.Logger,
 ) {
 	f.namedFormServices = s
 	f.namedFormDataProviders = p
@@ -62,6 +67,7 @@ func (f *FormHandlerFactoryImpl) Inject(
 	f.defaultFormDataDecoder = dd
 	f.defaultFormDataValidator = dv
 	f.validatorProvider = vp
+	f.logger = l
 }
 
 // CreateSimpleFormHandler as method for creating the simplest form handler instance which uses
@@ -111,6 +117,7 @@ func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() FormHandlerBuilder {
 		defaultFormDataDecoder:   f.defaultFormDataDecoder,
 		defaultFormDataValidator: f.defaultFormDataValidator,
 		validatorProvider:        f.validatorProvider,
+		logger:                   f.logger,
 	}
 }
 

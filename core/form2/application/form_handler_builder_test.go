@@ -3,6 +3,7 @@ package application
 import (
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/core/form2/domain/mocks"
+	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -36,6 +37,8 @@ type (
 		secondNamedExtension *mocks.CompleteFormServiceWithName
 
 		validatorProvider *mocks.ValidatorProvider
+
+		logger *flamingo.NullLogger
 	}
 )
 
@@ -68,24 +71,26 @@ func (t *FormHandlerBuilderImplTestSuite) SetupTest() {
 
 	t.validatorProvider = &mocks.ValidatorProvider{}
 
+	t.logger = &flamingo.NullLogger{}
+
 	t.builder = &formHandlerBuilderImpl{
-		namedFormServices:        []domain.FormServiceWithName{
+		namedFormServices: []domain.FormServiceWithName{
 			t.firstNamedService,
 			t.secondNamedService,
 		},
-		namedFormDataProviders:   []domain.FormDataProviderWithName{
+		namedFormDataProviders: []domain.FormDataProviderWithName{
 			t.firstNamedProvider,
 			t.secondNamedProvider,
 		},
-		namedFormDataDecoders:    []domain.FormDataDecoderWithName{
+		namedFormDataDecoders: []domain.FormDataDecoderWithName{
 			t.firstNamedDecoder,
 			t.secondNamedDecoder,
 		},
-		namedFormDataValidators:  []domain.FormDataValidatorWithName{
+		namedFormDataValidators: []domain.FormDataValidatorWithName{
 			t.firstNamedValidator,
 			t.secondNamedValidator,
 		},
-		namedFormExtensions:      []domain.FormExtensionWithName{
+		namedFormExtensions: []domain.FormExtensionWithName{
 			t.firstNamedExtension,
 			t.secondNamedExtension,
 		},
@@ -93,6 +98,7 @@ func (t *FormHandlerBuilderImplTestSuite) SetupTest() {
 		defaultFormDataDecoder:   t.defaultDecoder,
 		defaultFormDataValidator: t.defaultValidator,
 		validatorProvider:        t.validatorProvider,
+		logger:                   t.logger,
 	}
 }
 
@@ -324,6 +330,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestBuild_Empty() {
 		formDataValidator: t.defaultValidator,
 		formExtensions:    []interface{}(nil),
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}, t.builder.Build())
 }
 
@@ -337,9 +344,10 @@ func (t *FormHandlerBuilderImplTestSuite) TestBuild_Full() {
 		formDataProvider:  t.provider,
 		formDataDecoder:   t.decoder,
 		formDataValidator: t.validator,
-		formExtensions:    []interface{}{
+		formExtensions: []interface{}{
 			t.service,
 		},
 		validatorProvider: t.validatorProvider,
+		logger:            t.logger,
 	}, t.builder.Build())
 }

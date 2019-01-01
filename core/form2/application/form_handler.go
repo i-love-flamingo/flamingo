@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/web"
 )
 
@@ -19,6 +20,7 @@ type (
 		formDataValidator domain.FormDataValidator
 		formExtensions    []interface{}
 		validatorProvider domain.ValidatorProvider
+		logger            flamingo.Logger
 	}
 )
 
@@ -59,7 +61,8 @@ func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Requ
 func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submitted bool) (*domain.Form, error) {
 	formData, err := h.formDataProvider.GetFormData(ctx, req)
 	if err != nil {
-		return nil, err
+		h.getLogger("formBuilding").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
 	}
 
 	form := domain.NewForm(submitted, h.extractValidationRules(formData))
@@ -72,24 +75,28 @@ func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submi
 func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Request, form *domain.Form) (*domain.Form, error) {
 	values, err := h.getPostValues(req)
 	if err != nil {
-		return nil, err
+		h.getLogger("postValueProcessing").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
 	}
 
 	formData, err := h.formDataDecoder.Decode(ctx, req, *values, form.Data)
 	if err != nil {
-		return nil, err
+		h.getLogger("formDecoding").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
 	}
 	form.Data = formData
 
 	validationInfo, err := h.formDataValidator.Validate(ctx, req, h.validatorProvider, formData)
 	if err != nil {
-		return nil, err
+		h.getLogger("formValidation").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
 	}
 	form.ValidationInfo = *validationInfo
 
 	err = h.processExtensions(ctx, req, *values, form)
 	if err != nil {
-		return nil, err
+		h.getLogger("formExtensions").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
 	}
 
 	return form, nil
@@ -201,4 +208,9 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 	}
 
 	return nil
+}
+
+// formHandlerImpl returns flamingo logger instance with defined fields for error logging
+func (h *formHandlerImpl) getLogger(value string) flamingo.Logger {
+	return h.logger.WithField("FormHandler", value)
 }

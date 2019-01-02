@@ -47,7 +47,7 @@ func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *web.Sessi
 }
 
 func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *web.Session) bool {
-	return s.IsGranted(ctx, session, domain.RoleAnonymous.Permission(), nil)
+	return !s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
 }
 
 func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *web.Session, permission string, object interface{}) bool {

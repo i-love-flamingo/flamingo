@@ -199,7 +199,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessAbstained,
 			voterStrategy:     VoterStrategyAffirmative,
 			allowIfAllAbstain: false,
-			decision:          true,
+			decision:          false,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -207,7 +207,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyAffirmative,
 			allowIfAllAbstain: false,
-			decision:          true,
+			decision:          false,
 		},
 		{
 			firstVote:         voter.AccessAbstained,
@@ -215,7 +215,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyAffirmative,
 			allowIfAllAbstain: false,
-			decision:          false,
+			decision:          true,
 		},
 		{
 			firstVote:         voter.AccessAbstained,
@@ -223,7 +223,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessAbstained,
 			voterStrategy:     VoterStrategyAffirmative,
 			allowIfAllAbstain: false,
-			decision:          false,
+			decision:          true,
 		},
 		{
 			firstVote:         voter.AccessAbstained,
@@ -231,7 +231,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessAbstained,
 			voterStrategy:     VoterStrategyAffirmative,
 			allowIfAllAbstain: true,
-			decision:          true,
+			decision:          false,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -239,7 +239,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyConsensus,
 			allowIfAllAbstain: false,
-			decision:          true,
+			decision:          false,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -247,7 +247,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyConsensus,
 			allowIfAllAbstain: false,
-			decision:          false,
+			decision:          true,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -255,7 +255,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyConsensus,
 			allowIfAllAbstain: false,
-			decision:          false,
+			decision:          true,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -263,7 +263,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyConsensus,
 			allowIfAllAbstain: true,
-			decision:          true,
+			decision:          false,
 		},
 		{
 			firstVote:         voter.AccessGranted,
@@ -271,7 +271,7 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessDenied,
 			voterStrategy:     VoterStrategyUnanimous,
 			allowIfAllAbstain: false,
-			decision:          false,
+			decision:          true,
 		},
 		{
 			firstVote:         voter.AccessAbstained,
@@ -279,14 +279,6 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			thirdVote:         voter.AccessGranted,
 			voterStrategy:     VoterStrategyUnanimous,
 			allowIfAllAbstain: false,
-			decision:          true,
-		},
-		{
-			firstVote:         voter.AccessAbstained,
-			secondVote:        voter.AccessAbstained,
-			thirdVote:         voter.AccessAbstained,
-			voterStrategy:     VoterStrategyUnanimous,
-			allowIfAllAbstain: false,
 			decision:          false,
 		},
 		{
@@ -294,8 +286,16 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 			secondVote:        voter.AccessAbstained,
 			thirdVote:         voter.AccessAbstained,
 			voterStrategy:     VoterStrategyUnanimous,
-			allowIfAllAbstain: true,
+			allowIfAllAbstain: false,
 			decision:          true,
+		},
+		{
+			firstVote:         voter.AccessAbstained,
+			secondVote:        voter.AccessAbstained,
+			thirdVote:         voter.AccessAbstained,
+			voterStrategy:     VoterStrategyUnanimous,
+			allowIfAllAbstain: true,
+			decision:          false,
 		},
 	}
 
@@ -304,9 +304,9 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 		webSession := web.NewSession(session)
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleAnonymous.Permission(), nil).Return(testCase.thirdVote)
+		t.firstVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.firstVote)
+		t.secondVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.secondVote)
+		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Return(testCase.thirdVote)
 		t.Equal(testCase.decision, t.service.IsLoggedOut(t.context, webSession))
 	}
 }

@@ -19,7 +19,7 @@ func (v *RoleVoter) Inject(rs role.Service) {
 }
 
 func (v *RoleVoter) Vote(ctx context.Context, session *web.Session, permission string, object interface{}) int {
-	if permission == domain.RoleAnonymous.Permission() || permission == domain.RoleUser.Permission() {
+	if permission == domain.RoleUser.Permission() {
 		return AccessAbstained
 	}
 

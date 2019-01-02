@@ -5,11 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus/hooks/test"
+	"flamingo.me/flamingo/framework/flamingo/mocks"
 	"github.com/sony/gobreaker"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"flamingo.me/flamingo/core/logrus"
 )
 
 func TestGoBreakerExecute(t *testing.T) {
@@ -19,7 +17,7 @@ func TestGoBreakerExecute(t *testing.T) {
 		tries               int
 		expectedStatChanges int
 		expectedResults     []interface{}
-		expectedLogs        []string
+		expectedLogs        [][]interface{}
 		expectErrors        []bool
 	}{
 		{
@@ -35,7 +33,7 @@ func TestGoBreakerExecute(t *testing.T) {
 			tries:               5,
 			expectedStatChanges: 0,
 			expectedResults:     []interface{}{1, nil, 3, nil, 5},
-			expectedLogs:        []string{},
+			expectedLogs:        [][]interface{}{},
 			expectErrors:        []bool{false, true, false, true, false},
 		},
 		{
@@ -53,7 +51,7 @@ func TestGoBreakerExecute(t *testing.T) {
 			tries:               5,
 			expectedStatChanges: 1,
 			expectedResults:     []interface{}{1, nil, 3, nil, nil},
-			expectedLogs:        []string{"Circuit breaker 'Test Breaker' changed state from closed to open"},
+			expectedLogs:        [][]interface{}{{"Circuit breaker '%s' changed state from %s to %s", "Test Breaker", "closed", "open"}},
 			expectErrors:        []bool{false, true, false, true, true},
 		},
 		{
@@ -71,17 +69,17 @@ func TestGoBreakerExecute(t *testing.T) {
 			tries:               5,
 			expectedStatChanges: 3,
 			expectedResults:     []interface{}{1, nil, 3, nil, 5},
-			expectedLogs: []string{
-				"Circuit breaker 'Test Breaker' changed state from closed to open",
-				"Circuit breaker 'Test Breaker' changed state from open to half-open",
-				"Circuit breaker 'Test Breaker' changed state from half-open to closed",
+			expectedLogs: [][]interface{}{
+				{"Circuit breaker '%s' changed state from %s to %s", "Test Breaker", "closed", "open"},
+				{"Circuit breaker '%s' changed state from %s to %s", "Test Breaker", "open", "half-open"},
+				{"Circuit breaker '%s' changed state from %s to %s", "Test Breaker", "half-open", "closed"},
 			},
 			expectErrors: []bool{false, true, false, true, false},
 		},
 	}
 	for _, testData := range tests {
 		t.Run(testData.name, func(t *testing.T) {
-			logger, hook := test.NewNullLogger()
+			var logger = &mocks.Logger{}
 			var stateChangedHandlerCalls = 0
 
 			// a onStateChange function to count the state changes (and to assure it is used by the CircuitBreaker)
@@ -91,9 +89,13 @@ func TestGoBreakerExecute(t *testing.T) {
 				}
 			}()
 
+			for _, expLog := range testData.expectedLogs {
+				logger.On("Info", expLog...)
+			}
+
 			cb := NewCircuitBreaker(
 				testData.settings,
-				&logrus.LogrusEntry{Entry: logger.WithField("test", "test")},
+				logger,
 			)
 			// The BreakableFunction simulates a request which will fail every second time
 			f := func() BreakableFunction {
@@ -124,12 +126,8 @@ func TestGoBreakerExecute(t *testing.T) {
 
 			}
 			//check the log messages
-			entries := hook.AllEntries()
-			expectedLogMessages := testData.expectedLogs
-			require.Len(t, entries, len(expectedLogMessages), "Number of Log messages not as expected")
-			//for i := 0; i < len(entries); i++ {
-			//assert.Equal(t, expectedLogMessages[i], entries[i].Message)
-			//}
+			logger.AssertExpectations(t)
+
 			//check the state changes
 			assert.Equal(t, testData.expectedStatChanges, stateChangedHandlerCalls, "Number of expected state changes is wrong")
 		})

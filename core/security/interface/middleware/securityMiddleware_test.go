@@ -132,6 +132,23 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_Allowed() {
 	t.Exactly(t.response, result)
 }
 
+func (t *SecurityMiddlewareTestSuite) TestRedirectToLoginFallback() {
+	redirectUrl, err := url.Parse("/home")
+	t.NoError(err)
+
+	t.middleware.loginPathRedirectStrategy = PathRedirectStrategy
+	t.redirectUrlMaker.On("URL", t.context, "/home").Return(redirectUrl, nil).Once()
+
+	result := t.middleware.RedirectToLoginFallback(t.context, t.request)
+	response, ok := result.(*web.RouteRedirectResponse)
+
+	t.True(ok)
+	t.Equal(map[string]string{
+		"redirecturl": "/home",
+	}, response.Data)
+	t.Equal("auth.login", response.To)
+}
+
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithReferrer() {
 	redirectUrl, err := url.Parse("/http-referrer")
 	t.NoError(err)
@@ -170,6 +187,20 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_Allowed() {
 
 	result := action(t.context, t.request)
 	t.Exactly(t.response, result)
+}
+
+func (t *SecurityMiddlewareTestSuite) TestRedirectToLogoutFallback() {
+	redirectUrl, err := url.Parse("/authenticated")
+	t.NoError(err)
+
+	t.middleware.authenticatedHomepageStrategy = PathRedirectStrategy
+	t.redirectUrlMaker.On("URL", t.context, "/authenticated").Return(redirectUrl, nil).Once()
+
+	result := t.middleware.RedirectToLogoutFallback(t.context, t.request)
+	response, ok := result.(*web.URLRedirectResponse)
+
+	t.True(ok)
+	t.Equal(redirectUrl, response.URL)
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {

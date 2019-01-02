@@ -65,11 +65,7 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedIn(ctx, req.Session()) {
-			m.logIfNeeded(req, "request to only-authenticated page as unauthenticated user")
-			redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
-			return m.responder.RouteRedirect("auth.login", map[string]string{
-				"redirecturl": redirectUrl.String(),
-			})
+			return m.RedirectToLoginFallback(ctx, req)
 		}
 		return action(ctx, req)
 	}
@@ -78,9 +74,7 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
 	return func(ctx context.Context, req *web.Request) web.Response {
 		if !m.securityService.IsLoggedOut(ctx, req.Session()) {
-			m.logIfNeeded(req, "request to only-unauthenticated page as authenticated user")
-			redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
-			return m.responder.URLRedirect(redirectUrl)
+			return m.RedirectToLogoutFallback(ctx, req)
 		}
 		return action(ctx, req)
 	}
@@ -100,6 +94,20 @@ func (m *SecurityMiddleware) HandleIfGrantedWithFallback(action router.Action, f
 
 func (m *SecurityMiddleware) HandleIfNotGrantedWithFallback(action router.Action, fallback router.Action, permission string) router.Action {
 	return m.handleForPermissionAndFallback(action, fallback, false, permission)
+}
+
+func (m *SecurityMiddleware) RedirectToLoginFallback(ctx context.Context, req *web.Request) web.Response {
+	m.logIfNeeded(req, "request to only-authenticated page as unauthenticated user")
+	redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
+	return m.responder.RouteRedirect("auth.login", map[string]string{
+		"redirecturl": redirectUrl.String(),
+	})
+}
+
+func (m *SecurityMiddleware) RedirectToLogoutFallback(ctx context.Context, req *web.Request) web.Response {
+	m.logIfNeeded(req, "request to only-unauthenticated page as authenticated user")
+	redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
+	return m.responder.URLRedirect(redirectUrl)
 }
 
 func (m *SecurityMiddleware) handleForPermissionAndFallback(action router.Action, fallback router.Action, ifGranted bool, permission string) router.Action {

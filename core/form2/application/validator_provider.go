@@ -19,10 +19,6 @@ type (
 
 var _ domain.ValidatorProvider = &ValidatorProviderImpl{}
 
-func ErrorsToValidationInfo(err error) domain.ValidationInfo {
-	return new(ValidatorProviderImpl).ErrorsToValidationInfo(err)
-}
-
 func (p *ValidatorProviderImpl) Inject(fieldValidators []domain.FieldValidator, structValidators []domain.StructValidator) {
 	p.fieldValidators = fieldValidators
 	p.structValidators = structValidators

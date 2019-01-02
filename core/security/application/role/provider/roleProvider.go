@@ -14,23 +14,22 @@ type (
 		All(context.Context, *web.Session) []securityDomain.Role
 	}
 
-	DefaultRoleProvider struct {
+	AuthRoleProvider struct {
 		userService application.UserServiceInterface
 	}
 )
 
-func (p *DefaultRoleProvider) Inject(us application.UserServiceInterface) {
+func (p *AuthRoleProvider) Inject(us application.UserServiceInterface) {
 	p.userService = us
 }
 
-func (p *DefaultRoleProvider) All(ctx context.Context, session *web.Session) []securityDomain.Role {
+func (p *AuthRoleProvider) All(ctx context.Context, session *web.Session) []securityDomain.Role {
+	var roles []securityDomain.Role
+
 	user := p.userService.GetUser(ctx, session.G())
-	if user == nil || user.Type != authDomain.USER {
-		return []securityDomain.Role{
-			securityDomain.RoleAnonymous,
-		}
+	if user != nil && user.Type == authDomain.USER {
+		roles = append(roles, securityDomain.RoleUser)
 	}
-	return []securityDomain.Role{
-		securityDomain.RoleUser,
-	}
+
+	return roles
 }

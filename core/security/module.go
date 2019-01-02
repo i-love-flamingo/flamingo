@@ -35,9 +35,8 @@ func (r *routes) Routes(registry *router.Registry) {
 func (m *Module) Configure(injector *dingo.Injector) {
 	router.Bind(injector, &routes{})
 
-	injector.BindMulti((*provider.RoleProvider)(nil)).To(provider.DefaultRoleProvider{})
+	injector.BindMulti((*provider.RoleProvider)(nil)).To(provider.AuthRoleProvider{})
 	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.IsLoggedInVoter{})
-	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.IsLoggedOutVoter{})
 	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.RoleVoter{})
 	injector.Bind((*role.Service)(nil)).To(role.ServiceImpl{})
 	injector.Bind((*application.SecurityService)(nil)).To(application.SecurityServiceImpl{})
@@ -58,8 +57,7 @@ func (m *Module) DefaultConfig() config.Map {
 			},
 			"roles": config.Map{
 				"hierarchy": config.Map{
-					domain.RoleAnonymous.Permission(): config.Slice{},
-					domain.RoleUser.Permission():      config.Slice{},
+					domain.RoleUser.Permission(): config.Slice{},
 				},
 				"voters": config.Map{
 					"strategy":          application.VoterStrategyAffirmative,

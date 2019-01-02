@@ -102,7 +102,7 @@ type SecurityVoter interface {
 ## Roles Providers
 
 Role providers are used to fetch all roles granted for user in session. By default there is only one 
-role provider, which provides only RoleUser or RoleAnonymous.
+role provider, which provides only RoleUser.
 To provide more roles it's possible to define additional Role Provider:
 
 ```
@@ -134,7 +134,6 @@ security:
         path: "/" #only if strategy is "path"
     roles:
         hierarchy:
-            RoleAnonymous: []
             RoleUser: []
             RoleAdmin:
                 - RoleUser

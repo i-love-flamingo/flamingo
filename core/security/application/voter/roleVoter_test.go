@@ -52,7 +52,7 @@ func (t *RoleVoterTestSuite) TearDownTest() {
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessAbstained() {
-	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.webSession, domain.RoleAnonymous.Permission(), nil))
+	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.webSession, domain.RoleUser.Permission(), nil))
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithoutObject() {
@@ -75,9 +75,7 @@ func (t *RoleVoterTestSuite) TestVote_AccessGrantedWithObject() {
 }
 
 func (t *RoleVoterTestSuite) TestVote_AccessDeniedWithoutObject() {
-	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
-		domain.RoleAnonymous,
-	}).Once()
+	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{}).Once()
 	t.Equal(AccessDenied, t.voter.Vote(t.context, t.webSession, "RoleAdministrator", nil))
 }
 

@@ -58,8 +58,6 @@ func (t *IsLoggedInVoterTestSuite) TestVote_AccessGranted() {
 }
 
 func (t *IsLoggedInVoterTestSuite) TestVote_AccessDenied() {
-	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
-		domain.RoleAnonymous,
-	}).Once()
+	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{}).Once()
 	t.Equal(AccessDenied, t.voter.Vote(t.context, t.webSession, domain.RoleUser.Permission(), nil))
 }

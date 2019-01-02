@@ -14,36 +14,34 @@ import (
 )
 
 type (
-	DefaultRoleProviderTestSuite struct {
+	AuthRoleProviderTestSuite struct {
 		suite.Suite
 
-		provider    *DefaultRoleProvider
+		provider    *AuthRoleProvider
 		userService *fake.UserService
 
 		context context.Context
 	}
 )
 
-func TestDefaultRoleProviderTestSuite(t *testing.T) {
-	suite.Run(t, &DefaultRoleProviderTestSuite{})
+func TestAuthRoleProviderTestSuite(t *testing.T) {
+	suite.Run(t, &AuthRoleProviderTestSuite{})
 }
 
-func (t *DefaultRoleProviderTestSuite) SetupSuite() {
+func (t *AuthRoleProviderTestSuite) SetupSuite() {
 	t.context = context.Background()
 	t.userService = &fake.UserService{}
-	t.provider = &DefaultRoleProvider{}
+	t.provider = &AuthRoleProvider{}
 	t.provider.Inject(t.userService)
 }
 
-func (t *DefaultRoleProviderTestSuite) TestAll_RoleAnonymous() {
+func (t *AuthRoleProviderTestSuite) TestAll_Empty() {
 	session := sessions.NewSession(nil, "-")
 	webSession := web.NewSession(session)
-	t.Equal([]securityDomain.Role{
-		securityDomain.RoleAnonymous,
-	}, t.provider.All(t.context, webSession))
+	t.Equal([]securityDomain.Role(nil), t.provider.All(t.context, webSession))
 }
 
-func (t *DefaultRoleProviderTestSuite) TestAll_RoleUser() {
+func (t *AuthRoleProviderTestSuite) TestAll_RoleUser() {
 	session := sessions.NewSession(nil, "-")
 	session.Values[fake.UserSessionKey] = authDomain.User{
 		Type: authDomain.USER,

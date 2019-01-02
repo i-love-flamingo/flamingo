@@ -1,10 +1,5 @@
 package domain
 
-const (
-	PermissionAnonymous = "RoleAnonymous"
-	PermissionUser      = "RoleUser"
-)
-
 type (
 	RoleSet interface {
 		Roles() []Role
@@ -14,8 +9,7 @@ type (
 )
 
 var (
-	RoleAnonymous = Role(PermissionAnonymous)
-	RoleUser      = Role(PermissionUser)
+	RoleUser = Role("RoleUser")
 )
 
 func (r Role) Id() string {

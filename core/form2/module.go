@@ -30,9 +30,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.Bind(new(domain.ValidatorProvider)).To(application.ValidatorProviderImpl{})
 
-	injector.BindMulti(new(domain.DefaultFormDataProvider)).To(formData.DefaultFormDataProviderImpl{})
-	injector.BindMulti(new(domain.DefaultFormDataDecoder)).To(formData.DefaultFormDataDecoderImpl{})
-	injector.BindMulti(new(domain.DefaultFormDataValidator)).To(formData.DefaultFormDataValidatorImpl{})
+	injector.Bind(new(domain.DefaultFormDataProvider)).To(formData.DefaultFormDataProviderImpl{})
+	injector.Bind(new(domain.DefaultFormDataDecoder)).To(formData.DefaultFormDataDecoderImpl{})
+	injector.Bind(new(domain.DefaultFormDataValidator)).To(formData.DefaultFormDataValidatorImpl{})
 	injector.Bind(new(application.FormHandlerFactory)).To(application.FormHandlerFactoryImpl{})
 }
 

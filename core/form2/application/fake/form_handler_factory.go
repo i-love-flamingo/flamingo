@@ -1,4 +1,4 @@
-package application
+package fake
 
 import (
 	"flamingo.me/flamingo/core/form2/application"

@@ -1,10 +1,12 @@
 package formData
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/core/form2/domain/mocks"
+	"flamingo.me/flamingo/framework/web"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type (
@@ -35,7 +37,7 @@ func (t *DefaultFormDataValidatorImplTestSuite) TearDownTest() {
 }
 
 func (t *DefaultFormDataValidatorImplTestSuite) TestGetFormData() {
-	t.validatorProvider.On("Validate", nil, "something").Return(domain.ValidationInfo{}).Once()
+	t.validatorProvider.On("Validate", nil, (*web.Request)(nil), "something").Return(domain.ValidationInfo{}).Once()
 
 	result, err := t.validator.Validate(nil, nil, t.validatorProvider, "something")
 

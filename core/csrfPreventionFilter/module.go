@@ -32,7 +32,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"csrf.all":    false,
-		"csrf.secret": "6368616e676520746869732070617373776f726420746f206120736563726574",
+		"csrf.secret": "somethingSuperSecret",
 		"csrf.ttl":    900.0,
 	}
 }

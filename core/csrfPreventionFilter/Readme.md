@@ -12,7 +12,7 @@ By default, there are three parameters supported by module:
 ```
 csrf:
   all: false
-  secret: 6368616e676520746869732070617373776f726420746f206120736563726574
+  secret: "somethingSuperSecret"
   ttl: 900
 ```
 

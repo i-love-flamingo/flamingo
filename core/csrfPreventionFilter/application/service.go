@@ -12,6 +12,8 @@ import (
 
 	"net/http"
 
+	"crypto/sha256"
+
 	"flamingo.me/flamingo/framework/flamingo"
 	"flamingo.me/flamingo/framework/web"
 )
@@ -43,12 +45,8 @@ func (s *ServiceImpl) Inject(l flamingo.Logger, cfg *struct {
 	Secret string  `inject:"config:csrf.secret"`
 	Ttl    float64 `inject:"config:csrf.ttl"`
 }) {
-	var err error
-	s.secret, err = hex.DecodeString(cfg.Secret)
-	if err != nil {
-		panic(err)
-	}
-
+	hash := sha256.Sum256([]byte(cfg.Secret))
+	s.secret = hash[:]
 	s.ttl = int(cfg.Ttl)
 	s.logger = l
 }

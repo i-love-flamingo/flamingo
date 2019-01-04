@@ -1,11 +1,12 @@
 package application
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/core/form2/domain/mocks"
 	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type (
@@ -131,20 +132,23 @@ func (t *FormHandlerFactoryImplTestSuite) TearDownTest() {
 
 func (t *FormHandlerFactoryImplTestSuite) TestCreateSimpleFormHandler() {
 	t.Equal(&formHandlerImpl{
-		formDataProvider:  t.defaultProvider,
-		formDataDecoder:   t.defaultDecoder,
-		formDataValidator: t.defaultValidator,
-		formExtensions:    []interface{}(nil),
-		validatorProvider: t.validatorProvider,
-		logger:            t.logger,
+		defaultFormDataProvider:  t.defaultProvider,
+		defaultFormDataDecoder:   t.defaultDecoder,
+		defaultFormDataValidator: t.defaultValidator,
+		formExtensions:           []interface{}(nil),
+		validatorProvider:        t.validatorProvider,
+		logger:                   t.logger,
 	}, t.factory.CreateSimpleFormHandler())
 }
 
 func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormService() {
 	t.Equal(&formHandlerImpl{
-		formDataProvider:  t.service,
-		formDataDecoder:   t.service,
-		formDataValidator: t.service,
+		defaultFormDataProvider:  t.defaultProvider,
+		defaultFormDataDecoder:   t.defaultDecoder,
+		defaultFormDataValidator: t.defaultValidator,
+		formDataProvider:         t.service,
+		formDataDecoder:          t.service,
+		formDataValidator:        t.service,
 		formExtensions: []interface{}{
 			t.validator,
 			t.secondNamedValidator,
@@ -156,9 +160,12 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormService()
 
 func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices() {
 	t.Equal(&formHandlerImpl{
-		formDataProvider:  t.provider,
-		formDataDecoder:   t.decoder,
-		formDataValidator: t.validator,
+		defaultFormDataProvider:  t.defaultProvider,
+		defaultFormDataDecoder:   t.defaultDecoder,
+		defaultFormDataValidator: t.defaultValidator,
+		formDataProvider:         t.provider,
+		formDataDecoder:          t.decoder,
+		formDataValidator:        t.validator,
 		formExtensions: []interface{}{
 			t.service,
 			t.firstNamedService,

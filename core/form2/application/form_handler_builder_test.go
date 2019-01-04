@@ -1,11 +1,12 @@
 package application
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/core/form2/domain/mocks"
 	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type (
@@ -325,12 +326,12 @@ func (t *FormHandlerBuilderImplTestSuite) TestAddNamedFormExtension_CompleteForm
 
 func (t *FormHandlerBuilderImplTestSuite) TestBuild_Empty() {
 	t.Equal(&formHandlerImpl{
-		formDataProvider:  t.defaultProvider,
-		formDataDecoder:   t.defaultDecoder,
-		formDataValidator: t.defaultValidator,
-		formExtensions:    []interface{}(nil),
-		validatorProvider: t.validatorProvider,
-		logger:            t.logger,
+		defaultFormDataProvider:  t.defaultProvider,
+		defaultFormDataDecoder:   t.defaultDecoder,
+		defaultFormDataValidator: t.defaultValidator,
+		formExtensions:           []interface{}(nil),
+		validatorProvider:        t.validatorProvider,
+		logger:                   t.logger,
 	}, t.builder.Build())
 }
 
@@ -341,9 +342,12 @@ func (t *FormHandlerBuilderImplTestSuite) TestBuild_Full() {
 	t.builder.AddFormExtension(t.service)
 
 	t.Equal(&formHandlerImpl{
-		formDataProvider:  t.provider,
-		formDataDecoder:   t.decoder,
-		formDataValidator: t.validator,
+		defaultFormDataProvider:  t.defaultProvider,
+		defaultFormDataDecoder:   t.defaultDecoder,
+		defaultFormDataValidator: t.defaultValidator,
+		formDataProvider:         t.provider,
+		formDataDecoder:          t.decoder,
+		formDataValidator:        t.validator,
 		formExtensions: []interface{}{
 			t.service,
 		},

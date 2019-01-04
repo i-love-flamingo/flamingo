@@ -212,11 +212,14 @@ func (b *formHandlerBuilderImpl) Build() domain.FormHandler {
 	}
 
 	return &formHandlerImpl{
-		formDataProvider:  formDataProvider,
-		formDataDecoder:   formDataDecoder,
-		formDataValidator: formDataValidator,
-		formExtensions:    b.formExtensions,
-		validatorProvider: b.validatorProvider,
-		logger:            b.logger,
+		defaultFormDataProvider:  b.defaultFormDataProvider,
+		defaultFormDataDecoder:   b.defaultFormDataDecoder,
+		defaultFormDataValidator: b.defaultFormDataValidator,
+		formDataProvider:         b.formDataProvider,
+		formDataDecoder:          b.formDataDecoder,
+		formDataValidator:        b.formDataValidator,
+		formExtensions:           b.formExtensions,
+		validatorProvider:        b.validatorProvider,
+		logger:                   b.logger,
 	}
 }

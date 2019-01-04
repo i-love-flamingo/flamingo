@@ -7,6 +7,8 @@ type (
 	Form struct {
 		// Data  the form Data Struct (Forms DTO)
 		Data interface{}
+		// FormExtensionsData the additional form Data Structs (Forms DTO) fetched from form extensions
+		FormExtensionsData []interface{}
 		// ValidationInfo for the form
 		ValidationInfo ValidationInfo
 		// submitted  flag if form was submitted and this is the result page

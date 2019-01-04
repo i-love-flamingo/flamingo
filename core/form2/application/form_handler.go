@@ -15,12 +15,15 @@ import (
 type (
 	// formHandlerImpl as actual implementation of FormHandler interface
 	formHandlerImpl struct {
-		formDataProvider  domain.FormDataProvider
-		formDataDecoder   domain.FormDataDecoder
-		formDataValidator domain.FormDataValidator
-		formExtensions    []interface{}
-		validatorProvider domain.ValidatorProvider
-		logger            flamingo.Logger
+		formDataProvider         domain.FormDataProvider
+		formDataDecoder          domain.FormDataDecoder
+		formDataValidator        domain.FormDataValidator
+		defaultFormDataProvider  domain.DefaultFormDataProvider
+		defaultFormDataDecoder   domain.DefaultFormDataDecoder
+		defaultFormDataValidator domain.DefaultFormDataValidator
+		formExtensions           []interface{}
+		validatorProvider        domain.ValidatorProvider
+		logger                   flamingo.Logger
 	}
 )
 
@@ -59,7 +62,7 @@ func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Requ
 
 // buildForm as method for creating new instance of Form domain
 func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submitted bool) (*domain.Form, error) {
-	formData, err := h.formDataProvider.GetFormData(ctx, req)
+	formData, err := h.getFormData(ctx, req, h.formDataProvider)
 	if err != nil {
 		h.getLogger("formBuilding").Error(err.Error())
 		return nil, domain.NewFormError(err.Error())
@@ -79,14 +82,14 @@ func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Requ
 		return nil, domain.NewFormError(err.Error())
 	}
 
-	formData, err := h.formDataDecoder.Decode(ctx, req, *values, form.Data)
+	formData, err := h.decode(ctx, req, *values, form.Data, h.formDataDecoder)
 	if err != nil {
 		h.getLogger("formDecoding").Error(err.Error())
 		return nil, domain.NewFormError(err.Error())
 	}
 	form.Data = formData
 
-	validationInfo, err := h.formDataValidator.Validate(ctx, req, h.validatorProvider, formData)
+	validationInfo, err := h.validate(ctx, req, h.validatorProvider, formData, h.formDataValidator)
 	if err != nil {
 		h.getLogger("formValidation").Error(err.Error())
 		return nil, domain.NewFormError(err.Error())
@@ -183,29 +186,45 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 	var formData interface{}
 	var err error
 
+	// checks if form extension is defined as form data provider
+	// if it's not, it passes nil, which means that default form data provider will be used
+	var formDataProvider domain.FormDataProvider
 	if provider, ok := formExtension.(domain.FormDataProvider); ok {
-		formData, err = provider.GetFormData(ctx, req)
-		if err != nil {
-			return err
-		}
+		formDataProvider = provider
+	}
+	formData, err = h.getFormData(ctx, req, formDataProvider)
+	if err != nil {
+		return err
 	}
 
+	// checks if form extension is defined as form data decoder
+	// if it's not, it passes nil, which means that default form data decoder will be used
+	var formDataDecoder domain.FormDataDecoder
 	if decoder, ok := formExtension.(domain.FormDataDecoder); ok {
-		formData, err = decoder.Decode(ctx, req, values, formData)
-		if err != nil {
-			return err
-		}
+		formDataDecoder = decoder
+	}
+	formData, err = h.decode(ctx, req, values, formData, formDataDecoder)
+	if err != nil {
+		return err
 	}
 
+	// at this point decoded data is appended in list of form extension data
+	form.FormExtensionsData = append(form.FormExtensionsData, formData)
+
+	// checks if form extension is defined as form data validator
+	// if it's not, it passes nil, which means that default form data validator will be used
+	var formDataValidator domain.FormDataValidator
 	if validator, ok := formExtension.(domain.FormDataValidator); ok {
-		validationInfo, err := validator.Validate(ctx, req, h.validatorProvider, formData)
-		if err != nil {
-			return err
-		}
-
-		form.ValidationInfo.AppendGeneralErrors(validationInfo.GetGeneralErrors())
-		form.ValidationInfo.AppendFieldErrors(validationInfo.GetErrorsForAllFields())
+		formDataValidator = validator
 	}
+	validationInfo, err := h.validate(ctx, req, h.validatorProvider, formData, formDataValidator)
+	if err != nil {
+		return err
+	}
+
+	// form validation errors from form extension is attached
+	form.ValidationInfo.AppendGeneralErrors(validationInfo.GetGeneralErrors())
+	form.ValidationInfo.AppendFieldErrors(validationInfo.GetErrorsForAllFields())
 
 	return nil
 }
@@ -213,4 +232,31 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 // formHandlerImpl returns flamingo logger instance with defined fields for error logging
 func (h *formHandlerImpl) getLogger(value string) flamingo.Logger {
 	return h.logger.WithField("FormHandler", value)
+}
+
+// getFormData calls GetFormData from instance of domain.FormDataProvider if it's defined, otherwise it calls it from default domain.FormDataProvider
+func (h *formHandlerImpl) getFormData(ctx context.Context, req *web.Request, formDataProvider domain.FormDataProvider) (interface{}, error) {
+	if formDataProvider == nil {
+		formDataProvider = h.defaultFormDataProvider
+	}
+
+	return formDataProvider.GetFormData(ctx, req)
+}
+
+// decode calls Decode from instance of domain.FormDataDecoder if it's defined, otherwise it calls it from default domain.FormDataDecoder
+func (h *formHandlerImpl) decode(ctx context.Context, req *web.Request, values url.Values, formData interface{}, formDataDecoder domain.FormDataDecoder) (interface{}, error) {
+	if formDataDecoder == nil {
+		formDataDecoder = h.defaultFormDataDecoder
+	}
+
+	return formDataDecoder.Decode(ctx, req, values, formData)
+}
+
+// validate calls Validate from instance of domain.FormDataValidator if it's defined, otherwise it calls it from default domain.FormDataValidator
+func (h *formHandlerImpl) validate(ctx context.Context, req *web.Request, validatorProvider domain.ValidatorProvider, formData interface{}, formDataValidator domain.FormDataValidator) (*domain.ValidationInfo, error) {
+	if formDataValidator == nil {
+		formDataValidator = h.defaultFormDataValidator
+	}
+
+	return formDataValidator.Validate(ctx, req, validatorProvider, formData)
 }

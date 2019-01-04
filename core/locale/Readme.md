@@ -101,9 +101,9 @@ The formatter can format a date in the configured format - either in the timezon
 E.g.:
 ```
 dateTimeFormatFromIso("2006-01-02T15:04:05Z").formatDate()
-dateTimeFormat(timeObject).formalLocalDate()
+dateTimeFormat(timeObject).formatToLocalDate()
 ```
-Other functions are formalLocalDate() or formatTime() etc..
+Other functions are formalToLocalDate() or formatTime() etc..
 
 Note: For displaying locale formats set the correct date locationcode - see https://golang.org/pkg/time/#LoadLocation
 

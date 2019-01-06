@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -79,7 +80,10 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 
 	lock.Lock()
 	if e.debug || e.templates == nil {
-		e.loadTemplates(ctx)
+		err := e.loadTemplates(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 	lock.Unlock()
 
@@ -107,7 +111,7 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	return buf, err
 }
 
-func (e *engine) loadTemplates(ctx context.Context) {
+func (e *engine) loadTemplates(ctx context.Context) error {
 	ctx, span := trace.StartSpan(ctx, "gotemplate/loadTemplates")
 	defer span.End()
 
@@ -135,12 +139,17 @@ func (e *engine) loadTemplates(ctx context.Context) {
 		tplFuncs[k] = f.Func(ctx)
 	}
 
-	layoutTemplate := template.Must(e.parseLayoutTemplates(functionsMap, tplFuncs))
-
-	err := e.parseSiteTemplateDirectory(layoutTemplate, e.templatesBasePath)
+	layoutTemplate, err := e.parseLayoutTemplates(functionsMap, tplFuncs)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	err = e.parseSiteTemplateDirectory(layoutTemplate, e.templatesBasePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // parses all layout templates in a template instance which is the base instance for all other templates
@@ -152,20 +161,42 @@ func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs templ
 	}
 
 	dir := e.templatesBasePath + pathSeparatorString + e.layoutTemplatesDir
-	layoutFilesInfo, err := ioutil.ReadDir(dir)
+
+	layoutFilesNames := make([]string, 0)
+	err := filepath.Walk(
+		dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+
+			layoutFilesNames = append(layoutFilesNames, path)
+
+			return nil
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	layoutFilesNames := make([]string, 0)
-	for _, file := range layoutFilesInfo {
-		if file.IsDir() {
-			continue
+	for _, file := range layoutFilesNames {
+		tContent, err := ioutil.ReadFile(file)
+		if err != nil {
+			return nil, err
 		}
-		layoutFilesNames = append(layoutFilesNames, dir+pathSeparatorString+file.Name())
+		templateName, err := filepath.Rel(dir, file)
+		t := tpl.New(templateName)
+
+		_, err = t.Parse(string(tContent))
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return tpl.ParseFiles(layoutFilesNames...)
+	return tpl, nil
 }
 
 // parses all templates from a given directory into a clone of the given layout template, so that all layouts are available

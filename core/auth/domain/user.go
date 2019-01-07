@@ -25,7 +25,7 @@ type (
 		City         string
 		DateOfBirth  string
 		Country      string
-		customFields map[string]string
+		CustomFields map[string]string
 		Type         UserType
 	}
 
@@ -50,10 +50,10 @@ func init() {
 }
 
 func (u User) Get(name string) string {
-	if u.customFields == nil {
+	if u.CustomFields == nil {
 		return ""
 	}
-	return u.customFields[name]
+	return u.CustomFields[name]
 }
 
 const (

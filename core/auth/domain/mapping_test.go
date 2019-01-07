@@ -43,7 +43,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_Default() {
 		Sub:          "ID123456",
 		Name:         "Mr. Awesome",
 		Email:        "email@domain.com",
-		customFields: map[string]string{},
+		CustomFields: map[string]string{},
 		Type:         USER,
 	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }
@@ -90,7 +90,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		City:         "Whitecity",
 		DateOfBirth:  "01.01.2000",
 		Country:      "Mars",
-		customFields: map[string]string{},
+		CustomFields: map[string]string{},
 		Type:         USER,
 	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
 }
@@ -105,7 +105,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
 	}
 
 	t.Equal(&User{
-		customFields: map[string]string{
+		CustomFields: map[string]string{
 			"whatever": "value",
 		},
 		Type: USER,
@@ -155,7 +155,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		City:        "Whitecity",
 		DateOfBirth: "01.01.2000",
 		Country:     "Mars",
-		customFields: map[string]string{
+		CustomFields: map[string]string{
 			"whatever": "value",
 		},
 		Type: USER,

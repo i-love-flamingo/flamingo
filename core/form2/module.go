@@ -28,12 +28,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(domain.FieldValidator)).To(validators.MinimumAgeValidator{})
 	injector.BindMulti(new(domain.FieldValidator)).To(validators.MaximumAgeValidator{})
 
-	injector.Bind(new(domain.ValidatorProvider)).To(application.ValidatorProviderImpl{})
+	injector.Bind(new(domain.ValidatorProvider)).To(application.ValidatorProviderImpl{}).AsEagerSingleton()
 
 	injector.Bind(new(domain.DefaultFormDataProvider)).To(formData.DefaultFormDataProviderImpl{})
 	injector.Bind(new(domain.DefaultFormDataDecoder)).To(formData.DefaultFormDataDecoderImpl{})
 	injector.Bind(new(domain.DefaultFormDataValidator)).To(formData.DefaultFormDataValidatorImpl{})
-	injector.Bind(new(application.FormHandlerFactory)).To(application.FormHandlerFactoryImpl{})
+	injector.Bind(new(application.FormHandlerFactory)).To(application.FormHandlerFactoryImpl{}).AsEagerSingleton()
 }
 
 // DefaultConfig method which is responsible for setting up default module configuration

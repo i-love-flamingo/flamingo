@@ -18,8 +18,10 @@ type (
 		HandleForm(ctx context.Context, req *web.Request) (*Form, error)
 	}
 
+	// FormExtension is helper interface for form extensions used for binding with dingo injector
 	FormExtension interface{}
 
+	// FormService is helper interface for form services used for binding with dingo injector
 	FormService interface{}
 
 	// FormDataProvider is interface for defining all form services which creates form data

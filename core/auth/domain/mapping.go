@@ -72,7 +72,7 @@ func (ums *UserMappingService) MapToUser(claims map[string]interface{}, session 
 		City:         ums.mapField(mapping.City, claims),
 		DateOfBirth:  ums.mapField(mapping.DateOfBirth, claims),
 		Country:      ums.mapField(mapping.Country, claims),
-		customFields: ums.mapCustomFields(mapping.CustomFields, claims),
+		CustomFields: ums.mapCustomFields(mapping.CustomFields, claims),
 		Type:         USER,
 	}
 }

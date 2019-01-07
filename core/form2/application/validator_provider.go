@@ -13,16 +13,18 @@ import (
 type (
 	// ValidatorProviderImpl as struct which implements interface ValidatorProvider
 	ValidatorProviderImpl struct {
-		fieldValidators  []domain.FieldValidator
-		structValidators []domain.StructValidator
+		validate *validator.Validate
 	}
 )
 
 var _ domain.ValidatorProvider = &ValidatorProviderImpl{}
 
+// Inject initialize instance of validator.Validate struct
 func (p *ValidatorProviderImpl) Inject(fieldValidators []domain.FieldValidator, structValidators []domain.StructValidator) {
-	p.fieldValidators = fieldValidators
-	p.structValidators = structValidators
+	validate := validator.New()
+	p.attachFieldValidators(validate, fieldValidators)
+	p.attachStructValidators(validate, structValidators)
+	p.validate = validate
 }
 
 // Validate method which validates any struct and returns domain.ValidationInfo as a result of validation
@@ -36,11 +38,7 @@ func (p *ValidatorProviderImpl) Validate(ctx context.Context, req *web.Request, 
 
 // GetValidator method which returns instance of validator.Validate struct with all injected field and struct validations
 func (p *ValidatorProviderImpl) GetValidator() *validator.Validate {
-	validate := validator.New()
-	p.attachFieldValidators(validate)
-	p.attachStructValidators(validate)
-
-	return validate
+	return p.validate
 }
 
 // ErrorsToValidationInfo method which transforms errors into domain.ValidationInfo
@@ -64,15 +62,15 @@ func (p *ValidatorProviderImpl) ErrorsToValidationInfo(err error) domain.Validat
 }
 
 // attachFieldValidators method which attach all injected instances of FieldValidator interface into validator.Validate instance
-func (p *ValidatorProviderImpl) attachFieldValidators(validate *validator.Validate) {
-	for _, fieldValidator := range p.fieldValidators {
+func (p *ValidatorProviderImpl) attachFieldValidators(validate *validator.Validate, fieldValidators []domain.FieldValidator) {
+	for _, fieldValidator := range fieldValidators {
 		validate.RegisterValidationCtx(fieldValidator.ValidatorName(), fieldValidator.ValidateField)
 	}
 }
 
 // attachFieldValidators method which attach all injected instances of StructValidator interface into validator.Validate instance
-func (p *ValidatorProviderImpl) attachStructValidators(validate *validator.Validate) {
-	for _, structValidator := range p.structValidators {
+func (p *ValidatorProviderImpl) attachStructValidators(validate *validator.Validate, structValidators []domain.StructValidator) {
+	for _, structValidator := range structValidators {
 		validate.RegisterStructValidationCtx(structValidator.ValidateStruct, structValidator.StructType())
 	}
 }

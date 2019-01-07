@@ -42,6 +42,11 @@ func (t *ValidatorProviderTestSuite) SetupTest() {
 	t.secondFieldValidator = &mocks.FieldValidator{}
 	t.structValidator = &mocks.StructValidator{}
 	t.provider = &ValidatorProviderImpl{}
+
+	t.firstFieldValidator.On("ValidatorName").Return("firstfield").Once()
+	t.secondFieldValidator.On("ValidatorName").Return("secondfield").Once()
+	t.structValidator.On("StructType").Return(validatorProviderTestData{}).Once()
+
 	t.provider.Inject([]domain.FieldValidator{
 		t.firstFieldValidator,
 		t.secondFieldValidator,
@@ -61,10 +66,6 @@ func (t *ValidatorProviderTestSuite) TearDownTest() {
 }
 
 func (t *ValidatorProviderTestSuite) TestGetValidator() {
-	t.firstFieldValidator.On("ValidatorName").Return("firstfield").Once()
-	t.secondFieldValidator.On("ValidatorName").Return("secondfield").Once()
-	t.structValidator.On("StructType").Return(validatorProviderTestData{}).Once()
-
 	t.IsType(&validator.Validate{}, t.provider.GetValidator())
 }
 
@@ -138,11 +139,6 @@ func (t *ValidatorProviderTestSuite) TestValidate() {
 	ctx := context.Background()
 	request := &web.Request{}
 	reqCtx := web.Context_(ctx, request)
-
-	t.firstFieldValidator.On("ValidatorName").Return("firstfield").Once()
-	t.secondFieldValidator.On("ValidatorName").Return("secondfield").Once()
-
-	t.structValidator.On("StructType").Return(validatorProviderTestData{}).Once()
 
 	t.firstFieldValidator.On("ValidateField", reqCtx, mock.Anything).Return(false).Once()
 	t.secondFieldValidator.On("ValidateField", reqCtx, mock.Anything).Return(true).Once()

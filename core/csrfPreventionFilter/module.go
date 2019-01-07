@@ -24,7 +24,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	template.BindCtxFunc(injector, "csrfToken", new(templatefunctions.CsrfTokenFunc))
 	template.BindCtxFunc(injector, "csrfInput", new(templatefunctions.CsrfInputFunc))
 
-	injector.BindMulti((*domain.FormExtensionWithName)(nil)).To(application.CrsfTokenFormExtension{})
+	injector.BindMap((*domain.FormExtension)(nil), "formExtension.csrfToken").To(interfaces.CrsfTokenFormExtension{})
 
 	if m.All {
 		injector.BindMulti((*router.Filter)(nil)).To(interfaces.CsrfFilter{})

@@ -15,27 +15,27 @@ type (
 
 		factory *FormHandlerFactoryImpl
 
-		firstNamedService  *mocks.CompleteFormServiceWithName
-		secondNamedService *mocks.CompleteFormServiceWithName
+		firstNamedService  *mocks.CompleteFormService
+		secondNamedService *mocks.CompleteFormService
 		service            *mocks.CompleteFormService
 
-		firstNamedProvider  *mocks.FormDataProviderWithName
-		secondNamedProvider *mocks.FormDataProviderWithName
+		firstNamedProvider  *mocks.FormDataProvider
+		secondNamedProvider *mocks.FormDataProvider
 		defaultProvider     *mocks.DefaultFormDataProvider
 		provider            *mocks.FormDataProvider
 
-		firstNamedDecoder  *mocks.FormDataDecoderWithName
-		secondNamedDecoder *mocks.FormDataDecoderWithName
+		firstNamedDecoder  *mocks.FormDataDecoder
+		secondNamedDecoder *mocks.FormDataDecoder
 		defaultDecoder     *mocks.DefaultFormDataDecoder
 		decoder            *mocks.FormDataDecoder
 
-		firstNamedValidator  *mocks.FormDataValidatorWithName
-		secondNamedValidator *mocks.FormDataValidatorWithName
+		firstNamedValidator  *mocks.FormDataValidator
+		secondNamedValidator *mocks.FormDataValidator
 		defaultValidator     *mocks.DefaultFormDataValidator
 		validator            *mocks.FormDataValidator
 
-		firstNamedExtension  *mocks.CompleteFormServiceWithName
-		secondNamedExtension *mocks.CompleteFormServiceWithName
+		firstNamedExtension  *mocks.CompleteFormService
+		secondNamedExtension *mocks.CompleteFormService
 
 		validatorProvider *mocks.ValidatorProvider
 
@@ -48,27 +48,27 @@ func TestFormHandlerFactoryImplTestSuite(t *testing.T) {
 }
 
 func (t *FormHandlerFactoryImplTestSuite) SetupTest() {
-	t.firstNamedService = &mocks.CompleteFormServiceWithName{}
-	t.secondNamedService = &mocks.CompleteFormServiceWithName{}
+	t.firstNamedService = &mocks.CompleteFormService{}
+	t.secondNamedService = &mocks.CompleteFormService{}
 	t.service = &mocks.CompleteFormService{}
 
-	t.firstNamedProvider = &mocks.FormDataProviderWithName{}
-	t.secondNamedProvider = &mocks.FormDataProviderWithName{}
+	t.firstNamedProvider = &mocks.FormDataProvider{}
+	t.secondNamedProvider = &mocks.FormDataProvider{}
 	t.defaultProvider = &mocks.DefaultFormDataProvider{}
 	t.provider = &mocks.FormDataProvider{}
 
-	t.firstNamedDecoder = &mocks.FormDataDecoderWithName{}
-	t.secondNamedDecoder = &mocks.FormDataDecoderWithName{}
+	t.firstNamedDecoder = &mocks.FormDataDecoder{}
+	t.secondNamedDecoder = &mocks.FormDataDecoder{}
 	t.defaultDecoder = &mocks.DefaultFormDataDecoder{}
 	t.decoder = &mocks.FormDataDecoder{}
 
-	t.firstNamedValidator = &mocks.FormDataValidatorWithName{}
-	t.secondNamedValidator = &mocks.FormDataValidatorWithName{}
+	t.firstNamedValidator = &mocks.FormDataValidator{}
+	t.secondNamedValidator = &mocks.FormDataValidator{}
 	t.defaultValidator = &mocks.DefaultFormDataValidator{}
 	t.validator = &mocks.FormDataValidator{}
 
-	t.firstNamedExtension = &mocks.CompleteFormServiceWithName{}
-	t.secondNamedExtension = &mocks.CompleteFormServiceWithName{}
+	t.firstNamedExtension = &mocks.CompleteFormService{}
+	t.secondNamedExtension = &mocks.CompleteFormService{}
 
 	t.validatorProvider = &mocks.ValidatorProvider{}
 
@@ -76,25 +76,25 @@ func (t *FormHandlerFactoryImplTestSuite) SetupTest() {
 
 	t.factory = &FormHandlerFactoryImpl{}
 	t.factory.Inject(
-		[]domain.FormServiceWithName{
-			t.firstNamedService,
-			t.secondNamedService,
+		map[string]domain.FormService{
+			"first":  t.firstNamedService,
+			"second": t.secondNamedService,
 		},
-		[]domain.FormDataProviderWithName{
-			t.firstNamedProvider,
-			t.secondNamedProvider,
+		map[string]domain.FormDataProvider{
+			"first":  t.firstNamedProvider,
+			"second": t.secondNamedProvider,
 		},
-		[]domain.FormDataDecoderWithName{
-			t.firstNamedDecoder,
-			t.secondNamedDecoder,
+		map[string]domain.FormDataDecoder{
+			"first":  t.firstNamedDecoder,
+			"second": t.secondNamedDecoder,
 		},
-		[]domain.FormDataValidatorWithName{
-			t.firstNamedValidator,
-			t.secondNamedValidator,
+		map[string]domain.FormDataValidator{
+			"first":  t.firstNamedValidator,
+			"second": t.secondNamedValidator,
 		},
-		[]domain.FormExtensionWithName{
-			t.firstNamedExtension,
-			t.secondNamedExtension,
+		map[string]domain.FormExtension{
+			"first":  t.firstNamedExtension,
+			"second": t.secondNamedExtension,
 		},
 		t.defaultProvider,
 		t.defaultDecoder,
@@ -177,25 +177,25 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices(
 
 func (t *FormHandlerFactoryImplTestSuite) TestGetFormHandlerBuilder() {
 	t.Equal(&formHandlerBuilderImpl{
-		namedFormServices: []domain.FormServiceWithName{
-			t.firstNamedService,
-			t.secondNamedService,
+		namedFormServices: map[string]domain.FormService{
+			"first":  t.firstNamedService,
+			"second": t.secondNamedService,
 		},
-		namedFormDataProviders: []domain.FormDataProviderWithName{
-			t.firstNamedProvider,
-			t.secondNamedProvider,
+		namedFormDataProviders: map[string]domain.FormDataProvider{
+			"first":  t.firstNamedProvider,
+			"second": t.secondNamedProvider,
 		},
-		namedFormDataDecoders: []domain.FormDataDecoderWithName{
-			t.firstNamedDecoder,
-			t.secondNamedDecoder,
+		namedFormDataDecoders: map[string]domain.FormDataDecoder{
+			"first":  t.firstNamedDecoder,
+			"second": t.secondNamedDecoder,
 		},
-		namedFormDataValidators: []domain.FormDataValidatorWithName{
-			t.firstNamedValidator,
-			t.secondNamedValidator,
+		namedFormDataValidators: map[string]domain.FormDataValidator{
+			"first":  t.firstNamedValidator,
+			"second": t.secondNamedValidator,
 		},
-		namedFormExtensions: []domain.FormExtensionWithName{
-			t.firstNamedExtension,
-			t.secondNamedExtension,
+		namedFormExtensions: map[string]domain.FormExtension{
+			"first":  t.firstNamedExtension,
+			"second": t.secondNamedExtension,
 		},
 		defaultFormDataProvider:  t.defaultProvider,
 		defaultFormDataDecoder:   t.defaultDecoder,

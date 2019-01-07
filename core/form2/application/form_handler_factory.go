@@ -33,11 +33,11 @@ type (
 
 	// FormHandlerFactoryImpl as actual implementation of FormHandlerFactory interface
 	FormHandlerFactoryImpl struct {
-		namedFormServices        []domain.FormServiceWithName
-		namedFormDataProviders   []domain.FormDataProviderWithName
-		namedFormDataDecoders    []domain.FormDataDecoderWithName
-		namedFormDataValidators  []domain.FormDataValidatorWithName
-		namedFormExtensions      []domain.FormExtensionWithName
+		namedFormServices        map[string]domain.FormService
+		namedFormDataProviders   map[string]domain.FormDataProvider
+		namedFormDataDecoders    map[string]domain.FormDataDecoder
+		namedFormDataValidators  map[string]domain.FormDataValidator
+		namedFormExtensions      map[string]domain.FormExtension
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
@@ -47,11 +47,11 @@ type (
 )
 
 func (f *FormHandlerFactoryImpl) Inject(
-	s []domain.FormServiceWithName,
-	p []domain.FormDataProviderWithName,
-	d []domain.FormDataDecoderWithName,
-	v []domain.FormDataValidatorWithName,
-	e []domain.FormExtensionWithName,
+	s map[string]domain.FormService,
+	p map[string]domain.FormDataProvider,
+	d map[string]domain.FormDataDecoder,
+	v map[string]domain.FormDataValidator,
+	e map[string]domain.FormExtension,
 	dp domain.DefaultFormDataProvider,
 	dd domain.DefaultFormDataDecoder,
 	dv domain.DefaultFormDataValidator,

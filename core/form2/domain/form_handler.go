@@ -18,21 +18,9 @@ type (
 		HandleForm(ctx context.Context, req *web.Request) (*Form, error)
 	}
 
-	// NamedFormInstance is interface for defining all form services and extensions with names
-	NamedFormInstance interface {
-		// Name as method for defining name of form service and extension
-		Name() string
-	}
+	FormExtension interface{}
 
-	// FormExtensionWithName is interface for defining all form extensions with names
-	FormExtensionWithName interface {
-		NamedFormInstance
-	}
-
-	// FormServiceWithName is interface for defining all form services with names
-	FormServiceWithName interface {
-		NamedFormInstance
-	}
+	FormService interface{}
 
 	// FormDataProvider is interface for defining all form services which creates form data
 	FormDataProvider interface {
@@ -43,12 +31,6 @@ type (
 	// DefaultFormDataProvider is interface for defining default form data provider
 	// used in case when there is no custom form data provider defined
 	DefaultFormDataProvider interface {
-		FormDataProvider
-	}
-
-	// FormDataProviderWithName is interface for defining all form data provider with names
-	FormDataProviderWithName interface {
-		NamedFormInstance
 		FormDataProvider
 	}
 
@@ -64,12 +46,6 @@ type (
 		FormDataDecoder
 	}
 
-	// FormDataDecoderWithName is interface for defining all form data decoder with names
-	FormDataDecoderWithName interface {
-		NamedFormInstance
-		FormDataDecoder
-	}
-
 	// FormDataValidator is interface for defining all form services which validates form data
 	FormDataValidator interface {
 		// Validate as method for validating form data
@@ -82,23 +58,10 @@ type (
 		FormDataValidator
 	}
 
-	// FormDataValidatorWithName is interface for defining all form data validators with names
-	FormDataValidatorWithName interface {
-		NamedFormInstance
-		FormDataValidator
-	}
-
 	// CompleteFormService is interface for defining all form services which can acts as provider, decoder and validator
 	CompleteFormService interface {
 		FormDataProvider
 		FormDataDecoder
 		FormDataValidator
-	}
-
-	// CompleteFormServiceWithName is interface for defining all form services with names
-	// which can acts as provider, decoder and validator
-	CompleteFormServiceWithName interface {
-		NamedFormInstance
-		CompleteFormService
 	}
 )

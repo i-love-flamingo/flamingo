@@ -47,11 +47,11 @@ type (
 
 	// formHandlerBuilderImpl as actual implementation of FormHandlerBuilder interface
 	formHandlerBuilderImpl struct {
-		namedFormServices        []domain.FormServiceWithName
-		namedFormDataProviders   []domain.FormDataProviderWithName
-		namedFormDataDecoders    []domain.FormDataDecoderWithName
-		namedFormDataValidators  []domain.FormDataValidatorWithName
-		namedFormExtensions      []domain.FormExtensionWithName
+		namedFormServices        map[string]domain.FormService
+		namedFormDataProviders   map[string]domain.FormDataProvider
+		namedFormDataDecoders    map[string]domain.FormDataDecoder
+		namedFormDataValidators  map[string]domain.FormDataValidator
+		namedFormExtensions      map[string]domain.FormExtension
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
@@ -70,10 +70,8 @@ type (
 // It overrides provider, decoder and validator if it implements theirs interfaces.
 // If it doesn't implements any of those interfaces it panics.
 func (b *formHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBuilder {
-	for _, service := range b.namedFormServices {
-		if name == service.Name() {
-			return b.SetFormService(service)
-		}
+	if service, ok := b.namedFormServices[name]; ok {
+		return b.SetFormService(service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormService with name "%s"`, name))
@@ -105,10 +103,8 @@ func (b *formHandlerBuilderImpl) SetFormService(formService interface{}) FormHan
 // It panics if there is no injected form data provider with that name.
 // It sets form data provider instance and overrides default one.
 func (b *formHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandlerBuilder {
-	for _, provider := range b.namedFormDataProviders {
-		if name == provider.Name() {
-			return b.SetFormDataProvider(provider)
-		}
+	if service, ok := b.namedFormDataProviders[name]; ok {
+		return b.SetFormDataProvider(service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormDataProvider with name "%s"`, name))
@@ -125,10 +121,8 @@ func (b *formHandlerBuilderImpl) SetFormDataProvider(formDataProvider domain.For
 // It panics if there is no injected form data decoder with that name.
 // It sets form data decoder instance and overrides default one.
 func (b *formHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandlerBuilder {
-	for _, decoder := range b.namedFormDataDecoders {
-		if name == decoder.Name() {
-			return b.SetFormDataDecoder(decoder)
-		}
+	if service, ok := b.namedFormDataDecoders[name]; ok {
+		return b.SetFormDataDecoder(service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormDataDecoder with name "%s"`, name))
@@ -145,10 +139,8 @@ func (b *formHandlerBuilderImpl) SetFormDataDecoder(formDataDecoder domain.FormD
 // It panics if there is no injected form data validator with that name.
 // It sets form data validator instance and overrides default one.
 func (b *formHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHandlerBuilder {
-	for _, validator := range b.namedFormDataValidators {
-		if name == validator.Name() {
-			return b.SetFormDataValidator(validator)
-		}
+	if service, ok := b.namedFormDataValidators[name]; ok {
+		return b.SetFormDataValidator(service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormDataValidator with name "%s"`, name))
@@ -164,10 +156,8 @@ func (b *formHandlerBuilderImpl) SetFormDataValidator(formDataValidator domain.F
 // AddNamedFormExtension adds form extension by searching named extension via dingo injector.
 // It panics if there is no injected form extension with that name.
 func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerBuilder {
-	for _, extension := range b.namedFormExtensions {
-		if name == extension.Name() {
-			return b.AddFormExtension(extension)
-		}
+	if service, ok := b.namedFormExtensions[name]; ok {
+		return b.AddFormExtension(service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormExtension with name "%s"`, name))

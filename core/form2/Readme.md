@@ -251,41 +251,25 @@ Finally, it can be provided to instance of domain.FormHandler by using FormHandl
 Beside defining form services as pure instance by using FormHandlerFactory or FormHandlerBuilder,
 all form services can be defined globally, with dingo injector, and later user by their name.
 That means, they need to be injected as specific instances of interfaces:
-* domain.FormServiceWithName
-* domain.FormDataProviderWithName
-* domain.FormDataDecoderWithName
-* domain.FormDataValidatorWithName
+* domain.FormService
+* domain.FormDataProvider
+* domain.FormDataDecoder
+* domain.FormDataValidator
 
-Beside regular methods, those instances must implement method "Name", which provides name of form service
-as a string:
-
-```go
-  type (
-    MyGlobalFormDataProvider struct {}
-  }
-  
-  func (p *MyGlobalFormDataProvider) Name() {
-    return "formDataProvider.myCustom"
-  }
-  
-  func (p *MyGlobalFormDataProvider) GetFormData(ctx context.Context, req *web.Request) (interface{}, error) {
-    // define address form data with some default values
-  }
-```
-
-Than, service should be injected via dingo injector:
+Those kind of services should be injected via dingo injector, by using method "BindMap", with specific key:
 
 ```go
   func (m *Module) Configure(injector *dingo.Injector) {
     // some code
   
-  	injector.BindMulti(new(domain.FormDataProviderWithName)).To(providers.MyGlobalFormDataProvider{})
+  	injector.BindMap(new(domain.FormDataProvider), "formDataProvider.myCustom").To(providers.MyGlobalFormDataProvider{})
   	
   	// some code
   }
 ```
 
-Finally, provider can be defined for instance domain.FormHandler by using FormHandlerBuilder:
+Finally, provider can be defined for instance domain.FormHandler by using FormHandlerBuilder, with the same key
+provided in "BindMap" method:
 
 ```go
   func (c *MyController) Second(ctx context.Context, req *web.Request) web.Response {
@@ -333,29 +317,14 @@ To add some form extensions into domain.FormHandlerInstance there are multiple w
 
 ```
 
-To provide custom form extension with specific name which can be used globally, simply define form service with "Name" method:
+To provide custom form extension with specific name which can be used globally, simply use "BindMap" method from dingo injector:
 
-```go
-  type (
-    MyGlobalFormExtension struct {}
-  }
-  
-  func (p *MyGlobalFormExtension) Name() {
-    return "formExtension.myCustom"
-  }
-  
-  func (p *MyGlobalFormExtension) Validate(ctx context.Context, req *web.Request, validatorProvider domain.ValidatorProvider, formData interface{}) (*domain.ValidationInfo, error) {
-    // define address form data with some default values
-  }
-```
-
-Finally, define form extension via dingo injector:
 
 ```go
   func (m *Module) Configure(injector *dingo.Injector) {
     // some code
   
-  	injector.BindMulti(new(domain.FormExtensionWithName)).To(extensions.MyGlobalFormExtension{})
+  	injector.BindMulti(new(domain.FormExtension), "formExtension.csrfToken".To(extensions.CsrfTokenFormExtension{})
   	
   	// some code
   }

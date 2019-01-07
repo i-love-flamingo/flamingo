@@ -1,24 +1,21 @@
-package application
+package interfaces
 
 import (
 	"context"
 
+	"flamingo.me/flamingo/core/csrfPreventionFilter/application"
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/framework/web"
 )
 
 type (
 	CrsfTokenFormExtension struct {
-		service Service
+		service application.Service
 	}
 )
 
-func (f *CrsfTokenFormExtension) Inject(service Service) {
+func (f *CrsfTokenFormExtension) Inject(service application.Service) {
 	f.service = service
-}
-
-func (f *CrsfTokenFormExtension) Name() string {
-	return "formExtension.csrfToken"
 }
 
 func (f *CrsfTokenFormExtension) Validate(_ context.Context, req *web.Request, _ domain.ValidatorProvider, _ interface{}) (*domain.ValidationInfo, error) {

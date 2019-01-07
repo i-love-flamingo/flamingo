@@ -41,10 +41,6 @@ func (t *CsrfFormExtensionTestSuite) TearDown() {
 	t.service = nil
 }
 
-func (t *CsrfFormExtensionTestSuite) TestName() {
-	t.Equal("formExtension.csrfToken", t.formExtension.Name())
-}
-
 func (t *CsrfFormExtensionTestSuite) TestValidate_WrongToken() {
 	t.service.On("IsValid", t.webRequest).Return(false).Once()
 

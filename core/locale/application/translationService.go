@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"text/template"
 
+	"fmt"
+
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/flamingo"
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
@@ -95,14 +97,18 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 }
 func (ts *TranslationService) loadFiles() {
 	if ts.translationFile != "" {
-		ts.logger.Debug("Load translationfile", ts.translationFile)
-		i18bundle.LoadTranslationFile(ts.translationFile)
+		err := i18bundle.LoadTranslationFile(ts.translationFile)
+		if err != nil {
+			ts.logger.Warn(fmt.Sprintf("Load translationfile failed: %s", err))
+		}
 	}
 	if len(ts.translationFiles) > 0 {
 		for _, file := range ts.translationFiles {
 			if fileName, ok := file.(string); ok {
-				ts.logger.Debug("Load translationfile", fileName)
-				i18bundle.LoadTranslationFile(fileName)
+				err := i18bundle.LoadTranslationFile(fileName)
+				if err != nil {
+					ts.logger.Warn(fmt.Sprintf("Load translationfile failed: %s", err))
+				}
 			}
 		}
 	}

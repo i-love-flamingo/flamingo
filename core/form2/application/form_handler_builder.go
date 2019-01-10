@@ -74,7 +74,7 @@ func (b *formHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBui
 		return b.SetFormService(service)
 	}
 
-	panic(fmt.Sprintf(`there is no FormService with name "%s"`, name))
+	panic(fmt.Sprintf(`there is no FormService with name "%q"`, name))
 }
 
 // SetFormService sets form service instance and overrides provider, decoder and validator if
@@ -107,7 +107,7 @@ func (b *formHandlerBuilderImpl) SetNamedFormDataProvider(name string) FormHandl
 		return b.SetFormDataProvider(service)
 	}
 
-	panic(fmt.Sprintf(`there is no FormDataProvider with name "%s"`, name))
+	panic(fmt.Sprintf(`there is no FormDataProvider with name "%q"`, name))
 }
 
 // SetFormDataProvider sets form data provider instance and overrides default one.
@@ -125,7 +125,7 @@ func (b *formHandlerBuilderImpl) SetNamedFormDataDecoder(name string) FormHandle
 		return b.SetFormDataDecoder(service)
 	}
 
-	panic(fmt.Sprintf(`there is no FormDataDecoder with name "%s"`, name))
+	panic(fmt.Sprintf(`there is no FormDataDecoder with name "%q"`, name))
 }
 
 // SetFormDataDecoder sets form data decoder instance and overrides default one.
@@ -143,7 +143,7 @@ func (b *formHandlerBuilderImpl) SetNamedFormDataValidator(name string) FormHand
 		return b.SetFormDataValidator(service)
 	}
 
-	panic(fmt.Sprintf(`there is no FormDataValidator with name "%s"`, name))
+	panic(fmt.Sprintf(`there is no FormDataValidator with name "%q"`, name))
 }
 
 // SetFormDataValidator sets form data validator instance and overrides default one.
@@ -160,7 +160,7 @@ func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerB
 		return b.AddFormExtension(service)
 	}
 
-	panic(fmt.Sprintf(`there is no FormExtension with name "%s"`, name))
+	panic(fmt.Sprintf(`there is no FormExtension with name "%q"`, name))
 }
 
 // AddFormExtension adds form extension to the list of form extensions.

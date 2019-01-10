@@ -77,13 +77,17 @@ func (p *ValidatorProviderImpl) attachStructValidators(validate *validator.Valid
 
 // getRelativeFieldNameFromValidationError method which extracts relative field name depending on it's full namespace
 func (p *ValidatorProviderImpl) getRelativeFieldNameFromValidationError(err validator.FieldError) string {
-	var result []string
-
 	namespace := err.Namespace()
+
 	//first part of namespace is not required to have the relative path:
 	fieldName := namespace[(strings.Index(namespace, ".") + 1):]
-	for _, part := range strings.Split(fieldName, ".") {
-		result = append(result, strings.ToLower(part[0:1])+part[1:])
+
+	// initialize array of namespace parts
+	parts := strings.Split(fieldName, ".")
+	result := make([]string, len(parts))
+
+	for i, part := range parts {
+		result[i] = strings.ToLower(part[0:1]) + part[1:]
 	}
 
 	return strings.Join(result, ".")

@@ -2,10 +2,11 @@ package formData
 
 import (
 	"context"
-	"github.com/leebenson/conform"
 	"net/url"
 	"reflect"
 	"strings"
+
+	"github.com/leebenson/conform"
 
 	"github.com/go-playground/form"
 
@@ -28,7 +29,7 @@ func (p *DefaultFormDataDecoderImpl) Decode(_ context.Context, _ *web.Request, v
 }
 
 func (p *DefaultFormDataDecoderImpl) decodeStringMap(values url.Values) map[string]string {
-	stringMap := map[string]string{}
+	stringMap := make(map[string]string, len(values))
 
 	if values == nil {
 		return stringMap

@@ -2,22 +2,22 @@ package validators
 
 import (
 	"context"
-	"flamingo.me/flamingo/core/form2/domain"
 	"strconv"
 	"strings"
 	"time"
+
+	"flamingo.me/flamingo/core/form2/domain"
 
 	"gopkg.in/go-playground/validator.v9"
 )
 
 type (
-	/* MaximumAgeValidator defines maximum age validator which validates if passed date is after than desired years ago
-
-	Data struct {
-		Date string `validate:"maximumage=150"`
-	}
-
-	 */
+	// MaximumAgeValidator defines maximum age validator which validates if passed date is after than desired years ago
+	//
+	// Data struct {
+	//	 Date string `validate:"maximumage=150"`
+	// }
+	//
 	MaximumAgeValidator struct {
 		dateFormat string
 	}

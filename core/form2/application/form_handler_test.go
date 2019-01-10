@@ -69,7 +69,7 @@ func (t *FormHandlerImplTestSuite) SetupTest() {
 		formDataProvider:         t.provider,
 		formDataDecoder:          t.decoder,
 		formDataValidator:        t.validator,
-		formExtensions: []interface{}{
+		formExtensions: []domain.FormExtension{
 			t.firstExtension,
 			t.secondExtension,
 			t.thirdExtension,

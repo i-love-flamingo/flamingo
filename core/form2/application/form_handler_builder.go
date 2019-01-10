@@ -12,7 +12,7 @@ type (
 	FormHandlerBuilder interface {
 		// SetFormService sets form service instance and overrides provider, decoder and validator if
 		// it implements theirs interfaces. If it doesn't implements any of those interfaces it panics.
-		SetFormService(formService interface{}) FormHandlerBuilder
+		SetFormService(formService domain.FormService) FormHandlerBuilder
 		// SetNamedFormService sets form service instance by searching named form service provided via dingo injector.
 		// It panics if there is no injected form service with that name.
 		// It overrides provider, decoder and validator if it implements theirs interfaces.
@@ -37,7 +37,7 @@ type (
 		// It sets form data validator instance and overrides default one.
 		SetNamedFormDataValidator(name string) FormHandlerBuilder
 		// AddFormExtension adds form extension to the list of form extensions.
-		AddFormExtension(formExtension interface{}) FormHandlerBuilder
+		AddFormExtension(formExtension domain.FormExtension) FormHandlerBuilder
 		// AddNamedFormExtension adds form extension by searching named extension via dingo injector.
 		// It panics if there is no injected form extension with that name.
 		AddNamedFormExtension(name string) FormHandlerBuilder
@@ -61,9 +61,11 @@ type (
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
 		formDataValidator domain.FormDataValidator
-		formExtensions    []interface{}
+		formExtensions    []domain.FormExtension
 	}
 )
+
+var _ FormHandlerBuilder = &formHandlerBuilderImpl{}
 
 // SetNamedFormService sets form service instance by searching named form service provided via dingo injector.
 // It panics if there is no injected form service with that name.
@@ -79,7 +81,7 @@ func (b *formHandlerBuilderImpl) SetNamedFormService(name string) FormHandlerBui
 
 // SetFormService sets form service instance and overrides provider, decoder and validator if
 // it implements theirs interfaces. If it doesn't implements any of those interfaces it panics.
-func (b *formHandlerBuilderImpl) SetFormService(formService interface{}) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormService(formService domain.FormService) FormHandlerBuilder {
 	set := false
 	if provider, ok := formService.(domain.FormDataProvider); ok {
 		b.SetFormDataProvider(provider)
@@ -164,7 +166,7 @@ func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerB
 }
 
 // AddFormExtension adds form extension to the list of form extensions.
-func (b *formHandlerBuilderImpl) AddFormExtension(formExtension interface{}) FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) AddFormExtension(formExtension domain.FormExtension) FormHandlerBuilder {
 	implements := false
 	if _, ok := formExtension.(domain.FormDataProvider); ok {
 		implements = true

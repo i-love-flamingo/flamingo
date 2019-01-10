@@ -135,7 +135,7 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateSimpleFormHandler() {
 		defaultFormDataProvider:  t.defaultProvider,
 		defaultFormDataDecoder:   t.defaultDecoder,
 		defaultFormDataValidator: t.defaultValidator,
-		formExtensions:           []interface{}(nil),
+		formExtensions:           []domain.FormExtension(nil),
 		validatorProvider:        t.validatorProvider,
 		logger:                   t.logger,
 	}, t.factory.CreateSimpleFormHandler())
@@ -149,13 +149,13 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormService()
 		formDataProvider:         t.service,
 		formDataDecoder:          t.service,
 		formDataValidator:        t.service,
-		formExtensions: []interface{}{
-			t.validator,
-			t.secondNamedValidator,
+		formExtensions: []domain.FormExtension{
+			t.firstNamedExtension,
+			t.secondNamedExtension,
 		},
 		validatorProvider: t.validatorProvider,
 		logger:            t.logger,
-	}, t.factory.CreateFormHandlerWithFormService(t.service, t.validator, t.secondNamedValidator))
+	}, t.factory.CreateFormHandlerWithFormService(t.service, "first", "second"))
 }
 
 func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices() {
@@ -166,13 +166,13 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices(
 		formDataProvider:         t.provider,
 		formDataDecoder:          t.decoder,
 		formDataValidator:        t.validator,
-		formExtensions: []interface{}{
-			t.service,
-			t.firstNamedService,
+		formExtensions: []domain.FormExtension{
+			t.firstNamedExtension,
+			t.secondNamedExtension,
 		},
 		validatorProvider: t.validatorProvider,
 		logger:            t.logger,
-	}, t.factory.CreateFormHandlerWithFormServices(t.provider, t.decoder, t.validator, t.service, t.firstNamedService))
+	}, t.factory.CreateFormHandlerWithFormServices(t.provider, t.decoder, t.validator, "first", "second"))
 }
 
 func (t *FormHandlerFactoryImplTestSuite) TestGetFormHandlerBuilder() {

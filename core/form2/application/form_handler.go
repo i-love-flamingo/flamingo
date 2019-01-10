@@ -21,7 +21,7 @@ type (
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
-		formExtensions           []interface{}
+		formExtensions           []domain.FormExtension
 		validatorProvider        domain.ValidatorProvider
 		logger                   flamingo.Logger
 	}

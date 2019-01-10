@@ -278,7 +278,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestAddFormExtension_CompleteFormServi
 
 	t.builder.AddFormExtension(t.service)
 
-	t.Equal([]interface{}{
+	t.Equal([]domain.FormExtension{
 		t.service,
 	}, t.builder.formExtensions)
 }
@@ -294,7 +294,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestAddNamedFormExtension_CompleteForm
 
 	t.builder.AddNamedFormExtension("first")
 
-	t.Equal([]interface{}{
+	t.Equal([]domain.FormExtension{
 		t.firstNamedExtension,
 	}, t.builder.formExtensions)
 }
@@ -304,7 +304,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestBuild_Empty() {
 		defaultFormDataProvider:  t.defaultProvider,
 		defaultFormDataDecoder:   t.defaultDecoder,
 		defaultFormDataValidator: t.defaultValidator,
-		formExtensions:           []interface{}(nil),
+		formExtensions:           []domain.FormExtension(nil),
 		validatorProvider:        t.validatorProvider,
 		logger:                   t.logger,
 	}, t.builder.Build())
@@ -323,7 +323,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestBuild_Full() {
 		formDataProvider:         t.provider,
 		formDataDecoder:          t.decoder,
 		formDataValidator:        t.validator,
-		formExtensions: []interface{}{
+		formExtensions: []domain.FormExtension{
 			t.service,
 		},
 		validatorProvider: t.validatorProvider,

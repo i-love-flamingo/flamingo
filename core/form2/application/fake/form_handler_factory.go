@@ -22,11 +22,11 @@ func (f *FormHandlerFactoryImpl) CreateSimpleFormHandler() domain.FormHandler {
 	return f.formHandler
 }
 
-func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(formService interface{}, formExtensions ...interface{}) domain.FormHandler {
+func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(formService domain.FormService, formExtensions ...string) domain.FormHandler {
 	return f.formHandler
 }
 
-func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvider domain.FormDataProvider, formDataDecoder domain.FormDataDecoder, formDataValidator domain.FormDataValidator, formExtensions ...interface{}) domain.FormHandler {
+func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvider domain.FormDataProvider, formDataDecoder domain.FormDataDecoder, formDataValidator domain.FormDataValidator, formExtensions ...string) domain.FormHandler {
 	return f.formHandler
 }
 

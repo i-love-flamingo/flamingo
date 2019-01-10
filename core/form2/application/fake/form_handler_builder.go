@@ -12,11 +12,13 @@ type (
 	}
 )
 
+var _ application.FormHandlerBuilder = &formHandlerBuilderImpl{}
+
 func (b *formHandlerBuilderImpl) SetNamedFormService(name string) application.FormHandlerBuilder {
 	return b
 }
 
-func (b *formHandlerBuilderImpl) SetFormService(formService interface{}) application.FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) SetFormService(formService domain.FormService) application.FormHandlerBuilder {
 	return b
 }
 
@@ -48,7 +50,7 @@ func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) application.
 	return b
 }
 
-func (b *formHandlerBuilderImpl) AddFormExtension(formExtension interface{}) application.FormHandlerBuilder {
+func (b *formHandlerBuilderImpl) AddFormExtension(formExtension domain.FormExtension) application.FormHandlerBuilder {
 	return b
 }
 

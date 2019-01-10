@@ -298,7 +298,7 @@ To add some form extensions into domain.FormHandlerInstance there are multiple w
   func (c *MyController) First(ctx context.Context, req *web.Request) web.Response {
     // some code
     
-    formHandler := c.formHandlerFactory.CreateFormHandlerWithFormService(c.formService, c.formExtension, "formExtension.csrfToken")
+    formHandler := c.formHandlerFactory.CreateFormHandlerWithFormService(c.formService, "formExtension.csrfToken")
     
     // some code
   }  

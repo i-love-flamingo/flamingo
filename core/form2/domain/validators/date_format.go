@@ -2,21 +2,21 @@ package validators
 
 import (
 	"context"
-	"flamingo.me/flamingo/core/form2/domain"
 	"strings"
 	"time"
+
+	"flamingo.me/flamingo/core/form2/domain"
 
 	"gopkg.in/go-playground/validator.v9"
 )
 
 type (
-	/* DateFormatValidator defines date format validator which validates date format depending on application's configuration
-
-	Data struct {
-		Date string `validate:"dateformat"`
-	}
-
-	 */
+	// DateFormatValidator defines date format validator which validates date format depending on application's configuration
+	//
+	// Data struct {
+	//	 Date string `validate:"dateformat"`
+	// }
+	//
 	DateFormatValidator struct {
 		dateFormat string
 	}

@@ -1,8 +1,9 @@
 package domain
 
 import (
-	"github.com/stretchr/testify/suite"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -27,10 +28,10 @@ func (t *ValidationInfoTestSuite) TestIsValid_Valid() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
 	t.False(t.validationInfo.HasErrorsForField("fieldName2"))
 	t.False(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
-	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName2"))
+	t.Empty(t.validationInfo.GetErrorsForAllFields())
+	t.Empty(t.validationInfo.GetGeneralErrors())
 }
 
 func (t *ValidationInfoTestSuite) TestIsValid_FieldError() {
@@ -47,7 +48,7 @@ func (t *ValidationInfoTestSuite) TestIsValid_FieldError() {
 			DefaultLabel: "defaultLabel1",
 		},
 	}, t.validationInfo.GetErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName2"))
 	t.Equal(map[string][]Error{
 		"fieldName1": {
 			{
@@ -56,7 +57,7 @@ func (t *ValidationInfoTestSuite) TestIsValid_FieldError() {
 			},
 		},
 	}, t.validationInfo.GetErrorsForAllFields())
-	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
+	t.Empty(t.validationInfo.GetGeneralErrors())
 }
 
 func (t *ValidationInfoTestSuite) TestIsValid_GeneralError() {
@@ -67,9 +68,9 @@ func (t *ValidationInfoTestSuite) TestIsValid_GeneralError() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
 	t.False(t.validationInfo.HasErrorsForField("fieldName2"))
 	t.True(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName2"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName2"))
+	t.Empty(t.validationInfo.GetErrorsForAllFields())
 	t.Equal([]Error{
 		{
 			MessageKey:   "messageKeyG",
@@ -80,7 +81,7 @@ func (t *ValidationInfoTestSuite) TestIsValid_GeneralError() {
 
 func (t *ValidationInfoTestSuite) TestAddGeneralError() {
 	t.False(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
+	t.Empty(t.validationInfo.GetGeneralErrors())
 
 	t.validationInfo.AddGeneralError("messageKey1", "defaultLabel1")
 
@@ -123,7 +124,7 @@ func (t *ValidationInfoTestSuite) TestAddGeneralError() {
 
 func (t *ValidationInfoTestSuite) TestAppendGeneralErrors() {
 	t.False(t.validationInfo.HasGeneralErrors())
-	t.Equal([]Error{}, t.validationInfo.GetGeneralErrors())
+	t.Empty(t.validationInfo.GetGeneralErrors())
 
 	t.validationInfo.AppendGeneralErrors([]Error{
 		{
@@ -166,8 +167,8 @@ func (t *ValidationInfoTestSuite) TestAppendGeneralErrors() {
 
 func (t *ValidationInfoTestSuite) TestAddFieldError() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
-	t.Equal(map[string][]Error{}, t.validationInfo.GetErrorsForAllFields())
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Empty(t.validationInfo.GetErrorsForAllFields())
 
 	t.validationInfo.AddFieldError("fieldName1", "messageKey1", "defaultLabel1")
 	t.True(t.validationInfo.HasErrorsForField("fieldName1"))
@@ -239,7 +240,7 @@ func (t *ValidationInfoTestSuite) TestAddFieldError() {
 
 func (t *ValidationInfoTestSuite) TestAppendFieldErrors() {
 	t.False(t.validationInfo.HasErrorsForField("fieldName1"))
-	t.Equal([]Error{}, t.validationInfo.GetErrorsForField("fieldName1"))
+	t.Empty(t.validationInfo.GetErrorsForField("fieldName1"))
 
 	t.validationInfo.AppendFieldErrors(map[string][]Error{
 		"fieldName1": {

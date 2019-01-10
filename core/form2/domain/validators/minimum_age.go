@@ -2,22 +2,22 @@ package validators
 
 import (
 	"context"
-	"flamingo.me/flamingo/core/form2/domain"
 	"strconv"
 	"strings"
 	"time"
+
+	"flamingo.me/flamingo/core/form2/domain"
 
 	"gopkg.in/go-playground/validator.v9"
 )
 
 type (
-	/* MinimumAgeValidator defines minimum age validator which validates if passed date is before than desired years ago
-
-	Data struct {
-		Date string `validate:"minimumage=18"`
-	}
-
-	 */
+	// MinimumAgeValidator defines minimum age validator which validates if passed date is before than desired years ago
+	//
+	// Data struct {
+	//	 Date string `validate:"minimumage=18"`
+	// }
+	//
 	MinimumAgeValidator struct {
 		dateFormat string
 	}

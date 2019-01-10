@@ -12,7 +12,7 @@ type (
 	// ValidationRule - contains single validation rule for field. Name is mandatory (required|email|max|len|...), Value is optional and adds additional info (like "128" for "max=128" rule)
 	ValidationRule struct {
 		// Name validator tag name
-		Name  string
+		Name string
 		// Value additional parameter provided as condition for validation tag
 		Value string
 	}
@@ -52,16 +52,7 @@ func (vi *ValidationInfo) HasAnyFieldErrors() bool {
 
 // HasErrorsForField method which defines if there is any field validations error for specific field
 func (vi *ValidationInfo) HasErrorsForField(fieldName string) bool {
-	if vi.fieldErrors == nil {
-		return false
-	}
-
-	errs, ok := vi.fieldErrors[fieldName]
-	if !ok {
-		return false
-	}
-
-	return len(errs) > 0
+	return vi.fieldErrors != nil && len(vi.fieldErrors[fieldName]) > 0
 }
 
 // AppendGeneralErrors method which appends all provided validation errors to general errors, without duplicating existing ones
@@ -89,10 +80,6 @@ func (vi *ValidationInfo) AddGeneralError(messageKey string, defaultLabel string
 
 // GetGeneralErrors method which returns list of all general validation errors
 func (vi *ValidationInfo) GetGeneralErrors() []Error {
-	if len(vi.generalErrors) == 0 {
-		return []Error{}
-	}
-
 	return vi.generalErrors
 }
 
@@ -127,28 +114,17 @@ func (vi *ValidationInfo) AddFieldError(fieldName string, messageKey string, def
 
 // GetGeneralErrors method which returns list of all field validation errors for all fields
 func (vi *ValidationInfo) GetErrorsForAllFields() map[string][]Error {
-	if vi.fieldErrors == nil {
-		return map[string][]Error{}
-	}
-
 	return vi.fieldErrors
 }
 
 // GetFieldErrors method which returns list of all general validation errors for specific field
 func (vi *ValidationInfo) GetErrorsForField(fieldName string) []Error {
-	if vi.fieldErrors == nil {
-		return []Error{}
-	}
-	if _, ok := vi.fieldErrors[fieldName]; !ok {
-		return []Error{}
-	}
-
 	return vi.fieldErrors[fieldName]
 }
 
 // getExistingMessageKeys method which returns all message keys used in specific list of validation errors
 func (vi *ValidationInfo) getExistingMessageKeys(errs []Error) map[string]bool {
-	keys := map[string]bool{}
+	keys := make(map[string]bool, len(errs))
 	for _, err := range errs {
 		keys[err.MessageKey] = true
 	}

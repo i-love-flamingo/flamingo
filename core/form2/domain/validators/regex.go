@@ -2,23 +2,23 @@ package validators
 
 import (
 	"context"
+	"regexp"
+
 	"flamingo.me/flamingo/core/form2/domain"
 	"gopkg.in/go-playground/validator.v9"
-	"regexp"
 )
 
 type (
-	/* RegexValidator defines regex validator. Name and regex pattern is passed to fresh instance during creation of validator.
-
-	validator := NewRegexValidator("postcode", "^[0-9]{5}$")
-
-	...
-
-	Data struct {
-		PostCode string `validate:"postcode"`
-	}
-
-	 */
+	// RegexValidator defines regex validator. Name and regex pattern is passed to fresh instance during creation of validator.
+	//
+	// validator := NewRegexValidator("postcode", "^[0-9]{5}$")
+	//
+	// ...
+	//
+	// Data struct {
+	//	 PostCode string `validate:"postcode"`
+	// }
+	//
 	RegexValidator struct {
 		name  string
 		regex *regexp.Regexp

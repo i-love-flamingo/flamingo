@@ -93,6 +93,8 @@ func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Requ
 	if err != nil {
 		h.getLogger("formValidation").Error(err.Error())
 		return nil, domain.NewFormError(err.Error())
+	} else if validationInfo == nil {
+		validationInfo = &domain.ValidationInfo{}
 	}
 	form.ValidationInfo = *validationInfo
 

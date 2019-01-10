@@ -51,6 +51,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c55f81378c21b10ec287c698784eed24939f84c8c6a8e1b9afaeaaed6e3aba83"
+  name = "github.com/dchest/captcha"
+  packages = ["."]
+  pruneopts = ""
+  revision = "6a29415a8364ec2971fdc62d9e415ed53fc20410"
+
+[[projects]]
   digest = "1:6098222470fe0172157ce9bbef5d2200df4edde17ee649c5d6e48330e4afa4c6"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -95,6 +103,14 @@
   pruneopts = ""
   revision = "b32fa301c9fe55953584134cb6853a13c87ec0a1"
   version = "v0.16.0"
+
+[[projects]]
+  digest = "1:fb6b4ea21671a4a8037cccc0a582caada51b4ac550219f42b9e8ce4671bc568b"
+  name = "github.com/go-test/deep"
+  packages = ["."]
+  pruneopts = ""
+  revision = "6592d9cc0a499ad2d5f574fde80a2b5c5cc3b4f5"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -340,10 +356,7 @@
 [[projects]]
   digest = "1:3fcbf733a8d810a21265a7f2fe08a3353db2407da052b233f8b204b5afc03d9b"
   name = "github.com/sirupsen/logrus"
-  packages = [
-    ".",
-    "hooks/test",
-  ]
+  packages = ["."]
   pruneopts = ""
   revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
   version = "v1.0.6"
@@ -462,7 +475,12 @@
   packages = [
     "ed25519",
     "ed25519/internal/edwards25519",
+    "internal/subtle",
+    "nacl/secretbox",
     "pbkdf2",
+    "poly1305",
+    "salsa20/salsa",
+    "scrypt",
     "ssh/terminal",
   ]
   pruneopts = ""
@@ -583,9 +601,11 @@
     "flamingo.me/dingo",
     "github.com/boj/redistore",
     "github.com/coreos/go-oidc",
+    "github.com/dchest/captcha",
     "github.com/dgrijalva/jwt-go",
     "github.com/garyburd/redigo/redis",
     "github.com/ghodss/yaml",
+    "github.com/go-test/deep",
     "github.com/golang/groupcache/singleflight",
     "github.com/google/uuid",
     "github.com/gorilla/sessions",
@@ -601,7 +621,6 @@
     "github.com/robertkrimen/otto/token",
     "github.com/satori/go.uuid",
     "github.com/sirupsen/logrus",
-    "github.com/sirupsen/logrus/hooks/test",
     "github.com/sony/gobreaker",
     "github.com/spf13/cobra",
     "github.com/stretchr/testify/assert",
@@ -618,6 +637,8 @@
     "go.opencensus.io/trace",
     "go.uber.org/zap",
     "go.uber.org/zap/zapcore",
+    "golang.org/x/crypto/nacl/secretbox",
+    "golang.org/x/crypto/scrypt",
     "golang.org/x/net/html",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/clientcredentials",

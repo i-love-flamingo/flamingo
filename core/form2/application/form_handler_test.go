@@ -325,7 +325,9 @@ func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_FormExtensionError() 
 		"second": "second",
 	}).Return(&domain.ValidationInfo{}, nil).Once()
 
-	t.firstExtension.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Maybe()
+	t.secondExtension.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Maybe()
+	t.defaultProvider.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Maybe()
 
 	result, err := t.handler.HandleSubmittedForm(t.context, t.request)
 	t.Equal(domain.FormError("error"), err)

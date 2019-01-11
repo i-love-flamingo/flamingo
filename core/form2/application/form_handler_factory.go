@@ -85,7 +85,8 @@ func (f *FormHandlerFactoryImpl) CreateSimpleFormHandler() domain.FormHandler {
 // used to add additional form functionality, like validation which is attached to final validation info.
 // Form extensions can be passed by their names, which reflect named extensions injected via dingo injector.
 func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(formService domain.FormService, formExtensions ...string) domain.FormHandler {
-	builder := f.GetFormHandlerBuilder().SetFormService(formService)
+	builder := f.GetFormHandlerBuilder()
+	builder.Must(builder.SetFormService(formService))
 	f.attachExtensions(builder, formExtensions...)
 	return builder.Build()
 }

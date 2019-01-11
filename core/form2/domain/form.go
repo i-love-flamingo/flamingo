@@ -77,5 +77,5 @@ func NewFormErrorf(details string, args ...interface{}) FormError {
 }
 
 func (e FormError) Error() string {
-	return fmt.Sprintf("FormError: %s", e)
+	return fmt.Sprintf("FormError: %s", string(e))
 }

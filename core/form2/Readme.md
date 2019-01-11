@@ -275,13 +275,17 @@ provided in "BindMap" method:
   func (c *MyController) Second(ctx context.Context, req *web.Request) web.Response {
       // some code
       
-      formHandler := c.formHandlerFactory.GetBuilder().
-        SetNamedFormDataProvider("formDataProvider.myCustom").
+      builder := c.formHandlerFactory.GetBuilder()
+      formHandler := builder.
+        Must(builder.SetNamedFormDataProvider("formDataProvider.myCustom")).
         Build()
       
       // some code
     } 
 ```
+
+Notice: "Must" method is used as a wrapper to makes sure builder will be returned in case of successful execution
+of wrapped method, and panics if wrapped method returns an error.
 
 ### Form extensions
 
@@ -306,16 +310,20 @@ To add some form extensions into domain.FormHandlerInstance there are multiple w
   func (c *MyController) Second(ctx context.Context, req *web.Request) web.Response {
     // some code
     
-    formHandler := c.formHandlerFactory.GetBuilder().
+    builder := c.formHandlerFactory.GetBuilder()
+    formHandler := builder.
       SetFormDataDecoder(c.addressFormDataDecoder).
-      AddFormExtension(c.formExtension).
-      AddNamedFormExtension("formExtension.csrfToken").
+      Must(builder.AddFormExtension(c.formExtension)).
+      Must(builder.AddNamedFormExtension("formExtension.csrfToken")).
       Build()
     
     // some code
   }  
 
 ```
+
+Notice: "Must" method is used as a wrapper to makes sure builder will be returned in case of successful execution
+of wrapped method, and panics if wrapped method returns an error.
 
 To provide custom form extension with specific name which can be used globally, simply use "BindMap" method from dingo injector:
 

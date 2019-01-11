@@ -128,6 +128,6 @@ func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() FormHandlerBuilder {
 // It expects string as form extension's name or actual instance of form extension
 func (f *FormHandlerFactoryImpl) attachExtensions(builder FormHandlerBuilder, formExtensions ...string) {
 	for _, name := range formExtensions {
-		builder.AddNamedFormExtension(name)
+		builder.Must(builder.AddNamedFormExtension(name))
 	}
 }

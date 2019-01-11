@@ -1,7 +1,6 @@
 package application_test
 
 import (
-	"fmt"
 	"testing"
 
 	"flamingo.me/flamingo/core/captcha/application"
@@ -45,8 +44,6 @@ func TestGenerator_NewCaptcha(t *testing.T) {
 			assert.NotEmpty(t, got.Hash, "hash is empty")
 			assert.NotEmpty(t, got.Solution, "solution is empty")
 			assert.Lenf(t, got.Solution, tt.args.length, "solution length is %d, expected %d", len(got.Solution), tt.args.length)
-
-			fmt.Println(got)
 
 			proof, err := g.NewCaptchaByHash(got.Hash)
 			assert.Nil(t, err)

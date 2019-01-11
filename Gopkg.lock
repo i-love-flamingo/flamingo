@@ -67,6 +67,14 @@
   version = "v3.2.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c3cb8e3496074bf898a35c1d0a99ac97be52ca567ef0b3d638208a1a88371118"
+  name = "github.com/etgryphon/stringUp"
+  packages = ["."]
+  pruneopts = ""
+  revision = "31534ccd8cac1d3d205c906ea5722928b045ed8c"
+
+[[projects]]
   digest = "1:9525d0e79ccf382e32edeef466b9a91f16eb0eebdca5971a03fad1bb3be9cd89"
   name = "github.com/garyburd/redigo"
   packages = [
@@ -84,6 +92,14 @@
   packages = ["."]
   pruneopts = ""
   revision = "c7ce16629ff4cd059ed96ed06419dd3856fd3577"
+
+[[projects]]
+  digest = "1:4e2feb69ce9588ee0b264339d91731fc9e81078c6edf67f95ccd3942bc0e0b67"
+  name = "github.com/go-playground/form"
+  packages = ["."]
+  pruneopts = ""
+  revision = "572fa772c66ec5e3606a1a548406e10fb62de317"
+  version = "v3.1.3"
 
 [[projects]]
   digest = "1:709292c015123a3bc69ea970dc9abd6667170e7fbf5cdeb10c6d14b250d3385f"
@@ -194,6 +210,14 @@
   pruneopts = ""
   revision = "d6898124de917583f5ff5592ef931d1dfe0ddc05"
   version = "0.2.6"
+
+[[projects]]
+  digest = "1:bd7d1c15405569263cd71415196e666e07bbed212b6cec20d080d592d3030968"
+  name = "github.com/leebenson/conform"
+  packages = ["."]
+  pruneopts = ""
+  revision = "bdfc728cafe576ce87010707d3ed365c75e854cd"
+  version = "1.2.0"
 
 [[projects]]
   digest = "1:08e17d002d5a07e714f43a1a2df726ff1fee2bc53f8193513e75ae5d407b46d8"
@@ -605,12 +629,15 @@
     "github.com/dgrijalva/jwt-go",
     "github.com/garyburd/redigo/redis",
     "github.com/ghodss/yaml",
+    "github.com/go-playground/form",
+    "github.com/go-playground/universal-translator",
     "github.com/go-test/deep",
     "github.com/golang/groupcache/singleflight",
     "github.com/google/uuid",
     "github.com/gorilla/sessions",
     "github.com/hashicorp/golang-lru",
     "github.com/labstack/gommon/color",
+    "github.com/leebenson/conform",
     "github.com/leekchan/accounting",
     "github.com/nicksnyder/go-i18n/i18n/bundle",
     "github.com/pact-foundation/pact-go/dsl",

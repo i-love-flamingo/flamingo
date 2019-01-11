@@ -19,6 +19,8 @@ Note that `NewCaptchaBySolution` generates a different hash each time, even if t
 
 To check a string against a captcha, you can use `Verifier.Verify(hash, solution string) bool`.
 
+See `application/example_test.go` for a full example.
+
 ## Usage in templates
 
 This module registers 3 template functions:

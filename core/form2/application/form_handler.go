@@ -21,7 +21,7 @@ type (
 		defaultFormDataProvider  domain.DefaultFormDataProvider
 		defaultFormDataDecoder   domain.DefaultFormDataDecoder
 		defaultFormDataValidator domain.DefaultFormDataValidator
-		formExtensions           []domain.FormExtension
+		formExtensions           map[string]domain.FormExtension
 		validatorProvider        domain.ValidatorProvider
 		logger                   flamingo.Logger
 	}
@@ -47,7 +47,18 @@ func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*do
 
 // HandleUnsubmittedForm as method for returning Form instance which is not submitted
 func (h *formHandlerImpl) HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
-	return h.buildForm(ctx, req, false)
+	form, err := h.buildForm(ctx, req, false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = h.processExtensions(ctx, req, url.Values{}, form)
+	if err != nil {
+		h.getLogger("formExtensions").Error(err.Error())
+		return nil, domain.NewFormError(err.Error())
+	}
+
+	return form, nil
 }
 
 // HandleSubmittedForm as method for returning Form instance which is submitted
@@ -173,8 +184,8 @@ func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
 
 // processExtensions as method for processing list of form extensions
 func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Request, values url.Values, form *domain.Form) error {
-	for _, formExtension := range h.formExtensions {
-		err := h.processExtension(ctx, req, values, formExtension, form)
+	for name, formExtension := range h.formExtensions {
+		err := h.processExtension(ctx, req, values, name, formExtension, form)
 		if err != nil {
 			return err
 		}
@@ -184,7 +195,7 @@ func (h *formHandlerImpl) processExtensions(ctx context.Context, req *web.Reques
 }
 
 // processExtension as method for processing single form extensions
-func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request, values url.Values, formExtension interface{}, form *domain.Form) error {
+func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request, values url.Values, name string, formExtension interface{}, form *domain.Form) error {
 	var formData interface{}
 	var err error
 
@@ -199,6 +210,17 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 		return err
 	}
 
+	if form.FormExtensionsData == nil {
+		form.FormExtensionsData = map[string]interface{}{}
+	}
+
+	// at this point decoded data is added to map of form extension data
+	form.FormExtensionsData[name] = formData
+
+	if !form.IsSubmitted() {
+		return nil
+	}
+
 	// checks if form extension is defined as form data decoder
 	// if it's not, it passes nil, which means that default form data decoder will be used
 	var formDataDecoder domain.FormDataDecoder
@@ -210,8 +232,8 @@ func (h *formHandlerImpl) processExtension(ctx context.Context, req *web.Request
 		return err
 	}
 
-	// at this point decoded data is appended in list of form extension data
-	form.FormExtensionsData = append(form.FormExtensionsData, formData)
+	// at this point decoded data is added to map of form extension data
+	form.FormExtensionsData[name] = formData
 
 	// checks if form extension is defined as form data validator
 	// if it's not, it passes nil, which means that default form data validator will be used

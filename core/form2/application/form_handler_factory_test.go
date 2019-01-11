@@ -135,7 +135,7 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateSimpleFormHandler() {
 		defaultFormDataProvider:  t.defaultProvider,
 		defaultFormDataDecoder:   t.defaultDecoder,
 		defaultFormDataValidator: t.defaultValidator,
-		formExtensions:           []domain.FormExtension(nil),
+		formExtensions:           map[string]domain.FormExtension(nil),
 		validatorProvider:        t.validatorProvider,
 		logger:                   t.logger,
 	}, t.factory.CreateSimpleFormHandler())
@@ -149,9 +149,9 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormService()
 		formDataProvider:         t.service,
 		formDataDecoder:          t.service,
 		formDataValidator:        t.service,
-		formExtensions: []domain.FormExtension{
-			t.firstNamedExtension,
-			t.secondNamedExtension,
+		formExtensions: map[string]domain.FormExtension{
+			"first":  t.firstNamedExtension,
+			"second": t.secondNamedExtension,
 		},
 		validatorProvider: t.validatorProvider,
 		logger:            t.logger,
@@ -166,9 +166,9 @@ func (t *FormHandlerFactoryImplTestSuite) TestCreateFormHandlerWithFormServices(
 		formDataProvider:         t.provider,
 		formDataDecoder:          t.decoder,
 		formDataValidator:        t.validator,
-		formExtensions: []domain.FormExtension{
-			t.firstNamedExtension,
-			t.secondNamedExtension,
+		formExtensions: map[string]domain.FormExtension{
+			"first":  t.firstNamedExtension,
+			"second": t.secondNamedExtension,
 		},
 		validatorProvider: t.validatorProvider,
 		logger:            t.logger,

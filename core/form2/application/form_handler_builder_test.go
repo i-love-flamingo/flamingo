@@ -131,7 +131,7 @@ func (t *FormHandlerBuilderImplTestSuite) TearDownTest() {
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_Panic() {
 	t.Panics(func() {
-		t.builder.SetFormService(nil)
+		t.builder.Must(t.builder.SetFormService(nil))
 	})
 }
 
@@ -140,7 +140,8 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_FormDataProvider() 
 	t.Nil(t.builder.formDataDecoder)
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetFormService(t.provider)
+	err := t.builder.SetFormService(t.provider)
+	t.NoError(err)
 
 	t.Exactly(t.provider, t.builder.formDataProvider)
 	t.Nil(t.builder.formDataDecoder)
@@ -152,7 +153,8 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_FormDataDecoder() {
 	t.Nil(t.builder.formDataDecoder)
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetFormService(t.decoder)
+	err := t.builder.SetFormService(t.decoder)
+	t.NoError(err)
 
 	t.Nil(t.builder.formDataProvider)
 	t.Exactly(t.decoder, t.builder.formDataDecoder)
@@ -164,7 +166,8 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_FormDataValidator()
 	t.Nil(t.builder.formDataDecoder)
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetFormService(t.validator)
+	err := t.builder.SetFormService(t.validator)
+	t.NoError(err)
 
 	t.Nil(t.builder.formDataProvider)
 	t.Nil(t.builder.formDataDecoder)
@@ -176,7 +179,8 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_CompleteFormService
 	t.Nil(t.builder.formDataDecoder)
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetFormService(t.service)
+	err := t.builder.SetFormService(t.service)
+	t.NoError(err)
 
 	t.Exactly(t.service, t.builder.formDataProvider)
 	t.Exactly(t.service, t.builder.formDataDecoder)
@@ -185,7 +189,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormService_CompleteFormService
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormService_Panic() {
 	t.Panics(func() {
-		t.builder.SetNamedFormService("third")
+		t.builder.Must(t.builder.SetNamedFormService("third"))
 	})
 }
 
@@ -194,7 +198,8 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormService_CompleteFormSe
 	t.Nil(t.builder.formDataDecoder)
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetNamedFormService("first")
+	err := t.builder.SetNamedFormService("first")
+	t.NoError(err)
 
 	t.Exactly(t.firstNamedService, t.builder.formDataProvider)
 	t.Exactly(t.firstNamedService, t.builder.formDataDecoder)
@@ -211,14 +216,15 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormDataProvider() {
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataProvider_Panic() {
 	t.Panics(func() {
-		t.builder.SetNamedFormDataProvider("third")
+		t.builder.Must(t.builder.SetNamedFormDataProvider("third"))
 	})
 }
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataProvider_Success() {
 	t.Nil(t.builder.formDataProvider)
 
-	t.builder.SetNamedFormDataProvider("first")
+	err := t.builder.SetNamedFormDataProvider("first")
+	t.NoError(err)
 
 	t.Exactly(t.firstNamedProvider, t.builder.formDataProvider)
 }
@@ -233,14 +239,15 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormDataDecoder() {
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataDecoder_Panic() {
 	t.Panics(func() {
-		t.builder.SetNamedFormDataDecoder("third")
+		t.builder.Must(t.builder.SetNamedFormDataDecoder("third"))
 	})
 }
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataDecoder_Success() {
 	t.Nil(t.builder.formDataDecoder)
 
-	t.builder.SetNamedFormDataDecoder("first")
+	err := t.builder.SetNamedFormDataDecoder("first")
+	t.NoError(err)
 
 	t.Exactly(t.firstNamedDecoder, t.builder.formDataDecoder)
 }
@@ -255,28 +262,34 @@ func (t *FormHandlerBuilderImplTestSuite) TestSetFormDataValidator() {
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataValidator_Panic() {
 	t.Panics(func() {
-		t.builder.SetNamedFormDataValidator("third")
+		t.builder.Must(t.builder.SetNamedFormDataValidator("third"))
 	})
 }
 
 func (t *FormHandlerBuilderImplTestSuite) TestSetNamedFormDataValidator_Success() {
 	t.Nil(t.builder.formDataValidator)
 
-	t.builder.SetNamedFormDataValidator("first")
+	err := t.builder.SetNamedFormDataValidator("first")
+	t.NoError(err)
 
 	t.Exactly(t.firstNamedValidator, t.builder.formDataValidator)
 }
 
 func (t *FormHandlerBuilderImplTestSuite) TestAddFormExtension_Panic() {
 	t.Panics(func() {
-		t.builder.AddFormExtension(nil)
+		t.builder.Must(t.builder.AddFormExtension(nil))
+	})
+
+	t.Panics(func() {
+		t.builder.Must(t.builder.AddFormExtension("something wrong"))
 	})
 }
 
 func (t *FormHandlerBuilderImplTestSuite) TestAddFormExtension_CompleteFormService() {
 	t.Empty(t.builder.formExtensions)
 
-	t.builder.AddFormExtension(t.service)
+	err := t.builder.AddFormExtension(t.service)
+	t.NoError(err)
 
 	t.Equal(map[string]domain.FormExtension{
 		"CompleteFormService": t.service,
@@ -285,7 +298,7 @@ func (t *FormHandlerBuilderImplTestSuite) TestAddFormExtension_CompleteFormServi
 
 func (t *FormHandlerBuilderImplTestSuite) TestAddNamedFormExtension_Panic() {
 	t.Panics(func() {
-		t.builder.AddNamedFormExtension("third")
+		t.builder.Must(t.builder.AddNamedFormExtension("third"))
 	})
 }
 

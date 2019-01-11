@@ -69,11 +69,11 @@ func (t *FormHandlerImplTestSuite) SetupTest() {
 		formDataProvider:         t.provider,
 		formDataDecoder:          t.decoder,
 		formDataValidator:        t.validator,
-		formExtensions: []domain.FormExtension{
-			t.firstExtension,
-			t.secondExtension,
-			t.thirdExtension,
-			t.fourthExtension,
+		formExtensions: map[string]domain.FormExtension{
+			"first":  t.firstExtension,
+			"second": t.secondExtension,
+			"third":  t.thirdExtension,
+			"fourth": t.fourthExtension,
 		},
 		validatorProvider: t.validatorProvider,
 		logger:            t.logger,
@@ -107,11 +107,21 @@ func (t *FormHandlerImplTestSuite) TestHandleUnsubmittedForm_Error() {
 func (t *FormHandlerImplTestSuite) TestHandleUnsubmittedForm_Success() {
 	t.provider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
 
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.secondExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.defaultProvider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Twice()
+
 	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
 	t.NoError(err)
 
 	form := domain.NewForm(false, map[string][]domain.ValidationRule{})
 	form.Data = map[string]int{}
+	form.FormExtensionsData = map[string]interface{}{
+		"first":  map[string]int{},
+		"second": map[string]int{},
+		"third":  map[string]int{},
+		"fourth": map[string]int{},
+	}
 
 	t.Equal(&form, result)
 }
@@ -176,7 +186,7 @@ func (t *FormHandlerImplTestSuite) TestGetPostValues_Success() {
 func (t *FormHandlerImplTestSuite) TestProcessExtension_ProviderError() {
 	t.secondExtension.On("GetFormData", t.context, t.request).Return(nil, errors.New("error")).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.secondExtension, &domain.Form{})
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "second", t.secondExtension, &domain.Form{})
 	t.Error(err)
 }
 
@@ -185,7 +195,8 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_ProviderSuccess() {
 	t.defaultDecoder.On("Decode", t.context, t.request, url.Values{}, map[string]int{}).Return(map[string]int{}, nil).Once()
 	t.defaultValidator.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.secondExtension, &domain.Form{})
+	form := domain.NewForm(true, nil)
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "second", t.secondExtension, &form)
 	t.NoError(err)
 }
 
@@ -193,7 +204,8 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_DecoderError() {
 	t.defaultProvider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
 	t.thirdExtension.On("Decode", t.context, t.request, url.Values{}, map[string]int{}).Return(nil, errors.New("error")).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.thirdExtension, &domain.Form{})
+	form := domain.NewForm(true, nil)
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "third", t.thirdExtension, &form)
 	t.Error(err)
 }
 
@@ -202,7 +214,8 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_DecoderSuccess() {
 	t.thirdExtension.On("Decode", t.context, t.request, url.Values{}, map[string]int{}).Return(map[string]int{}, nil).Once()
 	t.defaultValidator.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.thirdExtension, &domain.Form{})
+	form := domain.NewForm(true, nil)
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "third", t.thirdExtension, &form)
 	t.NoError(err)
 }
 
@@ -211,7 +224,8 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_ValidatorError() {
 	t.defaultDecoder.On("Decode", t.context, t.request, url.Values{}, map[string]int{}).Return(map[string]int{}, nil).Once()
 	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(nil, errors.New("error")).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.fourthExtension, &domain.Form{})
+	form := domain.NewForm(true, nil)
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "fourth", t.fourthExtension, &form)
 	t.Error(err)
 }
 
@@ -220,7 +234,8 @@ func (t *FormHandlerImplTestSuite) TestProcessExtension_ValidatorSuccess() {
 	t.defaultDecoder.On("Decode", t.context, t.request, url.Values{}, map[string]int{}).Return(map[string]int{}, nil).Once()
 	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
 
-	err := t.handler.processExtension(t.context, t.request, url.Values{}, t.fourthExtension, &domain.Form{})
+	form := domain.NewForm(true, nil)
+	err := t.handler.processExtension(t.context, t.request, url.Values{}, "fourth", t.fourthExtension, &form)
 	t.NoError(err)
 }
 
@@ -375,11 +390,11 @@ func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_Success() {
 		"first":  "first",
 		"second": "second",
 	}
-	form.FormExtensionsData = []interface{}{
-		map[string]int{},
-		map[string]int{},
-		map[string]int{},
-		map[string]int{},
+	form.FormExtensionsData = map[string]interface{}{
+		"first":  map[string]int{},
+		"second": map[string]int{},
+		"third":  map[string]int{},
+		"fourth": map[string]int{},
 	}
 
 	t.Equal(&form, result)
@@ -388,11 +403,21 @@ func (t *FormHandlerImplTestSuite) TestHandleSubmittedForm_Success() {
 func (t *FormHandlerImplTestSuite) TestHandleForm_Unsubmitted() {
 	t.provider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
 
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.secondExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.defaultProvider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Twice()
+
 	result, err := t.handler.HandleUnsubmittedForm(t.context, t.request)
 	t.NoError(err)
 
 	form := domain.NewForm(false, map[string][]domain.ValidationRule{})
 	form.Data = map[string]int{}
+	form.FormExtensionsData = map[string]interface{}{
+		"first":  map[string]int{},
+		"second": map[string]int{},
+		"third":  map[string]int{},
+		"fourth": map[string]int{},
+	}
 
 	t.Equal(&form, result)
 }
@@ -455,11 +480,11 @@ func (t *FormHandlerImplTestSuite) TestHandleForm_Submitted() {
 		"first":  "first",
 		"second": "second",
 	}
-	form.FormExtensionsData = []interface{}{
-		map[string]int{},
-		map[string]int{},
-		map[string]int{},
-		map[string]int{},
+	form.FormExtensionsData = map[string]interface{}{
+		"first":  map[string]int{},
+		"second": map[string]int{},
+		"third":  map[string]int{},
+		"fourth": map[string]int{},
 	}
 
 	t.Equal(&form, result)

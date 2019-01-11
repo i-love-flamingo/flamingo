@@ -3,6 +3,8 @@ package application
 import (
 	"fmt"
 
+	"reflect"
+
 	"flamingo.me/flamingo/core/form2/domain"
 	"flamingo.me/flamingo/framework/flamingo"
 )
@@ -61,7 +63,7 @@ type (
 		formDataProvider  domain.FormDataProvider
 		formDataDecoder   domain.FormDataDecoder
 		formDataValidator domain.FormDataValidator
-		formExtensions    []domain.FormExtension
+		formExtensions    map[string]domain.FormExtension
 	}
 )
 
@@ -159,7 +161,7 @@ func (b *formHandlerBuilderImpl) SetFormDataValidator(formDataValidator domain.F
 // It panics if there is no injected form extension with that name.
 func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerBuilder {
 	if service, ok := b.namedFormExtensions[name]; ok {
-		return b.AddFormExtension(service)
+		return b.addFormExtension(name, service)
 	}
 
 	panic(fmt.Sprintf(`there is no FormExtension with name "%q"`, name))
@@ -167,23 +169,9 @@ func (b *formHandlerBuilderImpl) AddNamedFormExtension(name string) FormHandlerB
 
 // AddFormExtension adds form extension to the list of form extensions.
 func (b *formHandlerBuilderImpl) AddFormExtension(formExtension domain.FormExtension) FormHandlerBuilder {
-	implements := false
-	if _, ok := formExtension.(domain.FormDataProvider); ok {
-		implements = true
-	}
-	if _, ok := formExtension.(domain.FormDataDecoder); ok {
-		implements = true
-	}
-	if _, ok := formExtension.(domain.FormDataValidator); ok {
-		implements = true
-	}
-	if !implements {
-		panic("FormExtension doesn't implement any of FormDataProvider, FormDataDecoder or FormDataValidator interfaces")
-	}
+	valueOf := reflect.Indirect(reflect.ValueOf(formExtension))
 
-	b.formExtensions = append(b.formExtensions, formExtension)
-
-	return b
+	return b.addFormExtension(valueOf.Type().Name(), formExtension)
 }
 
 // Build creates new instance of FormHandler interface
@@ -214,4 +202,28 @@ func (b *formHandlerBuilderImpl) Build() domain.FormHandler {
 		validatorProvider:        b.validatorProvider,
 		logger:                   b.logger,
 	}
+}
+
+func (b *formHandlerBuilderImpl) addFormExtension(name string, formExtension domain.FormExtension) FormHandlerBuilder {
+	implements := false
+	if _, ok := formExtension.(domain.FormDataProvider); ok {
+		implements = true
+	}
+	if _, ok := formExtension.(domain.FormDataDecoder); ok {
+		implements = true
+	}
+	if _, ok := formExtension.(domain.FormDataValidator); ok {
+		implements = true
+	}
+	if !implements {
+		panic("FormExtension doesn't implement any of FormDataProvider, FormDataDecoder or FormDataValidator interfaces")
+	}
+
+	if b.formExtensions == nil {
+		b.formExtensions = map[string]domain.FormExtension{}
+	}
+
+	b.formExtensions[name] = formExtension
+
+	return b
 }

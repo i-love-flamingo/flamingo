@@ -48,6 +48,7 @@ type (
 
 var _ FormHandlerFactory = &FormHandlerFactoryImpl{}
 
+// Inject is method used to set all dependencies as local variables
 func (f *FormHandlerFactoryImpl) Inject(
 	s map[string]domain.FormService,
 	p map[string]domain.FormDataProvider,

@@ -10,11 +10,13 @@ import (
 )
 
 type (
+	// Module is struct for defining form2 module dependencies
 	Module struct {
 		CustomRegex config.Map `inject:"config:form.validator.customRegex"`
 	}
 )
 
+// Configure is main method for handling module dependencies via dingo injector
 func (m *Module) Configure(injector *dingo.Injector) {
 	for name, value := range m.CustomRegex {
 		regex, ok := value.(string)
@@ -30,13 +32,13 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.Bind(new(domain.ValidatorProvider)).To(application.ValidatorProviderImpl{}).AsEagerSingleton()
 
-	injector.Bind(new(domain.DefaultFormDataProvider)).To(formData.DefaultFormDataProviderImpl{})
-	injector.Bind(new(domain.DefaultFormDataDecoder)).To(formData.DefaultFormDataDecoderImpl{})
-	injector.Bind(new(domain.DefaultFormDataValidator)).To(formData.DefaultFormDataValidatorImpl{})
+	injector.Bind(new(domain.DefaultFormDataProvider)).To(formdata.DefaultFormDataProviderImpl{})
+	injector.Bind(new(domain.DefaultFormDataDecoder)).To(formdata.DefaultFormDataDecoderImpl{})
+	injector.Bind(new(domain.DefaultFormDataValidator)).To(formdata.DefaultFormDataValidatorImpl{})
 	injector.Bind(new(application.FormHandlerFactory)).To(application.FormHandlerFactoryImpl{}).AsEagerSingleton()
 }
 
-// DefaultConfig method which is responsible for setting up default module configuration
+// DefaultConfig is method which is responsible for setting up default module configuration
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"form.validator": config.Map{

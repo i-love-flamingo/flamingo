@@ -7,29 +7,35 @@ import (
 )
 
 type (
+	// FormHandlerFactoryImpl defines faked implementation of FormHandlerFactory interface used for unit testing
 	FormHandlerFactoryImpl struct {
 		formHandler *mocks.FormHandler
 	}
 )
 
+// New returns faked implementation of FormHandlerFactory interface which should deliver mocked domain.FormHandler instance
 func New(formHandler *mocks.FormHandler) application.FormHandlerFactory {
 	return &FormHandlerFactoryImpl{
 		formHandler: formHandler,
 	}
 }
 
+// CreateSimpleFormHandler returns mocked instance of domain.FormHandler interface
 func (f *FormHandlerFactoryImpl) CreateSimpleFormHandler() domain.FormHandler {
 	return f.formHandler
 }
 
-func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(formService domain.FormService, formExtensions ...string) domain.FormHandler {
+// CreateFormHandlerWithFormService returns mocked instance of domain.FormHandler interface
+func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormService(domain.FormService, ...string) domain.FormHandler {
 	return f.formHandler
 }
 
-func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(formDataProvider domain.FormDataProvider, formDataDecoder domain.FormDataDecoder, formDataValidator domain.FormDataValidator, formExtensions ...string) domain.FormHandler {
+// CreateFormHandlerWithFormServices returns mocked instance of domain.FormHandler interface
+func (f *FormHandlerFactoryImpl) CreateFormHandlerWithFormServices(domain.FormDataProvider, domain.FormDataDecoder, domain.FormDataValidator, ...string) domain.FormHandler {
 	return f.formHandler
 }
 
+// GetFormHandlerBuilder returns faked instance of FormHandlerBuilder interface
 func (f *FormHandlerFactoryImpl) GetFormHandlerBuilder() application.FormHandlerBuilder {
 	return &formHandlerBuilderImpl{
 		formHandler: f.formHandler,

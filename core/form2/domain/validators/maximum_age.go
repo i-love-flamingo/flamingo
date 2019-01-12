@@ -25,6 +25,7 @@ type (
 
 var _ domain.FieldValidator = &MaximumAgeValidator{}
 
+// Inject is method used to set all dependencies as local variables
 func (v *MaximumAgeValidator) Inject(cfg *struct {
 	DateFormat string `inject:"config:form.validator.dateFormat"`
 }) {

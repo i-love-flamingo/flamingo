@@ -17,6 +17,7 @@ type (
 		validationRules map[string][]ValidationRule
 	}
 
+	// FormError is used as wrapper for storing form error messages
 	FormError string
 )
 
@@ -43,7 +44,7 @@ func (f Form) IsSubmitted() bool {
 	return f.submitted
 }
 
-// HasErrorsForField method which defines if there is any field validations error for specific field
+// HasErrorForField method which defines if there is any field validations error for specific field
 func (f Form) HasErrorForField(name string) bool {
 	return f.ValidationInfo.HasErrorsForField(name)
 }
@@ -58,24 +59,27 @@ func (f Form) HasGeneralErrors() bool {
 	return f.ValidationInfo.HasGeneralErrors()
 }
 
-// GetFieldErrors method which returns list of all general validation errors for specific field
+// GetErrorsForField method which returns list of all general validation errors for specific field
 func (f Form) GetErrorsForField(name string) []Error {
 	return f.ValidationInfo.GetErrorsForField(name)
 }
 
-//GetValidationRulesForField adds option to extract validation rules for desired field in templates
+// GetValidationRulesForField adds option to extract validation rules for desired field in templates
 func (f Form) GetValidationRulesForField(name string) []ValidationRule {
 	return f.validationRules[name]
 }
 
+// NewFormError returns new instance of error interface by defining string content of error
 func NewFormError(details string) FormError {
 	return FormError(details)
 }
 
+// NewFormErrorf returns new instance of error interface by defining formatted string content of error with arguments
 func NewFormErrorf(details string, args ...interface{}) FormError {
 	return FormError(fmt.Sprintf(details, args...))
 }
 
+// Error represents implementation for required method so FormError can fulfil error interface
 func (e FormError) Error() string {
 	return fmt.Sprintf("FormError: %s", string(e))
 }

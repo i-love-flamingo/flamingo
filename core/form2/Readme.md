@@ -475,7 +475,7 @@ that only last defined struct validator for single type will be use in struct va
 For easier unit tests, it possible to use FormHandlerFactory from fake package:
 
 ```go
-func TestControlllerAction(t *testing) {
+func TestControlller_Action(t *testing) {
   mockedFormHandler := &mocks.FormHandler()
   mockedFormFactory := fake.New(mockedFormHandler)
   
@@ -485,6 +485,19 @@ func TestControlllerAction(t *testing) {
   // some code
   
   mockedFormHandler.On("HandleUnsubmittedForm", ctx, req).Return(&domain.Form{}, nil).Once()
+  
+  // some code
+}
+```
+
+In addition it's possible to use helpers from fake package for testing validators:
+
+```go
+func TestMyValidator_ValidateField(t *testing) {
+  mockedFieldLevel := fake.NewFieldLevel(5, "4")
+  
+  validator := &MyValidator{}
+  validator.ValidateField(context.Background(), mockedFieldLevel)
   
   // some code
 }

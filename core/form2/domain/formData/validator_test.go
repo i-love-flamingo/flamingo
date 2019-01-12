@@ -1,4 +1,4 @@
-package formData
+package formdata
 
 import (
 	"testing"

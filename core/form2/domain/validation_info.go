@@ -62,7 +62,7 @@ func (vi *ValidationInfo) AppendGeneralErrors(errs []Error) {
 	}
 }
 
-// AddError method which adds a general error with the passed MessageKey and DefaultLabel
+// AddGeneralError method which adds a general error with the passed MessageKey and DefaultLabel
 func (vi *ValidationInfo) AddGeneralError(messageKey string, defaultLabel string) {
 	keys := vi.getExistingMessageKeys(vi.generalErrors)
 
@@ -112,12 +112,12 @@ func (vi *ValidationInfo) AddFieldError(fieldName string, messageKey string, def
 	vi.fieldErrors[fieldName] = append(vi.fieldErrors[fieldName], err)
 }
 
-// GetGeneralErrors method which returns list of all field validation errors for all fields
+// GetErrorsForAllFields method which returns list of all field validation errors for all fields
 func (vi *ValidationInfo) GetErrorsForAllFields() map[string][]Error {
 	return vi.fieldErrors
 }
 
-// GetFieldErrors method which returns list of all general validation errors for specific field
+// GetErrorsForField method which returns list of all general validation errors for specific field
 func (vi *ValidationInfo) GetErrorsForField(fieldName string) []Error {
 	return vi.fieldErrors[fieldName]
 }

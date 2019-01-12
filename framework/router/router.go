@@ -259,7 +259,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	controller, params, handler := router.RouterRegistry.matchRequest(req)
 
 	if handler != nil {
-		ctx, _ = tag.New(req.Context(), tag.Upsert(ControllerKey, handler.GetHandlerName()))
+		ctx, _ = tag.New(req.Context(), tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Upsert(opencensus.KeyArea, "-"))
 		req = req.WithContext(ctx)
 		start := time.Now()
 		defer func() {

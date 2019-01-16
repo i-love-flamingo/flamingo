@@ -59,6 +59,11 @@ func (f Form) HasGeneralErrors() bool {
 	return f.ValidationInfo.HasGeneralErrors()
 }
 
+// GetGeneralErrors method which returns list of all general validation errors
+func (f Form) GetGeneralErrors() []Error {
+	return f.ValidationInfo.generalErrors
+}
+
 // GetErrorsForField method which returns list of all general validation errors for specific field
 func (f Form) GetErrorsForField(name string) []Error {
 	return f.ValidationInfo.GetErrorsForField(name)

@@ -41,7 +41,7 @@ func (t *FormTestSuite) TestNewForm() {
 				Value: "10",
 			},
 			{
-				Name:  "required",
+				Name: "required",
 			},
 		},
 	})
@@ -53,7 +53,7 @@ func (t *FormTestSuite) TestNewForm() {
 			Value: "10",
 		},
 		{
-			Name:  "required",
+			Name: "required",
 		},
 	}, form.GetValidationRulesForField("fieldName1"))
 }
@@ -90,4 +90,16 @@ func (t *FormTestSuite) TestErrors() {
 	t.True(form.HasAnyFieldErrors())
 	t.True(form.HasGeneralErrors())
 	t.True(form.HasErrorForField("fieldName1"))
+	t.Equal([]Error{
+		{
+			MessageKey:   "messageKey1",
+			DefaultLabel: "defaultLabel1",
+		},
+	}, form.GetGeneralErrors())
+	t.Equal([]Error{
+		{
+			MessageKey:   "messageKey1",
+			DefaultLabel: "defaultLabel1",
+		},
+	}, form.GetErrorsForField("fieldName1"))
 }

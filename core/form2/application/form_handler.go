@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -29,7 +30,7 @@ type (
 
 var _ domain.FormHandler = &formHandlerImpl{}
 
-// HandleForm as method for returning Form instance with state depending on fact if there was form submission or not
+// HandleForm as method for returning Form instance with state depending on fact if there was form submission or not, via POST request
 func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	submitted := req.Request().Method == http.MethodPost
 
@@ -39,7 +40,7 @@ func (h *formHandlerImpl) HandleForm(ctx context.Context, req *web.Request) (*do
 	}
 
 	if submitted {
-		return h.handleSubmittedForm(ctx, req, form)
+		return h.handleSubmittedForm(ctx, req, form, http.MethodPost)
 	}
 
 	return form, nil
@@ -61,14 +62,24 @@ func (h *formHandlerImpl) HandleUnsubmittedForm(ctx context.Context, req *web.Re
 	return form, nil
 }
 
-// HandleSubmittedForm as method for returning Form instance which is submitted
+// HandleSubmittedForm as method for returning Form instance which is submitted via POST request
 func (h *formHandlerImpl) HandleSubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	form, err := h.buildForm(ctx, req, true)
 	if err != nil {
 		return nil, err
 	}
 
-	return h.handleSubmittedForm(ctx, req, form)
+	return h.handleSubmittedForm(ctx, req, form, http.MethodPost)
+}
+
+// HandleSubmittedGETForm as method for returning Form instance which is submitted via GET request
+func (h *formHandlerImpl) HandleSubmittedGETForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
+	form, err := h.buildForm(ctx, req, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return h.handleSubmittedForm(ctx, req, form, http.MethodGet)
 }
 
 // buildForm as method for creating new instance of Form domain
@@ -86,8 +97,8 @@ func (h *formHandlerImpl) buildForm(ctx context.Context, req *web.Request, submi
 }
 
 // handleSubmittedForm as method for processing
-func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Request, form *domain.Form) (*domain.Form, error) {
-	values, err := h.getPostValues(req)
+func (h *formHandlerImpl) handleSubmittedForm(ctx context.Context, req *web.Request, form *domain.Form, method string) (*domain.Form, error) {
+	values, err := h.getUrlValues(req, method)
 	if err != nil {
 		h.getLogger("postValueProcessing").Error(err.Error())
 		return nil, domain.NewFormError(err.Error())
@@ -126,25 +137,42 @@ func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[strin
 		return validationRules
 	}
 
-	typeOf := reflect.TypeOf(formData)
-	if typeOf.Kind() == reflect.Ptr {
-		typeOf = typeOf.Elem()
-	}
+	valueOf := reflect.Indirect(reflect.ValueOf(formData))
+	typeOf := valueOf.Type()
 
 	if typeOf.Kind() != reflect.Struct {
 		return validationRules
 	}
 
 	for i := 0; i < typeOf.NumField(); i++ {
-		field := typeOf.Field(i)
+		fieldValue := valueOf.Field(i)
+		fieldType := typeOf.Field(i)
 
-		validationTag := field.Tag.Get("validate")
-		if validationTag == "" {
+		if fieldValue.Kind() == reflect.Ptr {
+			fieldValue = fieldValue.Elem()
+		}
+
+		name := fieldType.Tag.Get("form")
+		if name == "-" {
 			continue
 		}
 
-		name := field.Tag.Get("form")
-		if name == "-" || name == "" {
+		if name == "" {
+			name = fieldType.Name
+		}
+
+		if fieldValue.Kind() == reflect.Struct {
+			subRules := h.extractValidationRules(fieldValue.Interface())
+			for k, v := range subRules {
+				key := fmt.Sprintf("%s.%s", name, k)
+				validationRules[key] = v
+			}
+
+			continue
+		}
+
+		validationTag := fieldType.Tag.Get("validate")
+		if validationTag == "" {
 			continue
 		}
 
@@ -173,7 +201,12 @@ func (h *formHandlerImpl) extractValidationRules(formData interface{}) map[strin
 }
 
 // getPostValues as method for extracting http request body
-func (h *formHandlerImpl) getPostValues(r *web.Request) (*url.Values, error) {
+func (h *formHandlerImpl) getUrlValues(r *web.Request, method string) (*url.Values, error) {
+	if method == http.MethodGet {
+		values := r.Request().URL.Query()
+		return &values, nil
+	}
+
 	err := r.Request().ParseForm()
 	if err != nil {
 		return nil, err

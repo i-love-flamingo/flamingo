@@ -150,32 +150,122 @@ func (t *FormHandlerImplTestSuite) TestExtractValidationRules_Struct() {
 				Value: "10",
 			},
 		},
+		"Sixth": {
+			{
+				Name: "required",
+			},
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"subStruct.first": {
+			{
+				Name: "required",
+			},
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"subStruct.second": {
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"subStruct.Sixth": {
+			{
+				Name: "required",
+			},
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"StructWithoutName.first": {
+			{
+				Name: "required",
+			},
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"StructWithoutName.second": {
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
+		"StructWithoutName.Sixth": {
+			{
+				Name: "required",
+			},
+			{
+				Name:  "gte",
+				Value: "10",
+			},
+		},
 	}, t.handler.extractValidationRules(struct {
-		First  string `form:"first" validate:"required,gte=10"`
-		Second string `form:"second" validate:"omitempty,gte=10"`
-		Third  string `form:"-" validate:"required,gte=10"`
-		Fourth string `form:"fourth" validate:""`
-		Fifth  string `form:"fifth"`
-		Sixth  string `validate:"required,gte=10"`
+		First          string `form:"first" validate:"required,gte=10"`
+		Second         string `form:"second" validate:"omitempty,gte=10"`
+		Third          string `form:"-" validate:"required,gte=10"`
+		Fourth         string `form:"fourth" validate:""`
+		Fifth          string `form:"fifth"`
+		Sixth          string `validate:"required,gte=10"`
+		StructWithName struct {
+			First  string `form:"first" validate:"required,gte=10"`
+			Second string `form:"second" validate:"omitempty,gte=10"`
+			Third  string `form:"-" validate:"required,gte=10"`
+			Fourth string `form:"fourth" validate:""`
+			Fifth  string `form:"fifth"`
+			Sixth  string `validate:"required,gte=10"`
+		} `form:"subStruct"`
+		StructWithoutName struct {
+			First  string `form:"first" validate:"required,gte=10"`
+			Second string `form:"second" validate:"omitempty,gte=10"`
+			Third  string `form:"-" validate:"required,gte=10"`
+			Fourth string `form:"fourth" validate:""`
+			Fifth  string `form:"fifth"`
+			Sixth  string `validate:"required,gte=10"`
+		}
 	}{}))
 }
 
-func (t *FormHandlerImplTestSuite) TestGetPostValues_Error() {
+func (t *FormHandlerImplTestSuite) TestGetUrlValues_PostError() {
 	t.request.Request().Method = http.MethodPost
 
-	values, err := t.handler.getPostValues(t.request)
+	values, err := t.handler.getUrlValues(t.request, http.MethodPost)
 	t.Error(err)
 	t.Nil(values)
 }
 
-func (t *FormHandlerImplTestSuite) TestGetPostValues_Success() {
+func (t *FormHandlerImplTestSuite) TestGetUrlValues_PostSuccess() {
 	t.request.Request().Method = http.MethodPost
 	t.request.Request().PostForm = url.Values{
 		"first":  []string{"first"},
 		"second": []string{"second"},
 	}
 
-	values, err := t.handler.getPostValues(t.request)
+	values, err := t.handler.getUrlValues(t.request, http.MethodPost)
+	t.NoError(err)
+	t.Equal(&url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, values)
+}
+
+func (t *FormHandlerImplTestSuite) TestGetUrlValues_GetSuccess() {
+	t.request.Request().Method = http.MethodGet
+	t.request.Request().URL = &url.URL{
+		RawQuery: url.Values{
+			"first":  []string{"first"},
+			"second": []string{"second"},
+		}.Encode(),
+	}
+
+	values, err := t.handler.getUrlValues(t.request, http.MethodGet)
 	t.NoError(err)
 	t.Equal(&url.Values{
 		"first":  []string{"first"},
@@ -475,6 +565,76 @@ func (t *FormHandlerImplTestSuite) TestHandleForm_Submitted() {
 	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
 
 	result, err := t.handler.HandleForm(t.context, t.request)
+	t.NoError(err)
+
+	form := domain.NewForm(true, map[string][]domain.ValidationRule{})
+	form.Data = map[string]string{
+		"first":  "first",
+		"second": "second",
+	}
+	form.FormExtensionsData = map[string]interface{}{
+		"first":  map[string]int{},
+		"second": map[string]int{},
+		"third":  map[string]int{},
+		"fourth": map[string]int{},
+	}
+
+	t.Equal(&form, result)
+}
+
+func (t *FormHandlerImplTestSuite) TestHandleSubmittedGETForm() {
+	t.provider.On("GetFormData", t.context, t.request).Return(map[string]string{}, nil).Once()
+
+	t.request.Request().Method = http.MethodGet
+	t.request.Request().URL = &url.URL{
+		RawQuery: url.Values{
+			"first":  []string{"first"},
+			"second": []string{"second"},
+		}.Encode(),
+	}
+
+	t.decoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]string{}).Return(map[string]string{
+		"first":  "first",
+		"second": "second",
+	}, nil).Once()
+
+	t.validator.On("Validate", t.context, t.request, t.validatorProvider, map[string]string{
+		"first":  "first",
+		"second": "second",
+	}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.firstExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.firstExtension.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]int{}).Return(map[string]int{}, nil).Once()
+	t.firstExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.secondExtension.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.defaultDecoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]int{}).Return(map[string]int{}, nil).Once()
+	t.defaultValidator.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.defaultProvider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.thirdExtension.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]int{}).Return(map[string]int{}, nil).Once()
+	t.defaultValidator.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	t.defaultProvider.On("GetFormData", t.context, t.request).Return(map[string]int{}, nil).Once()
+	t.defaultDecoder.On("Decode", t.context, t.request, url.Values{
+		"first":  []string{"first"},
+		"second": []string{"second"},
+	}, map[string]int{}).Return(map[string]int{}, nil).Once()
+	t.fourthExtension.On("Validate", t.context, t.request, t.validatorProvider, map[string]int{}).Return(&domain.ValidationInfo{}, nil).Once()
+
+	result, err := t.handler.HandleSubmittedGETForm(t.context, t.request)
 	t.NoError(err)
 
 	form := domain.NewForm(true, map[string][]domain.ValidationRule{})

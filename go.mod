@@ -67,5 +67,5 @@ require (
 
 replace (
 	github.com/robertkrimen/otto => github.com/thebod/otto v0.0.0-20180101010101-83d297c4b64aeb2de4268d9a54c9a503ae2d8139
-	golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190101010101-5641e2160a306ced3c502eb34e0ebac405b48352
+	golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b762685799422ab779adefde348535e7a204c363
 )

@@ -12,9 +12,11 @@ type (
 	FormHandler interface {
 		// HandleUnsubmittedForm as method for returning Form instance which is not submitted
 		HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*Form, error)
-		// HandleSubmittedForm as method for returning Form instance which is submitted
+		// HandleSubmittedForm as method for returning Form instance which is submitted via POST request
 		HandleSubmittedForm(ctx context.Context, req *web.Request) (*Form, error)
-		// HandleForm as method for returning Form instance with state depending on fact if there was form submission or not
+		// HandleSubmittedGETForm as method for returning Form instance which is submitted via GET request
+		HandleSubmittedGETForm(ctx context.Context, req *web.Request) (*Form, error)
+		// HandleForm as method for returning Form instance with state depending on fact if there was form submission or not, via POST request
 		HandleForm(ctx context.Context, req *web.Request) (*Form, error)
 	}
 

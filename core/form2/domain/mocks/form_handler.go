@@ -58,6 +58,29 @@ func (_m *FormHandler) HandleSubmittedForm(ctx context.Context, req *web.Request
 	return r0, r1
 }
 
+// HandleSubmittedGETForm provides a mock function with given fields: ctx, req
+func (_m *FormHandler) HandleSubmittedGETForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 *domain.Form
+	if rf, ok := ret.Get(0).(func(context.Context, *web.Request) *domain.Form); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.Form)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *web.Request) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // HandleUnsubmittedForm provides a mock function with given fields: ctx, req
 func (_m *FormHandler) HandleUnsubmittedForm(ctx context.Context, req *web.Request) (*domain.Form, error) {
 	ret := _m.Called(ctx, req)

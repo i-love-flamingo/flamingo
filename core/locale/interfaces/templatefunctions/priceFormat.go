@@ -1,19 +1,20 @@
 package templatefunctions
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/leekchan/accounting"
 )
 
-type (
-	// PriceFormatFunc for formatting prices
-	PriceFormatFunc struct {
-		config             config.Map
-		translationService application.TranslationServiceInterface
-	}
-)
+// PriceFormatFunc for formatting prices
+type PriceFormatFunc struct {
+	config             config.Map
+	translationService application.TranslationServiceInterface
+}
 
+// Inject dependencies
 func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServiceInterface, config *struct {
 	Config config.Map `inject:"config:locale.accounting"`
 }) {
@@ -22,7 +23,8 @@ func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServi
 }
 
 // Func as implementation of debug method
-func (pff *PriceFormatFunc) Func() interface{} {
+// todo fix
+func (pff *PriceFormatFunc) Func(context.Context) interface{} {
 	return func(value interface{}, currency string) string {
 		currency = pff.translationService.Translate(currency, currency, "", 1, nil)
 		ac := accounting.Accounting{

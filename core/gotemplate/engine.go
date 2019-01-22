@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,8 +15,6 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
-	flamingotemplate "flamingo.me/flamingo/v3/framework/template"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
@@ -23,42 +22,47 @@ import (
 const pathSeparatorString = string(os.PathSeparator)
 
 type (
+	templateFuncProvider func() map[string]flamingo.TemplateFunc
+
 	engine struct {
 		templatesBasePath  string
 		layoutTemplatesDir string
 		debug              bool
-		tplFuncs           flamingotemplate.FuncProvider
-		tplCtxFuncs        flamingotemplate.CtxFuncProvider
+		tplFuncs           templateFuncProvider
 		templates          map[string]*template.Template
 		logger             flamingo.Logger
 	}
 
+	urlRouter interface {
+		URL(name string, params map[string]string) (*url.URL, error)
+		Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{}
+	}
+
 	// urlFunc allows templates to access the routers `URL` helper method
 	urlFunc struct {
-		Router *router.Router `inject:""`
+		router urlRouter
 	}
 
 	// getFunc allows templates to access the router's `get` method
 	dataFunc struct {
-		Router *router.Router `inject:""`
+		router urlRouter
 	}
 
 	getFunc struct {
-		Router *router.Router `inject:""`
+		router urlRouter
 	}
 )
 
 var (
-	_    flamingotemplate.Func    = new(urlFunc)
-	_    flamingotemplate.CtxFunc = new(getFunc)
-	_    flamingotemplate.CtxFunc = new(dataFunc)
-	lock                          = &sync.Mutex{}
+	_    flamingo.TemplateFunc = new(urlFunc)
+	_    flamingo.TemplateFunc = new(getFunc)
+	_    flamingo.TemplateFunc = new(dataFunc)
+	lock                       = &sync.Mutex{}
 )
 
 // Inject engine dependencies
 func (e *engine) Inject(
-	tplFuncs flamingotemplate.FuncProvider,
-	tplCtxFuncs flamingotemplate.CtxFuncProvider,
+	tplFuncs templateFuncProvider,
 	logger flamingo.Logger,
 	config *struct {
 		TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
@@ -67,7 +71,6 @@ func (e *engine) Inject(
 	},
 ) {
 	e.tplFuncs = tplFuncs
-	e.tplCtxFuncs = tplCtxFuncs
 	e.templatesBasePath = config.TemplatesBasePath
 	e.layoutTemplatesDir = config.LayoutTemplatesDir
 	e.debug = config.Debug
@@ -99,7 +102,7 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	}
 
 	tplFuncs := template.FuncMap{}
-	for k, f := range e.tplCtxFuncs() {
+	for k, f := range e.tplFuncs() {
 		tplFuncs[k] = f.Func(ctx)
 	}
 	tpl.Funcs(tplFuncs)
@@ -133,9 +136,6 @@ func (e *engine) loadTemplates(ctx context.Context) error {
 
 	tplFuncs := template.FuncMap{}
 	for k, f := range e.tplFuncs() {
-		tplFuncs[k] = f.Func()
-	}
-	for k, f := range e.tplCtxFuncs() {
 		tplFuncs[k] = f.Func(ctx)
 	}
 
@@ -232,7 +232,12 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 	return nil
 }
 
-// Func as implementation of get method
+func (g *getFunc) Inject(router urlRouter) *getFunc {
+	g.router = router
+	return g
+}
+
+// TemplateFunc as implementation of get method
 func (g *getFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...map[string]interface{}) interface{} {
 		var p = make(map[interface{}]interface{})
@@ -241,11 +246,16 @@ func (g *getFunc) Func(ctx context.Context) interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		return g.Router.Data(ctx, what, p)
+		return g.router.Data(ctx, what, p)
 	}
 }
 
-// Func as implementation of get method
+func (d *dataFunc) Inject(router urlRouter) *dataFunc {
+	d.router = router
+	return d
+}
+
+// TemplateFunc as implementation of get method
 func (d *dataFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...map[string]interface{}) interface{} {
 		var p = make(map[interface{}]interface{})
@@ -254,12 +264,17 @@ func (d *dataFunc) Func(ctx context.Context) interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		return d.Router.Data(ctx, what, p)
+		return d.router.Data(ctx, what, p)
 	}
 }
 
-// Func as implementation of url method
-func (u *urlFunc) Func() interface{} {
+func (u *urlFunc) Inject(router urlRouter) *urlFunc {
+	u.router = router
+	return u
+}
+
+// TemplateFunc as implementation of url method
+func (u *urlFunc) Func(context.Context) interface{} {
 	return func(where string, params ...map[string]interface{}) template.URL {
 		var p = make(map[string]string)
 		if len(params) == 1 {
@@ -267,6 +282,7 @@ func (u *urlFunc) Func() interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		return template.URL(u.Router.URL(where, p).String())
+		url, _ := u.router.URL(where, p)
+		return template.URL(url.String())
 	}
 }

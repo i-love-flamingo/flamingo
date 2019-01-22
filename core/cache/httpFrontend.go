@@ -3,7 +3,6 @@ package cache
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -113,11 +112,11 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 
 		defer func() {
 			if err := recover(); err != nil {
-				//resultErr = errors.WithStack(fmt.Errorf("%#v", err))
+				//resultErr = errors.WithStack(errors.Errorf("%#v", err))
 				if err2, ok := err.(error); ok {
-					resultErr = errors.WithStack(err2) //fmt.Errorf("%#v", err)
+					resultErr = errors.WithStack(err2) //errors.Errorf("%#v", err)
 				} else {
-					resultErr = errors.WithStack(fmt.Errorf("HTTPFrontend.load exception: %#v", err))
+					resultErr = errors.WithStack(errors.Errorf("HTTPFrontend.load exception: %#v", err))
 				}
 			}
 		}()

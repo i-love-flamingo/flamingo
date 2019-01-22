@@ -13,13 +13,13 @@ import (
 func SubTestMapDeepmerge(t *testing.T) {
 	m := make(Map)
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"foo.bar": "bar",
-	})
+	}))
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"foo.bar": "bar2",
-	})
+	}))
 
 	assert.Equal(t, Map{
 		"foo": Map{
@@ -31,10 +31,10 @@ func SubTestMapDeepmerge(t *testing.T) {
 func TestNilValuesRemoveData(t *testing.T) {
 	config := make(Map)
 
-	cfg := readConfig(t, "test/config.yml")
-	config.Add(cfg)
-	cfg = readConfig(t, "test/config_dev.yml")
-	config.Add(cfg)
+	cfg := readConfig(t, "testdata/config.yml")
+	assert.NoError(t, config.Add(cfg))
+	cfg = readConfig(t, "testdata/config_dev.yml")
+	assert.NoError(t, config.Add(cfg))
 
 	fooValue, present := config.Get("foo")
 	assert.Equal(t, nil, fooValue)
@@ -67,54 +67,50 @@ func TestMapDeepmerge(t *testing.T) {
 func TestMap(t *testing.T) {
 	m := make(Map)
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"foo": "bar",
-	})
+	}))
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"foo": "aaa",
-	})
+	}))
 
 	assert.Equal(t, "aaa", m["foo"])
 
-	assert.Panics(t, func() {
-		m.Add(Map{
-			"foo.bar": "a",
-		})
-	})
+	assert.Error(t, m.Add(Map{
+		"foo.bar": "a",
+	}))
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"b.a": "a",
 		"b.b": "b",
-	})
+	}))
 
 	assert.Equal(t, Map{"a": "a", "b": "b"}, m["b"])
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"b": Map{
 			"a": "a",
 			"b": "b",
 		},
-	})
+	}))
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"b.a": "c",
-	})
+	}))
 
 	assert.Equal(t, "c", m["b"].(Map)["a"])
 
-	assert.Panics(t, func() {
-		m.Add(Map{
-			"b": "a",
-		})
-	})
+	assert.Error(t, m.Add(Map{
+		"b": "a",
+	}))
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"x": Map{
 			"x":   "x",
 			"y.z": "a",
 		},
-	})
+	}))
 
 	assert.Equal(t, "x", m["x"].(Map)["x"])
 	assert.Equal(t, Map{"z": "a"}, m["x"].(Map)["y"])
@@ -137,16 +133,16 @@ func TestMapMapInto(t *testing.T) {
 	//fill the config map according to the resultType struct
 	m := make(Map)
 
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"key":    "value",
 		"number": 5,
 		"flag":   true,
-	})
-	m.Add(Map{
+	}))
+	assert.NoError(t, m.Add(Map{
 		"sub.foo":        "baz",
 		"sub.subsub.bar": "myvalue",
-	})
-	m.Add(Map{
+	}))
+	assert.NoError(t, m.Add(Map{
 		"map.a":   "a",
 		"map.b":   "b",
 		"map.c":   "c",
@@ -154,7 +150,7 @@ func TestMapMapInto(t *testing.T) {
 		"map.d.b": "db",
 		"map.e":   "e",
 		"map.f":   "f",
-	})
+	}))
 
 	var result resultType
 
@@ -193,9 +189,9 @@ func TestMapMapInto(t *testing.T) {
 
 func TestMap_Get(t *testing.T) {
 	m := make(Map)
-	m.Add(Map{
+	assert.NoError(t, m.Add(Map{
 		"foo.bar.x.y.z": "test",
-	})
+	}))
 
 	val, ok := m.Get("foo.bar.x.y.z")
 	assert.True(t, ok)
@@ -214,11 +210,11 @@ func TestMap_Get(t *testing.T) {
 
 func TestParents(t *testing.T) {
 	area := NewArea("root", nil, NewArea("c1", nil))
-	area.Configuration.Add(Map{"key1": "1"})
-	area.Configuration.Add(Map{"key2": "2"})
+	assert.NoError(t, area.Configuration.Add(Map{"key1": "1"}))
+	assert.NoError(t, area.Configuration.Add(Map{"key2": "2"}))
 
 	child := area.Childs[0]
-	child.Configuration.Add(Map{"key1": "c1"})
+	assert.NoError(t, child.Configuration.Add(Map{"key1": "c1"}))
 
 	assert.True(t, area.HasConfigKey("key1"))
 	assert.True(t, area.HasConfigKey("key2"))
@@ -279,7 +275,7 @@ func TestMap_Flat(t *testing.T) {
 		// run each case multiple times
 		for i := 0; i < 20; i++ {
 			t.Run(tt.name, func(t *testing.T) {
-				tt.m.Add(tt.overwrite)
+				assert.NoError(t, tt.m.Add(tt.overwrite))
 
 				got := tt.m.Flat()
 
@@ -324,7 +320,7 @@ func TestMap_Add(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.m.Add(tt.add)
+			assert.NoError(t, tt.m.Add(tt.add))
 
 			if !reflect.DeepEqual(tt.m, tt.want) {
 				t.Errorf("got %v, want %v", tt.m, tt.want)

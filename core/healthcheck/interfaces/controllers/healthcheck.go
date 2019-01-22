@@ -8,12 +8,11 @@ import (
 )
 
 type (
-	// StatusProvider provides all bound healthchecks
-	StatusProvider func() map[string]healthcheck.Status
+	statusProvider func() map[string]healthcheck.Status
 
 	// Healthcheck controller
 	Healthcheck struct {
-		statusProvider StatusProvider
+		statusProvider statusProvider
 	}
 
 	// Ping controller
@@ -31,10 +30,11 @@ type (
 )
 
 // Inject Healthcheck dependencies
-func (h *Healthcheck) Inject(provider StatusProvider) {
+func (h *Healthcheck) Inject(provider statusProvider) {
 	h.statusProvider = provider
 }
 
+// ServeHTTP responds to healthcheck requests
 func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	var resp response
 	var allAlive = true
@@ -66,6 +66,7 @@ func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	handleErr(err, w)
 }
 
+// ServeHTTP responds to Ping requests
 func (p *Ping) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("OK"))

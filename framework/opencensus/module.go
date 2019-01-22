@@ -27,9 +27,9 @@ var (
 	Sampler = trace.NeverSample()
 )
 
-// View registers a new view
-func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) {
-	view.Register(&view.View{
+// View helps to register opencensus views with the default "area" tag
+func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) error {
+	return view.Register(&view.View{
 		Name:        name,
 		Measure:     m,
 		Aggregation: aggr,
@@ -41,7 +41,7 @@ type correlationIDInjector struct {
 	next http.RoundTripper
 }
 
-// RoundTrip a requests
+// RoundTrip a request
 func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
 	if span := trace.FromContext(req.Context()); span != nil {
 		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID.String())
@@ -50,7 +50,7 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 	return rt.next.RoundTrip(req)
 }
 
-// Module basic struct
+// Module registers the opencensus module which in turn enables jaeger & co
 type Module struct {
 	Endpoint     string `inject:"config:opencensus.jaeger.endpoint"`
 	ServiceName  string `inject:"config:opencensus.serviceName"`
@@ -58,7 +58,7 @@ type Module struct {
 	JaegerEnable bool   `inject:"config:opencensus.jaeger.enable"`
 }
 
-// Configure DI
+// Configure the opencensus Module
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
@@ -68,6 +68,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 		if m.JaegerEnable {
 			// generate a random IP in 127.0.0.0/8 network to trick jaegers clock skew detection
+			// todo fix this?
 			randomIP := fmt.Sprintf("127.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255))
 
 			// Register the Jaeger exporter to be able to retrieve

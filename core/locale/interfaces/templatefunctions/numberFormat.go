@@ -1,20 +1,21 @@
 package templatefunctions
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"github.com/leekchan/accounting"
 )
 
-type (
-	// NumberFormatFunc for formatting numbers
-	NumberFormatFunc struct {
-		precision          float64
-		decimal            string
-		thousand           string
-		translationService application.TranslationServiceInterface
-	}
-)
+// NumberFormatFunc for formatting numbers
+type NumberFormatFunc struct {
+	precision          float64
+	decimal            string
+	thousand           string
+	translationService application.TranslationServiceInterface
+}
 
+// Inject dependencies
 func (nff *NumberFormatFunc) Inject(
 	serviceInterface application.TranslationServiceInterface,
 	config *struct {
@@ -30,7 +31,7 @@ func (nff *NumberFormatFunc) Inject(
 }
 
 // Func as implementation of debug method
-func (nff *NumberFormatFunc) Func() interface{} {
+func (nff *NumberFormatFunc) Func(context.Context) interface{} {
 	return func(value interface{}, params ...interface{}) string {
 
 		precision := int(nff.precision)
@@ -38,6 +39,7 @@ func (nff *NumberFormatFunc) Func() interface{} {
 			if precisionIntParam, ok := params[0].(int); ok {
 				precision = precisionIntParam
 			}
+			// todo fix
 			//if precisionNumberParam, ok := params[0].(pugjs.Number); ok {
 			//	precision = int(precisionNumberParam)
 			//}

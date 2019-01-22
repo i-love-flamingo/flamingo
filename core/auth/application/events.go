@@ -2,16 +2,18 @@ package application
 
 import (
 	"context"
+
 	"flamingo.me/flamingo/v3/core/auth/domain"
-	"flamingo.me/flamingo/v3/framework/event"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 // EventPublisher struct
 type EventPublisher struct {
-	router event.Router
+	router flamingo.EventRouter
 }
 
-func (e *EventPublisher) Inject(router event.Router) {
+// Inject dependencies
+func (e *EventPublisher) Inject(router flamingo.EventRouter) {
 	e.router = router
 }
 
@@ -25,19 +27,18 @@ func (e *EventPublisher) PublishLogoutEvent(ctx context.Context, event *domain.L
 	e.router.Dispatch(ctx, event)
 }
 
+// EventHandler for logout events
+type EventHandler struct {
+	authManager *AuthManager
+}
 
-type (
-	EventHandler struct {
-		authManager *AuthManager
-	}
-)
-
+// Inject dependencies
 func (e *EventHandler) Inject(authManager *AuthManager) {
 	e.authManager = authManager
 }
 
 // Notify calls AuthManager on each logout, so it can destroy data stored for previously logged in user
-func (e *EventHandler) Notify(event event.Event) {
+func (e *EventHandler) Notify(event flamingo.Event) {
 	logoutEvent, ok := event.(*domain.LogoutEvent)
 	if ok {
 		e.authManager.DeleteTokenDetails(logoutEvent.Session)

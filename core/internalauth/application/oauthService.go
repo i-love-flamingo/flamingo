@@ -5,21 +5,21 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-type (
-	OauthService struct {
-		baseUrl string
-	}
-)
+// OauthService for internal direct token grant
+type OauthService struct {
+	baseURL string
+}
 
+// Inject configuration
 func (os *OauthService) Inject(config *struct {
-	BaseUrl string `inject:"config:internalauth.baseurl"`
+	BaseURL string `inject:"config:internalauth.baseurl"`
 }) {
-	os.baseUrl = config.BaseUrl
+	os.baseURL = config.BaseURL
 }
 
 // GetConfig returns an oauth config object
@@ -27,7 +27,7 @@ func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, Cli
 	return clientcredentials.Config{
 		ClientID:       ClientID,
 		ClientSecret:   ClientSecret,
-		TokenURL:       strings.TrimRight(os.baseUrl, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
+		TokenURL:       strings.TrimRight(os.baseURL, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
 		EndpointParams: url.Values{},
 	}
 }

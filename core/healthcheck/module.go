@@ -1,10 +1,7 @@
-/*
-Package healthcheck provides a healthcheck endpoint under the default route /status/healthcheck
-Usage:
- Register your own Status via Dingo:
- injector.BindMap((*healthcheck.Status)(nil), "yourServiceName").To(yourServiceNameApi.Status{})
-
-*/
+// Package healthcheck provides a healthcheck endpoint under the default route /status/healthcheck
+// Usage:
+// Register your own Status via Dingo:
+// injector.BindMap(new(healthcheck.Status), "yourServiceName").To(yourServiceNameApi.Status{})
 package healthcheck
 
 import (
@@ -15,7 +12,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
-// Module basic struct
+// Module entry point for the flamingo healthcheck module
 type Module struct {
 	controller      *controllers.Healthcheck
 	checkSession    bool
@@ -44,16 +41,16 @@ func (m *Module) Inject(
 	m.sessionBackend = config.SessionBackend
 }
 
-// Configure DI
+// Configure dependency injection
 func (m *Module) Configure(injector *dingo.Injector) {
 	if m.checkSession {
 		switch m.sessionBackend {
 		case "redis":
-			injector.BindMap((*healthcheck.Status)(nil), "session").To(healthcheck.RedisSession{})
+			injector.BindMap(new(healthcheck.Status), "session").To(healthcheck.RedisSession{})
 		case "file":
-			injector.BindMap((*healthcheck.Status)(nil), "session").To(healthcheck.FileSession{})
+			injector.BindMap(new(healthcheck.Status), "session").To(healthcheck.FileSession{})
 		default:
-			injector.BindMap((*healthcheck.Status)(nil), "session").To(healthcheck.Nil{})
+			injector.BindMap(new(healthcheck.Status), "session").To(healthcheck.Nil{})
 		}
 	}
 	if m.checkAuthServer {

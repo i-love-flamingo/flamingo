@@ -10,16 +10,19 @@ import (
 )
 
 type (
+	// Service implements behaviour for retrieving roles
 	Service interface {
 		All(context.Context, *web.Session) []domain.Role
 	}
 
+	// The ServiceImpl is the default Service implementation
 	ServiceImpl struct {
 		providers      []provider.RoleProvider
 		rolesHierarchy config.Map
 	}
 )
 
+// Inject dependencies
 func (s *ServiceImpl) Inject(p []provider.RoleProvider, cfg *struct {
 	RolesHierarchy config.Map `inject:"config:security.roles.hierarchy"`
 }) {
@@ -27,6 +30,7 @@ func (s *ServiceImpl) Inject(p []provider.RoleProvider, cfg *struct {
 	s.rolesHierarchy = cfg.RolesHierarchy
 }
 
+// All returns all available roles, based on their hierarchy
 func (s *ServiceImpl) All(ctx context.Context, session *web.Session) []domain.Role {
 	rolesChan := make(chan []domain.Role)
 

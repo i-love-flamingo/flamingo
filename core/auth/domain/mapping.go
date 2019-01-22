@@ -5,11 +5,11 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/coreos/go-oidc"
+	oidc "github.com/coreos/go-oidc"
 )
 
 type (
-	UserMapping struct {
+	userMapping struct {
 		Sub          string
 		Name         string
 		Email        string
@@ -24,17 +24,20 @@ type (
 		CustomFields []string
 	}
 
+	// UserMappingService maps a user based on data available via the idTokenMapping setting
 	UserMappingService struct {
 		idTokenMapping config.Map
 	}
 )
 
+// Inject dependencies
 func (ums *UserMappingService) Inject(config *struct {
-	IdTokenMapping config.Map `inject:"config:auth.mapping.idToken"`
+	IDTokenMapping config.Map `inject:"config:auth.mapping.idToken"`
 }) {
-	ums.idTokenMapping = config.IdTokenMapping
+	ums.idTokenMapping = config.IDTokenMapping
 }
 
+// UserFromIDToken returns a user mapped with data from a provided OpenID connect token
 func (ums *UserMappingService) UserFromIDToken(idToken *oidc.IDToken, session *web.Session) (*User, error) {
 	var claims map[string]interface{}
 	err := idToken.Claims(&claims)
@@ -45,15 +48,16 @@ func (ums *UserMappingService) UserFromIDToken(idToken *oidc.IDToken, session *w
 	return ums.MapToUser(claims, session), nil
 }
 
-func (ums *UserMappingService) GetMapping(config.Map) (UserMapping, error) {
-	var mapping UserMapping
+func (ums *UserMappingService) getMapping(config.Map) (userMapping, error) {
+	var mapping userMapping
 	err := ums.idTokenMapping.MapInto(&mapping)
 
 	return mapping, err
 }
 
+// MapToUser returns the user mapped from the claims
 func (ums *UserMappingService) MapToUser(claims map[string]interface{}, session *web.Session) *User {
-	mapping, err := ums.GetMapping(ums.idTokenMapping)
+	mapping, err := ums.getMapping(ums.idTokenMapping)
 	if err != nil {
 		panic(err)
 	}

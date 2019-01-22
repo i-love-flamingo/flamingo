@@ -8,16 +8,17 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type (
-	RoleVoter struct {
-		roleService role.Service
-	}
-)
+// RoleVoter votes on specific roles
+type RoleVoter struct {
+	roleService role.Service
+}
 
+// Inject dependencies
 func (v *RoleVoter) Inject(rs role.Service) {
 	v.roleService = rs
 }
 
+// Vote for roles
 func (v *RoleVoter) Vote(ctx context.Context, session *web.Session, permission string, object interface{}) int {
 	if permission == domain.RoleUser.Permission() {
 		return AccessAbstained

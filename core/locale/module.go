@@ -1,11 +1,11 @@
 package locale
 
 import (
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/core/locale/interfaces/templatefunctions"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/template"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 type (
@@ -15,15 +15,15 @@ type (
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind((*application.TranslationServiceInterface)(nil)).To(application.TranslationService{})
-	injector.Bind((*application.DateTimeServiceInterface)(nil)).To(application.DateTimeService{})
+	injector.Bind(new(application.TranslationServiceInterface)).To(application.TranslationService{})
+	injector.Bind(new(application.DateTimeServiceInterface)).To(application.DateTimeService{})
 
-	template.BindFunc(injector, "__", new(templatefunctions.Label))
-	template.BindFunc(injector, "priceFormat", new(templatefunctions.PriceFormatFunc))
-	template.BindFunc(injector, "priceFormatLong", new(templatefunctions.PriceFormatLongFunc))
-	template.BindFunc(injector, "numberFormat", new(templatefunctions.NumberFormatFunc))
-	template.BindFunc(injector, "dateTimeFormatFromIso", new(templatefunctions.DateTimeFormatFromIso))
-	template.BindFunc(injector, "dateTimeFormat", new(templatefunctions.DateTimeFormatFromTime))
+	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.Label))
+	flamingo.BindTemplateFunc(injector, "priceFormat", new(templatefunctions.PriceFormatFunc))
+	flamingo.BindTemplateFunc(injector, "priceFormatLong", new(templatefunctions.PriceFormatLongFunc))
+	flamingo.BindTemplateFunc(injector, "numberFormat", new(templatefunctions.NumberFormatFunc))
+	flamingo.BindTemplateFunc(injector, "dateTimeFormatFromIso", new(templatefunctions.DateTimeFormatFromIso))
+	flamingo.BindTemplateFunc(injector, "dateTimeFormat", new(templatefunctions.DateTimeFormatFromTime))
 }
 
 // DefaultConfig for this module

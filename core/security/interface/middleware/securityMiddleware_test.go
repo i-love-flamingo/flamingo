@@ -3,18 +3,15 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"testing"
-
-	"github.com/gorilla/sessions"
-	"github.com/stretchr/testify/suite"
-
 	"net/url"
+	"testing"
 
 	applicationMocks "flamingo.me/flamingo/v3/core/security/application/mocks"
 	interfaceMocks "flamingo.me/flamingo/v3/core/security/interface/middleware/mocks"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/gorilla/sessions"
+	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -23,14 +20,14 @@ type (
 
 		middleware       *SecurityMiddleware
 		securityService  *applicationMocks.SecurityService
-		redirectUrlMaker *interfaceMocks.RedirectUrlMaker
+		redirectURLMaker *interfaceMocks.RedirectUrlMaker
 
 		context    context.Context
 		request    *web.Request
-		response   web.Response
+		response   web.Result
 		session    *sessions.Session
 		webSession *web.Session
-		action     router.Action
+		action     web.Action
 	}
 )
 
@@ -40,32 +37,29 @@ func TestSecurityMiddlewareTestSuite(t *testing.T) {
 
 func (t *SecurityMiddlewareTestSuite) SetupSuite() {
 	t.context = context.Background()
-	t.session = sessions.NewSession(nil, "")
-	t.webSession = web.NewSession(t.session)
-	t.request = web.RequestFromRequest(&http.Request{
+	t.webSession = web.EmptySession()
+	t.request = web.CreateRequest(&http.Request{
 		URL: &url.URL{
 			Path: "/referrer",
 		},
 		Header: http.Header{
 			"Referer": []string{"/http-referrer"},
 		},
-	}, web.NewSession(t.session))
-	t.request.LoadParams(map[string]string{
-		"permission": "SomePermission",
-	})
-	t.response = &web.HTTPResponse{
+	}, t.webSession)
+	t.request.Params["permission"] = "SomePermission"
+	t.response = &web.Response{
 		Status: http.StatusOK,
 	}
-	t.action = func(ctx context.Context, req *web.Request) web.Response {
+	t.action = func(ctx context.Context, req *web.Request) web.Result {
 		return t.response
 	}
 }
 
 func (t *SecurityMiddlewareTestSuite) SetupTest() {
 	t.securityService = &applicationMocks.SecurityService{}
-	t.redirectUrlMaker = &interfaceMocks.RedirectUrlMaker{}
+	t.redirectURLMaker = &interfaceMocks.RedirectUrlMaker{}
 	t.middleware = &SecurityMiddleware{}
-	t.middleware.Inject(&web.Responder{}, t.securityService, t.redirectUrlMaker, flamingo.NullLogger{}, &struct {
+	t.middleware.Inject(&web.Responder{}, t.securityService, t.redirectURLMaker, flamingo.NullLogger{}, &struct {
 		LoginPathHandler              string `inject:"config:security.loginPath.handler"`
 		LoginPathRedirectStrategy     string `inject:"config:security.loginPath.redirectStrategy"`
 		LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
@@ -81,19 +75,19 @@ func (t *SecurityMiddlewareTestSuite) SetupTest() {
 func (t *SecurityMiddlewareTestSuite) TearDownTest() {
 	t.securityService.AssertExpectations(t.T())
 	t.securityService = nil
-	t.redirectUrlMaker.AssertExpectations(t.T())
-	t.redirectUrlMaker = nil
+	t.redirectURLMaker.AssertExpectations(t.T())
+	t.redirectURLMaker = nil
 	t.middleware = nil
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithReferrer() {
-	redirectUrl, err := url.Parse("/referrer")
+	redirectURL, err := url.Parse("/referrer")
 	t.NoError(err)
 
 	action := t.middleware.HandleIfLoggedIn(t.action)
 	t.middleware.loginPathRedirectStrategy = ReferrerRedirectStrategy
 	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(false).Once()
-	t.redirectUrlMaker.On("URL", t.context, "/referrer").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/referrer").Return(redirectURL, nil).Once()
 
 	result := action(t.context, t.request)
 	response, ok := result.(*web.RouteRedirectResponse)
@@ -106,13 +100,13 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithReferrer
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_ForbiddenWithPath() {
-	redirectUrl, err := url.Parse("/home")
+	redirectURL, err := url.Parse("/home")
 	t.NoError(err)
 
 	action := t.middleware.HandleIfLoggedIn(t.action)
 	t.middleware.loginPathRedirectStrategy = PathRedirectStrategy
 	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(false).Once()
-	t.redirectUrlMaker.On("URL", t.context, "/home").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/home").Return(redirectURL, nil).Once()
 
 	result := action(t.context, t.request)
 	response, ok := result.(*web.RouteRedirectResponse)
@@ -133,11 +127,11 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedIn_Allowed() {
 }
 
 func (t *SecurityMiddlewareTestSuite) TestRedirectToLoginFallback() {
-	redirectUrl, err := url.Parse("/home")
+	redirectURL, err := url.Parse("/home")
 	t.NoError(err)
 
 	t.middleware.loginPathRedirectStrategy = PathRedirectStrategy
-	t.redirectUrlMaker.On("URL", t.context, "/home").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/home").Return(redirectURL, nil).Once()
 
 	result := t.middleware.RedirectToLoginFallback(t.context, t.request)
 	response, ok := result.(*web.RouteRedirectResponse)
@@ -150,35 +144,35 @@ func (t *SecurityMiddlewareTestSuite) TestRedirectToLoginFallback() {
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithReferrer() {
-	redirectUrl, err := url.Parse("/http-referrer")
+	redirectURL, err := url.Parse("/http-referrer")
 	t.NoError(err)
 
 	action := t.middleware.HandleIfLoggedOut(t.action)
 	t.middleware.authenticatedHomepageStrategy = ReferrerRedirectStrategy
 	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(false).Once()
-	t.redirectUrlMaker.On("URL", t.context, "/http-referrer").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/http-referrer").Return(redirectURL, nil).Once()
 
 	result := action(t.context, t.request)
 	response, ok := result.(*web.URLRedirectResponse)
 
 	t.True(ok)
-	t.Equal(redirectUrl, response.URL)
+	t.Equal(redirectURL, response.URL)
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_ForbiddenWithPath() {
-	redirectUrl, err := url.Parse("/authenticated")
+	redirectURL, err := url.Parse("/authenticated")
 	t.NoError(err)
 
 	action := t.middleware.HandleIfLoggedOut(t.action)
 	t.middleware.authenticatedHomepageStrategy = PathRedirectStrategy
 	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(false).Once()
-	t.redirectUrlMaker.On("URL", t.context, "/authenticated").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/authenticated").Return(redirectURL, nil).Once()
 
 	result := action(t.context, t.request)
 	response, ok := result.(*web.URLRedirectResponse)
 
 	t.True(ok)
-	t.Equal(redirectUrl, response.URL)
+	t.Equal(redirectURL, response.URL)
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_Allowed() {
@@ -190,17 +184,17 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfLoggedOut_Allowed() {
 }
 
 func (t *SecurityMiddlewareTestSuite) TestRedirectToLogoutFallback() {
-	redirectUrl, err := url.Parse("/authenticated")
+	redirectURL, err := url.Parse("/authenticated")
 	t.NoError(err)
 
 	t.middleware.authenticatedHomepageStrategy = PathRedirectStrategy
-	t.redirectUrlMaker.On("URL", t.context, "/authenticated").Return(redirectUrl, nil).Once()
+	t.redirectURLMaker.On("URL", t.context, "/authenticated").Return(redirectURL, nil).Once()
 
 	result := t.middleware.RedirectToLogoutFallback(t.context, t.request)
 	response, ok := result.(*web.URLRedirectResponse)
 
 	t.True(ok)
-	t.Equal(redirectUrl, response.URL)
+	t.Equal(redirectURL, response.URL)
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {

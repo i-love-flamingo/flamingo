@@ -7,25 +7,28 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type (
-	DataController struct {
-		securityService application.SecurityService
-	}
-)
+// DataController returns helper for checking access
+type DataController struct {
+	securityService application.SecurityService
+}
 
+// Inject security service dependency
 func (c *DataController) Inject(s application.SecurityService) {
 	c.securityService = s
 }
 
-func (c *DataController) IsLoggedIn(ctx context.Context, r *web.Request) interface{} {
+// IsLoggedIn check
+func (c *DataController) IsLoggedIn(ctx context.Context, r *web.Request, _ web.RequestParams) interface{} {
 	return c.securityService.IsLoggedIn(ctx, r.Session())
 }
 
-func (c *DataController) IsLoggedOut(ctx context.Context, r *web.Request) interface{} {
+// IsLoggedOut check
+func (c *DataController) IsLoggedOut(ctx context.Context, r *web.Request, _ web.RequestParams) interface{} {
 	return c.securityService.IsLoggedOut(ctx, r.Session())
 }
 
-func (c *DataController) IsGranted(ctx context.Context, r *web.Request) interface{} {
-	permission := r.MustParam1("permission")
+// IsGranted permission check
+func (c *DataController) IsGranted(ctx context.Context, r *web.Request, _ web.RequestParams) interface{} {
+	permission := r.Params["permission"]
 	return c.securityService.IsGranted(ctx, r.Session(), permission, nil)
 }

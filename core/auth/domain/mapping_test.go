@@ -5,7 +5,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -45,7 +44,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_Default() {
 		Email:        "email@domain.com",
 		CustomFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
+	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
@@ -92,7 +91,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		Country:      "Mars",
 		CustomFields: map[string]string{},
 		Type:         USER,
-	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
+	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
@@ -109,7 +108,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
+	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
 func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
@@ -159,5 +158,5 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 			"whatever": "value",
 		},
 		Type: USER,
-	}, t.mappingService.MapToUser(claims, web.NewSession(&sessions.Session{Values: map[interface{}]interface{}{}})))
+	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }

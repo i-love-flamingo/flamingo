@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//ConfigCmd - The Area for which the config is to be printed need to be passed. This will be done by Dingo if a Provider is used for example.
-func ConfigCmd(area *Area) *cobra.Command {
+// Cmd command: The Area for which the config is to be printed need to be passed. This will be done by Dingo if a Provider is used for example.
+func Cmd(area *Area) *cobra.Command {
 	var contextName string
 
 	cmd := &cobra.Command{
@@ -16,7 +16,8 @@ func ConfigCmd(area *Area) *cobra.Command {
 		Short: "Config dump",
 		Run: func(cmd *cobra.Command, args []string) {
 			if contextName != "" {
-				for _, c := range area.Flat() {
+				flatArea, _ := area.Flat()
+				for _, c := range flatArea {
 					if c.Name == contextName {
 						area = c
 						break

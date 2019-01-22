@@ -2,35 +2,35 @@ package middleware
 
 import (
 	"context"
-	"net/url"
-
-	"github.com/pkg/errors"
-
 	"fmt"
-	"time"
-
+	"net/url"
 	"strings"
+	"time"
 
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/pkg/errors"
 )
 
 const (
+	// ReferrerRedirectStrategy strategy to redirect to the supplied referrer
 	ReferrerRedirectStrategy = "referrer"
-	PathRedirectStrategy     = "path"
+	//PathRedirectStrategy strategy to redirect to the supplied path
+	PathRedirectStrategy = "path"
 )
 
 type (
-	RedirectUrlMaker interface {
+	// RedirectURLMaker helper function
+	RedirectURLMaker interface {
 		URL(context.Context, string) (*url.URL, error)
 	}
 
+	// SecurityMiddleware to be used to secure controllers/routes
 	SecurityMiddleware struct {
 		responder        *web.Responder
 		securityService  application.SecurityService
-		redirectUrlMaker RedirectUrlMaker
+		redirectURLMaker RedirectURLMaker
 		logger           flamingo.Logger
 
 		loginPathHandler              string
@@ -42,7 +42,8 @@ type (
 	}
 )
 
-func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityService, u RedirectUrlMaker, l flamingo.Logger, cfg *struct {
+// Inject dependencies
+func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityService, u RedirectURLMaker, l flamingo.Logger, cfg *struct {
 	LoginPathHandler              string `inject:"config:security.loginPath.handler"`
 	LoginPathRedirectStrategy     string `inject:"config:security.loginPath.redirectStrategy"`
 	LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
@@ -52,7 +53,7 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 }) {
 	m.responder = r
 	m.securityService = s
-	m.redirectUrlMaker = u
+	m.redirectURLMaker = u
 	m.logger = l
 	m.loginPathHandler = cfg.LoginPathHandler
 	m.loginPathRedirectStrategy = cfg.LoginPathRedirectStrategy
@@ -62,8 +63,9 @@ func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityServ
 	m.eventLogging = cfg.EventLogging
 }
 
-func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Action {
-	return func(ctx context.Context, req *web.Request) web.Response {
+// HandleIfLoggedIn allows a controller to be used for logged in users
+func (m *SecurityMiddleware) HandleIfLoggedIn(action web.Action) web.Action {
+	return func(ctx context.Context, req *web.Request) web.Result {
 		if !m.securityService.IsLoggedIn(ctx, req.Session()) {
 			return m.RedirectToLoginFallback(ctx, req)
 		}
@@ -71,8 +73,9 @@ func (m *SecurityMiddleware) HandleIfLoggedIn(action router.Action) router.Actio
 	}
 }
 
-func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Action {
-	return func(ctx context.Context, req *web.Request) web.Response {
+// HandleIfLoggedOut allows a controller to be used for logged out users
+func (m *SecurityMiddleware) HandleIfLoggedOut(action web.Action) web.Action {
+	return func(ctx context.Context, req *web.Request) web.Result {
 		if !m.securityService.IsLoggedOut(ctx, req.Session()) {
 			return m.RedirectToLogoutFallback(ctx, req)
 		}
@@ -80,38 +83,44 @@ func (m *SecurityMiddleware) HandleIfLoggedOut(action router.Action) router.Acti
 	}
 }
 
-func (m *SecurityMiddleware) HandleIfGranted(action router.Action, permission string) router.Action {
+// HandleIfGranted allows a controller to be used with a given permission
+func (m *SecurityMiddleware) HandleIfGranted(action web.Action, permission string) web.Action {
 	return m.handleForPermissionAndFallback(action, m.forbiddenAction(permission), true, permission)
 }
 
-func (m *SecurityMiddleware) HandleIfNotGranted(action router.Action, permission string) router.Action {
+// HandleIfNotGranted allows a controller not to be used with a given permission
+func (m *SecurityMiddleware) HandleIfNotGranted(action web.Action, permission string) web.Action {
 	return m.handleForPermissionAndFallback(action, m.forbiddenAction(permission), false, permission)
 }
 
-func (m *SecurityMiddleware) HandleIfGrantedWithFallback(action router.Action, fallback router.Action, permission string) router.Action {
+// HandleIfGrantedWithFallback is HandleIfGranted with a fallback action
+func (m *SecurityMiddleware) HandleIfGrantedWithFallback(action web.Action, fallback web.Action, permission string) web.Action {
 	return m.handleForPermissionAndFallback(action, fallback, true, permission)
 }
 
-func (m *SecurityMiddleware) HandleIfNotGrantedWithFallback(action router.Action, fallback router.Action, permission string) router.Action {
+// HandleIfNotGrantedWithFallback is HandleIfNotGranted with a fallback action
+func (m *SecurityMiddleware) HandleIfNotGrantedWithFallback(action web.Action, fallback web.Action, permission string) web.Action {
 	return m.handleForPermissionAndFallback(action, fallback, false, permission)
 }
 
-func (m *SecurityMiddleware) RedirectToLoginFallback(ctx context.Context, req *web.Request) web.Response {
+// RedirectToLoginFallback fallback helper action
+func (m *SecurityMiddleware) RedirectToLoginFallback(ctx context.Context, req *web.Request) web.Result {
 	m.logIfNeeded(req, "request to only-authenticated page as unauthenticated user")
-	redirectUrl := m.redirectUrl(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
+	redirectURL := m.redirectURL(ctx, req, m.loginPathRedirectStrategy, m.loginPathRedirectPath, req.Request().URL.String())
 	return m.responder.RouteRedirect("auth.login", map[string]string{
-		"redirecturl": redirectUrl.String(),
+		"redirecturl": redirectURL.String(),
 	})
 }
 
-func (m *SecurityMiddleware) RedirectToLogoutFallback(ctx context.Context, req *web.Request) web.Response {
+// RedirectToLogoutFallback fallback helper action
+func (m *SecurityMiddleware) RedirectToLogoutFallback(ctx context.Context, req *web.Request) web.Result {
 	m.logIfNeeded(req, "request to only-unauthenticated page as authenticated user")
-	redirectUrl := m.redirectUrl(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
-	return m.responder.URLRedirect(redirectUrl)
+	redirectURL := m.redirectURL(ctx, req, m.authenticatedHomepageStrategy, m.authenticatedHomepagePath, req.Request().Header.Get("Referer"))
+	return m.responder.URLRedirect(redirectURL)
 }
 
-func (m *SecurityMiddleware) handleForPermissionAndFallback(action router.Action, fallback router.Action, ifGranted bool, permission string) router.Action {
-	return func(ctx context.Context, req *web.Request) web.Response {
+func (m *SecurityMiddleware) handleForPermissionAndFallback(action web.Action, fallback web.Action, ifGranted bool, permission string) web.Action {
+	return func(ctx context.Context, req *web.Request) web.Result {
 		granted := m.securityService.IsGranted(ctx, req.Session(), permission, nil)
 		if (ifGranted && !granted) || (!ifGranted && granted) {
 			explanation := "without"
@@ -125,20 +134,20 @@ func (m *SecurityMiddleware) handleForPermissionAndFallback(action router.Action
 	}
 }
 
-func (m *SecurityMiddleware) forbiddenAction(permission string) router.Action {
-	return func(ctx context.Context, req *web.Request) web.Response {
+func (m *SecurityMiddleware) forbiddenAction(permission string) web.Action {
+	return func(ctx context.Context, req *web.Request) web.Result {
 		return m.responder.Forbidden(errors.Errorf("Permission %s for path %s.", permission, req.Request().URL.Path))
 	}
 }
 
-func (m *SecurityMiddleware) redirectUrl(ctx context.Context, req *web.Request, strategy string, path string, referrer string) *url.URL {
+func (m *SecurityMiddleware) redirectURL(ctx context.Context, req *web.Request, strategy string, path string, referrer string) *url.URL {
 	var err error
 	var generated *url.URL
 
 	if strategy == ReferrerRedirectStrategy {
-		generated, err = m.redirectUrlMaker.URL(ctx, referrer)
+		generated, err = m.redirectURLMaker.URL(ctx, referrer)
 	} else if strategy == PathRedirectStrategy {
-		generated, err = m.redirectUrlMaker.URL(ctx, path)
+		generated, err = m.redirectURLMaker.URL(ctx, path)
 	}
 
 	if err != nil {

@@ -6,23 +6,24 @@ import (
 
 	"flamingo.me/flamingo/v3/core/auth/application"
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 )
 
 type (
+	// LoginControllerInterface is the callback HTTP action provider
 	LoginControllerInterface interface {
-		Get(context.Context, *web.Request) web.Response
+		Get(context.Context, *web.Request) web.Result
 	}
 
 	// LoginController handles the login redirect
 	LoginController struct {
-		responder.RedirectAware
+		responder      *web.Responder
 		authManager    *application.AuthManager
 		parameterHooks []LoginGetParameterHook
 	}
 
+	// LoginGetParameterHook helper to inject additional GET parameters for logins
 	LoginGetParameterHook interface {
 		Parameters(context.Context, *web.Request) map[string]string
 	}
@@ -30,18 +31,18 @@ type (
 
 // Inject LoginController dependencies
 func (l *LoginController) Inject(
-	redirectAware responder.RedirectAware,
+	responder *web.Responder,
 	authManager *application.AuthManager,
 	ph []LoginGetParameterHook,
 ) {
-	l.RedirectAware = redirectAware
+	l.responder = responder
 	l.authManager = authManager
 	l.parameterHooks = ph
 }
 
 // Get handler for logins (redirect)
-func (l *LoginController) Get(c context.Context, request *web.Request) web.Response {
-	redirecturl, ok := request.Param1("redirecturl")
+func (l *LoginController) Get(c context.Context, request *web.Request) web.Result {
+	redirecturl, ok := request.Params["redirecturl"]
 	if !ok || redirecturl == "" {
 		redirecturl = request.Request().Referer()
 	}
@@ -63,5 +64,6 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Respo
 		}
 	}
 
-	return l.RedirectURL(l.authManager.OAuth2Config(c).AuthCodeURL(state, parameters...))
+	redirectURL, _ := url.Parse(l.authManager.OAuth2Config(c).AuthCodeURL(state, parameters...))
+	return l.responder.URLRedirect(redirectURL)
 }

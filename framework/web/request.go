@@ -2,196 +2,63 @@ package web
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 	"sync"
 )
 
 type (
-	// Request defines a web request
+	// Request object stores the actual HTTP Request, Session, Params and attached Values
 	Request struct {
-		request *http.Request
-		vars    map[string]string
-		session *Session
-		Values  *sync.Map
+		request http.Request
+		session Session
+		Params  RequestParams
+		Values  sync.Map
 	}
 
-	contextKey int
+	// RequestParams store string->string values for request data
+	RequestParams map[string]string
+
+	contextKeyType string
 )
 
-var (
-	// ErrFormNotFound is triggered for missing form values
-	ErrFormNotFound = errors.New("form value not found")
-	// ErrParamNotFound for missing router params
-	ErrParamNotFound = errors.New("param value not found")
-	// ErrQueryNotFound for missing query params
-	ErrQueryNotFound = errors.New("query value not found")
+const (
+	contextRequest contextKeyType = "request"
 )
 
-const requestKey contextKey = iota
-
-// Context_ saves the Session in the context
-func Context_(ctx context.Context, session *Request) context.Context {
-	return context.WithValue(ctx, requestKey, session)
-}
-
-// FromContext retrieves the Request from the context
-func FromContext(ctx context.Context) (*Request, bool) {
-	r, ok := ctx.Value(requestKey).(*Request)
-	return r, ok
-}
-
-// RequestFromRequest wraps a http Request
-func RequestFromRequest(r *http.Request, session *Session) *Request {
-	return &Request{
-		request: r,
-		session: session,
-		Values:  new(sync.Map),
+// CreateRequest creates a new request, with optional http.Request and Session.
+// If any variable is nil it is ignored, otherwise it is copied into the new Request.
+func CreateRequest(r *http.Request, s *Session) *Request {
+	req := new(Request)
+	if r != nil {
+		req.request = *r
 	}
-}
-
-// WithVars loads parameters
-func (r *Request) WithVars(vars map[string]string) *Request {
-	request := r.clone()
-
-	request.vars = vars
-
-	return request
-}
-
-func (r *Request) clone() *Request {
-	return &Request{
-		session: r.session,
-		request: r.request,
-		Values:  r.Values,
+	if s != nil {
+		req.session.s = s.s
 	}
+	req.Params = make(RequestParams)
+	return req
 }
 
-// LoadParams load request params
-func (r *Request) LoadParams(p map[string]string) *Request {
-	r.vars = p
-	return r
+// RequestFromContext retrieves the request from the context, if available
+func RequestFromContext(ctx context.Context) *Request {
+	req, _ := ctx.Value(contextRequest).(*Request)
+	return req
 }
 
-// Session returns the ctx Session
-func (r *Request) Session() *Session {
-	return r.session
+// ContextWithRequest stores the request in a new context
+func ContextWithRequest(ctx context.Context, r *Request) context.Context {
+	return context.WithValue(ctx, contextRequest, r)
 }
 
-// Form get POST value
-func (r *Request) Form(n string) ([]string, bool) {
-	f, ok := r.FormAll()[n]
-	return f, ok
-}
-
-// MustForm panics if n is not found
-func (r *Request) MustForm(n string) []string {
-	f, ok := r.Form(n)
-	if !ok {
-		panic(ErrFormNotFound)
-	}
-	return f
-}
-
-// Form1 get first POST value
-func (r *Request) Form1(n string) (string, bool) {
-	f, ok := r.Form(n)
-	if !ok {
-		return "", false
-	}
-
-	if len(f) > 0 {
-		return f[0], true
-	}
-
-	return "", false
-}
-
-// MustForm1 panics if n is not found
-func (r *Request) MustForm1(n string) string {
-	f, ok := r.Form1(n)
-	if !ok {
-		panic(ErrFormNotFound)
-	}
-	return f
-}
-
-// FormAll get all POST values
-func (r *Request) FormAll() map[string][]string {
-	r.Request().ParseForm()
-	return r.Request().Form
-}
-
-// Param1 get first querystring param
-func (r *Request) Param1(n string) (string, bool) {
-	if r, ok := r.vars[n]; ok {
-		return r, true
-	}
-	return "", false
-}
-
-// MustParam1 panics if n is not found
-func (r *Request) MustParam1(n string) string {
-	f, ok := r.Param1(n)
-	if !ok {
-		panic(ErrParamNotFound)
-	}
-	return f
-}
-
-// ParamAll get all querystring params
-func (r *Request) ParamAll() map[string]string {
-	return r.vars
-}
-
-// Query looks up Raw Query map for Param
-func (r *Request) Query(n string) ([]string, bool) {
-	f, ok := r.QueryAll()[n]
-	return f, ok
-}
-
-// MustQuery panics if n is not found
-func (r *Request) MustQuery(n string) []string {
-	f, ok := r.Query(n)
-	if !ok {
-		panic(ErrQueryNotFound)
-	}
-	return f
-}
-
-// Query1 looks up Raw Query map for First Param
-func (r *Request) Query1(n string) (string, bool) {
-	f, ok := r.Query(n)
-	if !ok {
-		return "", false
-	}
-	if len(f) > 0 {
-		return f[0], true
-	}
-	return "", false
-}
-
-// MustQuery1 panics if n is not found
-func (r *Request) MustQuery1(n string) string {
-	f, ok := r.Query1(n)
-	if !ok {
-		panic(ErrQueryNotFound)
-	}
-	return f
-}
-
-// QueryAll returns a Map of the Raw Query
-func (r *Request) QueryAll() map[string][]string {
-	if r.request == nil {
-		return nil
-	}
-	return r.request.URL.Query()
-}
-
-// Request get the requests request
+// Request getter
 func (r *Request) Request() *http.Request {
-	return r.request
+	return &r.request
+}
+
+// Session getter
+func (r *Request) Session() *Session {
+	return &r.session
 }
 
 // RemoteAddress get the requests real remote address

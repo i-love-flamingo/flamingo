@@ -1,10 +1,8 @@
 package zap
 
 import (
-	"flamingo.me/flamingo/v3/core/zap/domain"
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -25,7 +23,7 @@ type (
 
 	// ShutdownEventSubscriber handles the logger sync on flamingo shutdown
 	ShutdownEventSubscriber struct {
-		Logger flamingo.Logger `inject:""`
+		logger flamingo.Logger
 	}
 )
 
@@ -39,6 +37,7 @@ var logLevels = map[string]zapcore.Level{
 	"Fatal":  zap.FatalLevel,
 }
 
+// Inject dependencies
 func (m *Module) Inject(config *struct {
 	Area               string  `inject:"config:area"`
 	JSON               bool    `inject:"config:zap.json,optional"`
@@ -116,25 +115,31 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 	logger = logger.With(zap.String(flamingo.LogKeyArea, m.area))
 
-	zapLogger := &domain.Logger{
+	zapLogger := &Logger{
 		Logger: logger,
 	}
 
-	injector.Bind((*flamingo.Logger)(nil)).ToInstance(zapLogger)
-	injector.BindMulti((*event.Subscriber)(nil)).To(ShutdownEventSubscriber{})
+	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
+	flamingo.BindEventSubscriber(injector).To(ShutdownEventSubscriber{})
+}
+
+// Inject dependencies
+func (subscriber *ShutdownEventSubscriber) Inject(logger flamingo.Logger) {
+	subscriber.logger = logger
 }
 
 // Notify handles the incoming event if it is a AppShutdownEvent
-func (subscriber *ShutdownEventSubscriber) Notify(event event.Event) {
+func (subscriber *ShutdownEventSubscriber) Notify(event flamingo.Event) {
 	switch event.(type) {
-	case *flamingo.AppShutdownEvent:
-		if logger, ok := subscriber.Logger.(*domain.Logger); ok {
+	case *flamingo.ShutdownEvent:
+		if logger, ok := subscriber.logger.(*Logger); ok {
 			logger.Debug("Zap Logger shutdown event")
 			logger.Sync()
 		}
 	}
 }
 
+// DefaultConfig for zap log level
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"zap.loglevel": "Debug",

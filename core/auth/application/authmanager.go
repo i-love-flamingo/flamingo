@@ -9,9 +9,8 @@ import (
 	"flamingo.me/flamingo/v3/core/auth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/coreos/go-oidc"
+	oidc "github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
@@ -37,7 +36,7 @@ func init() {
 }
 
 type (
-	// authManager handles authentication related operations
+	// AuthManager handles authentication related operations
 	AuthManager struct {
 		server              string
 		secret              string
@@ -49,7 +48,7 @@ type (
 		idTokenMapping      config.Slice
 		userInfoMapping     config.Slice
 		logger              flamingo.Logger
-		router              *router.Router
+		router              *web.Router
 
 		openIDProvider *oidc.Provider
 		oauth2Config   map[string]*oauth2.Config
@@ -57,7 +56,7 @@ type (
 )
 
 // Inject authManager dependencies
-func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, config *struct {
+func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config *struct {
 	Server              string       `inject:"config:auth.server"`
 	Secret              string       `inject:"config:auth.secret"`
 	ClientID            string       `inject:"config:auth.clientid"`
@@ -65,7 +64,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	AllowHostFromReq    bool         `inject:"config:auth.allowHostFromReq,optional"`
 	DisableOfflineToken bool         `inject:"config:auth.disableOfflineToken"`
 	Scopes              config.Slice `inject:"config:auth.scopes"`
-	IdTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
+	IDTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
 	UserInfoMapping     config.Slice `inject:"config:auth.claims.userInfo"`
 }) {
 	am.logger = logger
@@ -77,7 +76,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	am.allowHostFromReq = config.AllowHostFromReq
 	am.disableOfflineToken = config.DisableOfflineToken
 	am.scopes = config.Scopes
-	am.idTokenMapping = config.IdTokenMapping
+	am.idTokenMapping = config.IDTokenMapping
 	am.userInfoMapping = config.UserInfoMapping
 	am.oauth2Config = make(map[string]*oauth2.Config)
 }
@@ -101,7 +100,7 @@ func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
 	}
 
 	u.Host = myhost.Host
-	if r, ok := web.FromContext(ctx); ok && am.allowHostFromReq {
+	if r := web.RequestFromContext(ctx); r != nil && am.allowHostFromReq {
 		u.Host = r.Request().Host
 	}
 	u.Scheme = myhost.Scheme
@@ -140,7 +139,8 @@ func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 
 // OAuth2Config is lazy setup oauth2config
 func (am *AuthManager) OAuth2Config(ctx context.Context) *oauth2.Config {
-	callbackURL, err := am.URL(ctx, am.router.URL("auth.callback", nil).Path)
+	url, _ := am.router.URL("auth.callback", nil)
+	callbackURL, err := am.URL(ctx, url.Path)
 	if err != nil {
 		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not get url", err)
 	}
@@ -226,7 +226,7 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 		}
 	}
 
-	token, raw, err := am.getNewIdToken(c, session)
+	token, raw, err := am.getNewIDToken(c, session)
 	if err != nil {
 		return nil, "", err
 	}
@@ -237,7 +237,7 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewIdToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
+func (am *AuthManager) getNewIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, "", errors.WithStack(err)

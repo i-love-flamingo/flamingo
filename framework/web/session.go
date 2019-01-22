@@ -1,36 +1,34 @@
 package web
 
 import (
+	"context"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 )
 
-// todo: still necessary?
-const (
-	// INFO notice
-	INFO = "info"
-	// WARNING notice
-	WARNING = "warning"
-	// ERROR notice
-	ERROR = "error"
-)
-
+// Session holds the data connected to the current user session
 type Session struct {
 	mu sync.RWMutex
-	//data map[interface{}]interface{}
-	//id   string
-	s *sessions.Session
+	s  *sessions.Session
 }
 
-func newID() string {
-	return uuid.New().String()
+const contextSession contextKeyType = "session"
+
+// EmptySession creates an empty session instance for testing etc.
+func EmptySession() *Session {
+	return &Session{s: sessions.NewSession(nil, "")}
 }
 
-// NewSession wraps a gorilla session
-func NewSession(s *sessions.Session) *Session {
-	return &Session{s: s}
+// ContextWithSession returns a new Context with an attached session
+func ContextWithSession(ctx context.Context, session *Session) context.Context {
+	return context.WithValue(ctx, contextSession, session)
+}
+
+// SessionFromContext allows to retrieve the stored session
+func SessionFromContext(ctx context.Context) *Session {
+	session, _ := ctx.Value(contextSession).(*Session)
+	return session
 }
 
 // Load data by a key
@@ -42,7 +40,7 @@ func (s *Session) Load(key interface{}) (data interface{}, ok bool) {
 	return data, ok
 }
 
-// Load data by a key
+// Try to load data by a key
 func (s *Session) Try(key interface{}) (data interface{}) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -75,45 +73,20 @@ func (s *Session) ID() (id string) {
 	return s.s.ID
 }
 
-// Migrate should generate a new ID and remove old Session data
-func (s *Session) migrate() (id, old_id string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	//old_id = s.id
-	//s.id = newID()
-	return "", ""
-
-	//return s.id, old_id
-}
-
-// Flashes returns a slice of flash messages from the session.
-//
-// A single variadic argument is accepted, and it is optional: it defines
-// the flash key. If not defined "_flash" is used by default.
-func (s *Session) Flashes(vars ...string) []interface{} {
+// Flashes returns a slice of flash messages from the session
+// todo change?
+func (s *Session) Flashes() []interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.s.Flashes(vars...)
+	return s.s.Flashes()
 }
 
 // AddFlash adds a flash message to the session.
-//
-// A single variadic argument is accepted, and it is optional: it defines
-// the flash key. If not defined "_flash" is used by default.
-func (s *Session) AddFlash(value interface{}, vars ...string) {
+// todo change?
+func (s *Session) AddFlash(value interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.s.AddFlash(value, vars...)
-}
-
-// G access gorilla subsession
-// deprecated: kept for backwards compatibility
-func (s *Session) G() *sessions.Session {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	return s.s
+	s.s.AddFlash(value)
 }

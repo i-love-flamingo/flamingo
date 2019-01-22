@@ -1,26 +1,24 @@
 package config
 
 import (
-	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/dingo"
 )
 
-/*
- Module defines a dingo module which automatically binds provided config.
- Normaly this module is not included in your flamingo projects bootstrap.
-
- Its can be useful for testing dingo.Module that require certain configuration to be set before. E.g.:
-
- cfgModule := &config.Module{
-		Map: config.Map{
-			"redirects.useInRouter":       true,
-			"redirects.useInPrefixRouter": true,
-		},
-	}
-
-	if err := dingo.TryModule(cfgModule, module); err != nil {
-		t.Error(err)
-	}
-*/
+// Module defines a dingo module which automatically binds provided config.
+// Normaly this module is not included in your flamingo projects bootstrap.
+//
+// Its can be useful for testing dingo.Module that require certain configuration to be set before. E.g.:
+//
+// cfgModule := &config.Module{
+//		Map: config.Map{
+//			"redirects.useInRouter":       true,
+//			"redirects.useInPrefixRouter": true,
+//		},
+//	}
+//
+//	if err := dingo.TryModule(cfgModule, module); err != nil {
+//		t.Error(err)
+//	}
 type Module struct {
 	Map
 }

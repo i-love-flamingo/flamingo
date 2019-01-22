@@ -3,10 +3,9 @@ package domain
 import (
 	"encoding/gob"
 
-	"github.com/coreos/go-oidc"
-	"golang.org/x/oauth2"
-
 	"flamingo.me/flamingo/v3/framework/web"
+	oidc "github.com/coreos/go-oidc"
+	"golang.org/x/oauth2"
 )
 
 type (
@@ -30,16 +29,17 @@ type (
 		Type         UserType
 	}
 
-	// LoginEvent
+	// LoginEvent for the current session
 	LoginEvent struct {
 		Session *web.Session
 	}
 
-	// LogoutEvent
+	// LogoutEvent for the current session
 	LogoutEvent struct {
 		Session *web.Session
 	}
 
+	// Auth information
 	Auth struct {
 		TokenSource oauth2.TokenSource
 		IDToken     *oidc.IDToken
@@ -50,6 +50,7 @@ func init() {
 	gob.Register(User{})
 }
 
+// Get a custom field by the name
 func (u User) Get(name string) string {
 	if u.CustomFields == nil {
 		return ""

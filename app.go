@@ -7,37 +7,25 @@ import (
 	"os"
 	"time"
 
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/zap"
 	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 )
 
-type (
-	appmodule struct {
-		root   *config.Area
-		router *router.Router
-		server *http.Server
-		logger flamingo.Logger
-	}
+type appmodule struct {
+	root   *config.Area
+	router *web.Router
+	server *http.Server
+	logger flamingo.Logger
+}
 
-	// AppShutdownEvent is dispatched on app startup
-	AppStartupEvent struct {
-		AppModule dingo.Module
-	}
-
-	// AppShutdownEvent is dispatched on app shutdown
-	AppShutdownEvent struct {
-		AppModule dingo.Module
-	}
-)
-
-func (a *appmodule) Inject(root *config.Area, router *router.Router, logger flamingo.Logger) {
+// Inject basic application dependencies
+func (a *appmodule) Inject(root *config.Area, router *web.Router, logger flamingo.Logger) {
 	a.root = root
 	a.router = router
 	a.logger = logger
@@ -49,8 +37,8 @@ func (a *appmodule) Inject(root *config.Area, router *router.Router, logger flam
 
 // Configure dependency injection
 func (a *appmodule) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*event.Subscriber)(nil)).ToInstance(a)
-	//pass a function that returns the Command
+	flamingo.BindEventSubscriber(injector).ToInstance(a)
+
 	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
 		return serveProvider(a, a.logger)
 	})
@@ -80,10 +68,12 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 	return cmd
 }
 
-func (a *appmodule) Notify(event event.Event) {
+// Notify upon flamingo Shutdown event
+func (a *appmodule) Notify(event flamingo.Event) {
 	switch event.(type) {
-	case *AppShutdownEvent:
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	case *flamingo.ShutdownEvent:
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		a.logger.Info("Shutdown server on ", a.server.Addr)
 
 		err := a.server.Shutdown(ctx)
@@ -95,7 +85,8 @@ func (a *appmodule) Notify(event event.Event) {
 
 type option func(config *appconfig)
 
-func ConfigDir(configdir string) option {
+// ConfigDir configuration option
+func ConfigDir(configdir string) func(config *appconfig) {
 	return func(config *appconfig) {
 		config.configDir = configdir
 	}
@@ -112,7 +103,6 @@ func App(modules []dingo.Module, options ...option) {
 
 	root.Modules = append([]dingo.Module{
 		new(framework.InitModule),
-		new(framework.Module),
 		new(zap.Module),
 		new(cmd.Module),
 	}, root.Modules...)
@@ -127,7 +117,7 @@ func App(modules []dingo.Module, options ...option) {
 	config.Load(root, cfg.configDir)
 
 	cmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
-	root.Injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})
+	root.Injector.GetInstance(new(web.EventRouterProvider)).(web.EventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Println(err)

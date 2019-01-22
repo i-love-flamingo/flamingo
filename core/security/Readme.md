@@ -88,7 +88,7 @@ it into list of Security Voters:
 
 ```
 func (m *Module) Configure(injector *dingo.Injector) {
-  injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.CustomVoter{})
+  injector.BindMulti(new(voter.SecurityVoter))).To(voter.CustomVoter{})
 }
 ```
 
@@ -107,7 +107,7 @@ To provide more roles it's possible to define additional Role Provider:
 
 ```
 func (m *Module) Configure(injector *dingo.Injector) {
-  injector.BindMulti((*provider.RoleProvider)(nil)).To(provider.CustomProvider{})
+  injector.BindMulti(new(provider.RoleProvider))).To(provider.CustomProvider{})
 }
 ```
 

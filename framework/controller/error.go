@@ -3,37 +3,38 @@ package controller
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/framework/router"
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
 	"github.com/pkg/errors"
 )
 
-type (
-	// Error controller
-	Error struct {
-		Responder responder.ErrorAware `inject:""`
-	}
-)
+// Error controller
+type Error struct {
+	responder *web.Responder
+}
+
+// Inject *web.Responder
+func (controller *Error) Inject(responder *web.Responder) {
+	controller.responder = responder
+}
 
 // Error responder
-func (controller *Error) Error(ctx context.Context, request *web.Request) web.Response {
+func (controller *Error) Error(ctx context.Context, request *web.Request) web.Result {
 	var err error
-	if ctx.Value(router.ERROR) != nil {
-		err = ctx.Value(router.ERROR).(error)
+	if ctx.Value(web.ERROR) != nil {
+		err = ctx.Value(web.ERROR).(error)
 	} else {
 		err = errors.New("no error found in provided context")
 	}
-	return controller.Responder.Error(ctx, err)
+	return controller.responder.ServerError(err)
 }
 
 // NotFound responder
-func (controller *Error) NotFound(ctx context.Context, request *web.Request) web.Response {
+func (controller *Error) NotFound(ctx context.Context, request *web.Request) web.Result {
 	var err error
-	if ctx.Value(router.ERROR) != nil {
-		err = ctx.Value(router.ERROR).(error)
+	if ctx.Value(web.ERROR) != nil {
+		err = ctx.Value(web.ERROR).(error)
 	} else {
 		err = errors.New("no error found in provided context")
 	}
-	return controller.Responder.ErrorNotFound(ctx, err)
+	return controller.responder.NotFound(err)
 }

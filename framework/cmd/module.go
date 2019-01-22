@@ -9,11 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 )
 
@@ -26,11 +25,10 @@ var once = sync.Once{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-
 	injector.Bind(new(cobra.Command)).AnnotatedWith("flamingo").ToProvider(
 		func(
 			commands []*cobra.Command,
-			eventRouterProvider router.EventRouterProvider,
+			eventRouterProvider web.EventRouterProvider,
 			logger flamingo.Logger,
 			config *struct {
 				Name string `inject:"config:cmd.name"`
@@ -63,14 +61,14 @@ func (m *Module) DefaultConfig() config.Map {
 	}
 }
 
-func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flamingo.Logger, m dingo.Module) {
+func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, logger flamingo.Logger, m dingo.Module) {
 	<-signals
 	logger.Info("start graceful shutdown")
 
 	stopper := make(chan struct{})
 
 	go func() {
-		eventRouter.Dispatch(context.Background(), &flamingo.AppShutdownEvent{AppModule: m})
+		eventRouter.Dispatch(context.Background(), &flamingo.ShutdownEvent{})
 		close(stopper)
 	}()
 
@@ -90,7 +88,7 @@ func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flaming
 // Run the root command
 func Run(injector *dingo.Injector) error {
 	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
-	injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})
+	injector.GetInstance(new(web.EventRouterProvider)).(web.EventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
 
 	return cmd.Execute()
 }

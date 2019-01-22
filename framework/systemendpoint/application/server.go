@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
@@ -33,11 +32,11 @@ func (s *SystemServer) Inject(
 }
 
 // Notify handles required actions on startup and shutdown
-func (s *SystemServer) Notify(e event.Event) {
+func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 	switch e.(type) {
-	case *flamingo.AppStartupEvent:
+	case *flamingo.StartupEvent:
 		s.startup()
-	case *flamingo.AppShutdownEvent:
+	case *flamingo.ShutdownEvent:
 		s.shutdown()
 	}
 }

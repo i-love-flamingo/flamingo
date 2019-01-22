@@ -1,21 +1,15 @@
 package healthcheck
 
-import (
-	"os"
-)
+import "os"
 
-type (
-	// FileSession is the healthcheck for session file handling
-	FileSession struct {
-		fileName string
-	}
-)
+// FileSession session backend health check
+type FileSession struct {
+	fileName string
+}
 
-var (
-	_ Status = &FileSession{}
-)
+var _ Status = &FileSession{}
 
-// Inject dependencies
+// Inject configuration for session backend
 func (s *FileSession) Inject(cfg *struct {
 	FileName string `inject:"config:session.file"`
 }) {

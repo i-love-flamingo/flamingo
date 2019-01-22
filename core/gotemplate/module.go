@@ -1,9 +1,10 @@
 package gotemplate
 
 import (
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/template"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 // Module for gotemplate engine
@@ -11,11 +12,12 @@ type Module struct{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind((*template.Engine)(nil)).In(dingo.ChildSingleton).To(engine{})
+	injector.Bind(new(flamingo.TemplateEngine)).In(dingo.ChildSingleton).To(engine{})
+	injector.Bind(new(urlRouter)).To(web.Router{})
 
-	template.BindFunc(injector, "url", new(urlFunc))
-	template.BindCtxFunc(injector, "get", new(getFunc))
-	template.BindCtxFunc(injector, "data", new(dataFunc))
+	flamingo.BindTemplateFunc(injector, "url", new(urlFunc))
+	flamingo.BindTemplateFunc(injector, "get", new(getFunc))
+	flamingo.BindTemplateFunc(injector, "data", new(dataFunc))
 }
 
 // DefaultConfig for gotemplate module

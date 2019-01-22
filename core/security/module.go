@@ -1,6 +1,7 @@
 package security
 
 import (
+	"flamingo.me/dingo"
 	authApplication "flamingo.me/flamingo/v3/core/auth/application"
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/core/security/application/role"
@@ -10,11 +11,11 @@ import (
 	"flamingo.me/flamingo/v3/core/security/interface/controller"
 	"flamingo.me/flamingo/v3/core/security/interface/middleware"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
+	// Module is the security module entry point
 	Module struct{}
 
 	routes struct {
@@ -22,27 +23,31 @@ type (
 	}
 )
 
+// Inject dependencies
 func (r *routes) Inject(c *controller.DataController) {
 	r.dataController = c
 }
 
-func (r *routes) Routes(registry *router.Registry) {
+// Routes registers security controller
+func (r *routes) Routes(registry *web.Registry) {
 	registry.HandleData("security.isLoggedIn", r.dataController.IsLoggedIn)
 	registry.HandleData("security.isLoggedOut", r.dataController.IsLoggedOut)
 	registry.HandleData("security.isGranted", r.dataController.IsGranted)
 }
 
+// Configure security dependency injection
 func (m *Module) Configure(injector *dingo.Injector) {
-	router.Bind(injector, &routes{})
+	web.Bind(injector, &routes{})
 
-	injector.BindMulti((*provider.RoleProvider)(nil)).To(provider.AuthRoleProvider{})
-	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.IsLoggedInVoter{})
-	injector.BindMulti((*voter.SecurityVoter)(nil)).To(voter.RoleVoter{})
-	injector.Bind((*role.Service)(nil)).To(role.ServiceImpl{})
-	injector.Bind((*application.SecurityService)(nil)).To(application.SecurityServiceImpl{})
-	injector.Bind((*middleware.RedirectUrlMaker)(nil)).To(authApplication.AuthManager{})
+	injector.BindMulti(new(provider.RoleProvider)).To(provider.AuthRoleProvider{})
+	injector.BindMulti(new(voter.SecurityVoter)).To(voter.IsLoggedInVoter{})
+	injector.BindMulti(new(voter.SecurityVoter)).To(voter.RoleVoter{})
+	injector.Bind(new(role.Service)).To(role.ServiceImpl{})
+	injector.Bind(new(application.SecurityService)).To(application.SecurityServiceImpl{})
+	injector.Bind(new(middleware.RedirectURLMaker)).To(authApplication.AuthManager{})
 }
 
+// DefaultConfig for core security module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"security": config.Map{

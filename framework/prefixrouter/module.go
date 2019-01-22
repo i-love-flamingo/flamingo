@@ -7,12 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
@@ -26,9 +25,9 @@ type Module struct {
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind((*http.ServeMux)(nil)).ToInstance(http.NewServeMux())
+	injector.Bind(new(http.ServeMux)).ToInstance(http.NewServeMux())
 	injector.BindMulti(new(cobra.Command)).ToProvider(serveCmd(m))
-	injector.BindMulti((*event.Subscriber)(nil)).ToInstance(m)
+	flamingo.BindEventSubscriber(injector).ToInstance(m)
 }
 
 // Inject dependencies
@@ -67,7 +66,8 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 		frontRouter.SetFallbackHandlers(fallbackHandlers)
 		frontRouter.SetPrimaryHandlers(primaryHandlers)
 
-		for _, area := range root.GetFlatContexts() {
+		areas, _ := root.GetFlatContexts()
+		for _, area := range areas {
 			baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl")
 
 			if !ok {
@@ -82,8 +82,8 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 			}
 
 			m.logger.WithField("category", "prefixrouter").Info("Routing ", area.Name, " at ", baseurl)
-			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
-			areaRouter := area.Injector.GetInstance(router.Router{}).(*router.Router)
+			area.Injector.Bind(new(flamingo.Logger)).ToInstance(m.logger.WithField("area", area.Name))
+			areaRouter := area.Injector.GetInstance(web.Router{}).(*web.Router)
 			areaRouter.Init(area)
 			bu, _ := url.Parse("scheme://" + baseurl)
 
@@ -105,10 +105,11 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 }
 
 // Notify handles the app shutdown event
-func (m *Module) Notify(event event.Event) {
+func (m *Module) Notify(event flamingo.Event) {
 	switch event.(type) {
-	case *flamingo.AppShutdownEvent:
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	case *flamingo.ShutdownEvent:
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 		m.logger.WithField("category", "prefixrouter").Info("Shutdown server on ", m.server.Addr)
 
 		err := m.server.Shutdown(ctx)

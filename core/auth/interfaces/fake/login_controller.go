@@ -6,52 +6,49 @@ import (
 
 	"flamingo.me/flamingo/v3/core/auth/application"
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (
+	// LoginController fake implementation
 	LoginController struct {
-		responder.RedirectAware
-		responder.RenderAware
-
-		authManager *application.AuthManager
-
+		responder     *web.Responder
+		authManager   *application.AuthManager
 		loginTemplate string
 	}
 )
 
+// Inject dependencies
 func (l *LoginController) Inject(
-	redirectAware responder.RedirectAware,
-	renderAware responder.RenderAware,
+	responder *web.Responder,
 	authManager *application.AuthManager,
 	cfg *struct {
 		FakeLoginTemplate string `inject:"config:auth.fakeLoginTemplate"`
 	},
 ) {
-	l.RedirectAware = redirectAware
-	l.RenderAware = renderAware
+	l.responder = responder
 	l.authManager = authManager
 	l.loginTemplate = cfg.FakeLoginTemplate
 }
 
-func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Response {
-	redirectUrl, ok := request.Param1("redirecturl")
-	if !ok || redirectUrl == "" {
-		redirectUrl = request.Request().Referer()
+// Get http action
+func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Result {
+	redirectURL, ok := request.Params["redirecturl"]
+	if !ok || redirectURL == "" {
+		redirectURL = request.Request().Referer()
 	}
 
-	if refURL, err := url.Parse(redirectUrl); err != nil || refURL.Host != request.Request().Host {
+	if refURL, err := url.Parse(redirectURL); err != nil || refURL.Host != request.Request().Host {
 		u, _ := l.authManager.URL(ctx, "")
-		redirectUrl = u.String()
+		redirectURL = u.String()
 	}
 
-	if redirectUrl != "" {
-		request.Session().Store("auth.redirect", redirectUrl)
+	if redirectURL != "" {
+		request.Session().Store("auth.redirect", redirectURL)
 	}
 
 	if l.loginTemplate != "" {
-		return l.Render(ctx, l.loginTemplate, nil)
+		return l.responder.Render(l.loginTemplate, nil)
 	}
 
-	return l.Redirect("auth.callback", nil)
+	return l.responder.RouteRedirect("auth.callback", nil)
 }

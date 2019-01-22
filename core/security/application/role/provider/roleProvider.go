@@ -10,19 +10,23 @@ import (
 )
 
 type (
+	// RoleProvider interface
 	RoleProvider interface {
 		All(context.Context, *web.Session) []securityDomain.Role
 	}
 
+	// AuthRoleProvider implements the RoleProvider interface for authenticated users
 	AuthRoleProvider struct {
 		userService application.UserServiceInterface
 	}
 )
 
+// Inject userService dependency
 func (p *AuthRoleProvider) Inject(us application.UserServiceInterface) {
 	p.userService = us
 }
 
+// All return all associated roles
 func (p *AuthRoleProvider) All(ctx context.Context, session *web.Session) []securityDomain.Role {
 	var roles []securityDomain.Role
 

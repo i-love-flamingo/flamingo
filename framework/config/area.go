@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/dingo"
 	"github.com/pkg/errors"
 )
 
@@ -69,9 +69,12 @@ func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 
 // GetFlatContexts returns a map of context-relative-name->*Area, which has been flatted to inherit all parent's
 // tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of area.
-func (area *Area) GetFlatContexts() []*Area {
+func (area *Area) GetFlatContexts() ([]*Area, error) {
 	var result []*Area
-	flat := area.Flat()
+	flat, err := area.Flat()
+	if err != nil {
+		return nil, err
+	}
 
 	for relativeContextKey, context := range flat {
 		result = append(result, &Area{
@@ -82,11 +85,11 @@ func (area *Area) GetFlatContexts() []*Area {
 		})
 
 	}
-	return result
+	return result, nil
 }
 
 // Add to the map (deep merge)
-func (m Map) Add(cfg Map) {
+func (m Map) Add(cfg Map) error {
 	// so we can not deep merge if we have `.` in our own keys, we need to ensure our keys are clean first
 	for k, v := range m {
 		var toClean Map
@@ -98,7 +101,9 @@ func (m Map) Add(cfg Map) {
 			delete(m, k)
 		}
 		if toClean != nil {
-			m.Add(toClean)
+			if err := m.Add(toClean); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -113,11 +118,15 @@ func (m Map) Add(cfg Map) {
 			k, sub := strings.SplitN(k, ".", 2)[0], strings.SplitN(k, ".", 2)[1]
 			if mm, ok := m[k]; !ok {
 				m[k] = make(Map)
-				m[k].(Map).Add(Map{sub: v})
+				if err := m[k].(Map).Add(Map{sub: v}); err != nil {
+					return err
+				}
 			} else if mm, ok := mm.(Map); ok {
-				mm.Add(Map{sub: v})
+				if err := mm.Add(Map{sub: v}); err != nil {
+					return err
+				}
 			} else {
-				panic(fmt.Sprintf("Config conflict! %q.%q: %v into %v", k, sub, v, m[k]))
+				return errors.Errorf("config conflict: %q.%q: %v into %v", k, sub, v, m[k])
 			}
 		} else {
 			_, mapleft := m[k].(Map)
@@ -126,17 +135,47 @@ func (m Map) Add(cfg Map) {
 			if mapleft && v == nil {
 				m[k] = nil
 			} else if mapleft && mapright {
-				m[k].(Map).Add(v.(Map))
+				if err := m[k].(Map).Add(v.(Map)); err != nil {
+					return err
+				}
 			} else if mapleft && !mapright {
-				panic(fmt.Sprintf("Config conflict! %q:%v into %v", k, v, m[k]))
+				return errors.Errorf("config conflict: %q:%v into %v", k, v, m[k])
 			} else if mapright {
 				m[k] = make(Map)
-				m[k].(Map).Add(v.(Map))
+				if err := m[k].(Map).Add(v.(Map)); err != nil {
+					return err
+				}
 			} else {
+				// convert non-float64 to float64
+				switch vv := v.(type) {
+				case int:
+					v = float64(vv)
+				case int8:
+					v = float64(vv)
+				case int16:
+					v = float64(vv)
+				case int32:
+					v = float64(vv)
+				case int64:
+					v = float64(vv)
+				case uint:
+					v = float64(vv)
+				case uint8:
+					v = float64(vv)
+				case uint16:
+					v = float64(vv)
+				case uint32:
+					v = float64(vv)
+				case uint64:
+					v = float64(vv)
+				case float32:
+					v = float64(vv)
+				}
 				m[k] = v
 			}
 		}
 	}
+	return nil
 }
 
 // Flat map
@@ -203,7 +242,7 @@ func (m Map) Get(key string) (interface{}, bool) {
 
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
-func (area *Area) GetInitializedInjector() *dingo.Injector {
+func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 	var injector *dingo.Injector
 	if area.Parent != nil {
 		injector = area.Parent.Injector.Child()
@@ -215,16 +254,24 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 	area.Configuration = make(Map)
 	for _, module := range area.Modules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
-			area.Configuration.Add(cfgmodule.DefaultConfig())
+			if err := area.Configuration.Add(cfgmodule.DefaultConfig()); err != nil {
+				return nil, err
+			}
 		}
 	}
 
-	area.Configuration.Add(Map{"area": area.Name})
-	area.Configuration.Add(area.LoadedConfig)
+	if err := area.Configuration.Add(Map{"area": area.Name}); err != nil {
+		return nil, err
+	}
+	if err := area.Configuration.Add(area.LoadedConfig); err != nil {
+		return nil, err
+	}
 
 	for _, module := range area.Modules {
 		if cfgmodule, ok := module.(OverrideConfigModule); ok {
-			area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration))
+			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -249,23 +296,30 @@ func (area *Area) GetInitializedInjector() *dingo.Injector {
 
 	injector.InitModules(area.Modules...)
 
-	return injector
+	return injector, nil
 }
 
 // Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overriden) of the parent context tree.
-func (area *Area) Flat() map[string]*Area {
+func (area *Area) Flat() (map[string]*Area, error) {
 	res := make(map[string]*Area)
 	res[area.Name] = area
-
-	area.Injector = area.GetInitializedInjector()
+	var err error
+	area.Injector, err = area.GetInitializedInjector()
+	if err != nil {
+		return nil, err
+	}
 
 	for _, child := range area.Childs {
-		for cn, flatchild := range child.Flat() {
+		flat, err := child.Flat()
+		if err != nil {
+			return nil, err
+		}
+		for cn, flatchild := range flat {
 			res[area.Name+`/`+cn] = MergeFrom(*flatchild, *area)
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 // MergeFrom merges two Contexts into a new one

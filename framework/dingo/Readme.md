@@ -1,1 +1,0 @@
-See flamingo.me/dingo

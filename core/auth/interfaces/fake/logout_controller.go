@@ -7,35 +7,36 @@ import (
 	"flamingo.me/flamingo/v3/core/auth/application/fake"
 	"flamingo.me/flamingo/v3/core/auth/domain"
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (
+	//LogoutController fake implementation
 	LogoutController struct {
-		responder.RedirectAware
-
+		responder      *web.Responder
 		authManager    *application.AuthManager
 		eventPublisher *application.EventPublisher
 	}
 )
 
+// Inject dependencies
 func (l *LogoutController) Inject(
-	redirectAware responder.RedirectAware,
+	responder *web.Responder,
 	authManager *application.AuthManager,
 	eventPublisher *application.EventPublisher,
 ) {
-	l.RedirectAware = redirectAware
+	l.responder = responder
 	l.authManager = authManager
 	l.eventPublisher = eventPublisher
 }
 
-func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Response {
+// Get HTTP action
+func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Result {
 	request.Session().Delete(fake.UserSessionKey)
 	l.eventPublisher.PublishLogoutEvent(ctx, &domain.LogoutEvent{
 		Session: request.Session(),
 	})
 
-	redirectUrl, _ := l.authManager.URL(ctx, "")
+	redirectURL, _ := l.authManager.URL(ctx, "")
 
-	return l.RedirectURL(redirectUrl.String())
+	return l.responder.URLRedirect(redirectURL)
 }

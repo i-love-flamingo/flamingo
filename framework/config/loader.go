@@ -1,8 +1,6 @@
 package config
 
 import (
-	"bytes"
-	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,32 +11,12 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-var debugLog bool
-var additionalConfig stringFlags
-
-type stringFlags []string
-
-func (s *stringFlags) String() string {
-	return strings.Join(*s, ", ")
-}
-
-func (s *stringFlags) Set(value string) error {
-	*s = append(*s, value)
-	return nil
-}
-
-func init() {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.SetOutput(new(bytes.Buffer))
-
-	fs.BoolVar(&debugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
-	fs.Var(&additionalConfig, "flamingo-config", "add multiple flamingo config additions")
-
-	if err := fs.Parse(os.Args[1:]); err == flag.ErrHelp {
-		fs.SetOutput(os.Stderr)
-		fs.PrintDefaults()
-	}
-}
+var (
+	// DebugLog flag
+	DebugLog bool
+	// AdditionalConfig to be loaded
+	AdditionalConfig []string
+)
 
 // Load configuration in basedir
 func Load(root *Area, basedir string) error {
@@ -49,29 +27,34 @@ func Load(root *Area, basedir string) error {
 		if file == "" {
 			continue
 		}
-		loadConfigFile(root, file)
+		if err := loadConfigFile(root, file); err != nil {
+			return err
+		}
 	}
 
-	for _, add := range additionalConfig {
-		if debugLog {
+	for _, add := range AdditionalConfig {
+		if DebugLog {
 			log.Printf("Loading %q", add)
 		}
-		loadConfig(root, []byte(add))
+		if err := loadConfig(root, []byte(add)); err != nil {
+			return err
+		}
 	}
 
-	root.GetFlatContexts()
-
-	return nil
+	_, err := root.GetFlatContexts()
+	return err
 }
 
 // LoadConfigFile loads a config
 func LoadConfigFile(area *Area, file string) error {
-	err := loadConfigFile(area, file)
-	area.GetFlatContexts()
+	if err := loadConfigFile(area, file); err != nil {
+		return err
+	}
+	_, err := area.GetFlatContexts()
 	return err
 }
 
-func load(area *Area, basedir, curdir string) error {
+func load(area *Area, basedir, curdir string) {
 	loadConfigFile(area, filepath.Join(basedir, curdir, "config.yml"))
 	loadRoutes(area, filepath.Join(basedir, curdir, "routes.yml"))
 	for _, context := range strings.Split(os.Getenv("CONTEXT"), ":") {
@@ -87,8 +70,6 @@ func load(area *Area, basedir, curdir string) error {
 	for _, child := range area.Childs {
 		load(child, basedir, filepath.Join(curdir, child.Name))
 	}
-
-	return nil
 }
 
 var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
@@ -96,12 +77,12 @@ var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
 func loadConfigFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if debugLog {
+		if DebugLog {
 			log.Println(err)
 		}
 		return err
 	}
-	if debugLog {
+	if DebugLog {
 		log.Println(area.Name, "loading", filename)
 	}
 	return loadConfig(area, config)
@@ -122,7 +103,7 @@ func loadConfig(area *Area, config []byte) error {
 	cfg := make(Map)
 	err := yaml.Unmarshal(config, &cfg)
 	if err != nil {
-		if debugLog {
+		if DebugLog {
 			log.Println(err)
 		}
 		return err
@@ -132,14 +113,13 @@ func loadConfig(area *Area, config []byte) error {
 		area.LoadedConfig = make(Map)
 	}
 
-	area.LoadedConfig.Add(cfg)
-	return nil
+	return area.LoadedConfig.Add(cfg)
 }
 
 func loadRoutes(area *Area, filename string) error {
 	routes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if debugLog {
+		if DebugLog {
 			log.Println(err)
 		}
 		return err
@@ -147,13 +127,13 @@ func loadRoutes(area *Area, filename string) error {
 
 	err = yaml.Unmarshal(routes, &area.Routes)
 	if err != nil {
-		if debugLog {
+		if DebugLog {
 			log.Println(err)
 		}
 		return err
 	}
 
-	if debugLog {
+	if DebugLog {
 		log.Println(area.Name, "loading", filename)
 	}
 

@@ -23,7 +23,7 @@ func (t *testStatus) Status() (alive bool, details string) {
 
 func TestController_Healthcheck(t *testing.T) {
 	type fields struct {
-		statusProvider StatusProvider
+		statusProvider statusProvider
 	}
 	type args struct {
 		request *http.Request

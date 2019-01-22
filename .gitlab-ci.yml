@@ -13,7 +13,7 @@ docker 1.11:
   only:
   - master
 
-.dep: &dep
+.init:
   stage: test
   image: iloveflamingo/buildenv:1.11
   cache:
@@ -24,27 +24,24 @@ docker 1.11:
   - /pact/pact-go_linux_amd64 daemon &
 
 cover flamingo:
-  <<: *dep
+  extends: .init
   script:
   - go test -coverprofile cover.out ./...
   - go tool cover -func cover.out
 
 test flamingo:
-  <<: *dep
+  extends: .init
   script:
   - go test -race ./...
 
 static-check flamingo:
-  <<: *dep
-  allow_failure: true
+  extends: .init
   script:
-  - golint -set_exit_status $(go list ./...)
+  - golint -set_exit_status ./...
   - go vet ./...
-  - gocritic check-project .
+    #  - gocritic check-project .
 
-#vet flamingo:
-#  <<: *dep
-#  script:
-#  - go test -vet 'all' -race ./...
-#  allow_failure: true
-
+vet flamingo:
+  extends: .init
+  script:
+  - go test -vet 'all' -race ./...

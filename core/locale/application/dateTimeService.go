@@ -9,12 +9,13 @@ import (
 )
 
 type (
+	// DateTimeServiceInterface to define a service to obtain formatted date time data
 	DateTimeServiceInterface interface {
 		GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error)
 		GetDateTimeFormatter(dateTime time.Time) (*domain.DateTimeFormatter, error)
 	}
 
-	// dateTimeService is a basic support service for date/time parsing
+	// DateTimeService is a basic support service for date/time parsing
 	DateTimeService struct {
 		dateFormat     string
 		timeFormat     string
@@ -44,7 +45,7 @@ func (dts *DateTimeService) Inject(
 	dts.location = config.Location
 }
 
-//GetDateTimeFromString Need string in format ISO: "2017-11-25T06:30:00Z"
+// GetDateTimeFormatterFromIsoString Need string in format ISO: "2017-11-25T06:30:00Z"
 func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
 	timeResult, err := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
 	if err != nil {
@@ -54,7 +55,7 @@ func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString str
 	return dts.GetDateTimeFormatter(timeResult)
 }
 
-//GetDateTimeFormatter from time
+// GetDateTimeFormatter from time
 func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.DateTimeFormatter, error) {
 	loc, err := dts.loadLocation()
 	if err != nil {

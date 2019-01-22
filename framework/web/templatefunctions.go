@@ -4,16 +4,23 @@ import (
 	"context"
 )
 
-type partialDataContextKey string
+type (
+	partialDataContextKey string
+
+	// SetPartialDataFunc allows to set partial data
+	SetPartialDataFunc struct{}
+
+	// GetPartialDataFunc allows to get partial data
+	GetPartialDataFunc struct{}
+)
 
 const ctxKey partialDataContextKey = "partialData"
 
-type SetPartialDataFunc struct{}
-
+// Func getter to bind the context
 func (*SetPartialDataFunc) Func(c context.Context) interface{} {
 	return func(key string, val interface{}) interface{} {
-		r, ok := FromContext(c)
-		if !ok {
+		r := RequestFromContext(c)
+		if r == nil {
 			return nil
 		}
 
@@ -30,12 +37,11 @@ func (*SetPartialDataFunc) Func(c context.Context) interface{} {
 	}
 }
 
-type GetPartialDataFunc struct{}
-
+// Func getter to bind the context
 func (*GetPartialDataFunc) Func(c context.Context) interface{} {
 	return func() map[string]interface{} {
-		r, ok := FromContext(c)
-		if !ok {
+		r := RequestFromContext(c)
+		if r == nil {
 			return nil
 		}
 

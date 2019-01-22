@@ -3,7 +3,7 @@ package systemendpoint
 import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/event"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/application"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
@@ -17,7 +17,7 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*event.Subscriber)(nil)).To(&application.SystemServer{})
+	flamingo.BindEventSubscriber(injector).To(&application.SystemServer{})
 }
 
 // DefaultConfig for the module

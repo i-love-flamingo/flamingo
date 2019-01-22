@@ -1,21 +1,21 @@
 package templatefunctions
 
 import (
+	"context"
 	"fmt"
 
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/framework/config"
 )
 
-type (
-	// PriceFormatFunc for formatting prices
-	PriceFormatLongFunc struct {
-		config             config.Map
-		translationService application.TranslationServiceInterface
-		priceFormat        *PriceFormatFunc
-	}
-)
+// PriceFormatLongFunc for formatting prices
+type PriceFormatLongFunc struct {
+	config             config.Map
+	translationService application.TranslationServiceInterface
+	priceFormat        *PriceFormatFunc
+}
 
+// Inject dependencies
 func (pff *PriceFormatLongFunc) Inject(
 	serviceInterface application.TranslationServiceInterface,
 	formatFunc *PriceFormatFunc,
@@ -29,9 +29,9 @@ func (pff *PriceFormatLongFunc) Inject(
 }
 
 // Func as implementation of debug method
-func (pff *PriceFormatLongFunc) Func() interface{} {
+func (pff *PriceFormatLongFunc) Func(ctx context.Context) interface{} {
 	return func(value interface{}, currency string, currencyLabel string) string {
-		priceFunc := pff.priceFormat.Func().(func(value interface{}, currency string) string)
+		priceFunc := pff.priceFormat.Func(ctx).(func(value interface{}, currency string) string)
 		price := priceFunc(value, currency)
 		currencyLabel = pff.translationService.Translate(currencyLabel, "", "", 1, nil)
 		format, ok := pff.config["formatLong"].(string)

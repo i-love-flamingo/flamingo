@@ -44,7 +44,7 @@ Adding the fake implementation:
 In module.go register the fake implementation:
 
 ```
-injector.Override((*productdomain.BrandService)(nil), "").To(product.FakeService{})
+injector.Override(new(productdomain.BrandService), "").To(product.FakeService{})
 ```
 
 Better is to make this even configurable. And then add feature flags to your configuration in dev context (context_dev.yml).

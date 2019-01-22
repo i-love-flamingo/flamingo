@@ -10,18 +10,24 @@ import (
 )
 
 const (
+	// VoterStrategyAffirmative allows access if there is a positive vote
 	VoterStrategyAffirmative = "affirmative"
-	VoterStrategyConsensus   = "consensus"
-	VoterStrategyUnanimous   = "unanimous"
+	// VoterStrategyConsensus allows access if there are more positive votes
+	VoterStrategyConsensus = "consensus"
+	// VoterStrategyUnanimous allows access if there are no negative votes
+	VoterStrategyUnanimous = "unanimous"
 )
 
 type (
+	// SecurityService decides if a user is logged in/out, or granted a certain permission
+	// todo name arguments
 	SecurityService interface {
 		IsLoggedIn(context.Context, *web.Session) bool
 		IsLoggedOut(context.Context, *web.Session) bool
 		IsGranted(context.Context, *web.Session, string, interface{}) bool
 	}
 
+	// SecurityServiceImpl default implementation of the SecurityService
 	SecurityServiceImpl struct {
 		voters            []voter.SecurityVoter
 		voterStrategy     string
@@ -29,10 +35,9 @@ type (
 	}
 )
 
-var (
-	_ SecurityService = &SecurityServiceImpl{}
-)
+var _ SecurityService = &SecurityServiceImpl{}
 
+// Inject dependencies
 func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, cfg *struct {
 	VoterStrategy     string `inject:"config:security.roles.voters.strategy"`
 	AllowIfAllAbstain bool   `inject:"config:security.roles.voters.allowIfAllAbstain"`
@@ -42,14 +47,17 @@ func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, cfg *struct {
 	s.allowIfAllAbstain = cfg.AllowIfAllAbstain
 }
 
+// IsLoggedIn checks if the user is granted login permission
 func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *web.Session) bool {
 	return s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
 }
 
+// IsLoggedOut checks if the user is not granted login permission
 func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *web.Session) bool {
 	return !s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
 }
 
+// IsGranted checks for a specific permission of the user
 func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *web.Session, permission string, object interface{}) bool {
 	var results []int
 	for index := range s.voters {

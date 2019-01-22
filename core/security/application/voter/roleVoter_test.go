@@ -8,7 +8,6 @@ import (
 	"flamingo.me/flamingo/v3/core/security/domain"
 	domainMocks "flamingo.me/flamingo/v3/core/security/domain/mocks"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -21,7 +20,6 @@ type (
 		object      *domainMocks.RoleSet
 
 		context    context.Context
-		session    *sessions.Session
 		webSession *web.Session
 	}
 )
@@ -32,8 +30,7 @@ func TestRoleVoterTestSuite(t *testing.T) {
 
 func (t *RoleVoterTestSuite) SetupSuite() {
 	t.context = context.Background()
-	t.session = sessions.NewSession(nil, "-")
-	t.webSession = web.NewSession(t.session)
+	t.webSession = web.EmptySession()
 }
 
 func (t *RoleVoterTestSuite) SetupTest() {

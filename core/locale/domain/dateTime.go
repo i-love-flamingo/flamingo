@@ -1,62 +1,58 @@
 package domain
 
-import (
-	"time"
-)
+import "time"
 
-type (
-	// DateTimeFormatter has a couple of helpful methods to format date and times
-	DateTimeFormatter struct {
-		DateFormat     string
-		TimeFormat     string
-		DateTimeFormat string
-		localDateTime  time.Time
-		dateTime       time.Time
-	}
-)
+// DateTimeFormatter has a couple of helpful methods to format date and times
+type DateTimeFormatter struct {
+	DateFormat     string
+	TimeFormat     string
+	DateTimeFormat string
+	localDateTime  time.Time
+	dateTime       time.Time
+}
 
-//SetDateTime Setter for private member
-func (dt *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
-	dt.dateTime = time
-	dt.localDateTime = localtime
+// SetDateTime setter for private member
+func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
+	dtf.dateTime = time
+	dtf.localDateTime = localtime
 }
 
 // Format datetime
-func (dts *DateTimeFormatter) Format(format string) string {
-	return dts.dateTime.Format(format)
+func (dtf *DateTimeFormatter) Format(format string) string {
+	return dtf.dateTime.Format(format)
 }
 
 // FormatLocale formats the local time
-func (dts *DateTimeFormatter) FormatLocale(format string) string {
-	return dts.localDateTime.Format(format)
+func (dtf *DateTimeFormatter) FormatLocale(format string) string {
+	return dtf.localDateTime.Format(format)
 }
 
 // FormatDate formats the date
-func (dts *DateTimeFormatter) FormatDate() string {
-	return dts.dateTime.Format(dts.DateFormat)
+func (dtf *DateTimeFormatter) FormatDate() string {
+	return dtf.dateTime.Format(dtf.DateFormat)
 }
 
 // FormatTime formats the time
-func (dts *DateTimeFormatter) FormatTime() string {
-	return dts.dateTime.Format(dts.TimeFormat)
+func (dtf *DateTimeFormatter) FormatTime() string {
+	return dtf.dateTime.Format(dtf.TimeFormat)
 }
 
 // FormatDateTime formats both date and time
-func (dts *DateTimeFormatter) FormatDateTime() string {
-	return dts.dateTime.Format(dts.DateTimeFormat)
+func (dtf *DateTimeFormatter) FormatDateTime() string {
+	return dtf.dateTime.Format(dtf.DateTimeFormat)
 }
 
 // FormatToLocalDate formats for local date
-func (dts *DateTimeFormatter) FormatToLocalDate() string {
-	return dts.localDateTime.Format(dts.DateFormat)
+func (dtf *DateTimeFormatter) FormatToLocalDate() string {
+	return dtf.localDateTime.Format(dtf.DateFormat)
 }
 
 // FormatToLocalTime formats the local time
-func (dts *DateTimeFormatter) FormatToLocalTime() string {
-	return dts.localDateTime.Format(dts.TimeFormat)
+func (dtf *DateTimeFormatter) FormatToLocalTime() string {
+	return dtf.localDateTime.Format(dtf.TimeFormat)
 }
 
 // FormatToLocalDateTime formats both locale date and time
-func (dts *DateTimeFormatter) FormatToLocalDateTime() string {
-	return dts.localDateTime.Format(dts.DateTimeFormat)
+func (dtf *DateTimeFormatter) FormatToLocalDateTime() string {
+	return dtf.localDateTime.Format(dtf.DateTimeFormat)
 }

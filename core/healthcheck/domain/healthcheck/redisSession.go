@@ -1,21 +1,15 @@
 package healthcheck
 
-import (
-	"github.com/garyburd/redigo/redis"
-)
+import "github.com/garyburd/redigo/redis"
 
-type (
-	// RedisSession is the healthcheck for the redis session
-	RedisSession struct {
-		pool *redis.Pool
-	}
-)
+// RedisSession pool status check
+type RedisSession struct {
+	pool *redis.Pool
+}
 
-var (
-	_ Status = &RedisSession{}
-)
+var _ Status = &RedisSession{}
 
-// Inject dependencies
+// Inject redis pool for session
 func (s *RedisSession) Inject(pool *redis.Pool) {
 	s.pool = pool
 }

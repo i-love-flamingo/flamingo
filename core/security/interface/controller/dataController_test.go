@@ -4,13 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"net/http"
-
 	"flamingo.me/flamingo/v3/core/security/application/mocks"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/gorilla/sessions"
+	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -22,7 +18,6 @@ type (
 
 		context    context.Context
 		request    *web.Request
-		session    *sessions.Session
 		webSession *web.Session
 	}
 )
@@ -33,12 +28,9 @@ func TestDataControllerTestSuite(t *testing.T) {
 
 func (t *DataControllerTestSuite) SetupSuite() {
 	t.context = context.Background()
-	t.session = sessions.NewSession(nil, "")
-	t.webSession = web.NewSession(t.session)
-	t.request = web.RequestFromRequest(&http.Request{}, web.NewSession(t.session))
-	t.request.LoadParams(map[string]string{
-		"permission": "SomePermission",
-	})
+	t.webSession = web.EmptySession()
+	t.request = web.CreateRequest(nil, t.webSession)
+	t.request.Params["permission"] = "SomePermission"
 }
 
 func (t *DataControllerTestSuite) SetupTest() {
@@ -55,7 +47,7 @@ func (t *DataControllerTestSuite) TearDownTest() {
 
 func (t *DataControllerTestSuite) TestIsLoggedIn() {
 	t.securityService.On("IsLoggedIn", t.context, t.webSession).Return(true).Once()
-	result := t.controller.IsLoggedIn(t.context, t.request)
+	result := t.controller.IsLoggedIn(t.context, t.request, nil)
 	isLoggedIn, ok := result.(bool)
 	t.True(isLoggedIn)
 	t.True(ok)
@@ -63,7 +55,7 @@ func (t *DataControllerTestSuite) TestIsLoggedIn() {
 
 func (t *DataControllerTestSuite) TestIsLoggedOut() {
 	t.securityService.On("IsLoggedOut", t.context, t.webSession).Return(true).Once()
-	result := t.controller.IsLoggedOut(t.context, t.request)
+	result := t.controller.IsLoggedOut(t.context, t.request, nil)
 	isLoggedOut, ok := result.(bool)
 	t.True(isLoggedOut)
 	t.True(ok)
@@ -71,7 +63,7 @@ func (t *DataControllerTestSuite) TestIsLoggedOut() {
 
 func (t *DataControllerTestSuite) TestIsGranted() {
 	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
-	result := t.controller.IsGranted(t.context, t.request)
+	result := t.controller.IsGranted(t.context, t.request, nil)
 	isGranted, ok := result.(bool)
 	t.True(isGranted)
 	t.True(ok)

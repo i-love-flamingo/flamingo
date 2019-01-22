@@ -2,17 +2,18 @@ package fake
 
 import (
 	"context"
+	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth/application/fake"
 	"flamingo.me/flamingo/v3/core/auth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (
+	// CallbackController fake controller
 	CallbackController struct {
-		responder.RedirectAware
+		responder *web.Responder
 
 		mappingService *domain.UserMappingService
 
@@ -20,19 +21,21 @@ type (
 	}
 )
 
+// Inject dependencies
 func (c *CallbackController) Inject(
-	redirectAware responder.RedirectAware,
+	responder *web.Responder,
 	mappingService *domain.UserMappingService,
 	config *struct {
 		UserData config.Map `inject:"config:auth.fakeUserData"`
 	},
 ) {
-	c.RedirectAware = redirectAware
+	c.responder = responder
 	c.mappingService = mappingService
 	c.userData = config.UserData
 }
 
-func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Response {
+// Get http action
+func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Result {
 	user := c.mappingService.MapToUser(c.userData, request.Session())
 	if user == nil {
 		user = domain.Guest
@@ -40,10 +43,14 @@ func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Re
 	request.Session().Store(fake.UserSessionKey, user)
 
 	value, _ := request.Session().Load("auth.redirect")
-	redirectUrl, ok := value.(string)
-	if !ok || redirectUrl == "" {
-		return c.Redirect("home", nil)
+	redirectURL, ok := value.(string)
+	if !ok || redirectURL == "" {
+		return c.responder.RouteRedirect("home", nil)
+	}
+	url, err := url.Parse(redirectURL)
+	if err != nil {
+		return c.responder.RouteRedirect("home", nil)
 	}
 
-	return c.RedirectURL(redirectUrl)
+	return c.responder.URLRedirect(url)
 }

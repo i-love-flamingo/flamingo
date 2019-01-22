@@ -1,8 +1,8 @@
 package requestlogger
 
 import (
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -12,5 +12,5 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*router.Filter)(nil)).To(logger{})
+	injector.BindMulti(new(web.Filter)).To(logger{})
 }

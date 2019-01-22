@@ -1,14 +1,14 @@
 package auth
 
 import (
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/auth/application"
 	fakeService "flamingo.me/flamingo/v3/core/auth/application/fake"
 	"flamingo.me/flamingo/v3/core/auth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/auth/interfaces/fake"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/event"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 // Module for core.auth
@@ -21,23 +21,24 @@ type Module struct {
 // Configure core.auth module
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
-	injector.Bind((*interfaces.LogoutRedirectAware)(nil)).To(interfaces.DefaultLogoutRedirect{})
-	injector.BindMulti((*event.Subscriber)(nil)).To(&application.EventHandler{})
+	injector.Bind(new(interfaces.LogoutRedirectAware)).To(interfaces.DefaultLogoutRedirect{})
+	flamingo.BindEventSubscriber(injector).To(&application.EventHandler{})
 	if !m.UseFake {
-		injector.Bind((*application.UserServiceInterface)(nil)).To(application.UserService{})
-		injector.Bind((*interfaces.LoginControllerInterface)(nil)).To(interfaces.LoginController{})
-		injector.Bind((*interfaces.CallbackControllerInterface)(nil)).To(interfaces.CallbackController{})
-		injector.Bind((*interfaces.LogoutControllerInterface)(nil)).To(interfaces.LogoutController{})
+		injector.Bind(new(application.UserServiceInterface)).To(application.UserService{})
+		injector.Bind(new(interfaces.LoginControllerInterface)).To(interfaces.LoginController{})
+		injector.Bind(new(interfaces.CallbackControllerInterface)).To(interfaces.CallbackController{})
+		injector.Bind(new(interfaces.LogoutControllerInterface)).To(interfaces.LogoutController{})
 	} else {
-		injector.Bind((*application.UserServiceInterface)(nil)).To(fakeService.UserService{})
-		injector.Bind((*interfaces.LoginControllerInterface)(nil)).To(fakeController.LoginController{})
-		injector.Bind((*interfaces.CallbackControllerInterface)(nil)).To(fakeController.CallbackController{})
-		injector.Bind((*interfaces.LogoutControllerInterface)(nil)).To(fakeController.LogoutController{})
+		injector.Bind(new(application.UserServiceInterface)).To(fakeService.UserService{})
+		injector.Bind(new(interfaces.LoginControllerInterface)).To(fakeController.LoginController{})
+		injector.Bind(new(interfaces.CallbackControllerInterface)).To(fakeController.CallbackController{})
+		injector.Bind(new(interfaces.LogoutControllerInterface)).To(fakeController.LogoutController{})
 	}
 
-	router.Bind(injector, new(routes))
+	web.Bind(injector, new(routes))
 }
 
+// DefaultConfig for auth module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
@@ -87,7 +88,7 @@ func (r *routes) Inject(
 }
 
 // Routes module
-func (r *routes) Routes(registry *router.Registry) {
+func (r *routes) Routes(registry *web.Registry) {
 	registry.Route("/auth/login", `auth.login(redirecturl?="")`)
 	registry.HandleGet("auth.login", r.login.Get)
 	registry.Route("/auth/callback", "auth.callback")

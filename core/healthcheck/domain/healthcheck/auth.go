@@ -7,23 +7,19 @@ import (
 	"flamingo.me/flamingo/v3/core/auth/application"
 )
 
-type (
-	// Auth is the healthcheck for auth module
-	Auth struct {
-		authManager *application.AuthManager
-	}
-)
+// Auth healthcheck
+type Auth struct {
+	authManager *application.AuthManager
+}
 
-var (
-	_ Status = &Auth{}
-)
+var _ Status = &Auth{}
 
-// Inject dependencies
+// Inject auth manager dependency
 func (s *Auth) Inject(authManager *application.AuthManager) {
 	s.authManager = authManager
 }
 
-// Status returns the health state of auth manager
+// Status checks the status
 func (s *Auth) Status() (bool, string) {
 	path := s.authManager.OAuth2Config(context.Background()).AuthCodeURL("")
 	_, err := http.Get(path)

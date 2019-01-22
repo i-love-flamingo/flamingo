@@ -4,17 +4,19 @@ import (
 	"context"
 
 	"flamingo.me/flamingo/v3/framework/web"
-	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
-type (
-	// Render controller
-	Render struct {
-		Responder responder.RenderAware `inject:""`
-	}
-)
+// Render controller
+type Render struct {
+	responder *web.Responder
+}
+
+// Inject *web.Responder
+func (controller *Render) Inject(responder *web.Responder) {
+	controller.responder = responder
+}
 
 // Render responder
-func (controller *Render) Render(ctx context.Context, request *web.Request) web.Response {
-	return controller.Responder.Render(ctx, request.MustParam1("tpl"), nil)
+func (controller *Render) Render(ctx context.Context, request *web.Request) web.Result {
+	return controller.responder.Render(request.Params["tpl"], nil)
 }

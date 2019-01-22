@@ -1,6 +1,7 @@
 package templatefunctions
 
 import (
+	"context"
 	"time"
 
 	"flamingo.me/flamingo/v3/core/locale/application"
@@ -9,26 +10,27 @@ import (
 )
 
 type (
-	// DateTime template helper function
+	// DateTimeFormatFromIso template helper function
 	DateTimeFormatFromIso struct {
 		dateTimeService *application.DateTimeService
 		logger          flamingo.Logger
 	}
 
-	// DateTime template helper function
+	// DateTimeFormatFromTime template helper function
 	DateTimeFormatFromTime struct {
 		dateTimeService *application.DateTimeService
 		logger          flamingo.Logger
 	}
 )
 
+// Inject dependencies
 func (tf *DateTimeFormatFromIso) Inject(service *application.DateTimeService, logger flamingo.Logger) {
 	tf.dateTimeService = service
 	tf.logger = logger
 }
 
 // Func template function factory
-func (tf *DateTimeFormatFromIso) Func() interface{} {
+func (tf *DateTimeFormatFromIso) Func(context.Context) interface{} {
 	// Usage
 	// dateTimeFormatFromIso(dateTimeString).formatDate()
 	return func(dateTimeString string) *domain.DateTimeFormatter {
@@ -41,13 +43,14 @@ func (tf *DateTimeFormatFromIso) Func() interface{} {
 	}
 }
 
+// Inject dependencies
 func (tf *DateTimeFormatFromTime) Inject(service *application.DateTimeService, logger flamingo.Logger) {
 	tf.dateTimeService = service
 	tf.logger = logger
 }
 
 // Func template function factory
-func (tf *DateTimeFormatFromTime) Func() interface{} {
+func (tf *DateTimeFormatFromTime) Func(context.Context) interface{} {
 	// Usage
 	// dateTimeFormat(dateTime).formatDate()
 	return func(dateTime time.Time) *domain.DateTimeFormatter {

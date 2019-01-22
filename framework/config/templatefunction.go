@@ -1,5 +1,7 @@
 package config
 
+import "context"
+
 type (
 	// TemplateFunc allows to retrieve config variables
 	TemplateFunc struct {
@@ -13,7 +15,7 @@ func (c *TemplateFunc) Inject(area *Area) {
 }
 
 // Func returns the template function
-func (c *TemplateFunc) Func() interface{} {
+func (c *TemplateFunc) Func(ctx context.Context) interface{} {
 	return func(what string) interface{} {
 		val, _ := c.area.Config(what)
 		return val

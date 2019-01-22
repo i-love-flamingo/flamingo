@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/opencensus"
@@ -14,12 +13,10 @@ import (
 	"go.opencensus.io/trace"
 )
 
-var (
-	rt = stats.Int64("flamingo/prefixrouter/requesttimes", "prefixrouter request times", stats.UnitMilliseconds)
-)
+var rt = stats.Int64("flamingo/prefixrouter/requesttimes", "prefixrouter request times", stats.UnitMilliseconds)
 
 func init() {
-	view.Register(
+	if err := view.Register(
 		&view.View{
 			Name:        "flamingo/prefixrouter/requests",
 			Description: "request times",
@@ -27,7 +24,9 @@ func init() {
 			Measure:     rt,
 			TagKeys:     []tag.Key{opencensus.KeyArea},
 		},
-	)
+	); err != nil {
+		panic(err)
+	}
 }
 
 type (

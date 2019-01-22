@@ -1,21 +1,24 @@
 package templatefunctions
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/v3/core/locale/application"
 )
 
-type (
-	// Label is exported as a template function
-	Label struct {
-		translationService application.TranslationServiceInterface
-	}
-)
+// Label is exported as a template function
+type Label struct {
+	translationService application.TranslationServiceInterface
+}
 
+// Inject dependencies
 func (tf *Label) Inject(service application.TranslationServiceInterface) {
 	tf.translationService = service
 }
 
-func (tf *Label) Func() interface{} {
+// Func template function factory
+// todo fix
+func (tf *Label) Func(context.Context) interface{} {
 
 	// Usage:  __("key")
 	// __("key","default")

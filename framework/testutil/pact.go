@@ -3,7 +3,6 @@ package testutil
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"flamingo.me/flamingo/v3/framework"
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
+	"github.com/pkg/errors"
 )
 
 // ErrNoPact error

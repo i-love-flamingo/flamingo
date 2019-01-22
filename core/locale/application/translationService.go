@@ -2,9 +2,8 @@ package application
 
 import (
 	"bytes"
-	"text/template"
-
 	"fmt"
+	"text/template"
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -17,6 +16,7 @@ type (
 		Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string
 	}
 
+	// TranslationService is the default TranslationServiceInterface implementation
 	TranslationService struct {
 		defaultLocaleCode string
 		translationFile   string
@@ -54,6 +54,7 @@ func (ts *TranslationService) Inject(
 	ts.devmode = config.DevMode
 }
 
+// Translate returns the result for translating a key, with a default label for a given locale code
 func (ts *TranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
 	if count < 1 {
 		count = 1

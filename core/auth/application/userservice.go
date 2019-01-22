@@ -8,10 +8,10 @@ import (
 )
 
 type (
-	// userService helps to use the authenticated user information
+	// UserService helps to use the authenticated user information
 	UserService struct {
-		authManager                 *AuthManager
-		mappingService              *domain.UserMappingService
+		authManager    *AuthManager
+		mappingService *domain.UserMappingService
 	}
 
 	// UserServiceInterface to mock in tests
@@ -21,6 +21,7 @@ type (
 	}
 )
 
+// Inject dependencies
 func (us *UserService) Inject(manager *AuthManager, ums *domain.UserMappingService) {
 	us.authManager = manager
 	us.mappingService = ums
@@ -45,7 +46,7 @@ func (us *UserService) getUser(c context.Context, session *web.Session) *domain.
 		return domain.Guest
 	}
 
-	r, _ := web.FromContext(c)
+	r := web.RequestFromContext(c)
 	user, err := us.mappingService.UserFromIDToken(id, r.Session())
 	if user == nil || err != nil {
 		return domain.Guest

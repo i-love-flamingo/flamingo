@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	roleMocks "flamingo.me/flamingo/core/security/application/role/mocks"
-	"flamingo.me/flamingo/core/security/domain"
-	domainMocks "flamingo.me/flamingo/core/security/domain/mocks"
-	"flamingo.me/flamingo/framework/web"
+	roleMocks "flamingo.me/flamingo/v3/core/security/application/role/mocks"
+	"flamingo.me/flamingo/v3/core/security/domain"
+	domainMocks "flamingo.me/flamingo/v3/core/security/domain/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )

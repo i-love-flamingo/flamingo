@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 )
 

@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"flamingo.me/flamingo/framework"
+	"flamingo.me/flamingo/v3/framework"
 
 	"github.com/spf13/cobra"
 )

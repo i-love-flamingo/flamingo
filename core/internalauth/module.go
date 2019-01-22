@@ -1,9 +1,9 @@
 package internalauth
 
 import (
-	"flamingo.me/flamingo/core/internalauth/application"
-	"flamingo.me/flamingo/core/internalauth/domain"
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/core/internalauth/application"
+	"flamingo.me/flamingo/v3/core/internalauth/domain"
+	"flamingo.me/flamingo/v3/framework/dingo"
 )
 
 // InternalAuth

@@ -1,11 +1,8 @@
 package templatefunctions
 
 import (
-	"strconv"
-
-	"flamingo.me/flamingo/core/locale/application"
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
-	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/v3/core/locale/application"
+	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/leekchan/accounting"
 )
 
@@ -48,15 +45,16 @@ func (pff *PriceFormatFunc) Func() interface{} {
 		if ok {
 			ac.Format = format
 		}
-		if valueNumber, ok := value.(pugjs.Number); ok {
-			return ac.FormatMoney(float64(valueNumber))
-		} else if valueString, ok := value.(pugjs.String); ok {
-			float, err := strconv.ParseFloat(string(valueString), 64)
-			if err != nil {
-				float = 0.0
-			}
-			return ac.FormatMoney(float)
-		} else {
+		//if valueNumber, ok := value.(pugjs.Number); ok {
+		//	return ac.FormatMoney(float64(valueNumber))
+		//} else if valueString, ok := value.(pugjs.String); ok {
+		//	float, err := strconv.ParseFloat(string(valueString), 64)
+		//	if err != nil {
+		//		float = 0.0
+		//	}
+		//	return ac.FormatMoney(float)
+		//} else
+		{
 			return ac.FormatMoney(0)
 		}
 	}

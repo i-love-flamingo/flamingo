@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"flamingo.me/flamingo/core/auth/application"
+	"flamingo.me/flamingo/v3/core/auth/application"
 )
 
 type (

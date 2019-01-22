@@ -3,10 +3,10 @@ package role
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/security/application/role/provider"
-	"flamingo.me/flamingo/core/security/domain"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/security/application/role/provider"
+	"flamingo.me/flamingo/v3/core/security/domain"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/framework/router"
 
 	"github.com/spf13/cobra"
 )

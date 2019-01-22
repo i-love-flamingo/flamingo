@@ -3,11 +3,11 @@ package fake
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/auth/application"
-	"flamingo.me/flamingo/core/auth/application/fake"
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/v3/core/auth/application"
+	"flamingo.me/flamingo/v3/core/auth/application/fake"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/web"
+	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (

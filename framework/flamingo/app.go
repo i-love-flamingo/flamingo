@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/event"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/event"
+	"flamingo.me/flamingo/v3/framework/router"
 	"github.com/spf13/cobra"
 )
 

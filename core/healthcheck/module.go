@@ -8,11 +8,11 @@ Usage:
 package healthcheck
 
 import (
-	"flamingo.me/flamingo/core/healthcheck/domain/healthcheck"
-	"flamingo.me/flamingo/core/healthcheck/interfaces/controllers"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	"flamingo.me/flamingo/v3/core/healthcheck/interfaces/controllers"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 type Module struct {

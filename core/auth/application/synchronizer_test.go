@@ -5,9 +5,9 @@ import (
 
 	"errors"
 
-	"flamingo.me/flamingo/core/auth/application/mocks"
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/auth/application/mocks"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"

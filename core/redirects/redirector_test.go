@@ -9,12 +9,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"flamingo.me/flamingo/core/redirects/infrastructure"
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/router/mocks"
-	"flamingo.me/flamingo/framework/web"
-	responderMocks "flamingo.me/flamingo/framework/web/responder/mocks"
+	"flamingo.me/flamingo/v3/core/redirects/infrastructure"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/router/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
+	responderMocks "flamingo.me/flamingo/v3/framework/web/responder/mocks"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/mock"
 )

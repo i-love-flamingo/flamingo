@@ -3,7 +3,7 @@ package application_test
 import (
 	"testing"
 
-	"flamingo.me/flamingo/core/captcha/application"
+	"flamingo.me/flamingo/v3/core/captcha/application"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
 )

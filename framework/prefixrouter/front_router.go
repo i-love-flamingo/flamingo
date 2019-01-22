@@ -7,7 +7,7 @@ import (
 
 	"time"
 
-	"flamingo.me/flamingo/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"

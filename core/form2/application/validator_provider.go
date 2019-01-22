@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/go-playground/validator.v9"
 
-	"flamingo.me/flamingo/core/form2/domain"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/form2/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

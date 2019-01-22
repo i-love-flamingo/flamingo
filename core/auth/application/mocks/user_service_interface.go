@@ -3,7 +3,7 @@
 package mocks
 
 import context "context"
-import domain "flamingo.me/flamingo/core/auth/domain"
+import domain "flamingo.me/flamingo/v3/core/auth/domain"
 import mock "github.com/stretchr/testify/mock"
 import sessions "github.com/gorilla/sessions"
 

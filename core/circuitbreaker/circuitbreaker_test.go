@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"flamingo.me/flamingo/framework/flamingo/mocks"
+	"flamingo.me/flamingo/v3/framework/flamingo/mocks"
 	"github.com/sony/gobreaker"
 	"github.com/stretchr/testify/assert"
 )

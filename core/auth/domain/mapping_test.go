@@ -3,8 +3,8 @@ package domain
 import (
 	"testing"
 
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )

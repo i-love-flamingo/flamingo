@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	eventMocks "flamingo.me/flamingo/framework/event/mocks"
-	"flamingo.me/flamingo/framework/web"
+	eventMocks "flamingo.me/flamingo/v3/framework/event/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/spf13/cobra"
 )
 

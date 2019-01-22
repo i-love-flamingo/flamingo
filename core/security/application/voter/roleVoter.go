@@ -3,9 +3,9 @@ package voter
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/security/application/role"
-	"flamingo.me/flamingo/core/security/domain"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/security/application/role"
+	"flamingo.me/flamingo/v3/core/security/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

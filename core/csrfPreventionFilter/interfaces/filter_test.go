@@ -9,10 +9,10 @@ import (
 
 	"net/http/httptest"
 
-	applicationMocks "flamingo.me/flamingo/core/csrfPreventionFilter/application/mocks"
-	"flamingo.me/flamingo/framework/router"
-	routerMocks "flamingo.me/flamingo/framework/router/mocks"
-	"flamingo.me/flamingo/framework/web"
+	applicationMocks "flamingo.me/flamingo/v3/core/csrfPreventionFilter/application/mocks"
+	"flamingo.me/flamingo/v3/framework/router"
+	routerMocks "flamingo.me/flamingo/v3/framework/router/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

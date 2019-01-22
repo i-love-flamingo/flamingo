@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/sony/gobreaker"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 type (

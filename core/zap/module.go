@@ -1,11 +1,11 @@
 package zap
 
 import (
-	"flamingo.me/flamingo/core/zap/domain"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/event"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/zap/domain"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/event"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

@@ -5,9 +5,9 @@ import (
 
 	"fmt"
 
-	"flamingo.me/flamingo/core/csrfPreventionFilter/application"
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/session"
+	"flamingo.me/flamingo/v3/core/csrfPreventionFilter/application"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/session"
 )
 
 type (

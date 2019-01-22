@@ -3,9 +3,9 @@ package controller
 import (
 	"context"
 
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
+	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (

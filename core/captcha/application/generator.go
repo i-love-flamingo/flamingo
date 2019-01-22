@@ -6,7 +6,7 @@ import (
 	"io"
 	"strconv"
 
-	"flamingo.me/flamingo/core/captcha/domain"
+	"flamingo.me/flamingo/v3/core/captcha/domain"
 	"github.com/dchest/captcha"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/nacl/secretbox"

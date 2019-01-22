@@ -6,8 +6,8 @@ import (
 
 	"fmt"
 
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
 )
 

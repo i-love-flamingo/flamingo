@@ -1,8 +1,8 @@
 package application
 
 import (
-	"flamingo.me/flamingo/core/form2/domain"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/form2/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 type (

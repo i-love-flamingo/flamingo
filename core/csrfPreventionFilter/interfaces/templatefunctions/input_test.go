@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	applicationMocks "flamingo.me/flamingo/core/csrfPreventionFilter/application/mocks"
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/session"
-	"flamingo.me/flamingo/framework/web"
+	applicationMocks "flamingo.me/flamingo/v3/core/csrfPreventionFilter/application/mocks"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/session"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/suite"
 )
 

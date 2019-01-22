@@ -1,7 +1,7 @@
 package config
 
 import (
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/dingo"
 )
 
 // Module defines a dingo module which automatically binds available config

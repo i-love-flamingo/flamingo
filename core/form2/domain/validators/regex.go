@@ -4,7 +4,7 @@ import (
 	"context"
 	"regexp"
 
-	"flamingo.me/flamingo/core/form2/domain"
+	"flamingo.me/flamingo/v3/core/form2/domain"
 	"gopkg.in/go-playground/validator.v9"
 )
 

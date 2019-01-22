@@ -5,8 +5,8 @@ import (
 	"html/template"
 	"strings"
 
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 type (

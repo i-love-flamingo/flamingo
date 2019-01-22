@@ -3,7 +3,7 @@ package pugjs
 import (
 	"testing"
 
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,9 +1,9 @@
 package csp
 
 import (
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 // Module for core/csp

@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"testing"
 
-	"flamingo.me/flamingo/core/captcha/application"
-	"flamingo.me/flamingo/core/captcha/domain"
-	"flamingo.me/flamingo/core/captcha/interfaces"
+	"flamingo.me/flamingo/v3/core/captcha/application"
+	"flamingo.me/flamingo/v3/core/captcha/domain"
+	"flamingo.me/flamingo/v3/core/captcha/interfaces"
 	"github.com/stretchr/testify/assert"
 )
 

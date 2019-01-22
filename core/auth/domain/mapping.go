@@ -3,8 +3,8 @@ package domain
 import (
 	"encoding/gob"
 
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc"
 )
 

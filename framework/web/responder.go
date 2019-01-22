@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/v3/framework/template"
 )
 
 type (

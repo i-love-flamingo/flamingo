@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"flamingo.me/flamingo/core/form2/domain/mocks"
+	"flamingo.me/flamingo/v3/core/form2/domain/mocks"
 )
 
 type (

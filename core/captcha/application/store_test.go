@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"flamingo.me/flamingo/core/captcha/application"
+	"flamingo.me/flamingo/v3/core/captcha/application"
 )
 
 func TestPseudoStore_Get(t *testing.T) {

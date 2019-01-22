@@ -3,8 +3,8 @@ package session
 import (
 	"os"
 
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
 	"github.com/boj/redistore"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/sessions"

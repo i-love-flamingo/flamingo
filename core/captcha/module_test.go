@@ -3,9 +3,9 @@ package captcha_test
 import (
 	"testing"
 
-	"flamingo.me/flamingo/core/captcha"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/core/captcha"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
 )
 
 func TestModule_Configure(t *testing.T) {

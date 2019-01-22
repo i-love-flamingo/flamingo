@@ -3,7 +3,7 @@ package application_test
 import (
 	"fmt"
 
-	"flamingo.me/flamingo/core/captcha/application"
+	"flamingo.me/flamingo/v3/core/captcha/application"
 )
 
 // Example generates a new captcha instance and calls the verify process with a wrong and a right solution

@@ -14,8 +14,8 @@ import (
 
 	"crypto/sha256"
 
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 const (

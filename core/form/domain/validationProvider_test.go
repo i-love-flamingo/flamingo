@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/go-playground/validator.v9"
 )

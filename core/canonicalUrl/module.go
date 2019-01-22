@@ -1,11 +1,11 @@
 package canonicalUrl
 
 import (
-	"flamingo.me/flamingo/core/canonicalUrl/application"
-	"flamingo.me/flamingo/core/canonicalUrl/interfaces"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/v3/core/canonicalUrl/application"
+	"flamingo.me/flamingo/v3/core/canonicalUrl/interfaces"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/template"
 )
 
 // Module for core/canonicalUrl

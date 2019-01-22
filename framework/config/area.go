@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/dingo"
 	"github.com/pkg/errors"
 )
 

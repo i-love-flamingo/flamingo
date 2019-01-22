@@ -10,7 +10,7 @@ Using metrics in your module:
 	package controller
 
 	import (
-		"flamingo.me/flamingo/framework/opencensus"
+		"flamingo.me/flamingo/v3/framework/opencensus"
 		"go.opencensus.io/stats"
 		"go.opencensus.io/stats/view"
 	)

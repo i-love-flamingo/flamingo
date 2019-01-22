@@ -3,12 +3,12 @@ package interfaces
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/auth/application"
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/v3/core/auth/application"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
+	"flamingo.me/flamingo/v3/framework/web/responder"
 	"github.com/pkg/errors"
 )
 

@@ -3,8 +3,8 @@ package interfaces
 import (
 	"fmt"
 
-	"flamingo.me/flamingo/core/captcha/application"
-	"flamingo.me/flamingo/core/captcha/domain"
+	"flamingo.me/flamingo/v3/core/captcha/application"
+	"flamingo.me/flamingo/v3/core/captcha/domain"
 )
 
 type (

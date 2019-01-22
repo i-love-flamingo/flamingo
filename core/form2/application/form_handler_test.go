@@ -7,13 +7,13 @@ import (
 	"net/url"
 	"testing"
 
-	"flamingo.me/flamingo/core/form2/domain"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/form2/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 
 	"github.com/stretchr/testify/suite"
 
-	"flamingo.me/flamingo/core/form2/domain/mocks"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/form2/domain/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

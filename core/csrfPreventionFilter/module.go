@@ -1,14 +1,14 @@
 package csrfPreventionFilter
 
 import (
-	"flamingo.me/flamingo/core/csrfPreventionFilter/application"
-	"flamingo.me/flamingo/core/csrfPreventionFilter/interfaces"
-	"flamingo.me/flamingo/core/csrfPreventionFilter/interfaces/templatefunctions"
-	"flamingo.me/flamingo/core/form2/domain"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/template"
+	"flamingo.me/flamingo/v3/core/csrfPreventionFilter/application"
+	"flamingo.me/flamingo/v3/core/csrfPreventionFilter/interfaces"
+	"flamingo.me/flamingo/v3/core/csrfPreventionFilter/interfaces/templatefunctions"
+	"flamingo.me/flamingo/v3/core/form2/domain"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/template"
 )
 
 // Module for core/csrfPreventionFilter

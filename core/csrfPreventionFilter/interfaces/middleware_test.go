@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	applicationMocks "flamingo.me/flamingo/core/csrfPreventionFilter/application/mocks"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
+	applicationMocks "flamingo.me/flamingo/v3/core/csrfPreventionFilter/application/mocks"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

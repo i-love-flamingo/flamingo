@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )

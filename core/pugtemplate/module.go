@@ -13,15 +13,15 @@ import (
 
 	"fmt"
 
-	"flamingo.me/flamingo/core/pugtemplate/puganalyse"
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
-	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/event"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/template"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/pugtemplate/puganalyse"
+	"flamingo.me/flamingo/v3/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/v3/core/pugtemplate/templatefunctions"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/event"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/template"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 )
 

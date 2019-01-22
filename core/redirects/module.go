@@ -1,11 +1,11 @@
 package redirects
 
 import (
-	"flamingo.me/flamingo/core/redirects/infrastructure"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/prefixrouter"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/core/redirects/infrastructure"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/prefixrouter"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 type (

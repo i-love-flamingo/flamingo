@@ -1,9 +1,9 @@
 package form
 
 import (
-	"flamingo.me/flamingo/core/form/domain"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
+	"flamingo.me/flamingo/v3/core/form/domain"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
 	"gopkg.in/go-playground/validator.v9"
 )
 

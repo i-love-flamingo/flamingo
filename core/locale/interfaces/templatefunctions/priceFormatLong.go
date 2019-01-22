@@ -3,8 +3,8 @@ package templatefunctions
 import (
 	"fmt"
 
-	"flamingo.me/flamingo/core/locale/application"
-	"flamingo.me/flamingo/framework/config"
+	"flamingo.me/flamingo/v3/core/locale/application"
+	"flamingo.me/flamingo/v3/framework/config"
 )
 
 type (

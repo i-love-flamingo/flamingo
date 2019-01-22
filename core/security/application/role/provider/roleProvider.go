@@ -3,10 +3,10 @@ package provider
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/auth/application"
-	authDomain "flamingo.me/flamingo/core/auth/domain"
-	securityDomain "flamingo.me/flamingo/core/security/domain"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/auth/application"
+	authDomain "flamingo.me/flamingo/v3/core/auth/domain"
+	securityDomain "flamingo.me/flamingo/v3/core/security/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

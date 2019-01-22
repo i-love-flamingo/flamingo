@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/web"
 	"gopkg.in/go-playground/validator.v9"
 )
 

@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/event"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/event"
 )
 
 // EventPublisher struct

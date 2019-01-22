@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/core/auth/application/store"
-	"flamingo.me/flamingo/core/auth/domain"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/auth/application/store"
+	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gorilla/sessions"
 )
 

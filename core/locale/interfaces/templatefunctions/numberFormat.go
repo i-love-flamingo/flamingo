@@ -1,8 +1,7 @@
 package templatefunctions
 
 import (
-	"flamingo.me/flamingo/core/locale/application"
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/v3/core/locale/application"
 	"github.com/leekchan/accounting"
 )
 
@@ -39,9 +38,9 @@ func (nff *NumberFormatFunc) Func() interface{} {
 			if precisionIntParam, ok := params[0].(int); ok {
 				precision = precisionIntParam
 			}
-			if precisionNumberParam, ok := params[0].(pugjs.Number); ok {
-				precision = int(precisionNumberParam)
-			}
+			//if precisionNumberParam, ok := params[0].(pugjs.Number); ok {
+			//	precision = int(precisionNumberParam)
+			//}
 		}
 
 		return accounting.FormatNumber(value, precision, nff.thousand, nff.decimal)

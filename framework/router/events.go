@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

@@ -1,17 +1,17 @@
 package security
 
 import (
-	authApplication "flamingo.me/flamingo/core/auth/application"
-	"flamingo.me/flamingo/core/security/application"
-	"flamingo.me/flamingo/core/security/application/role"
-	"flamingo.me/flamingo/core/security/application/role/provider"
-	"flamingo.me/flamingo/core/security/application/voter"
-	"flamingo.me/flamingo/core/security/domain"
-	"flamingo.me/flamingo/core/security/interface/controller"
-	"flamingo.me/flamingo/core/security/interface/middleware"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
+	authApplication "flamingo.me/flamingo/v3/core/auth/application"
+	"flamingo.me/flamingo/v3/core/security/application"
+	"flamingo.me/flamingo/v3/core/security/application/role"
+	"flamingo.me/flamingo/v3/core/security/application/role/provider"
+	"flamingo.me/flamingo/v3/core/security/application/voter"
+	"flamingo.me/flamingo/v3/core/security/domain"
+	"flamingo.me/flamingo/v3/core/security/interface/controller"
+	"flamingo.me/flamingo/v3/core/security/interface/middleware"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 type (

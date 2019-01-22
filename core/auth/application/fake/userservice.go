@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/sessions"
 
-	"flamingo.me/flamingo/core/auth/domain"
+	"flamingo.me/flamingo/v3/core/auth/domain"
 )
 
 const (

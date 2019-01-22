@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"flamingo.me/flamingo/core/auth/application"
-	fakeService "flamingo.me/flamingo/core/auth/application/fake"
-	"flamingo.me/flamingo/core/auth/application/store"
-	"flamingo.me/flamingo/core/auth/interfaces"
-	fakeController "flamingo.me/flamingo/core/auth/interfaces/fake"
-	"flamingo.me/flamingo/framework/config"
-	"flamingo.me/flamingo/framework/dingo"
-	"flamingo.me/flamingo/framework/router"
+	"flamingo.me/flamingo/v3/core/auth/application"
+	fakeService "flamingo.me/flamingo/v3/core/auth/application/fake"
+	"flamingo.me/flamingo/v3/core/auth/application/store"
+	"flamingo.me/flamingo/v3/core/auth/interfaces"
+	fakeController "flamingo.me/flamingo/v3/core/auth/interfaces/fake"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/router"
 )
 
 // Module for core.auth

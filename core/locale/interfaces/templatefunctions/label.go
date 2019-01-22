@@ -1,10 +1,7 @@
 package templatefunctions
 
 import (
-	"strconv"
-
-	"flamingo.me/flamingo/core/locale/application"
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
+	"flamingo.me/flamingo/v3/core/locale/application"
 )
 
 type (
@@ -31,29 +28,31 @@ func (tf *Label) Func() interface{} {
 		count := 1
 
 		if len(params) > 0 {
-			if stringParam1, ok := params[0].(pugjs.String); ok {
-				defaultLabel = string(stringParam1)
-			} else if stringParam1, ok := params[0].(string); ok {
+			//if stringParam1, ok := params[0].(pugjs.String); ok {
+			//	defaultLabel = string(stringParam1)
+			//} else
+			if stringParam1, ok := params[0].(string); ok {
 				defaultLabel = string(stringParam1)
 			}
 		}
 		if len(params) > 1 {
-			if mapParam2, ok := params[1].(*pugjs.Map); ok {
-				for k, v := range mapParam2.Items {
-					translationArguments[k.String()] = v
-				}
-				//use the special _count to set the count for T func
-				if countArgument, ok := translationArguments["_count"]; ok {
-					if countArgumentInt, ok := countArgument.(pugjs.Number); ok {
-						count, _ = strconv.Atoi(countArgumentInt.String())
-					}
-				}
-			}
+			//if mapParam2, ok := params[1].(*pugjs.Map); ok {
+			//	for k, v := range mapParam2.Items {
+			//		translationArguments[k.String()] = v
+			//	}
+			//	//use the special _count to set the count for T func
+			//	if countArgument, ok := translationArguments["_count"]; ok {
+			//		if countArgumentInt, ok := countArgument.(pugjs.Number); ok {
+			//			count, _ = strconv.Atoi(countArgumentInt.String())
+			//		}
+			//	}
+			//}
 		}
 		if len(params) > 2 {
-			if stringParam3, ok := params[2].(pugjs.String); ok {
-				localeCode = string(stringParam3)
-			} else if stringParam3, ok := params[2].(string); ok {
+			//if stringParam3, ok := params[2].(pugjs.String); ok {
+			//	localeCode = string(stringParam3)
+			//} else
+			if stringParam3, ok := params[2].(string); ok {
 				localeCode = stringParam3
 			}
 		}

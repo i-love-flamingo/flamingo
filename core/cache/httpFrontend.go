@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/golang/groupcache/singleflight"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"

@@ -8,8 +8,8 @@ import (
 
 	"net/http"
 
-	"flamingo.me/flamingo/core/security/application/mocks"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/security/application/mocks"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 )
 

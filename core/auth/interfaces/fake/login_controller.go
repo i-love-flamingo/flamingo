@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/url"
 
-	"flamingo.me/flamingo/core/auth/application"
-	"flamingo.me/flamingo/framework/web"
-	"flamingo.me/flamingo/framework/web/responder"
+	"flamingo.me/flamingo/v3/core/auth/application"
+	"flamingo.me/flamingo/v3/framework/web"
+	"flamingo.me/flamingo/v3/framework/web/responder"
 )
 
 type (

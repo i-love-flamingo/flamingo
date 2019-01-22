@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"flamingo.me/flamingo/framework"
+	"flamingo.me/flamingo/v3/framework"
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
 )

@@ -10,11 +10,11 @@ import (
 
 	"net/url"
 
-	applicationMocks "flamingo.me/flamingo/core/security/application/mocks"
-	interfaceMocks "flamingo.me/flamingo/core/security/interface/middleware/mocks"
-	"flamingo.me/flamingo/framework/flamingo"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/web"
+	applicationMocks "flamingo.me/flamingo/v3/core/security/application/mocks"
+	interfaceMocks "flamingo.me/flamingo/v3/core/security/interface/middleware/mocks"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

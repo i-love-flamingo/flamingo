@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"flamingo.me/flamingo/core/cache"
+	"flamingo.me/flamingo/v3/core/cache"
 )
 
 type (
@@ -85,6 +85,11 @@ func TestFileBackendGet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
+
+			if *update && tt.wantFound {
+				t.Log("update file")
+				f.Set(tt.args.key, tt.wantEntry)
+			}
 
 			gotEntry, gotFound := f.Get(tt.args.key)
 			if !reflect.DeepEqual(gotEntry, tt.wantEntry) {

@@ -6,8 +6,8 @@ import (
 
 	"strings"
 
-	"flamingo.me/flamingo/core/healthcheck/domain/healthcheck"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/assert"
 )
 

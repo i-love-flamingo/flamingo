@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"flamingo.me/flamingo/core/security/application/role/mocks"
-	"flamingo.me/flamingo/core/security/domain"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/core/security/application/role/mocks"
+	"flamingo.me/flamingo/v3/core/security/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )

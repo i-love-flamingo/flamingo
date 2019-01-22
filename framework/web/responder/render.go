@@ -8,10 +8,9 @@ import (
 
 	"strings"
 
-	"flamingo.me/flamingo/core/pugtemplate/pugjs"
-	"flamingo.me/flamingo/framework/router"
-	"flamingo.me/flamingo/framework/template"
-	"flamingo.me/flamingo/framework/web"
+	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/template"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -75,7 +74,8 @@ func (r *FlamingoRenderAware) Render(context context.Context, tpl string, data i
 			ContentType: "text/html; charset=utf-8",
 		}
 	} else {
-		body, err := json.Marshal(pugjs.Convert(data))
+		//body, err := json.Marshal(pugjs.Convert(data))
+		body, err := json.Marshal(data)
 		if err != nil {
 			panic(err)
 		}

@@ -3,8 +3,8 @@ package application
 import (
 	"time"
 
-	"flamingo.me/flamingo/core/locale/domain"
-	"flamingo.me/flamingo/framework/flamingo"
+	"flamingo.me/flamingo/v3/core/locale/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/pkg/errors"
 )
 

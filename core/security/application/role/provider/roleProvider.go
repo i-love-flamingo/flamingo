@@ -26,7 +26,7 @@ func (p *AuthRoleProvider) Inject(us application.UserServiceInterface) {
 func (p *AuthRoleProvider) All(ctx context.Context, session *web.Session) []securityDomain.Role {
 	var roles []securityDomain.Role
 
-	user := p.userService.GetUser(ctx, session.G())
+	user := p.userService.GetUser(ctx, session)
 	if user != nil && user.Type == authDomain.USER {
 		roles = append(roles, securityDomain.RoleUser)
 	}

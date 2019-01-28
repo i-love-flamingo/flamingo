@@ -51,17 +51,6 @@ func (d *DefaultLogoutRedirect) GetRedirectURL(c context.Context, u *url.URL) (s
 	return u.String(), nil
 }
 
-// Logout locally
-func logout(r *web.Request) {
-	r.Session().Delete(application.KeyAuthstate)
-	r.Session().Delete(application.KeyToken)
-	r.Session().Delete(application.KeyRawIDToken)
-	r.Session().Delete(application.KeyTokenExtras)
-
-	// kill session
-	r.Session().G().Options.MaxAge = -1
-}
-
 // Inject LogoutController dependencies
 func (l *LogoutController) Inject(
 	redirectAware responder.RedirectAware,
@@ -78,34 +67,44 @@ func (l *LogoutController) Inject(
 }
 
 // Get handler for logout
-func (l *LogoutController) Get(c context.Context, request *web.Request) web.Response {
+func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Response {
 	var claims struct {
 		EndSessionEndpoint string `json:"end_session_endpoint"`
 	}
 
-	ru, _ := l.authManager.URL(c, "")
+	ru, _ := l.authManager.URL(ctx, "")
 
-	l.authManager.OpenIDProvider().Claims(&claims)
-	endURL, parseError := url.Parse(claims.EndSessionEndpoint)
-	if parseError != nil {
-		logout(request)
-		l.logger.Error("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP", parseError.Error())
+	err := l.authManager.OpenIDProvider().Claims(&claims)
+	if err != nil {
+		l.logoutLocally(ctx, request)
+		l.logger.Error("Logout locally only. Could not unmarshal raw fields", err.Error())
 		return l.RedirectURL(ru.String())
 	}
 
-	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectURL(c, endURL)
+	endURL, err := url.Parse(claims.EndSessionEndpoint)
+	if err != nil {
+		l.logoutLocally(ctx, request)
+		l.logger.Error("Logout locally only. Could not parse end_session_endpoint claim to logout from IDP", err.Error())
+		return l.RedirectURL(ru.String())
+	}
+
+	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectURL(ctx, endURL)
 	if redirectURLError != nil {
-		logout(request)
+		l.logoutLocally(ctx, request)
 		l.logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectURLError.Error())
 		return l.RedirectURL(ru.String())
 	}
 
-	logout(request)
-
+	l.logoutLocally(ctx, request)
 	request.Session().AddFlash("successful logged out", "warning")
-	l.eventPublisher.PublishLogoutEvent(c, &domain.LogoutEvent{
-		Session: request.Session().G(),
-	})
+
 
 	return l.RedirectURL(redirectURL)
+}
+
+func (l *LogoutController) logoutLocally(ctx context.Context, request *web.Request) {
+	l.eventPublisher.PublishLogoutEvent(ctx, &domain.LogoutEvent{
+		Session: request.Session(),
+	})
+	request.Session().G().Options.MaxAge = -1
 }

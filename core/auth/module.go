@@ -3,11 +3,11 @@ package auth
 import (
 	"flamingo.me/flamingo/v3/core/auth/application"
 	fakeService "flamingo.me/flamingo/v3/core/auth/application/fake"
-	"flamingo.me/flamingo/v3/core/auth/application/store"
 	"flamingo.me/flamingo/v3/core/auth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/auth/interfaces/fake"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/event"
 	"flamingo.me/flamingo/v3/framework/router"
 )
 
@@ -22,6 +22,7 @@ type Module struct {
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 	injector.Bind((*interfaces.LogoutRedirectAware)(nil)).To(interfaces.DefaultLogoutRedirect{})
+	injector.BindMulti((*event.Subscriber)(nil)).To(&application.EventHandler{})
 	if !m.UseFake {
 		injector.Bind((*application.UserServiceInterface)(nil)).To(application.UserService{})
 		injector.Bind((*interfaces.LoginControllerInterface)(nil)).To(interfaces.LoginController{})
@@ -34,22 +35,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		injector.Bind((*interfaces.LogoutControllerInterface)(nil)).To(fakeController.LogoutController{})
 	}
 
-	if !m.PreventSimultaneousSessions {
-		injector.Bind((*store.Store)(nil)).To(store.Nil{})
-	} else {
-		switch m.SessionBackend {
-		case "redis":
-			injector.Bind((*store.Store)(nil)).To(store.Redis{}).AsEagerSingleton()
-		case "memory":
-			injector.Bind((*store.Store)(nil)).To(store.Memory{}).AsEagerSingleton()
-		case "file":
-			injector.Bind((*store.Store)(nil)).To(store.File{}).AsEagerSingleton()
-		default:
-			injector.Bind((*store.Store)(nil)).To(store.Nil{}).AsEagerSingleton()
-		}
-	}
-	injector.Bind((*application.Synchronizer)(nil)).To(application.SynchronizerImpl{})
-
 	router.Bind(injector, new(routes))
 }
 
@@ -57,7 +42,6 @@ func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
 			"useFake":                     false,
-			"preventSimultaneousSessions": false,
 			"fakeUserData":                config.Map{},
 			"fakeLoginTemplate":           "",
 			"scopes":                      config.Slice{"profile", "email"},

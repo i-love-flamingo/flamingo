@@ -4,8 +4,9 @@ import (
 	"encoding/gob"
 
 	"github.com/coreos/go-oidc"
-	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
+
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -31,12 +32,12 @@ type (
 
 	// LoginEvent
 	LoginEvent struct {
-		Session *sessions.Session
+		Session *web.Session
 	}
 
 	// LogoutEvent
 	LogoutEvent struct {
-		Session *sessions.Session
+		Session *web.Session
 	}
 
 	Auth struct {

@@ -3,8 +3,7 @@ package fake
 import (
 	"context"
 
-	"github.com/gorilla/sessions"
-
+	"flamingo.me/flamingo/v3/framework/web"
 	"flamingo.me/flamingo/v3/core/auth/domain"
 )
 
@@ -13,16 +12,15 @@ const (
 )
 
 type (
-	UserService struct {
-	}
+	UserService struct {}
 )
 
-func (us *UserService) InitUser(c context.Context, session *sessions.Session) error {
+func (us *UserService) InitUser(c context.Context, session *web.Session) error {
 	return nil
 }
 
-func (u *UserService) GetUser(ctx context.Context, session *sessions.Session) *domain.User {
-	value := session.Values[UserSessionKey]
+func (u *UserService) GetUser(ctx context.Context, session *web.Session) *domain.User {
+	value, _ := session.Load(UserSessionKey)
 	user, ok := value.(domain.User)
 	if !ok {
 		return domain.Guest
@@ -31,7 +29,7 @@ func (u *UserService) GetUser(ctx context.Context, session *sessions.Session) *d
 	return &user
 }
 
-func (u *UserService) IsLoggedIn(c context.Context, session *sessions.Session) bool {
+func (u *UserService) IsLoggedIn(c context.Context, session *web.Session) bool {
 	user := u.GetUser(c, session)
 	return user.Type == domain.USER
 }

@@ -12,23 +12,22 @@ import (
 	"flamingo.me/flamingo/v3/framework/router"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc"
-	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
 const (
-	// KeyToken defines where the authentication token is saved
-	KeyToken = "auth.token"
+	// keyToken defines where the authentication token is saved
+	keyToken = "auth.token"
 
-	// KeyRawIDToken defines where the raw ID token is saved
-	KeyRawIDToken = "auth.rawidtoken"
+	// keyRawIDToken defines where the raw ID token is saved
+	keyRawIDToken = "auth.rawidtoken"
 
-	// KeyAuthstate defines the current internal authentication state
-	KeyAuthstate = "auth.state"
+	// keyAuthstate defines the current internal authentication state
+	keyAuthstate = "auth.state"
 
-	// KeyToken defines where the authentication token extras are saved
-	KeyTokenExtras = "auth.token.extras"
+	// keyToken defines where the authentication token extras are saved
+	keyTokenExtras = "auth.token.extras"
 )
 
 func init() {
@@ -83,6 +82,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *router.Router, con
 	am.oauth2Config = make(map[string]*oauth2.Config)
 }
 
+// URL tries to generate complete url from passed path, including scheme
 func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
 	ubase := *am.router.Base()
 	u := &ubase
@@ -110,7 +110,7 @@ func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
 }
 
 // Auth tries to retrieve the authentication context for a active session
-func (am *AuthManager) Auth(c context.Context, session *sessions.Session) (domain.Auth, error) {
+func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Auth, error) {
 	ts, err := am.TokenSource(c, session)
 	if err != nil {
 		return domain.Auth{}, err
@@ -187,38 +187,39 @@ func (am *AuthManager) Verifier() *oidc.IDTokenVerifier {
 }
 
 // OAuth2Token retrieves the oauth2 token from the session
-func (am *AuthManager) OAuth2Token(session *sessions.Session) (*oauth2.Token, error) {
-	if _, ok := session.Values[KeyToken]; !ok {
+func (am *AuthManager) OAuth2Token(session *web.Session) (*oauth2.Token, error) {
+	if _, ok := session.Load(keyToken); !ok {
 		return nil, errors.New("no token")
 	}
 
-	oauth2Token, ok := session.Values[KeyToken].(*oauth2.Token)
+	value, _ := session.Load(keyToken)
+	oauth2Token, ok := value.(*oauth2.Token)
 	if !ok {
-		return nil, errors.Errorf("invalid token %T %v", session.Values[KeyToken], session.Values[KeyToken])
+		return nil, errors.Errorf("invalid token %#v", value)
 	}
 
 	return oauth2Token, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) IDToken(c context.Context, session *sessions.Session) (*oidc.IDToken, error) {
+func (am *AuthManager) IDToken(c context.Context, session *web.Session) (*oidc.IDToken, error) {
 	token, _, err := am.getIDToken(c, session)
 	return token, err
 }
 
 // GetRawIDToken gets the raw IDToken from session
-func (am *AuthManager) GetRawIDToken(c context.Context, session *sessions.Session) (string, error) {
+func (am *AuthManager) GetRawIDToken(c context.Context, session *web.Session) (string, error) {
 	_, raw, err := am.getIDToken(c, session)
 	return raw, err
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getIDToken(c context.Context, session *sessions.Session) (*oidc.IDToken, string, error) {
+func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
 	if session == nil {
 		return nil, "", errors.New("no session configured")
 	}
 
-	if token, ok := session.Values[KeyRawIDToken]; ok {
+	if token, ok := session.Load(keyRawIDToken); ok {
 		idtoken, err := am.Verifier().Verify(c, token.(string))
 		if err == nil {
 			return idtoken, token.(string), nil
@@ -230,13 +231,13 @@ func (am *AuthManager) getIDToken(c context.Context, session *sessions.Session) 
 		return nil, "", err
 	}
 
-	session.Values[KeyRawIDToken] = raw
+	session.Store(keyRawIDToken, raw)
 
 	return token, raw, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewIdToken(c context.Context, session *sessions.Session) (*oidc.IDToken, string, error) {
+func (am *AuthManager) getNewIdToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
@@ -272,7 +273,10 @@ func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
 
 func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth2.ClaimSet) *oauth2.ClaimSet {
 	var mapping []string
-	configuration.MapInto(&mapping)
+	err := configuration.MapInto(&mapping)
+	if err != nil {
+		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not map configuration", err)
+	}
 
 	for _, name := range mapping {
 		if name == "" {
@@ -299,7 +303,7 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 }
 
 // TokenSource to be used in situations where you need it
-func (am *AuthManager) TokenSource(c context.Context, session *sessions.Session) (oauth2.TokenSource, error) {
+func (am *AuthManager) TokenSource(c context.Context, session *web.Session) (oauth2.TokenSource, error) {
 	oauth2Token, err := am.OAuth2Token(session)
 	if err != nil {
 		return nil, err
@@ -309,10 +313,41 @@ func (am *AuthManager) TokenSource(c context.Context, session *sessions.Session)
 }
 
 // HTTPClient to retrieve a client with automatic tokensource
-func (am *AuthManager) HTTPClient(c context.Context, session *sessions.Session) (*http.Client, error) {
+func (am *AuthManager) HTTPClient(c context.Context, session *web.Session) (*http.Client, error) {
 	ts, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, err
 	}
 	return oauth2.NewClient(c, ts), nil
+}
+
+// StoreTokenDetails stores all token related data into session
+func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oauth2.Token, rawToken string, tokenExtras *domain.TokenExtras) {
+	session.Store(keyToken, oauth2Token)
+	session.Store(keyRawIDToken, rawToken)
+	session.Store(keyTokenExtras, tokenExtras)
+}
+
+// DeleteTokenDetails deletes all token related data from session
+func (am *AuthManager) DeleteTokenDetails(session *web.Session) {
+	session.Delete(keyToken)
+	session.Delete(keyRawIDToken)
+	session.Delete(keyTokenExtras)
+}
+
+// StoreAuthState stores auth state into session, used to connect passed state id in auth callback with the one stored in session
+func (am *AuthManager) StoreAuthState(session *web.Session, state string) {
+	session.Store(keyAuthstate, state)
+}
+
+// LoadAuthState loads auth state from session
+func (am *AuthManager) LoadAuthState(session *web.Session) (string, bool) {
+	value, _ := session.Load(keyAuthstate)
+	state, ok := value.(string)
+	return state, ok
+}
+
+// DeleteAuthState deletes auth state from session
+func (am *AuthManager) DeleteAuthState(session *web.Session) {
+	session.Delete(keyAuthstate)
 }

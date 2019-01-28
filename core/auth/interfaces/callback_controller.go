@@ -53,10 +53,10 @@ func (cc *CallbackController) Inject(
 // Get handler for callbacks
 func (cc *CallbackController) Get(c context.Context, request *web.Request) web.Response {
 	// Verify state and errors.
-	defer request.Session().Delete(application.KeyAuthstate)
+	defer cc.authManager.DeleteAuthState(request.Session())
 
-	if request.Session().Try(application.KeyAuthstate) != request.MustQuery1("state") {
-		cc.logger.Error("Invalid State", request.Session().Try(application.KeyAuthstate), request.MustQuery1("state"))
+	if state, ok := cc.authManager.LoadAuthState(request.Session()); !ok || state != request.MustQuery1("state") {
+		cc.logger.Error("Invalid State", state, request.MustQuery1("state"))
 		return cc.Error(c, errors.New("Invalid State"))
 	}
 
@@ -90,22 +90,14 @@ func (cc *CallbackController) Get(c context.Context, request *web.Request) web.R
 			tokenExtras.Add(extra, parsed)
 		}
 
-		request.Session().Store(application.KeyToken, oauth2Token)
 		rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
-		request.Session().Store(application.KeyRawIDToken, rawToken)
-		request.Session().Store(application.KeyTokenExtras, tokenExtras)
 		if err != nil {
 			cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
 			return cc.Error(c, errors.WithStack(err))
 		}
+		cc.authManager.StoreTokenDetails(request.Session(), oauth2Token, rawToken, tokenExtras)
 
-		err = cc.userService.InitUser(c, request.Session().G())
-		if err != nil {
-			cc.logger.Error("core.auth.callback Error init user", err)
-			return cc.Error(c, errors.WithStack(err))
-		}
-
-		cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session().G()})
+		cc.eventPublisher.PublishLoginEvent(c, &domain.LoginEvent{Session: request.Session()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
 		request.Session().AddFlash("successful logged in", "info")
 	} else if eOk {

@@ -52,7 +52,7 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Respo
 	}
 
 	state := uuid.NewV4().String()
-	request.Session().Store("auth.state", state)
+	l.authManager.StoreAuthState(request.Session(), state)
 	request.Session().Store("auth.redirect", redirecturl)
 
 	var parameters []oauth2.AuthCodeOption

@@ -216,6 +216,18 @@ func (r *DataResponse) Hook(hooks ...ResponseHook) Response {
 	return r
 }
 
+// Download returns a download response to handle file downloads
+func (r *Responder) Download(data io.ReadCloser, contentType string, fileName string) *HTTPResponse {
+	return &HTTPResponse{
+		Status: http.StatusOK,
+		Header: http.Header{
+			"Content-Type":        []string{contentType},
+			"Content-Disposition": []string{"attachment; filename=" + fileName},
+		},
+		Body: data,
+	}
+}
+
 // Render creates a render response, with the supplied template and data
 func (r *Responder) Render(tpl string, data interface{}) *RenderResponse {
 	return &RenderResponse{

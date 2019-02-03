@@ -1,23 +1,6 @@
 # Flamingo Dev Hints
 
-## Setup
-
-In order to work properly, Flamingo needs to be checked out at the following location: `$GOPATH/src/flamingo.me/flamingo`
-```sh
-git clone git@gitlab.aoe.com:shared/i-love-flamingo/flamingo.git $GOPATH/src/flamingo.me/flamingo
-```
-
 ## Necessary tooling
-
-### dep
-
-Dependency manager:
-
-`go get -u github.com/golang/dep/cmd/dep`
-
-Usage
-
-`dep ensure` or `dep ensure -vendor-only`
 
 ### go-bindata
 

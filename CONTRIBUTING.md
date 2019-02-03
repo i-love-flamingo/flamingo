@@ -1,10 +1,15 @@
 # Contributing to Flamingo
 
+## CLA
+
+Flamingo is Open Source and therefore we need a signed CLA (Contributor License Agreements) before we can include your contributions.
+See [AOE Individual Contributor License Agreement](CLA.md).
+
 ## Workflow
 
 ### Committing
 
-Please contribute by opening merge requests in gitlab.
+Please contribute by opening merge requests in github.
 This allows us to review, and optionally squash changes to an atomic change.
 
 You can always create branches in this repository, not necessary to do so in a custom fork.
@@ -19,8 +24,6 @@ or
 
 A commit message is supposed to tell what has changed.
 
-Feel free to use Targetprocess and/or Jira ticket numbers in the commit message body, but not in the first line.
-The internal ID's do not belong to the Flamingo core in general.
 
 ### Releases
 
@@ -45,6 +48,7 @@ Do not check, and do not pass, nil contexts, as they are forbidden!
 Do not use the context for general passing of scoped data, unless it's explicit necessary.
 
 Use the opencensus/tags package for tracing/stats tags.
+
 If necessary use the session.FromContext and web.FromContext to retrieve current session or request.
 The `web.Request` has a `Values` map which allows you to pass request-scoped data. Please note that this works like a 
 request-global variable, thus you might create implicit dependencies. Use a private type for the map-key.

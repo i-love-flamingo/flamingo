@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"flamingo.me/flamingo/v3/core/cmd/interfaces/command"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/dingo"
 	"flamingo.me/flamingo/v3/framework/event"
@@ -27,12 +26,6 @@ var once = sync.Once{}
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	// command.VersionCmd,
-	// command.DiCmd,
-	// command.RoutingConfCmd,
-	// command.RouterCmd,
-	// command.DataControllerCmd,
-	// command.TplfuncsCmd,
 
 	injector.Bind(new(cobra.Command)).AnnotatedWith("flamingo").ToProvider(
 		func(
@@ -61,8 +54,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			return rootCmd
 		},
 	)
-
-	injector.BindMulti(new(cobra.Command)).ToProvider(command.ConfigCmd)
 }
 
 // DefaultConfig specifies the command name
@@ -96,7 +87,7 @@ func shutdown(eventRouter event.Router, signals <-chan os.Signal, logger flaming
 	}
 }
 
-// Run the root command todo: still in use?
+// Run the root command
 func Run(injector *dingo.Injector) error {
 	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
 	injector.GetInstance(new(router.EventRouterProvider)).(router.EventRouterProvider)().Dispatch(context.Background(), &flamingo.AppStartupEvent{AppModule: nil})

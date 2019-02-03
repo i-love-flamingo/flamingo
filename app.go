@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"flamingo.me/flamingo/v3/core/cmd"
 	"flamingo.me/flamingo/v3/core/zap"
 	"flamingo.me/flamingo/v3/framework"
+	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/dingo"
 	"flamingo.me/flamingo/v3/framework/event"

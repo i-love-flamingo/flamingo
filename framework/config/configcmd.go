@@ -1,14 +1,14 @@
-package command
+package config
 
 import (
 	"encoding/json"
 	"fmt"
 
-	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/spf13/cobra"
 )
 
-func ConfigCmd(area *config.Area) *cobra.Command {
+//ConfigCmd - The Area for which the config is to be printed need to be passed. This will be done by Dingo if a Provider is used for example.
+func ConfigCmd(area *Area) *cobra.Command {
 	var contextName string
 
 	cmd := &cobra.Command{
@@ -49,7 +49,7 @@ func ConfigCmd(area *config.Area) *cobra.Command {
 	return cmd
 }
 
-func dumpConfigArea(a *config.Area) {
+func dumpConfigArea(a *Area) {
 	fmt.Println()
 	fmt.Println("**************************")
 	fmt.Println("Area: ", a.Name)

@@ -17,6 +17,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/template"
 	"flamingo.me/flamingo/v3/framework/web"
 	"flamingo.me/flamingo/v3/framework/web/responder"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -45,10 +46,13 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	router.Bind(injector, new(routes))
 
 	injector.Bind((*event.Router)(nil)).To(event.DefaultRouter{})
-
 	injector.Bind(router.Router{}).In(dingo.ChildSingleton).ToProvider(router.NewRouter)
 	injector.Bind(router.Registry{}).In(dingo.Singleton).ToProvider(router.NewRegistry)
 	injector.Bind(new(web.ReverseRouter)).To(router.Router{})
+	injector.BindMulti(new(cobra.Command)).ToProvider(router.RoutesCmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(router.HandlerCmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(config.ConfigCmd)
+
 }
 
 // Configure the Module

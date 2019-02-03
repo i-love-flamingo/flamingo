@@ -32,13 +32,13 @@ func init() {
 type (
 	// FrontRouter is a http.handler which serves multiple sites based on the host/path prefix
 	FrontRouter struct {
-		//primaryHandlers a list of handlers used before processing
+		// primaryHandlers a list of handlers used before processing
 		primaryHandlers []OptionalHandler
-		//router registered to serve the request based on the prefix
+		// router registered to serve the request based on the prefix
 		router map[string]routerHandler
-		//fallbackHandlers is used if no router is matching
+		// fallbackHandlers is used if no router is matching
 		fallbackHandlers []OptionalHandler
-		//finalFallbackHandler is used as final fallback handler - which is called if no other handler can process
+		// finalFallbackHandler is used as final fallback handler - which is called if no other handler can process
 		finalFallbackHandler http.Handler
 	}
 
@@ -94,7 +94,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(ctx)
 	defer span.End()
 
-	//process registered primaryHandlers - and if they are sucessfull exist
+	// process registered primaryHandlers - and if they are sucessfull exist
 	for _, handler := range fr.primaryHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
 		if !proceed {
@@ -107,12 +107,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		host = strings.Split(host, ":")[0]
 	}
 
-	//path := req.URL.Path
-	//if req.URL.RawPath != "" {
-	//	path = req.URL.RawPath
-	//}
 	path := req.RequestURI
-
 	path = "/" + strings.TrimLeft(path, "/")
 
 	for prefix, router := range fr.router {
@@ -151,7 +146,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	//fallback to final handler if given
+	// fallback to final handler if given
 	if fr.finalFallbackHandler != nil {
 		span.End()
 		fr.finalFallbackHandler.ServeHTTP(w, req)

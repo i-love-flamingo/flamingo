@@ -4,14 +4,14 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/baseurl"
+	"flamingo.me/flamingo/v3/framework/baseurl/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
-	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
 )
@@ -21,6 +21,7 @@ type Module struct {
 	server                    *http.Server
 	logger                    flamingo.Logger
 	enableRootRedirectHandler bool
+	urlService                domain.Service
 }
 
 // Configure DI
@@ -34,11 +35,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 // Inject dependencies
-func (m *Module) Inject(l flamingo.Logger, config *struct {
+func (m *Module) Inject(l flamingo.Logger, urlService domain.Service, config *struct {
 	EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
 }) {
 	m.logger = l
 	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
+	m.urlService = urlService
 }
 
 func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {
@@ -81,24 +83,18 @@ func (m *Module) serve(
 
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
-			baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl")
+			baseURL := area.Injector.GetInstance((*domain.Service)(nil)).(domain.Service).BaseURL()
 
-			if !ok {
+			if baseURL == "" {
 				m.logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue
 			}
 
-			baseurl := baseurlVal.(string)
-
-			if strings.HasPrefix(baseurl, "/") {
-				baseurl = "host" + baseurl
-			}
-
-			m.logger.WithField("category", "prefixrouter").Info("Routing ", area.Name, " at ", baseurl)
-			area.Injector.Bind(new(flamingo.Logger)).ToInstance(m.logger.WithField("area", area.Name))
+			m.logger.WithField("category", "prefixrouter").Info("Routing ", area.Name, " at ", baseURL)
+			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(web.Router{}).(*web.Router)
 			areaRouter.Init(area)
-			bu, _ := url.Parse("scheme://" + baseurl)
+			bu, _ := url.Parse(baseURL)
 
 			areaRouter.SetBase(bu)
 			frontRouter.Add(bu.Path, routerHandler{area: area.Name, handler: areaRouter})
@@ -139,6 +135,12 @@ func (m *Module) serve(
 		if e != nil && e != http.ErrServerClosed {
 			m.logger.WithField("category", "prefixrouter").Error("Unexpected Error ", e)
 		}
+	}
+}
+
+func (m *Module) Depends() []dingo.Module {
+	return []dingo.Module{
+		new(baseurl.Module),
 	}
 }
 

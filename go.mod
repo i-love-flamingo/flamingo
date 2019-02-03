@@ -2,6 +2,7 @@ module flamingo.me/flamingo/v3
 
 require (
 	flamingo.me/dingo v0.1.3
+	flamingo.me/flamingo v2.3.3+incompatible // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/boj/redistore v0.0.0-20160128113310-fc113767cd6b
 	github.com/coreos/go-oidc v2.0.0+incompatible
@@ -10,6 +11,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20180513044358-24b0969c4cb7
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect

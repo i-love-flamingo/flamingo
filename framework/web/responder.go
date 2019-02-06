@@ -217,12 +217,17 @@ func (r *DataResponse) Hook(hooks ...ResponseHook) Response {
 }
 
 // Download returns a download response to handle file downloads
-func (r *Responder) Download(data io.ReadCloser, contentType string, fileName string) *HTTPResponse {
+func (r *Responder) Download(data io.ReadCloser, contentType string, fileName string, forceDownload bool) *HTTPResponse {
+	contentDisposition := "inline"
+	if forceDownload {
+		contentDisposition = "attachement"
+	}
+
 	return &HTTPResponse{
 		Status: http.StatusOK,
 		Header: http.Header{
 			"Content-Type":        []string{contentType},
-			"Content-Disposition": []string{"attachment; filename=" + fileName},
+			"Content-Disposition": []string{contentDisposition + "; filename=" + fileName},
 		},
 		Body: data,
 	}

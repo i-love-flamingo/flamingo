@@ -295,7 +295,9 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 			Template: tpl,
 			engine:   r.engine,
 			DataResponse: DataResponse{
-				Data: nil,
+				Data: map[string]interface{}{
+					"code": status,
+				},
 				HTTPResponse: HTTPResponse{
 					Status: status,
 					Header: make(http.Header),

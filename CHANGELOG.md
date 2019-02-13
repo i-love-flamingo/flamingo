@@ -20,8 +20,10 @@
 - `web.Request` is heavily condensed
   - Access to Params has changed
 - `web.Session` does not expose `.GS()` for the gorilla session anymore
-- `event.Subscriber` is getting `context.Context` as the first argument: `Notify(ctx context.Context, e flamingo.Event)`
-- `event.Subscriber` are registered via `framework/flamingo.BindEventSubscriber(injector).To(...)`
+- `event.Subscriber` changes:
+  - is getting `context.Context` as the first argument: `Notify(ctx context.Context, e flamingo.Event)`
+  - `event.Subscriber` are registered via `framework/flamingo.BindEventSubscriber(injector).To(...)`
+  - There is no SubscriberWithContext anymore!
 - `dingo` is moved out to `flamingo.me/dingo` and we recommend to use the Inject() methods instead of public properties.
 - several other Modules have been moved out of flamingo and exist as seperate modules:
   - **For all the stuff in this section:** you may use the script `docs/updates/v3/renameimports.sh` for autoupdate the import paths in your project and to do some first replacements.

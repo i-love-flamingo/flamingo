@@ -40,12 +40,12 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.HandlerCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(config.Cmd)
 
-	web.Bind(injector, new(routes))
+	web.BindRoutes(injector, new(routes))
 
 	injector.Bind(new(flamingo.EventRouter)).To(flamingo.DefaultEventRouter{})
 
 	injector.Bind(web.Router{}).In(dingo.ChildSingleton)
-	injector.Bind(web.Registry{}).In(dingo.Singleton).ToProvider(web.NewRegistry)
+	injector.Bind(web.RouterRegistry{}).In(dingo.Singleton).ToProvider(web.NewRegistry)
 
 	flamingo.BindTemplateFunc(injector, "config", new(config.TemplateFunc))
 	flamingo.BindTemplateFunc(injector, "setPartialData", new(web.SetPartialDataFunc))
@@ -65,7 +65,7 @@ func (r *routes) Inject(
 	r.errorController = errorController
 }
 
-func (r *routes) Routes(registry *web.Registry) {
+func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleData("session.flash", r.flashController.Data)
 
 	registry.HandleAny("flamingo.render", r.render.Render)

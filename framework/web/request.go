@@ -78,3 +78,28 @@ func (r *Request) RemoteAddress() []string {
 
 	return remoteAddress
 }
+
+
+// Query looks up Raw Query map for Param
+func (r *Request) Query(n string) ([]string, bool) {
+	f, ok := r.QueryAll()[n]
+	return f, ok
+}
+
+// Query1 looks up Raw Query map for First Param
+func (r *Request) Query1(n string) (string, bool) {
+	f, ok := r.Query(n)
+	if !ok {
+		return "", false
+	}
+	if len(f) > 0 {
+		return f[0], true
+	}
+	return "", false
+}
+
+
+// QueryAll returns a Map of the Raw Query
+func (r *Request) QueryAll() map[string][]string {
+	return r.request.URL.Query()
+}

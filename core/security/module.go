@@ -29,7 +29,7 @@ func (r *routes) Inject(c *controller.DataController) {
 }
 
 // Routes registers security controller
-func (r *routes) Routes(registry *web.Registry) {
+func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleData("security.isLoggedIn", r.dataController.IsLoggedIn)
 	registry.HandleData("security.isLoggedOut", r.dataController.IsLoggedOut)
 	registry.HandleData("security.isGranted", r.dataController.IsGranted)
@@ -37,7 +37,7 @@ func (r *routes) Routes(registry *web.Registry) {
 
 // Configure security dependency injection
 func (m *Module) Configure(injector *dingo.Injector) {
-	web.Bind(injector, &routes{})
+	web.BindRoutes(injector, &routes{})
 
 	injector.BindMulti(new(provider.RoleProvider)).To(provider.AuthRoleProvider{})
 	injector.BindMulti(new(voter.SecurityVoter)).To(voter.IsLoggedInVoter{})

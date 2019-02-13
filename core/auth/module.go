@@ -41,10 +41,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"auth": config.Map{
-			"useFake":                     false,
-			"fakeUserData":                config.Map{},
-			"fakeLoginTemplate":           "",
-			"scopes":                      config.Slice{"profile", "email"},
+			"useFake":           false,
+			"fakeUserData":      config.Map{},
+			"fakeLoginTemplate": "",
+			"scopes":            config.Slice{"profile", "email"},
 			"claims": config.Map{
 				"idToken":  config.Slice{},
 				"userInfo": config.Slice{},

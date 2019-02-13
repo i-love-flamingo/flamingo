@@ -1,15 +1,15 @@
 package opencensus
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 
-	"fmt"
-	"math/rand"
-
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
+	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	"go.opencensus.io/exporter/jaeger"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/plugin/ochttp"
@@ -21,10 +21,13 @@ import (
 
 var (
 	registerOnce = new(sync.Once)
-	KeyArea, _   = tag.NewKey("area")
-	Sampler      = trace.NeverSample()
+	// KeyArea is the key to represent the current flamingo area
+	KeyArea, _ = tag.NewKey("area")
+	// Sampler is used as default sampler
+	Sampler = trace.NeverSample()
 )
 
+// View registers a new view
 func View(name string, m stats.Measure, aggr *view.Aggregation, tagKeys ...tag.Key) {
 	view.Register(&view.View{
 		Name:        name,
@@ -38,7 +41,7 @@ type correlationIDInjector struct {
 	next http.RoundTripper
 }
 
-// RoundTrip a request
+// RoundTrip a requests
 func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
 	if span := trace.FromContext(req.Context()); span != nil {
 		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID.String())
@@ -47,6 +50,7 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 	return rt.next.RoundTrip(req)
 }
 
+// Module basic struct
 type Module struct {
 	Endpoint     string `inject:"config:opencensus.jaeger.endpoint"`
 	ServiceName  string `inject:"config:opencensus.serviceName"`
@@ -54,6 +58,7 @@ type Module struct {
 	JaegerEnable bool   `inject:"config:opencensus.jaeger.enable"`
 }
 
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
@@ -63,7 +68,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 		if m.JaegerEnable {
 			// generate a random IP in 127.0.0.0/8 network to trick jaegers clock skew detection
-			randomIp := fmt.Sprintf("127.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255))
+			randomIP := fmt.Sprintf("127.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255))
 
 			// Register the Jaeger exporter to be able to retrieve
 			// the collected spans.
@@ -72,7 +77,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Process: jaeger.Process{
 					ServiceName: m.ServiceName,
 					Tags: []jaeger.Tag{
-						jaeger.StringTag("ip", randomIp),
+						jaeger.StringTag("ip", randomIP),
 					},
 				},
 			})
@@ -88,13 +93,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				log.Fatal(err)
 			}
 			view.RegisterExporter(exporter)
-			s := http.NewServeMux()
-			s.Handle("/metrics", exporter)
-			go http.ListenAndServe(m.ServiceAddr, s)
+			injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exporter)
 		}
 	})
 }
 
+// DefaultConfig for opencensus module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"opencensus": config.Map{

@@ -1,5 +1,5 @@
 /*
-Flamingo Package that provides a healthcheck endpoint under the default route /status/healthcheck
+Package healthcheck provides a healthcheck endpoint under the default route /status/healthcheck
 Usage:
  Register your own Status via Dingo:
  injector.BindMap((*healthcheck.Status)(nil), "yourServiceName").To(yourServiceNameApi.Status{})
@@ -8,24 +8,46 @@ Usage:
 package healthcheck
 
 import (
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/v3/core/healthcheck/interfaces/controllers"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/dingo"
-	"flamingo.me/flamingo/v3/framework/router"
+	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
+// Module basic struct
 type Module struct {
-	CheckSession    bool   `inject:"config:healthcheck.checkSession"`
-	CheckAuthServer bool   `inject:"config:healthcheck.checkAuth"`
-	SessionBackend  string `inject:"config:session.backend"`
+	controller      *controllers.Healthcheck
+	checkSession    bool
+	checkAuthServer bool
+	checkPath       string
+	pingPath        string
+	sessionBackend  string
 }
 
-func (m *Module) Configure(injector *dingo.Injector) {
-	router.Bind(injector, new(routes))
+// Inject dependencies
+func (m *Module) Inject(
+	controller *controllers.Healthcheck,
+	config *struct {
+		CheckSession    bool   `inject:"config:healthcheck.checkSession"`
+		CheckAuthServer bool   `inject:"config:healthcheck.checkAuth"`
+		CheckPath       string `inject:"config:healthcheck.checkPath"`
+		PingPath        string `inject:"config:healthcheck.pingPath"`
+		SessionBackend  string `inject:"config:session.backend"`
+	},
+) {
+	m.controller = controller
+	m.checkSession = config.CheckSession
+	m.checkAuthServer = config.CheckAuthServer
+	m.checkPath = config.CheckPath
+	m.pingPath = config.PingPath
+	m.sessionBackend = config.SessionBackend
+}
 
-	if m.CheckSession {
-		switch m.SessionBackend {
+// Configure DI
+func (m *Module) Configure(injector *dingo.Injector) {
+	if m.checkSession {
+		switch m.sessionBackend {
 		case "redis":
 			injector.BindMap((*healthcheck.Status)(nil), "session").To(healthcheck.RedisSession{})
 		case "file":
@@ -34,38 +56,20 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			injector.BindMap((*healthcheck.Status)(nil), "session").To(healthcheck.Nil{})
 		}
 	}
-	if m.CheckAuthServer {
+	if m.checkAuthServer {
 		injector.BindMap((*healthcheck.Status)(nil), "auth").To(healthcheck.Auth{})
 	}
+
+	injector.BindMap((*domain.Handler)(nil), m.pingPath).To(&controllers.Ping{})
+	injector.BindMap((*domain.Handler)(nil), m.checkPath).To(&controllers.Healthcheck{})
+
 }
 
-type routes struct {
-	checkPath   string
-	pingPath    string
-	healthcheck *controllers.Healthcheck
-}
-
-func (r *routes) Inject(healthcheck *controllers.Healthcheck, cfg *struct {
-	CheckPath string `inject:"config:healthcheck.checkPath"`
-	PingPath  string `inject:"config:healthcheck.pingPath"`
-}) {
-	r.healthcheck = healthcheck
-	r.checkPath = cfg.CheckPath
-	r.pingPath = cfg.PingPath
-}
-
-func (r *routes) Routes(registry *router.Registry) {
-	registry.HandleGet("health.check", r.healthcheck.Healthcheck)
-	registry.Route(r.checkPath, "health.check")
-
-	registry.HandleGet("health.ping", r.healthcheck.Ping)
-	registry.Route(r.pingPath, "health.ping")
-}
-
+// DefaultConfig for healthcheck module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"healthcheck": config.Map{
-			"checkSession": false,
+			"checkSession": true,
 			"checkAuth":    false,
 			"checkPath":    "/status/healthcheck",
 			"pingPath":     "/status/ping",

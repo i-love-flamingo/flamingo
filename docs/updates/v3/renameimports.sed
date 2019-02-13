@@ -1,4 +1,4 @@
-s/\"flamingo.me\/flamingo\/framework\/dingo/\"flamingo.me\/dingo\//
+s/\"flamingo.me\/flamingo\/framework\/dingo/\"flamingo.me\/dingo/
 s/\"flamingo.me\/flamingo\/core\/canonicalUrl/\"flamingo.me\/v3\/core\/canonicalurl/
 s/\"flamingo.me\/flamingo\/core\/requestTask/\"flamingo.me\/v3\/core\/requesttask/
 

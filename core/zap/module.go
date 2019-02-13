@@ -135,7 +135,7 @@ func (subscriber *ShutdownEventSubscriber) Notify(_ context.Context, event flami
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if logger, ok := subscriber.logger.(*Logger); ok {
 			logger.Debug("Zap Logger shutdown event")
-			_ = logger.Sync()
+			logger.Sync()
 		}
 	}
 }

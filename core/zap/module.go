@@ -1,6 +1,8 @@
 package zap
 
 import (
+	"context"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -129,12 +131,11 @@ func (subscriber *ShutdownEventSubscriber) Inject(logger flamingo.Logger) {
 }
 
 // Notify handles the incoming event if it is a AppShutdownEvent
-func (subscriber *ShutdownEventSubscriber) Notify(event flamingo.Event) {
-	switch event.(type) {
-	case *flamingo.ShutdownEvent:
+func (subscriber *ShutdownEventSubscriber) Notify(_ context.Context, event flamingo.Event) {
+	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if logger, ok := subscriber.logger.(*Logger); ok {
 			logger.Debug("Zap Logger shutdown event")
-			logger.Sync()
+			_ = logger.Sync()
 		}
 	}
 }

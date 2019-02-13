@@ -54,7 +54,7 @@ type (
 		eventrouter            flamingo.EventRouter
 		injector               *dingo.Injector
 		routerRegistryProvider RegistryProvider
-		routerRegistry         *Registry
+		routerRegistry         *RouterRegistry
 		routerTimeout          float64
 		notFoundHandler        string
 		errorHandler           string
@@ -85,7 +85,7 @@ func (router *Router) Inject(
 	eventRouterProvider EventRouterProvider,
 	injector *dingo.Injector,
 	routerRegistryProvider RegistryProvider,
-	routerRegistry *Registry,
+	routerRegistry *RouterRegistry,
 	cfg *struct {
 		SessionName     string         `inject:"config:session.name"`
 		SessionStore    sessions.Store `inject:",optional"`

@@ -10,7 +10,7 @@ import (
 )
 
 type (
-	// Registry holds a list of all routes and handlers to be registered in modules.
+	// RouterRegistry holds a list of all routes and handlers to be registered in modules.
 	//
 	// We have:
 	// routes: key-params -> path, for reverse routes
@@ -18,7 +18,7 @@ type (
 	// path: url-pattern -> key+params
 	//
 	// Handler: key -> Controller
-	Registry struct {
+	RouterRegistry struct {
 		handler map[string]handlerAction
 		routes  []*Handler
 		alias   map[string]*Handler
@@ -53,18 +53,18 @@ type (
 
 	// Module defines a router Module, which is able to register routes
 	Module interface {
-		Routes(registry *Registry)
+		Routes(registry *RouterRegistry)
 	}
 )
 
-// Bind is a convenience helper to multi-bind router modules
-func Bind(injector *dingo.Injector, m Module) {
+// BindRoutes is a convenience helper to multi-bind router modules
+func BindRoutes(injector *dingo.Injector, m Module) {
 	injector.BindMulti(new(Module)).To(m)
 }
 
-// NewRegistry creates a new Registry
-func NewRegistry() *Registry {
-	return &Registry{
+// NewRegistry creates a new RouterRegistry
+func NewRegistry() *RouterRegistry {
+	return &RouterRegistry{
 		handler: make(map[string]handlerAction),
 		alias:   make(map[string]*Handler),
 	}
@@ -106,77 +106,77 @@ func (mh matchedHandlers) hasMethod(method string) bool {
 }
 
 // HandleAny serves as a fallback to handle HTTP requests which are not taken care of by other handlers
-func (registry *Registry) HandleAny(name string, action Action) {
+func (registry *RouterRegistry) HandleAny(name string, action Action) {
 	ha := registry.handler[name]
 	ha.setAny(action)
 	registry.handler[name] = ha
 }
 
 // HandleData sets the controllers data action
-func (registry *Registry) HandleData(name string, action DataAction) {
+func (registry *RouterRegistry) HandleData(name string, action DataAction) {
 	ha := registry.handler[name]
 	ha.setData(action)
 	registry.handler[name] = ha
 }
 
 // HandleMethod handles requests for the specified HTTP Method
-func (registry *Registry) HandleMethod(method, name string, action Action) {
+func (registry *RouterRegistry) HandleMethod(method, name string, action Action) {
 	ha := registry.handler[name]
 	ha.set(method, action)
 	registry.handler[name] = ha
 }
 
 // HandleGet handles a HTTP GET request
-func (registry *Registry) HandleGet(name string, action Action) {
+func (registry *RouterRegistry) HandleGet(name string, action Action) {
 	registry.HandleMethod(http.MethodGet, name, action)
 }
 
 // HandlePost handles HTTP POST requests
-func (registry *Registry) HandlePost(name string, action Action) {
+func (registry *RouterRegistry) HandlePost(name string, action Action) {
 	registry.HandleMethod(http.MethodPost, name, action)
 }
 
 // HandlePut handles HTTP PUT requests
-func (registry *Registry) HandlePut(name string, action Action) {
+func (registry *RouterRegistry) HandlePut(name string, action Action) {
 	registry.HandleMethod(http.MethodPut, name, action)
 }
 
 // HandleDelete handles HTTP DELETE requests
-func (registry *Registry) HandleDelete(name string, action Action) {
+func (registry *RouterRegistry) HandleDelete(name string, action Action) {
 	registry.HandleMethod(http.MethodDelete, name, action)
 }
 
 // HandleOptions handles HTTP OPTIONS requests
-func (registry *Registry) HandleOptions(name string, action Action) {
+func (registry *RouterRegistry) HandleOptions(name string, action Action) {
 	registry.HandleMethod(http.MethodOptions, name, action)
 }
 
 // HandleHead handles HTTP HEAD requests
-func (registry *Registry) HandleHead(name string, action Action) {
+func (registry *RouterRegistry) HandleHead(name string, action Action) {
 	registry.HandleMethod(http.MethodHead, name, action)
 }
 
 // Has checks if a method is set for a given handler name
-func (registry *Registry) Has(method, name string) bool {
+func (registry *RouterRegistry) Has(method, name string) bool {
 	la, ok := registry.handler[name]
 	_, methodSet := la.method[method]
 	return ok && methodSet
 }
 
 // HasAny checks if an any handler is set for a given name
-func (registry *Registry) HasAny(name string) bool {
+func (registry *RouterRegistry) HasAny(name string) bool {
 	la, ok := registry.handler[name]
 	return ok && la.any != nil
 }
 
 // HasData checks if a data handler is set for a given name
-func (registry *Registry) HasData(name string) bool {
+func (registry *RouterRegistry) HasData(name string) bool {
 	la, ok := registry.handler[name]
 	return ok && la.data != nil
 }
 
 // Route assigns a route to a Handler
-func (registry *Registry) Route(path, handler string) (*Handler, error) {
+func (registry *RouterRegistry) Route(path, handler string) (*Handler, error) {
 	var h = parseHandler(handler)
 	var err error
 
@@ -194,17 +194,17 @@ func (registry *Registry) Route(path, handler string) (*Handler, error) {
 }
 
 // GetRoutes returns registered Routes
-func (registry *Registry) GetRoutes() []*Handler {
+func (registry *RouterRegistry) GetRoutes() []*Handler {
 	return registry.routes
 }
 
 // getHandler returns registered Routes
-func (registry *Registry) getHandler() map[string]handlerAction {
+func (registry *RouterRegistry) getHandler() map[string]handlerAction {
 	return registry.handler
 }
 
 // Alias for an existing router definition
-func (registry *Registry) Alias(name, to string) {
+func (registry *RouterRegistry) Alias(name, to string) {
 	registry.alias[name] = parseHandler(to)
 }
 
@@ -295,7 +295,7 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 }
 
 // Reverse builds the path from a named route with params
-func (registry *Registry) Reverse(name string, params map[string]string) (string, error) {
+func (registry *RouterRegistry) Reverse(name string, params map[string]string) (string, error) {
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler
 		for name, param := range alias.params {
@@ -397,7 +397,7 @@ catchallrouteloop:
 }
 
 // Match a request path
-func (registry *Registry) match(path string) (handler handlerAction, params map[string]string) {
+func (registry *RouterRegistry) match(path string) (handler handlerAction, params map[string]string) {
 	for _, route := range registry.routes {
 		if match := route.path.Match(path); match != nil {
 			handler = registry.handler[route.handler]
@@ -415,7 +415,7 @@ func (registry *Registry) match(path string) (handler handlerAction, params map[
 }
 
 // matchRequest matches a http Request (with query and path parameters)
-func (registry *Registry) matchRequest(req *http.Request) (handlerAction, map[string]string, *Handler) {
+func (registry *RouterRegistry) matchRequest(req *http.Request) (handlerAction, map[string]string, *Handler) {
 	var path = req.URL.Path
 	if req.URL.RawPath != "" {
 		path = req.URL.RawPath
@@ -460,7 +460,7 @@ func (registry *Registry) matchRequest(req *http.Request) (handlerAction, map[st
 	return handlerAction{}, nil, nil
 }
 
-func (registry *Registry) makeHandler(req *http.Request, matched matchedHandler) (handlerAction, map[string]string, *Handler) {
+func (registry *RouterRegistry) makeHandler(req *http.Request, matched matchedHandler) (handlerAction, map[string]string, *Handler) {
 	params := make(map[string]string)
 	if len(matched.handler.params) > 0 {
 		for k, param := range matched.handler.params {

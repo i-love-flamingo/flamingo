@@ -35,7 +35,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		injector.Bind(new(interfaces.LogoutControllerInterface)).To(fakeController.LogoutController{})
 	}
 
-	web.Bind(injector, new(routes))
+	web.BindRoutes(injector, new(routes))
 }
 
 // DefaultConfig for auth module
@@ -88,7 +88,7 @@ func (r *routes) Inject(
 }
 
 // Routes module
-func (r *routes) Routes(registry *web.Registry) {
+func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.Route("/auth/login", `auth.login(redirecturl?="")`)
 	registry.HandleGet("auth.login", r.login.Get)
 	registry.Route("/auth/callback", "auth.callback")

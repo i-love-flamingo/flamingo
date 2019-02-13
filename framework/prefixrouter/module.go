@@ -84,7 +84,7 @@ func (m *Module) serve(
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
 			baseURL := area.Injector.GetInstance((*domain.Service)(nil)).(domain.Service).BaseURL()
-
+			// todo use determine base if configured base URL is relative
 			if baseURL == "" {
 				m.logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue

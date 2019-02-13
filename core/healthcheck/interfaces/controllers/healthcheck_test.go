@@ -1,13 +1,12 @@
 package controllers
 
 import (
-	"context"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
-	"strings"
-
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
-	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,14 +26,13 @@ func TestController_Healthcheck(t *testing.T) {
 		statusProvider StatusProvider
 	}
 	type args struct {
-		ctx     context.Context
-		request *web.Request
+		request *http.Request
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   response
+		want   string
 	}{
 		{
 			name: "alive",
@@ -46,12 +44,9 @@ func TestController_Healthcheck(t *testing.T) {
 				},
 			},
 			args: args{
-				ctx: context.Background(),
-				request: &web.Request{
-					Values: nil,
-				},
+				request: nil,
 			},
-			want: response{[]service{{Name: "test", Alive: true, Details: "alive"}}},
+			want: "{\"services\":[{\"name\":\"test\",\"alive\":true,\"details\":\"alive\"}]}",
 		},
 		{
 			name: "not alive",
@@ -63,33 +58,39 @@ func TestController_Healthcheck(t *testing.T) {
 				},
 			},
 			args: args{
-				ctx: context.Background(),
-				request: &web.Request{
-					Values: nil,
-				},
+				request: nil,
 			},
-			want: response{Services: []service{{Name: "test", Alive: false, Details: "not alive"}}},
+			want: "{\"services\":[{\"name\":\"test\",\"alive\":false,\"details\":\"not alive\"}]}",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			controller := &Healthcheck{}
-			controller.Inject(&web.Responder{}, tt.fields.statusProvider)
+			controller.Inject(tt.fields.statusProvider)
 
-			result := controller.Healthcheck(tt.args.ctx, tt.args.request)
-			response, ok := result.(*web.DataResponse)
-			assert.True(t, ok)
-			assert.Equal(t, tt.want, response.Data)
+			recorder := httptest.NewRecorder()
+			controller.ServeHTTP(recorder, tt.args.request)
+
+			resp := recorder.Result()
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, tt.want, string(body))
 		})
 	}
 }
 
 func TestController_Ping(t *testing.T) {
-	controller := &Healthcheck{}
-	controller.Inject(&web.Responder{}, nil)
+	controller := &Ping{}
 
-	result := controller.Ping(nil, nil)
-	response, ok := result.(*web.HTTPResponse)
-	assert.True(t, ok)
-	assert.Equal(t, strings.NewReader("OK"), response.Body)
+	recorder := httptest.NewRecorder()
+	controller.ServeHTTP(recorder, nil)
+
+	resp := recorder.Result()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, "OK", string(body))
 }

@@ -32,7 +32,7 @@ func (l *LogoutController) Inject(
 func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Response {
 	request.Session().Delete(fake.UserSessionKey)
 	l.eventPublisher.PublishLogoutEvent(ctx, &domain.LogoutEvent{
-		Session: request.Session().G(),
+		Session: request.Session(),
 	})
 
 	redirectUrl, _ := l.authManager.URL(ctx, "")

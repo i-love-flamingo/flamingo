@@ -3,8 +3,11 @@ package web
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -22,8 +25,14 @@ type (
 	contextKeyType string
 )
 
-const (
-	contextRequest contextKeyType = "request"
+const contextRequest contextKeyType = "request"
+
+var (
+	// ErrFormNotFound is returned for unknown form values
+	ErrFormNotFound = errors.New("form value not found")
+
+	// ErrQueryNotFound is returned for unknown URL query parameters
+	ErrQueryNotFound = errors.New("query value not found")
 )
 
 // CreateRequest creates a new request, with optional http.Request and Session.
@@ -79,27 +88,56 @@ func (r *Request) RemoteAddress() []string {
 	return remoteAddress
 }
 
+// Form get POST value
+func (r *Request) Form(name string) ([]string, error) {
+	f, err := r.FormAll()
+	if err != nil {
+		return nil, err
+	}
+	val, ok := f[name]
+	if !ok {
+		return nil, ErrFormNotFound
+	}
+	return val, nil
+}
+
+// Form1 get first POST value
+func (r *Request) Form1(name string) (string, error) {
+	f, err := r.Form(name)
+	if err != nil {
+		return "", err
+	}
+	if len(f) > 0 {
+		return f[0], nil
+	}
+
+	return "", ErrFormNotFound
+}
+
+// FormAll get all POST values
+func (r *Request) FormAll() (map[string][]string, error) {
+	err := r.Request().ParseForm()
+	return r.Request().Form, err
+}
 
 // Query looks up Raw Query map for Param
-func (r *Request) Query(n string) ([]string, bool) {
-	f, ok := r.QueryAll()[n]
-	return f, ok
+func (r *Request) Query(name string) ([]string, error) {
+	if f, ok := r.QueryAll()[name]; ok {
+		return f, nil
+	}
+
+	return nil, ErrQueryNotFound
 }
 
 // Query1 looks up Raw Query map for First Param
-func (r *Request) Query1(n string) (string, bool) {
-	f, ok := r.Query(n)
-	if !ok {
-		return "", false
+func (r *Request) Query1(name string) (string, error) {
+	if f, err := r.Query(name); err == nil && len(f) > 0 {
+		return f[0], nil
 	}
-	if len(f) > 0 {
-		return f[0], true
-	}
-	return "", false
+	return "", ErrQueryNotFound
 }
 
-
 // QueryAll returns a Map of the Raw Query
-func (r *Request) QueryAll() map[string][]string {
+func (r *Request) QueryAll() url.Values {
 	return r.request.URL.Query()
 }

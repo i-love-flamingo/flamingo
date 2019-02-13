@@ -3,21 +3,23 @@
 ## v3
 
 - `framework/web.Response` is now `framework/web.Result`
-- `web.Request` is heavily condensed
-- `web.Session` does not expose `.GS()` for the gorilla session anymore
-- `web.Responser`concept is changed
+- `web.Responser`concept is changed in general
   - instead of injecting 
     ```
      responder.JSONAware
      responder.RenderAware
      responder.RedirectAware
      ``` 
-     in a controlelr you need to inject 
+     in a controller you need to inject 
      ```
      Responder *web.Responder
      ```
      And use the Methods of the Responser:
      `c.Responder.Data()` `c.Responder.Render()`  `c.Responder.Redirect()`
+   - also the Controller returns type `web.Result` now (instead of `web.Response`)
+- `web.Request` is heavily condensed
+  - Access to Params has changed
+- `web.Session` does not expose `.GS()` for the gorilla session anymore
 - `event.Subscriber` is getting `context.Context` as the first argument: `Notify(ctx context.Context, e flamingo.Event)`
 - `event.Subscriber` are registered via `framework/flamingo.BindEventSubscriber(injector).To(...)`
 - `dingo` is moved out to `flamingo.me/dingo` and we recommend to use the Inject() methods instead of public properties.

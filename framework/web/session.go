@@ -50,11 +50,13 @@ func (s *Session) Try(key interface{}) (data interface{}) {
 }
 
 // Store data with a key in the Session
-func (s *Session) Store(key interface{}, data interface{}) {
+func (s *Session) Store(key interface{}, data interface{}) *Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.s.Values[key] = data
+
+	return s
 }
 
 // Delete a given key from the session
@@ -86,6 +88,16 @@ func (s *Session) Keys() []interface{} {
 	}
 	return keys
 }
+
+// ClearAll removes all values from the session
+func (s *Session) ClearAll() *Session {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.s.Values = make(map[interface{}]interface{})
+	return s
+}
+
 
 // Flashes returns a slice of flash messages from the session
 // todo change?

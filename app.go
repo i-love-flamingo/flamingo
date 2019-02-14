@@ -69,10 +69,9 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 }
 
 // Notify upon flamingo Shutdown event
-func (a *appmodule) Notify(event flamingo.Event) {
-	switch event.(type) {
-	case *flamingo.ShutdownEvent:
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (a *appmodule) Notify(ctx context.Context, event flamingo.Event) {
+	if _, ok := event.(*flamingo.ShutdownEvent); ok {
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		a.logger.Info("Shutdown server on ", a.server.Addr)
 

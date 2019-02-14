@@ -9,7 +9,7 @@ s/ event.Event/ flamingo.Event/
 s/\"flamingo.me\/flamingo\/core\/redirects/\"flamingo.me\/redirects/
 s/\"flamingo.me\/flamingo\/core\/pugtemplate/\"flamingo.me\/pugtemplate/
 s/\"flamingo.me\/flamingo\/core\/form2/\"flamingo.me\/form/
-s/\"flamingo.me\/flamingo\/core\/form/\"flamingo.me\/form/
+s/\"flamingo.me\/flamingo\/core\/form/\"go.aoe.com\/flamingo\/form/
 
 s/\"flamingo.me\/flamingo\/core\/csrf/\"flamingo.me\/csrf\//
 s/\"flamingo.me\/flamingo\/core\/csp/\"flamingo.me\/csp\//
@@ -29,7 +29,9 @@ s/\.Param1(\(.*\))/\.Params\[\1]/
 
 s/\"flamingo.me\/flamingo\/framework\/router\"/\"flamingo.me\/flamingo\/v3\/framework\/web\"/
 s/router\.Bind(/web\.BindRoutes(/
+s/router\.Router/web\.Router/
 s/router\.Registry/web\.RouterRegistry/
+
 
 
 s/\"flamingo.me\/flamingo\/framework\/template\"/\"flamingo.me\/flamingo\/v3\/framework\/flamingo\"/

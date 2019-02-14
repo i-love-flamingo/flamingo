@@ -41,7 +41,7 @@ type (
 	// FilterProvider for filter injection
 	FilterProvider func() []Filter
 	// RegistryProvider is called to retrieve registered routes
-	RegistryProvider func() []Module
+	RegistryProvider func() []RoutesModule
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
 	// This includes DI resolving etc

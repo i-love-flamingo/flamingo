@@ -62,7 +62,7 @@ Currently Flamingo uses Dingo Multibindings to register Event Subscriber
 
 ```go
 func (m *Module) Configure(injector *dingo.Injector) {
-    injector.BindMulti(new(event.SubscriberWithContext)).To(application.EventSubscriber{})
+    flamingo.BindEventSubscriber(injector).To(application.EventSubscriber{})
 }
 ```
 

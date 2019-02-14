@@ -73,6 +73,20 @@ func (s *Session) ID() (id string) {
 	return s.s.ID
 }
 
+// Keys returns an unordered list of session keys
+func (s *Session) Keys() []interface{} {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	keys := make([]interface{}, len(s.s.Values))
+	i := 0
+	for k := range s.s.Values {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
 // Flashes returns a slice of flash messages from the session
 // todo change?
 func (s *Session) Flashes(vars ...string) []interface{} {

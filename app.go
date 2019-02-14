@@ -91,16 +91,11 @@ func ConfigDir(configdir string) func(config *appconfig) {
 	}
 }
 
+// ChildAreas allows to define additional config areas for roots
 func ChildAreas(areas ...*config.Area) func(config *appconfig) {
 	return func(config *appconfig) {
 		config.childAreas = areas
 	}
-}
-
-func a() {
-	App([]dingo.Module{
-		new(prefixrouter.Module),
-	}, ChildAreas(config.NewArea("en-GB", new(special.Module))))
 }
 
 type appconfig struct {

@@ -38,7 +38,7 @@ func (e *EventHandler) Inject(authManager *AuthManager) {
 }
 
 // Notify calls AuthManager on each logout, so it can destroy data stored for previously logged in user
-func (e *EventHandler) Notify(event flamingo.Event) {
+func (e *EventHandler) Notify(_ context.Context, event flamingo.Event) {
 	logoutEvent, ok := event.(*domain.LogoutEvent)
 	if ok {
 		e.authManager.DeleteTokenDetails(logoutEvent.Session)

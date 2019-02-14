@@ -197,6 +197,12 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	return r.Response.Apply(c, w)
 }
 
+//Status - changes status in the response
+func (r *DataResponse) Status(status uint) *DataResponse{
+	r.Response.Status = status
+	return r
+}
+
 // Download returns a download response to handle file downloads
 func (r *Responder) Download(data io.ReadCloser, contentType string, fileName string, forceDownload bool) *Response {
 	contentDisposition := "inline"

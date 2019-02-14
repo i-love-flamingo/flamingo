@@ -75,18 +75,18 @@ func (s *Session) ID() (id string) {
 
 // Flashes returns a slice of flash messages from the session
 // todo change?
-func (s *Session) Flashes() []interface{} {
+func (s *Session) Flashes(vars ...string) []interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return s.s.Flashes()
+	return s.s.Flashes(vars...)
 }
 
 // AddFlash adds a flash message to the session.
 // todo change?
-func (s *Session) AddFlash(value interface{}) {
+func (s *Session) AddFlash(value interface{}, vars ...string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.s.AddFlash(value)
+	s.s.AddFlash(value, vars...)
 }

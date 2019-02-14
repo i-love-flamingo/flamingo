@@ -91,14 +91,34 @@ func ConfigDir(configdir string) func(config *appconfig) {
 	}
 }
 
+func ChildAreas(areas ...*config.Area) func(config *appconfig) {
+	return func(config *appconfig) {
+		config.childAreas = areas
+	}
+}
+
+func a() {
+	App([]dingo.Module{
+		new(prefixrouter.Module),
+	}, ChildAreas(config.NewArea("en-GB", new(special.Module))))
+}
+
 type appconfig struct {
-	configDir string
+	configDir  string
+	childAreas []*config.Area
 }
 
 // App is a simple app-runner for flamingo
 func App(modules []dingo.Module, options ...option) {
+	cfg := &appconfig{
+		configDir: "config",
+	}
+	for _, option := range options {
+		option(cfg)
+	}
+
 	app := new(appmodule)
-	root := config.NewArea("root", modules)
+	root := config.NewArea("root", modules, cfg.childAreas...)
 
 	root.Modules = append([]dingo.Module{
 		new(framework.InitModule),
@@ -107,12 +127,6 @@ func App(modules []dingo.Module, options ...option) {
 	}, root.Modules...)
 
 	root.Modules = append(root.Modules, app)
-	cfg := &appconfig{
-		configDir: "config",
-	}
-	for _, option := range options {
-		option(cfg)
-	}
 	config.Load(root, cfg.configDir)
 
 	cmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)

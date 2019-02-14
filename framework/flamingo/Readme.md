@@ -126,7 +126,7 @@ func (c *Controller) Get(ctx web.Context) web.Response {
 }
 ```
 
-## Configuration
+## Session Configuration
 
 Flamingo expects a `session.Store` dingo binding, this is currently handled via the `session.backend` config parameter.
 

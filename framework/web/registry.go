@@ -51,15 +51,15 @@ type (
 		optional bool
 	}
 
-	// Module defines a router Module, which is able to register routes
-	Module interface {
+	// RoutesModule defines a router RoutesModule, which is able to register routes
+	RoutesModule interface {
 		Routes(registry *RouterRegistry)
 	}
 )
 
 // BindRoutes is a convenience helper to multi-bind router modules
-func BindRoutes(injector *dingo.Injector, m Module) {
-	injector.BindMulti(new(Module)).To(m)
+func BindRoutes(injector *dingo.Injector, m RoutesModule) {
+	injector.BindMulti(new(RoutesModule)).To(m)
 }
 
 // NewRegistry creates a new RouterRegistry

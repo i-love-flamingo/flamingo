@@ -51,7 +51,7 @@ require (
 	go.uber.org/zap v1.9.1
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 	golang.org/x/net v0.0.0-20190108225652-1e06a53dbb7e
-	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
+	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635
 	golang.org/x/sys v0.0.0-20181122145206-62eef0e2fa9b // indirect
 	google.golang.org/api v0.0.0-20180824000442-943e5aafc110 // indirect
 	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
@@ -65,5 +65,5 @@ require (
 
 replace (
 	github.com/robertkrimen/otto => github.com/thebod/otto v0.0.0-20180101010101-83d297c4b64aeb2de4268d9a54c9a503ae2d8139
-	golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b762685799422ab779adefde348535e7a204c363
+	golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b7626857
 )

@@ -6,6 +6,7 @@ git.apache.org/thrift.git v0.0.0-20180807212849-6e67faa92827 h1:VHUAl8nd+JayBhMd
 git.apache.org/thrift.git v0.0.0-20180807212849-6e67faa92827/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b7626857/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b762685799422ab779adefde348535e7a204c363 h1:iN394JGas3ZEBAlhjwQ5UbcuSdYLFhMVcGpCQ8kDWWo=
 github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b762685799422ab779adefde348535e7a204c363/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 h1:xJ4a3vCFaGF/jqvzLMYoU8P317H5OQ+Via4RmuPwCS0=

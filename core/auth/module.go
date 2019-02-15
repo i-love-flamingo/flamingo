@@ -63,6 +63,7 @@ func (m *Module) DefaultConfig() config.Map {
 					"name":  "name",
 				},
 			},
+			"preventSimultaneousSessions": false,
 		},
 	}
 }

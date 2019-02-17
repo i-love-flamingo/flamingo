@@ -1,14 +1,15 @@
-package provider
+package application
 
 import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"flamingo.me/flamingo/v3/core/auth/application/fake"
 	authDomain "flamingo.me/flamingo/v3/core/auth/domain"
 	securityDomain "flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -44,6 +45,6 @@ func (t *AuthRoleProviderTestSuite) TestAll_RoleUser() {
 		Type: authDomain.USER,
 	})
 	t.Equal([]securityDomain.Role{
-		securityDomain.RoleUser,
+		authDomain.OAuthRoleUser,
 	}, t.provider.All(t.context, webSession))
 }

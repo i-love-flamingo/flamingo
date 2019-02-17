@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
+	roleMocks "flamingo.me/flamingo/v3/core/security/application/role/mocks"
 	"flamingo.me/flamingo/v3/core/security/application/voter"
-	"flamingo.me/flamingo/v3/core/security/application/voter/mocks"
+	voterMocks "flamingo.me/flamingo/v3/core/security/application/voter/mocks"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/suite"
@@ -16,17 +17,18 @@ type (
 		suite.Suite
 
 		service     *SecurityServiceImpl
-		firstVoter  *mocks.SecurityVoter
-		secondVoter *mocks.SecurityVoter
-		thirdVoter  *mocks.SecurityVoter
+		firstVoter  *voterMocks.SecurityVoter
+		secondVoter *voterMocks.SecurityVoter
+		thirdVoter  *voterMocks.SecurityVoter
+		roleService *roleMocks.Service
 
 		context context.Context
 	}
 
 	serviceTestCase struct {
-		firstVote         int
-		secondVote        int
-		thirdVote         int
+		firstVote         voter.AccessDecision
+		secondVote        voter.AccessDecision
+		thirdVote         voter.AccessDecision
 		voterStrategy     string
 		allowIfAllAbstain bool
 		decision          bool
@@ -42,16 +44,17 @@ func (t *SecurityServiceTestSuite) SetupSuite() {
 }
 
 func (t *SecurityServiceTestSuite) SetupTest() {
-	t.firstVoter = &mocks.SecurityVoter{}
-	t.secondVoter = &mocks.SecurityVoter{}
-	t.thirdVoter = &mocks.SecurityVoter{}
+	t.firstVoter = &voterMocks.SecurityVoter{}
+	t.secondVoter = &voterMocks.SecurityVoter{}
+	t.thirdVoter = &voterMocks.SecurityVoter{}
 	voters := []voter.SecurityVoter{
 		t.firstVoter,
 		t.secondVoter,
 		t.thirdVoter,
 	}
+	t.roleService = &roleMocks.Service{}
 	t.service = &SecurityServiceImpl{}
-	t.service.Inject(voters, &struct {
+	t.service.Inject(voters, t.roleService, &struct {
 		VoterStrategy     string `inject:"config:security.roles.voters.strategy"`
 		AllowIfAllAbstain bool   `inject:"config:security.roles.voters.allowIfAllAbstain"`
 	}{})
@@ -64,6 +67,8 @@ func (t *SecurityServiceTestSuite) TearDownTest() {
 	t.secondVoter = nil
 	t.thirdVoter.AssertExpectations(t.T())
 	t.thirdVoter = nil
+	t.roleService.AssertExpectations(t.T())
+	t.roleService = nil
 	t.service = nil
 }
 
@@ -179,9 +184,10 @@ func (t *SecurityServiceTestSuite) TestIsLoggedIn() {
 		webSession := web.EmptySession()
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.thirdVote)
+		t.firstVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.firstVote).Once()
+		t.secondVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.secondVote).Once()
+		t.thirdVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.thirdVote).Once()
+		t.roleService.On("AllPermissions", t.context, webSession).Return([]string{}).Once()
 		t.Equal(testCase.decision, t.service.IsLoggedIn(t.context, webSession))
 	}
 }
@@ -298,9 +304,10 @@ func (t *SecurityServiceTestSuite) TestIsLoggedOut() {
 		webSession := web.EmptySession()
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, webSession, domain.RoleUser.Permission(), nil).Once().Return(testCase.thirdVote)
+		t.firstVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.firstVote).Once()
+		t.secondVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.secondVote).Once()
+		t.thirdVoter.On("Vote", []string{}, domain.PermissionAuthorized, nil).Return(testCase.thirdVote).Once()
+		t.roleService.On("AllPermissions", t.context, webSession).Return([]string{}).Once()
 		t.Equal(testCase.decision, t.service.IsLoggedOut(t.context, webSession))
 	}
 }
@@ -417,9 +424,10 @@ func (t *SecurityServiceTestSuite) TestIsGranted() {
 		webSession := web.EmptySession()
 		t.service.voterStrategy = testCase.voterStrategy
 		t.service.allowIfAllAbstain = testCase.allowIfAllAbstain
-		t.firstVoter.On("Vote", t.context, webSession, "SomePermission", nil).Once().Return(testCase.firstVote)
-		t.secondVoter.On("Vote", t.context, webSession, "SomePermission", nil).Once().Return(testCase.secondVote)
-		t.thirdVoter.On("Vote", t.context, webSession, "SomePermission", nil).Once().Return(testCase.thirdVote)
+		t.firstVoter.On("Vote", []string{}, "SomePermission", nil).Return(testCase.firstVote).Once()
+		t.secondVoter.On("Vote", []string{}, "SomePermission", nil).Return(testCase.secondVote).Once()
+		t.thirdVoter.On("Vote", []string{}, "SomePermission", nil).Return(testCase.thirdVote).Once()
+		t.roleService.On("AllPermissions", t.context, webSession).Return([]string{}).Once()
 		t.Equal(testCase.decision, t.service.IsGranted(t.context, webSession, "SomePermission", nil))
 	}
 }

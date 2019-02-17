@@ -2,6 +2,7 @@ package domain
 
 import (
 	"encoding/gob"
+	"flamingo.me/flamingo/v3/core/security/domain"
 
 	"flamingo.me/flamingo/v3/framework/web"
 	oidc "github.com/coreos/go-oidc"
@@ -71,3 +72,6 @@ var Guest = &User{
 	Name: "Guest",
 	Type: GUEST,
 }
+
+// OAuthRoleUser represents basic role for authorized user
+var OAuthRoleUser = domain.StringRole(domain.PermissionAuthorized)

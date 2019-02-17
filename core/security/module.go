@@ -5,7 +5,6 @@ import (
 	authApplication "flamingo.me/flamingo/v3/core/auth/application"
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/core/security/application/role"
-	"flamingo.me/flamingo/v3/core/security/application/role/provider"
 	"flamingo.me/flamingo/v3/core/security/application/voter"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/core/security/interface/controller"
@@ -39,9 +38,8 @@ func (r *routes) Routes(registry *web.RouterRegistry) {
 func (m *Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, &routes{})
 
-	injector.BindMulti(new(provider.RoleProvider)).To(provider.AuthRoleProvider{})
 	injector.BindMulti(new(voter.SecurityVoter)).To(voter.IsLoggedInVoter{})
-	injector.BindMulti(new(voter.SecurityVoter)).To(voter.RoleVoter{})
+	injector.BindMulti(new(voter.SecurityVoter)).To(voter.PermissionVoter{})
 	injector.Bind(new(role.Service)).To(role.ServiceImpl{})
 	injector.Bind(new(application.SecurityService)).To(application.SecurityServiceImpl{})
 	injector.Bind(new(middleware.RedirectURLMaker)).To(authApplication.AuthManager{})
@@ -61,8 +59,8 @@ func (m *Module) DefaultConfig() config.Map {
 				"path":     "/",
 			},
 			"roles": config.Map{
-				"hierarchy": config.Map{
-					domain.RoleUser.Permission(): config.Slice{},
+				"permissionHierarchy": config.Map{
+					domain.PermissionAuthorized: config.Slice{},
 				},
 				"voters": config.Map{
 					"strategy":          application.VoterStrategyAffirmative,

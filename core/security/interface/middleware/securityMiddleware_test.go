@@ -205,7 +205,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {
 	response, ok := result.(*web.ServerErrorResponse)
 
 	t.True(ok)
-	t.Equal(uint(http.StatusForbidden), response.Status)
+	t.Equal(uint(http.StatusForbidden), response.Response.Status)
 	t.Equal("Permission SomePermission for path /referrer.", response.Error.Error())
 }
 
@@ -225,7 +225,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfNotGranted_Forbidden() {
 	response, ok := result.(*web.ServerErrorResponse)
 
 	t.True(ok)
-	t.Equal(uint(http.StatusForbidden), response.Status)
+	t.Equal(uint(http.StatusForbidden), response.Response.Status)
 	t.Equal("Permission SomePermission for path /referrer.", response.Error.Error())
 }
 

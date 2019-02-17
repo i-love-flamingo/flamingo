@@ -1,19 +1,20 @@
 package voter
 
-import (
-	"context"
+type (
+	// AccessDecision defines access decision type which represents voter result
+	AccessDecision int
 
-	"flamingo.me/flamingo/v3/framework/web"
+	// SecurityVoter defines a common interface for voters who vote on security decisions
+	SecurityVoter interface {
+		Vote(allAssignedPermissions []string, desiredPermission string, forObject interface{}) AccessDecision
+	}
 )
 
-// todo: add custom type
 const (
-	AccessAbstained = iota
-	AccessGranted
-	AccessDenied
+	// AccessAbstained defines access decision in case voter is not responsible for permission
+	AccessAbstained AccessDecision = iota
+	// AccessGranted defines access decision in case when voter grants an access
+	AccessGranted AccessDecision = iota
+	// AccessDenied defines access decision in case when voter denies an access
+	AccessDenied AccessDecision = iota
 )
-
-// SecurityVoter defines a common interface for voters who vote on security decisions
-type SecurityVoter interface {
-	Vote(context.Context, *web.Session, string, interface{}) int
-}

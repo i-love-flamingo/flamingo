@@ -6,6 +6,7 @@ import (
 	fakeService "flamingo.me/flamingo/v3/core/auth/application/fake"
 	"flamingo.me/flamingo/v3/core/auth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/auth/interfaces/fake"
+	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -34,6 +35,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		injector.Bind(new(interfaces.CallbackControllerInterface)).To(fakeController.CallbackController{})
 		injector.Bind(new(interfaces.LogoutControllerInterface)).To(fakeController.LogoutController{})
 	}
+
+	injector.BindMulti(new(role.Provider)).To(application.AuthRoleProvider{})
 
 	web.BindRoutes(injector, new(routes))
 }

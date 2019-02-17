@@ -3,7 +3,6 @@
 package mocks
 
 import context "context"
-import domain "flamingo.me/flamingo/v3/core/security/domain"
 import mock "github.com/stretchr/testify/mock"
 
 import web "flamingo.me/flamingo/v3/framework/web"
@@ -13,16 +12,16 @@ type Service struct {
 	mock.Mock
 }
 
-// All provides a mock function with given fields: _a0, _a1
-func (_m *Service) All(_a0 context.Context, _a1 *web.Session) []domain.Role {
+// AllPermissions provides a mock function with given fields: _a0, _a1
+func (_m *Service) AllPermissions(_a0 context.Context, _a1 *web.Session) []string {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 []domain.Role
-	if rf, ok := ret.Get(0).(func(context.Context, *web.Session) []domain.Role); ok {
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(context.Context, *web.Session) []string); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.Role)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 

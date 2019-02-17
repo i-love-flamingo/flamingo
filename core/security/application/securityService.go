@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"flamingo.me/flamingo/v3/core/security/application/role"
 	"fmt"
 
 	"flamingo.me/flamingo/v3/core/security/application/voter"
@@ -30,6 +31,7 @@ type (
 	// SecurityServiceImpl default implementation of the SecurityService
 	SecurityServiceImpl struct {
 		voters            []voter.SecurityVoter
+		roleService       role.Service
 		voterStrategy     string
 		allowIfAllAbstain bool
 	}
@@ -38,36 +40,39 @@ type (
 var _ SecurityService = &SecurityServiceImpl{}
 
 // Inject dependencies
-func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, cfg *struct {
+func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, r role.Service, cfg *struct {
 	VoterStrategy     string `inject:"config:security.roles.voters.strategy"`
 	AllowIfAllAbstain bool   `inject:"config:security.roles.voters.allowIfAllAbstain"`
 }) {
 	s.voters = v
+	s.roleService = r
 	s.voterStrategy = cfg.VoterStrategy
 	s.allowIfAllAbstain = cfg.AllowIfAllAbstain
 }
 
 // IsLoggedIn checks if the user is granted login permission
 func (s *SecurityServiceImpl) IsLoggedIn(ctx context.Context, session *web.Session) bool {
-	return s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
+	return s.IsGranted(ctx, session, domain.PermissionAuthorized, nil)
 }
 
 // IsLoggedOut checks if the user is not granted login permission
 func (s *SecurityServiceImpl) IsLoggedOut(ctx context.Context, session *web.Session) bool {
-	return !s.IsGranted(ctx, session, domain.RoleUser.Permission(), nil)
+	return !s.IsGranted(ctx, session, domain.PermissionAuthorized, nil)
 }
 
 // IsGranted checks for a specific permission of the user
-func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *web.Session, permission string, object interface{}) bool {
-	var results []int
+func (s *SecurityServiceImpl) IsGranted(ctx context.Context, session *web.Session, desiredPermission string, object interface{}) bool {
+	allPermissions := s.roleService.AllPermissions(ctx, session)
+
+	var results []voter.AccessDecision
 	for index := range s.voters {
-		results = append(results, s.voters[index].Vote(ctx, session, permission, object))
+		results = append(results, s.voters[index].Vote(allPermissions, desiredPermission, object))
 	}
 
 	return s.decide(results)
 }
 
-func (s *SecurityServiceImpl) decide(results []int) bool {
+func (s *SecurityServiceImpl) decide(results []voter.AccessDecision) bool {
 	granted := 0
 	denied := 0
 

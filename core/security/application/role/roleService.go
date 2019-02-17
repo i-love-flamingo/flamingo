@@ -3,85 +3,93 @@ package role
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/core/security/application/role/provider"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
-	// Service implements behaviour for retrieving roles
-	Service interface {
+	// Provider interface
+	Provider interface {
 		All(context.Context, *web.Session) []domain.Role
+	}
+
+	// Service implements behaviour for retrieving permissions by using all role providers
+	Service interface {
+		AllPermissions(context.Context, *web.Session) []string
 	}
 
 	// The ServiceImpl is the default Service implementation
 	ServiceImpl struct {
-		providers      []provider.RoleProvider
-		rolesHierarchy config.Map
+		providers           []Provider
+		permissionHierarchy map[string][]string
 	}
 )
 
 // Inject dependencies
-func (s *ServiceImpl) Inject(p []provider.RoleProvider, cfg *struct {
-	RolesHierarchy config.Map `inject:"config:security.roles.hierarchy"`
+func (s *ServiceImpl) Inject(p []Provider, cfg *struct {
+	PermissionHierarchy config.Map `inject:"config:security.roles.permissionHierarchy"`
 }) {
 	s.providers = p
-	s.rolesHierarchy = cfg.RolesHierarchy
+
+	var permissionHierarchy map[string][]string
+	err := cfg.PermissionHierarchy.MapInto(&permissionHierarchy)
+	if err != nil {
+		panic(err)
+	}
+
+	s.permissionHierarchy = permissionHierarchy
 }
 
-// All returns all available roles, based on their hierarchy
-func (s *ServiceImpl) All(ctx context.Context, session *web.Session) []domain.Role {
+// AllPermissions returns all available permissions, based on their hierarchy
+func (s *ServiceImpl) AllPermissions(ctx context.Context, session *web.Session) []string {
 	rolesChan := make(chan []domain.Role)
 
 	for index := range s.providers {
-		go func(p provider.RoleProvider) {
+		go func(p Provider) {
 			rolesChan <- p.All(ctx, session)
 		}(s.providers[index])
 	}
 
-	var roles []domain.Role
+	var permissions []string
 	for range s.providers {
 		fromChan := <-rolesChan
 
-		var extracted []domain.Role
+		var extracted []string
 		for _, role := range fromChan {
-			extracted = append(extracted, s.extractRoles(role)...)
+			extracted = append(extracted, s.extractPermissions(role)...)
 		}
-		roles = append(roles, extracted...)
+		permissions = append(permissions, extracted...)
 	}
 
-	return s.removeDuplicates(roles)
+	return s.removeDuplicates(permissions)
 }
 
-func (s *ServiceImpl) extractRoles(role domain.Role) []domain.Role {
-	roles := []domain.Role{
-		role,
+func (s *ServiceImpl) extractPermissions(role domain.Role) []string {
+	permissions := role.Permissions()
+
+	for _, permission := range role.Permissions() {
+		hierarchy, ok := s.permissionHierarchy[permission]
+		if !ok {
+			continue
+		}
+
+		permissions = append(permissions, hierarchy...)
 	}
 
-	var roleMap map[string][]string
-	s.rolesHierarchy.MapInto(&roleMap)
-
-	hierarchy, ok := roleMap[role.Permission()]
-	if !ok {
-		return roles
-	}
-
-	for index := range hierarchy {
-		roles = append(roles, domain.Role(hierarchy[index]))
-	}
-
-	return roles
+	return permissions
 }
 
-func (s *ServiceImpl) removeDuplicates(roles []domain.Role) []domain.Role {
-	roleMap := map[string]bool{}
-	var clean []domain.Role
-	for _, role := range roles {
-		if !roleMap[role.Permission()] {
-			clean = append(clean, role)
+func (s *ServiceImpl) removeDuplicates(permissions []string) []string {
+	permissionMap := map[string]bool{}
+	var cleanPermissions []string
+
+	for _, permission := range permissions {
+		if !permissionMap[permission] {
+			cleanPermissions = append(cleanPermissions, permission)
 		}
-		roleMap[role.Permission()] = true
+		permissionMap[permission] = true
 	}
-	return clean
+
+	return cleanPermissions
 }

@@ -35,7 +35,7 @@ func (r *routes) Routes(registry *router.Registry) {
 Security service provides more detailed security checks. Beside checking if user is 
 logged in or not, it's possible to check for permission.
 If IsGranted method is called with no object, it will check only permissions added to
-user in session. Otherwise, if item implements security domain.RoleSet interface, it will
+user in session. Otherwise, if item implements security domain.PermissionSet interface, it will
 check if permission is attached to item itself.
 
 ```
@@ -60,10 +60,10 @@ func (c *SomeController) Handle(ctx context.Context, r *web.Request) web.Respons
   }
 }
 ```
-RoleSet interface:
+PermissionSet interface:
 ```
-type RoleSet interface {
-  Roles() []Role
+type PermissionSet interface {
+  Permissions() []Role
 }
 ```
 
@@ -95,33 +95,32 @@ func (m *Module) Configure(injector *dingo.Injector) {
 SecurityVoter interface:
 ```
 type SecurityVoter interface {
-  Vote(context.Context, *sessions.Session, string, interface{}) int
+  Vote(allPermissions []string, desiredPermisssion string, forObject interface{}) int
 }
 ```
 
 ## Roles Providers
 
-Role providers are used to fetch all roles granted for user in session. By default there is only one 
-role provider, which provides only RoleUser.
+Role providers are used to fetch all roles granted for user in session.
 To provide more roles it's possible to define additional Role Provider:
 
 ```
 func (m *Module) Configure(injector *dingo.Injector) {
-  injector.BindMulti(new(provider.RoleProvider))).To(provider.CustomProvider{})
+  injector.BindMulti(new(role.Provider))).To(provider.CustomProvider{})
 }
 ```
 
-RoleProvider interface:
+Role Provider interface:
 ```
-type RoleProvider interface {
+type Provider interface {
   All(context.Context, *sessions.Session) []domain.Role
 }
 ```
 
 ## Configuration example
 
-Roles hierarchy provides automatic inclusion of child permissions into list of permissions if 
-their parent is provided via Role Providers.
+Permissions hierarchy provides automatic inclusion of child permissions into list of permissions if 
+their parent is fetched via Role Providers.
 
 ```
 security: 
@@ -133,12 +132,16 @@ security:
         strategy: "path" # possible referrer|path
         path: "/" #only if strategy is "path"
     roles:
-        hierarchy:
-            RoleUser: []
-            RoleAdmin:
-                - RoleUser
-            RoleSuperAdmin:
-                - RoleAdmin
+        permissionHierarchy:
+            PermissionAuthorized:
+                - PermissionView
+            PermissionAdmin:
+                - PermissionView
+                - PermissionEdit
+            PermissionSuperAdmin:
+                - PermissionView
+                - PermissionEdit
+                - PermissionDelete
         voters:
             strategy: "unanimous" # possible unanimous|affirmative|consensus
             allowIfAllAbstain: false

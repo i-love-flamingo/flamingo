@@ -1,30 +1,53 @@
 package domain
 
 type (
-	// RoleSet is a list of roles
-	RoleSet interface {
-		Roles() []Role
+	// PermissionSet is a list of permissions
+	PermissionSet interface {
+		Permissions() []string
 	}
 
-	// Role is an available role
-	Role string
+	// Role is an interface for available role
+	Role interface {
+		Label() string
+		PermissionSet
+	}
+
+	// StringRole is simple representation of Role interface
+	StringRole string
+
+	complexRole struct {
+		label       string
+		permissions []string
+	}
 )
 
-// RoleUser is the default Role for users
-var RoleUser = Role("RoleUser")
+// NewRole creates instance of Role interface
+func NewRole(label string, permissions []string) Role {
+	return complexRole{
+		label:       label,
+		permissions: permissions,
+	}
+}
 
-// todo check if still needed, then name ID
-// Id returns the role identification
-//func (r Role) Id() string {
-//	return string(r)
-//}
+// PermissionAuthorized is the default permission for authorized users
+var PermissionAuthorized = string("PermissionAuthorized")
 
 // Label returns the role's label
-func (r Role) Label() string {
+func (r StringRole) Label() string {
 	return string(r)
 }
 
-// Permission returns the role's permission identifier
-func (r Role) Permission() string {
-	return string(r)
+// Permissions returns the list of role's permissions
+func (r StringRole) Permissions() []string {
+	return []string{string(r)}
+}
+
+// Label returns the role's label
+func (r complexRole) Label() string {
+	return r.label
+}
+
+// Permissions returns the list of role's permissions
+func (r complexRole) Permissions() []string {
+	return r.permissions
 }

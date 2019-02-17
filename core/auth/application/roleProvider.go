@@ -1,28 +1,22 @@
-package provider
+package application
 
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/core/auth/application"
 	authDomain "flamingo.me/flamingo/v3/core/auth/domain"
 	securityDomain "flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
-	// RoleProvider interface
-	RoleProvider interface {
-		All(context.Context, *web.Session) []securityDomain.Role
-	}
-
 	// AuthRoleProvider implements the RoleProvider interface for authenticated users
 	AuthRoleProvider struct {
-		userService application.UserServiceInterface
+		userService UserServiceInterface
 	}
 )
 
 // Inject userService dependency
-func (p *AuthRoleProvider) Inject(us application.UserServiceInterface) {
+func (p *AuthRoleProvider) Inject(us UserServiceInterface) {
 	p.userService = us
 }
 
@@ -32,7 +26,7 @@ func (p *AuthRoleProvider) All(ctx context.Context, session *web.Session) []secu
 
 	user := p.userService.GetUser(ctx, session)
 	if user != nil && user.Type == authDomain.USER {
-		roles = append(roles, securityDomain.RoleUser)
+		roles = append(roles, authDomain.OAuthRoleUser)
 	}
 
 	return roles

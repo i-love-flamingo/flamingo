@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"flamingo.me/flamingo/v3/core/security/application/role/mocks"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/suite"
@@ -14,8 +13,7 @@ type (
 	IsLoggedInVoterTestSuite struct {
 		suite.Suite
 
-		voter       *IsLoggedInVoter
-		roleService *mocks.Service
+		voter *IsLoggedInVoter
 
 		context    context.Context
 		webSession *web.Session
@@ -32,29 +30,21 @@ func (t *IsLoggedInVoterTestSuite) SetupSuite() {
 }
 
 func (t *IsLoggedInVoterTestSuite) SetupTest() {
-	t.roleService = &mocks.Service{}
 	t.voter = &IsLoggedInVoter{}
-	t.voter.Inject(t.roleService)
 }
 
 func (t *IsLoggedInVoterTestSuite) TearDownTest() {
-	t.roleService.AssertExpectations(t.T())
-	t.roleService = nil
 	t.voter = nil
 }
 
 func (t *IsLoggedInVoterTestSuite) TestVote_AccessAbstained() {
-	t.Equal(AccessAbstained, t.voter.Vote(t.context, t.webSession, "SomePermission", nil))
+	t.Equal(AccessAbstained, t.voter.Vote([]string{}, "SomePermission", nil))
 }
 
 func (t *IsLoggedInVoterTestSuite) TestVote_AccessGranted() {
-	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{
-		domain.RoleUser,
-	}).Once()
-	t.Equal(AccessGranted, t.voter.Vote(t.context, t.webSession, domain.RoleUser.Permission(), nil))
+	t.Equal(AccessGranted, t.voter.Vote([]string{domain.PermissionAuthorized}, domain.PermissionAuthorized, nil))
 }
 
 func (t *IsLoggedInVoterTestSuite) TestVote_AccessDenied() {
-	t.roleService.On("All", t.context, t.webSession).Return([]domain.Role{}).Once()
-	t.Equal(AccessDenied, t.voter.Vote(t.context, t.webSession, domain.RoleUser.Permission(), nil))
+	t.Equal(AccessDenied, t.voter.Vote([]string{}, domain.PermissionAuthorized, nil))
 }

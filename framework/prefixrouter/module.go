@@ -23,7 +23,7 @@ type Module struct {
 	server                    *http.Server
 	logger                    flamingo.Logger
 	enableRootRedirectHandler bool
-	urlService                application.Service
+	urlService                *application.Service
 }
 
 // Configure DI
@@ -37,7 +37,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 // Inject dependencies
-func (m *Module) Inject(l flamingo.Logger, urlService application.Service, config *struct {
+func (m *Module) Inject(l flamingo.Logger, urlService *application.Service, config *struct {
 	EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
 }) {
 	m.logger = l
@@ -85,7 +85,7 @@ func (m *Module) serve(
 
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
-			baseURL := area.Injector.GetInstance((*application.Service)(nil)).(application.Service).BaseURL()
+			baseURL := area.Injector.GetInstance((*application.Service)(nil)).(*application.Service).BaseURL()
 			if strings.HasPrefix(baseURL, "/") {
 				baseURL = "scheme://host" + baseURL
 			}

@@ -138,7 +138,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	//process registered fallbackHandlers - and if they are sucessfull exist
+	// process registered fallbackHandlers - and if they are sucessfull exist
 	for _, handler := range fr.fallbackHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
 		if !proceed {

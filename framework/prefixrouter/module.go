@@ -4,11 +4,12 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/baseurl"
-	"flamingo.me/flamingo/v3/framework/baseurl/domain"
+	"flamingo.me/flamingo/v3/framework/baseurl/application"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
@@ -22,7 +23,7 @@ type Module struct {
 	server                    *http.Server
 	logger                    flamingo.Logger
 	enableRootRedirectHandler bool
-	urlService                domain.Service
+	urlService                application.Service
 }
 
 // Configure DI
@@ -36,7 +37,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 // Inject dependencies
-func (m *Module) Inject(l flamingo.Logger, urlService domain.Service, config *struct {
+func (m *Module) Inject(l flamingo.Logger, urlService application.Service, config *struct {
 	EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
 }) {
 	m.logger = l
@@ -84,8 +85,10 @@ func (m *Module) serve(
 
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
-			baseURL := area.Injector.GetInstance((*domain.Service)(nil)).(domain.Service).BaseURL()
-			// todo use determine base if configured base URL is relative
+			baseURL := area.Injector.GetInstance((*application.Service)(nil)).(application.Service).BaseURL()
+			if strings.HasPrefix(baseURL, "/") {
+				baseURL = "scheme://host" + baseURL
+			}
 			if baseURL == "" {
 				m.logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue
@@ -139,6 +142,7 @@ func (m *Module) serve(
 	}
 }
 
+// Depends on other modules
 func (m *Module) Depends() []dingo.Module {
 	return []dingo.Module{
 		new(baseurl.Module),

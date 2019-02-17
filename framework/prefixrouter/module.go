@@ -12,6 +12,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
 )

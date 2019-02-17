@@ -1,6 +1,8 @@
 package interfaces
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/v3/framework/baseurl/domain"
 )
 
@@ -18,7 +20,7 @@ func (c *CanonicalDomainFunc) Inject(service domain.Service) *CanonicalDomainFun
 }
 
 // Func returns the canonicalDomain func
-func (c *CanonicalDomainFunc) Func() interface{} {
+func (c *CanonicalDomainFunc) Func(_ context.Context) interface{} {
 	return func() string {
 		return c.service.BaseDomain()
 	}

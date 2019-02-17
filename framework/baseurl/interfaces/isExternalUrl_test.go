@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"context"
 	"testing"
 )
 
@@ -16,7 +17,7 @@ func TestIsExternalUrl_Func(t *testing.T) {
 		{"a/b", true},
 	}
 
-	fnc := new(IsExternalURL).Inject(new(serviceMock)).Func().(func(string) bool)
+	fnc := new(IsExternalURL).Inject(new(serviceMock)).Func(context.Background()).(func(string) bool)
 
 	for _, tt := range tests {
 		got := fnc(tt.url)

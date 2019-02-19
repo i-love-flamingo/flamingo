@@ -361,7 +361,8 @@ func (router *Router) Data(ctx context.Context, handler string, params map[inter
 
 	if c, ok := router.routerRegistry.handler[handler]; ok {
 		if c.data != nil {
-			return c.data(ctx, r, dataParams(r.Params, params))
+			r.Params = dataParams(r.Params, params)
+			return c.data(ctx, r, r.Params)
 		}
 		panic(errors.Errorf("%q is not a data Controller", handler))
 	}

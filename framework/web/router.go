@@ -327,11 +327,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Reques
 	}
 }
 
-func dataParams(rParams RequestParams, params map[interface{}]interface{}) RequestParams {
-	vars := make(map[string]string)
-	for k, v := range rParams {
-		vars[k] = v
-	}
+func dataParams(params map[interface{}]interface{}) RequestParams {
+	vars := make(map[string]string, len(params))
 
 	for k, v := range params {
 		if k, ok := k.(string); ok {
@@ -361,8 +358,7 @@ func (router *Router) Data(ctx context.Context, handler string, params map[inter
 
 	if c, ok := router.routerRegistry.handler[handler]; ok {
 		if c.data != nil {
-			r.Params = dataParams(r.Params, params)
-			return c.data(ctx, r, r.Params)
+			return c.data(ctx, r, dataParams(params))
 		}
 		panic(errors.Errorf("%q is not a data Controller", handler))
 	}

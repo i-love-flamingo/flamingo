@@ -28,6 +28,15 @@ func WrapHTTPHandler(handler http.Handler) Action {
 	}
 }
 
+// WrapDataAction allows to register a data action for a HTTP method
+func WrapDataAction(da DataAction) Action {
+	return func(ctx context.Context, req *Request) Result {
+		return &DataResponse{
+			Data: da(ctx, req, req.Params),
+		}
+	}
+}
+
 func (h *wrappedHTTPHandler) Apply(ctx context.Context, rw http.ResponseWriter) error {
 	h.handler.ServeHTTP(rw, h.request.Request().WithContext(ctx))
 	return nil

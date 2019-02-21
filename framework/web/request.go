@@ -41,9 +41,14 @@ func CreateRequest(r *http.Request, s *Session) *Request {
 	req := new(Request)
 	if r != nil {
 		req.request = *r
+	} else {
+		r, _ := http.NewRequest(http.MethodGet, "", nil)
+		req.request = *r
 	}
 	if s != nil {
 		req.session.s = s.s
+	} else {
+		req.session = *EmptySession()
 	}
 	req.Params = make(RequestParams)
 	return req

@@ -26,10 +26,10 @@ func getreplacements() []string {
 func m() error {
 	switch os.Args[1] {
 	case "gomod-local":
-		if err := run("git", "config", "filter.gomod.clean", "go run flamingo.me/flamingo/build/dev gomod-clean"); err != nil {
+		if err := run("git", "config", "filter.gomod.clean", "go run flamingo.me/flamingo/v3/build/dev gomod-clean"); err != nil {
 			return err
 		}
-		if err := run("git", "config", "filter.gomod.smudge", "go run flamingo.me/flamingo/build/dev gomod-smudge"); err != nil {
+		if err := run("git", "config", "filter.gomod.smudge", "go run flamingo.me/flamingo/v3/build/dev gomod-smudge"); err != nil {
 			return err
 		}
 		if err := run("git", "config", "filter.gomod.required", "true"); err != nil {

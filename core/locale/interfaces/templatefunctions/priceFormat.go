@@ -11,22 +11,22 @@ import (
 // PriceFormatFunc for formatting prices
 type PriceFormatFunc struct {
 	config             config.Map
-	translationService application.TranslationServiceInterface
+	labelService *application.LabelService
 }
 
 // Inject dependencies
-func (pff *PriceFormatFunc) Inject(serviceInterface application.TranslationServiceInterface, config *struct {
+func (pff *PriceFormatFunc) Inject(labelService *application.LabelService, config *struct {
 	Config config.Map `inject:"config:locale.accounting"`
 }) {
-	pff.translationService = serviceInterface
+	pff.labelService = labelService
 	pff.config = config.Config
 }
 
 // Func as implementation of debug method
 // todo fix
 func (pff *PriceFormatFunc) Func(context.Context) interface{} {
-	return func(value interface{}, currency string) string {
-		currency = pff.translationService.Translate(currency, currency, "", 1, nil)
+	return func(value float64, currency string) string {
+		currency = pff.labelService.NewLabel(currency).String()
 		ac := accounting.Accounting{
 			Symbol:    currency,
 			Precision: 2,
@@ -47,17 +47,7 @@ func (pff *PriceFormatFunc) Func(context.Context) interface{} {
 		if ok {
 			ac.Format = format
 		}
-		//if valueNumber, ok := value.(pugjs.Number); ok {
-		//	return ac.FormatMoney(float64(valueNumber))
-		//} else if valueString, ok := value.(pugjs.String); ok {
-		//	float, err := strconv.ParseFloat(string(valueString), 64)
-		//	if err != nil {
-		//		float = 0.0
-		//	}
-		//	return ac.FormatMoney(float)
-		//} else
-		{
-			return ac.FormatMoney(0)
-		}
+
+		return ac.FormatMoney(value)
 	}
 }

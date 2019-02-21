@@ -11,20 +11,20 @@ import (
 // PriceFormatLongFunc for formatting prices
 type PriceFormatLongFunc struct {
 	config             config.Map
-	translationService application.TranslationServiceInterface
+	labelService *application.LabelService
 	priceFormat        *PriceFormatFunc
 }
 
 // Inject dependencies
 func (pff *PriceFormatLongFunc) Inject(
-	serviceInterface application.TranslationServiceInterface,
+	labelService *application.LabelService,
 	formatFunc *PriceFormatFunc,
 	config *struct {
 		Config config.Map `inject:"config:locale.accounting"`
 	},
 ) {
 	pff.config = config.Config
-	pff.translationService = serviceInterface
+	pff.labelService = labelService
 	pff.priceFormat = formatFunc
 }
 
@@ -33,7 +33,7 @@ func (pff *PriceFormatLongFunc) Func(ctx context.Context) interface{} {
 	return func(value interface{}, currency string, currencyLabel string) string {
 		priceFunc := pff.priceFormat.Func(ctx).(func(value interface{}, currency string) string)
 		price := priceFunc(value, currency)
-		currencyLabel = pff.translationService.Translate(currencyLabel, "", "", 1, nil)
+		currencyLabel = pff.labelService.NewLabel(currencyLabel).String()
 		format, ok := pff.config["formatLong"].(string)
 		if ok {
 			return fmt.Sprintf(format, price, currencyLabel)

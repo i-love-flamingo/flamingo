@@ -3,6 +3,8 @@ package locale
 import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/locale/application"
+	"flamingo.me/flamingo/v3/core/locale/domain"
+	"flamingo.me/flamingo/v3/core/locale/infrastructure"
 	"flamingo.me/flamingo/v3/core/locale/interfaces/templatefunctions"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -15,7 +17,7 @@ type (
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind(new(application.TranslationServiceInterface)).To(application.TranslationService{})
+	injector.Bind(new(domain.TranslationService)).To(infrastructure.TranslationService{})
 	injector.Bind(new(application.DateTimeServiceInterface)).To(application.DateTimeService{})
 
 	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.Label))

@@ -2,6 +2,8 @@
 
 ## v3
 
+- "locale" package:
+  - the templatefunc __(key) is now returning a Label and instead additional parameters you need to use the label setters (see doc)
 - Depricated Features are removed:
   - `flamingo.me/dingo` need to be used now
   - support for responder.*Aware types is removed

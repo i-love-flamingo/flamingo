@@ -1,7 +1,8 @@
-package application
+package infrastructure
 
 import (
 	"bytes"
+	"flamingo.me/flamingo/v3/core/locale/domain"
 	"fmt"
 	"text/template"
 
@@ -11,14 +12,10 @@ import (
 )
 
 type (
-	// TranslationServiceInterface defines the translation service
-	TranslationServiceInterface interface {
-		Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string
-	}
 
-	// TranslationService is the default TranslationServiceInterface implementation
+
+	// TranslationService is the default TranslationService implementation
 	TranslationService struct {
-		defaultLocaleCode string
 		translationFile   string
 		translationFiles  config.Slice
 		logger            flamingo.Logger
@@ -27,7 +24,7 @@ type (
 )
 
 // check if translationService implements its interface
-var _ TranslationServiceInterface = (*TranslationService)(nil)
+var _ domain.TranslationService = (*TranslationService)(nil)
 
 var i18bundle *bundle.Bundle
 var filesLoaded bool
@@ -41,14 +38,12 @@ func init() {
 func (ts *TranslationService) Inject(
 	logger flamingo.Logger,
 	config *struct {
-		DefaultLocaleCode string       `inject:"config:locale.locale"`
 		DevMode           bool         `inject:"config:debug.mode"`
 		TranslationFile   string       `inject:"config:locale.translationFile,optional"`
 		TranslationFiles  config.Slice `inject:"config:locale.translationFiles,optional"`
 	},
 ) {
 	ts.logger = logger
-	ts.defaultLocaleCode = config.DefaultLocaleCode
 	ts.translationFile = config.TranslationFile
 	ts.translationFiles = config.TranslationFiles
 	ts.devmode = config.DevMode
@@ -67,10 +62,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 		filesLoaded = true
 	}
 	label := ""
-	//Use default configured localeCode if nothing is given explicitly
-	if localeCode == "" {
-		localeCode = ts.defaultLocaleCode
-	}
+
 	T, err := i18bundle.Tfunc(localeCode)
 	if err != nil {
 		ts.logger.Info("Error - locale.translationservice", err)

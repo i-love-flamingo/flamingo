@@ -42,17 +42,17 @@ By providing different configurations for the different configuration areas (see
   __("key")
   
   # Display the label and pass a default that is used if the key is not existend in a labelfile
-	__("key","default")
+	__("key").SetDefaultLabel("default")
 	
 	# Display the label with dynamic values replaces:
-	__("key","Hello Mr {{.UserName}}",{UserName: "Max"})
+	__("key").SetDefaultLabel("Hello Mr {{.UserName}}").SetTranslationArguments({UserName: "Max"})
 	
 	# Support the usage of plural labels idepending on a given count:
-	__("unread_mails","",{_count: 5})
+	__("unread_mails").SetCount(5)
 	
 	
 	# Force the usage of another local by passing languange code as 5th paramater:
-	__("switch_to_german","",{},"de-DE")
+	__("switch_to_german").SetLocale("de-DE")
 	
 ```
 

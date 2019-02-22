@@ -122,6 +122,11 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 	return err
 }
 
+// SetNoCache helper
+func (r *Response) SetNoCache() {
+	r.Header.Set("Cache-Control", "no-cache, max-age=0, must-revalidate, no-store")
+}
+
 // RouteRedirect generator
 func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedirectResponse {
 	return &RouteRedirectResponse{
@@ -198,7 +203,7 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 }
 
 //Status - changes status in the response
-func (r *DataResponse) Status(status uint) *DataResponse{
+func (r *DataResponse) Status(status uint) *DataResponse {
 	r.Response.Status = status
 	return r
 }
@@ -257,6 +262,12 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		return err
 	}
 	return r.Response.Apply(c, w)
+}
+
+// SetNoCache helper
+func (r *RenderResponse) SetNoCache() *RenderResponse {
+	r.Response.SetNoCache()
+	return r
 }
 
 // Apply response

@@ -1,6 +1,6 @@
 package healthcheck
 
-import "github.com/garyburd/redigo/redis"
+import "github.com/gomodule/redigo/redis"
 
 // RedisSession pool status check
 type RedisSession struct {

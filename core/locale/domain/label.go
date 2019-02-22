@@ -1,5 +1,7 @@
 package domain
 
+import "encoding/json"
+
 type (
 	// Label instance
 	Label struct {
@@ -24,6 +26,11 @@ func (l *Label) Inject(translationService TranslationService) {
 //String implements fmt.Stringer - pinning to the non pointer by intent
 func (l Label) String() string {
 	return l.translationService.Translate(l.key, l.defaultLabel, l.localeCode, l.count, l.translationArguments)
+}
+
+//MarshalJSON implements fmt.Stringer - pinning to the non pointer by intent
+func (l Label) MarshalJSON() ([]byte, error) {
+	return json.Marshal(l.translationService.Translate(l.key, l.defaultLabel, l.localeCode, l.count, l.translationArguments))
 }
 
 // SetTranslationArguments sets the argument map

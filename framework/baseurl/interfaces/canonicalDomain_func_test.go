@@ -3,12 +3,19 @@ package interfaces
 import (
 	"context"
 	"testing"
+
+	"flamingo.me/flamingo/v3/framework/baseurl/application"
 )
 
 func TestCanonicalDomainFunc_Func(t *testing.T) {
-	fnc := new(CanonicalDomainFunc).Inject(new(serviceMock)).Func(context.Background()).(func() string)
+	service := new(application.Service).Inject(&struct {
+		BaseURL string `inject:"config:baseurl.url"`
+		Scheme  string `inject:"config:baseurl.scheme"`
+	}{BaseURL: "domain.base", Scheme: "http://"})
+
+	fnc := new(CanonicalDomainFunc).Inject(service).Func(context.Background()).(func() string)
 	got := fnc()
-	want := new(serviceMock).BaseDomain()
+	want := "domain.base"
 
 	if got != want {
 		t.Errorf("got %q, wanted %q", got, want)

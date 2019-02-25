@@ -23,11 +23,13 @@ func (s *Service) Inject(
 		BaseURL string `inject:"config:baseurl.url"`
 		Scheme  string `inject:"config:baseurl.scheme"`
 	},
-) {
+) *Service {
 	if cfg != nil {
 		s.baseURL = cfg.BaseURL
 		s.scheme = cfg.Scheme
 	}
+
+	return s
 }
 
 // BaseURL returns the configured base URL
@@ -43,7 +45,7 @@ func (s *Service) BaseURL() string {
 
 // BaseDomain returns the canonical base domain
 func (s *Service) BaseDomain() string {
-	u, err := url.Parse(s.baseURL)
+	u, err := url.Parse(s.BaseURL())
 
 	if err != nil {
 		return ""

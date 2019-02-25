@@ -3,6 +3,8 @@ package interfaces
 import (
 	"context"
 	"testing"
+
+	"flamingo.me/flamingo/v3/framework/baseurl/application"
 )
 
 func TestIsExternalUrl_Func(t *testing.T) {
@@ -17,7 +19,12 @@ func TestIsExternalUrl_Func(t *testing.T) {
 		{"a/b", true},
 	}
 
-	fnc := new(IsExternalURL).Inject(new(serviceMock)).Func(context.Background()).(func(string) bool)
+	service := new(application.Service).Inject(&struct {
+		BaseURL string `inject:"config:baseurl.url"`
+		Scheme  string `inject:"config:baseurl.scheme"`
+	}{BaseURL: "baseDomain", Scheme: "http://"})
+
+	fnc := new(IsExternalURL).Inject(service).Func(context.Background()).(func(string) bool)
 
 	for _, tt := range tests {
 		got := fnc(tt.url)

@@ -3,18 +3,18 @@ package interfaces
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/framework/baseurl/domain"
+	"flamingo.me/flamingo/v3/framework/baseurl/application"
 )
 
 type (
 	// CanonicalDomainFunc is exported as a template function
 	CanonicalDomainFunc struct {
-		service domain.Service
+		service *application.Service
 	}
 )
 
 // Inject dependencies
-func (c *CanonicalDomainFunc) Inject(service domain.Service) *CanonicalDomainFunc {
+func (c *CanonicalDomainFunc) Inject(service *application.Service) *CanonicalDomainFunc {
 	c.service = service
 	return c
 }

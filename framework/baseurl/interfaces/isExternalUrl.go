@@ -4,18 +4,18 @@ import (
 	"context"
 	"net/url"
 
-	"flamingo.me/flamingo/v3/framework/baseurl/domain"
+	"flamingo.me/flamingo/v3/framework/baseurl/application"
 )
 
 type (
 	// IsExternalURL is exported as a template function
 	IsExternalURL struct {
-		service domain.Service
+		service *application.Service
 	}
 )
 
 // Inject dependencies
-func (c *IsExternalURL) Inject(service domain.Service) *IsExternalURL {
+func (c *IsExternalURL) Inject(service *application.Service) *IsExternalURL {
 	c.service = service
 	return c
 }

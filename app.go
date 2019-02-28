@@ -45,14 +45,12 @@ func (a *appmodule) Configure(injector *dingo.Injector) {
 }
 
 func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
-	var addr string
-
-	cmd := &cobra.Command{
+	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
 			a.router.Init(a.root)
-			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
+			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", a.server.Addr))
 			err := a.server.ListenAndServe()
 			if err != nil {
 				if err == http.ErrServerClosed {
@@ -63,9 +61,9 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 			}
 		},
 	}
-	cmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
 
-	return cmd
+	return serveCmd
 }
 
 // Notify upon flamingo Shutdown event
@@ -124,10 +122,10 @@ func App(modules []dingo.Module, options ...option) {
 	root.Modules = append(root.Modules, app)
 	config.Load(root, cfg.configDir)
 
-	cmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
+	rootCmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
 	root.Injector.GetInstance(new(web.EventRouterProvider)).(web.EventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
-	if err := cmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

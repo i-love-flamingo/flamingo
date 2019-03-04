@@ -3,6 +3,8 @@ package pugtemplate
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -10,8 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"fmt"
 
 	"flamingo.me/flamingo/core/pugtemplate/puganalyse"
 	"flamingo.me/flamingo/core/pugtemplate/pugjs"
@@ -37,6 +37,10 @@ type (
 	routes struct {
 		controller *DebugController
 		Basedir    string `inject:"config:pug_template.basedir"`
+	}
+
+	assetFileSystem struct {
+		fs http.FileSystem
 	}
 )
 
@@ -101,7 +105,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				copyHeaders(r, rw)
 				io.Copy(rw, r.Body)
 			} else {
-				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+				fileServer := http.FileServer(assetFileSystem{http.Dir("frontend/dist/")})
+				fileServer.ServeHTTP(rw, req)
 			}
 		})
 	}
@@ -248,4 +253,20 @@ func copyHeaders(r *http.Response, w http.ResponseWriter) {
 			w.Header().Add(key, value)
 		}
 	}
+}
+
+func (nfs assetFileSystem) Open(path string) (http.File, error) {
+	path = strings.Replace(path, "/assets/", "", 1)
+	log.Println(path)
+	f, err := nfs.fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := f.Stat()
+	if s.IsDir() {
+		return nil, errors.New("not allowed")
+	}
+
+	return f, nil
 }

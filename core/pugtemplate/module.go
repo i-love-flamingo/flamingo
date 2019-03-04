@@ -2,6 +2,7 @@ package pugtemplate
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -29,6 +30,9 @@ type (
 	// TemplateFunctionInterceptor to use fixtype
 	TemplateFunctionInterceptor struct {
 		template.ContextFunction
+	}
+	assetFileSystem struct {
+		fs http.FileSystem
 	}
 )
 
@@ -63,7 +67,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 				io.Copy(rw, r.Body)
 			} else {
-				http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+				fileServer := http.FileServer(assetFileSystem{http.Dir("frontend/dist/")})
+				fileServer.ServeHTTP(rw, req)
 			}
 		})
 	}
@@ -142,4 +147,28 @@ func mockcontroller(name string, data interface{}) func(web.Context) interface{}
 		defer ctx.Profile("pugmock", name)()
 		return data
 	}
+}
+
+func copyHeaders(r *http.Response, w http.ResponseWriter) {
+	for key, values := range r.Header {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	}
+}
+
+func (nfs assetFileSystem) Open(path string) (http.File, error) {
+	path = strings.Replace(path, "/assets/", "", 1)
+	log.Println(path)
+	f, err := nfs.fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := f.Stat()
+	if s.IsDir() {
+		return nil, errors.New("not allowed")
+	}
+
+	return f, nil
 }

@@ -13,9 +13,20 @@ docker 1.11:
   only:
   - master
 
+docker 1.12:
+  stage: prepare
+  image: docker:latest
+  script:
+  - cd build/docker
+  - docker login -uiloveflamingobot -p${DOCKERPASSWORD}
+  - docker build --pull -t iloveflamingo/buildenv:1.12 -f Dockerfile-1.12 .
+  - docker push iloveflamingo/buildenv:1.12
+  only:
+  - master
+
 .dep: &dep
   stage: test
-  image: iloveflamingo/buildenv:1.11
+  image: iloveflamingo/buildenv:1.12
   cache:
     paths:
     - __gopath/pkg/mod
@@ -41,6 +52,12 @@ static-check flamingo:
   - golint -set_exit_status $(go list ./...)
   - go vet ./...
   - gocritic check-project .
+
+test flamingo 1.11:
+  <<: *dep
+  image: iloveflamingo/buildenv:1.11
+  script:
+  - go test -race ./...
 
 #vet flamingo:
 #  <<: *dep

@@ -51,7 +51,15 @@ func (r *routes) Routes(registry *router.Registry) {
 	registry.Route("/_pugtpl/debug", "pugtpl.debug")
 	registry.HandleGet("pugtpl.debug", r.controller.Get)
 
-	registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.FileServer(http.Dir(r.Basedir)))))
+	//registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.FileServer(http.Dir(r.Basedir)))))
+	registry.HandleAny("_static", router.HTTPAction(http.StripPrefix("/static/", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		origin := req.Header.Get("Origin")
+		if origin != "" {
+			//TODO - configure whitelist
+			rw.Header().Add("Access-Control-Allow-Origin", origin)
+		}
+		http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
+	}))))
 	registry.Route("/static/*n", "_static")
 
 	registry.HandleData("page.template", func(ctx context.Context, _ *web.Request) interface{} {
@@ -69,7 +77,7 @@ func (r *routes) Routes(registry *router.Registry) {
 			copyHeaders(r, rw)
 			io.Copy(rw, r.Body)
 		} else {
-			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+			http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
 		}
 	})))
 }

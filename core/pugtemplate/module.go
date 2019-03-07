@@ -38,7 +38,15 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
+	//m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.FileServer(http.Dir(m.Basedir))))
+	m.RouterRegistry.Handle("_static", http.StripPrefix("/static/", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		origin := req.Header.Get("Origin")
+		if origin != "" {
+			//TODO - configure whitelist
+			rw.Header().Add("Access-Control-Allow-Origin", origin)
+		}
+		http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
+	})))
 	m.RouterRegistry.Route("/static/*n", "_static")
 
 	m.RouterRegistry.Route("/_pugtpl/debug", "pugtpl.debug")
@@ -83,7 +91,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		if r, e := http.Get("http://localhost:1337" + req.RequestURI); e == nil {
 			io.Copy(rw, r.Body)
 		} else {
-			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+			http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
 		}
 	}))
 

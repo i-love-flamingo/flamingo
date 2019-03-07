@@ -59,7 +59,7 @@ func (r *routes) Routes(registry *router.Registry) {
 			//TODO - configure whitelist
 			rw.Header().Add("Access-Control-Allow-Origin", origin)
 		}
-		http.ServeFile(rw, req, r.Basedir+"/"+req.URL.Path)
+		http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
 	}))))
 	registry.Route("/static/*n", "_static")
 
@@ -78,7 +78,7 @@ func (r *routes) Routes(registry *router.Registry) {
 			copyHeaders(r, rw)
 			io.Copy(rw, r.Body)
 		} else {
-			http.ServeFile(rw, req, strings.Replace(req.RequestURI, "/assets/", "frontend/dist/", 1))
+			http.FileServer(assetFileSystem{http.Dir("frontend/dist/")}).ServeHTTP(rw, req)
 		}
 	})))
 }

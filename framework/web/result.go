@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -246,7 +247,20 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		partialRenderer, ok := r.engine.(flamingo.PartialTemplateEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
 			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
-			body, err := json.Marshal(map[string]interface{}{"partials": content, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
+			if err != nil {
+				return err
+			}
+
+			result := make(map[string]string, len(content))
+			for k, v := range content {
+				buf, err := ioutil.ReadAll(v)
+				if err != nil {
+					return err
+				}
+				result[k] = string(buf)
+			}
+
+			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
 			if err != nil {
 				return err
 			}

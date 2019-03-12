@@ -30,6 +30,7 @@ type (
 	Responder struct {
 		engine flamingo.TemplateEngine
 		router *Router
+		logger flamingo.Logger
 
 		templateForbidden     string
 		templateNotFound      string
@@ -79,7 +80,7 @@ type (
 )
 
 // Inject Responder dependencies
-func (r *Responder) Inject(engine flamingo.TemplateEngine, router *Router, cfg *struct {
+func (r *Responder) Inject(engine flamingo.TemplateEngine, router *Router, logger flamingo.Logger, cfg *struct {
 	TemplateForbidden     string `inject:"config:flamingo.template.err403"`
 	TemplateNotFound      string `inject:"config:flamingo.template.err404"`
 	TemplateUnavailable   string `inject:"config:flamingo.template.err503"`
@@ -91,6 +92,7 @@ func (r *Responder) Inject(engine flamingo.TemplateEngine, router *Router, cfg *
 	r.templateNotFound = cfg.TemplateNotFound
 	r.templateUnavailable = cfg.TemplateUnavailable
 	r.templateErrorWithCode = cfg.TemplateErrorWithCode
+	r.logger = logger.WithField("module","framework.web").WithField("category","responder")
 
 	return r
 }
@@ -299,6 +301,7 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 			DataResponse: DataResponse{
 				Data: map[string]interface{}{
 					"code": status,
+					"error": err.Error(),
 				},
 				Response: Response{
 					Status: status,
@@ -311,6 +314,7 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 
 // ServerError creates a 500 error response
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
+	r.logger.Error(err)
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
 }
 

@@ -1,13 +1,13 @@
-package canonicalurl
+package canonicalurl_test
 
 import (
-	"testing"
-
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/canonicalurl"
+	"testing"
 )
 
 func TestModule_Configure(t *testing.T) {
-	if err := dingo.TryModule(new(Module)); err != nil {
+	if err := dingo.TryModule(new(canonicalurl.Module)); err != nil {
 		t.Error(err)
 	}
 }

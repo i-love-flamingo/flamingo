@@ -9,6 +9,7 @@ import (
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/v3/core/healthcheck/interfaces/controllers"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/systemendpoint"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
@@ -71,5 +72,12 @@ func (m *Module) DefaultConfig() config.Map {
 			"checkPath":    "/status/healthcheck",
 			"pingPath":     "/status/ping",
 		},
+	}
+}
+
+// Depends on other modules
+func (m *Module) Depends() []dingo.Module {
+	return []dingo.Module{
+		new(systemendpoint.Module),
 	}
 }

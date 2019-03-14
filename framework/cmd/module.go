@@ -19,8 +19,6 @@ import (
 // Module for DI
 type Module struct{}
 
-var dingoTrace *bool
-
 var once = sync.Once{}
 
 // Configure DI
@@ -34,16 +32,21 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Name string `inject:"config:cmd.name"`
 			}) *cobra.Command {
 			signals := make(chan os.Signal, 1)
+			shutdownComplete := make(chan struct{}, 1)
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 			once.Do(func() {
-				go shutdown(eventRouterProvider(), signals, logger, m)
+				go shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
 			})
 
 			rootCmd := &cobra.Command{
 				Use:              config.Name,
 				Short:            "Flamingo " + config.Name,
 				TraverseChildren: true,
+				PersistentPostRun: func(cmd *cobra.Command, args []string) {
+					signals <- syscall.SIGTERM
+					<-shutdownComplete
+				},
 			}
 			rootCmd.FParseErrWhitelist.UnknownFlags = true
 
@@ -61,7 +64,7 @@ func (m *Module) DefaultConfig() config.Map {
 	}
 }
 
-func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, logger flamingo.Logger, m dingo.Module) {
+func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, complete chan<- struct{}, logger flamingo.Logger) {
 	<-signals
 	logger.Info("start graceful shutdown")
 
@@ -81,6 +84,7 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, logger
 		os.Exit(130)
 	case <-stopper:
 		logger.Info("graceful shutdown complete")
+		complete <- struct{}{}
 		os.Exit(0)
 	}
 }

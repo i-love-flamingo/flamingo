@@ -264,9 +264,8 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Reques
 	chain := &FilterChain{
 		Filters: make([]Filter, 0, len(router.filters)+1),
 	}
-	copy(chain.Filters, router.filters)
 
-	chain.Filters = append(chain.Filters, lastFilter(func(ctx context.Context, r *Request, rw http.ResponseWriter) Result {
+	chain.Filters = append(router.filters, lastFilter(func(ctx context.Context, r *Request, rw http.ResponseWriter) Result {
 		ctx, span := trace.StartSpan(ctx, "router/controller")
 		defer span.End()
 

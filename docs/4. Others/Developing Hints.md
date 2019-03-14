@@ -2,11 +2,11 @@
 
 ## Necessary tooling
 
-### go-bindata
+### statik
 
 Static file compiler for fakeservices, etc
 
-`go get -u github.com/jteeuwen/go-bindata/...`
+`go get -u github.com/rakyll/statik`
 
 ## Docs
 

@@ -7,8 +7,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/ghodss/yaml"
+	"github.com/spf13/pflag"
 )
 
 var (
@@ -16,10 +18,17 @@ var (
 	DebugLog bool
 	// AdditionalConfig to be loaded
 	AdditionalConfig []string
+	once             = sync.Once{}
 )
 
 // Load configuration in basedir
 func Load(root *Area, basedir string) error {
+	once.Do(func() {
+		pflag.StringArrayVar(&AdditionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")
+		pflag.BoolVar(&DebugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
+		pflag.Parse()
+	})
+
 	load(root, basedir, "/")
 
 	// load additional single context file

@@ -11,6 +11,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/systemendpoint"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 // Module entry point for the flamingo healthcheck module
@@ -42,6 +43,19 @@ func (m *Module) Inject(
 	m.sessionBackend = config.SessionBackend
 }
 
+type routes struct {
+	controller *controllers.Ping
+}
+
+func (r *routes) Inject(controller *controllers.Ping) {
+	r.controller = controller
+}
+
+func (r *routes) Routes(registry *web.RouterRegistry) {
+	registry.HandleAny("core.healtchcheck.ping", web.WrapHTTPHandler(r.controller))
+	registry.Route("/status/ping", "core.healthcheck.ping")
+}
+
 // Configure dependency injection
 func (m *Module) Configure(injector *dingo.Injector) {
 	if m.checkSession {
@@ -61,6 +75,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMap((*domain.Handler)(nil), m.pingPath).To(&controllers.Ping{})
 	injector.BindMap((*domain.Handler)(nil), m.checkPath).To(&controllers.Healthcheck{})
 
+	web.BindRoutes(injector, new(routes))
 }
 
 // DefaultConfig for healthcheck module

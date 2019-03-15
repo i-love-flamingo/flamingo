@@ -53,7 +53,7 @@ func (r *routes) Inject(controller *controllers.Ping) {
 
 func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleAny("core.healthcheck.ping", web.WrapHTTPHandler(r.controller))
-	registry.Route("/status/ping", "core.healthcheck.ping")
+	registry.Route("/health/ping", "core.healthcheck.ping")
 }
 
 // Configure dependency injection

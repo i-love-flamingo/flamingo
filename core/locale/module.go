@@ -38,6 +38,7 @@ func (m *Module) DefaultConfig() config.Map {
 				"thousand":   ".",
 				"formatZero": "%s -,-",
 				"format":     "%s %v",
+				"formatLong": "%v %v",
 			},
 			"numbers": config.Map{
 				"decimal":   ",",

@@ -111,6 +111,7 @@ Note: For displaying locale formats set the correct date locationcode - see http
 
 ```
 priceFormat(90,"GBP")
+priceFormatLong(90,"GBP","british pound")
 ```
 
 ### Formatting of numbers:

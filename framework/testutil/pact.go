@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework"
 	"github.com/pact-foundation/pact-go/dsl"
 	"github.com/pact-foundation/pact-go/types"
 	"github.com/pkg/errors"
@@ -95,8 +94,8 @@ func pactTeardown(pact *dsl.Pact) error {
 		err := p.Publish(types.PublishRequest{
 			PactURLs:        []string{file},
 			PactBroker:      pactbroker,
-			ConsumerVersion: framework.VERSION,
-			Tags:            []string{strings.ToLower(pact.Consumer), strings.ToLower(pact.Provider)},
+			ConsumerVersion: os.Getenv("PACT_VERSION"),
+			Tags:            append([]string{strings.ToLower(pact.Consumer), strings.ToLower(pact.Provider)}, strings.Split(os.Getenv("PACT_TAGS"), ",")...),
 			BrokerUsername:  os.Getenv("PACT_BROKER_USERNAME"),
 			BrokerPassword:  os.Getenv("PACT_BROKER_PASSWORD"),
 		})

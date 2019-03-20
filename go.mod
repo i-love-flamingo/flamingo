@@ -5,17 +5,17 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/boj/redistore v0.0.0-20160128113310-fc113767cd6b
 	github.com/coreos/go-oidc v2.0.0+incompatible
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/garyburd/redigo v1.6.0 // indirect
-	github.com/ghodss/yaml v0.0.0-20180820084758-c7ce16629ff4
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20180513044358-24b0969c4cb7
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/sessions v1.1.3
-	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47
+	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91
 	github.com/leekchan/accounting v0.0.0-20161211142212-a35854c07593
 	github.com/mattn/go-colorable v0.0.9 // indirect
@@ -23,24 +23,18 @@ require (
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/pkg/errors v0.8.1
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.3 // indirect
-	github.com/stretchr/objx v0.1.1 // indirect
+	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.2.2
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
-	go.opencensus.io v0.0.0-20180823191657-71e2e3e3082a
+	go.opencensus.io v0.19.1
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac // indirect
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635
-	golang.org/x/sys v0.0.0-20181122145206-62eef0e2fa9b // indirect
-	google.golang.org/api v0.0.0-20180824000442-943e5aafc110 // indirect
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
 
 replace (

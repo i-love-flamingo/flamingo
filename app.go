@@ -13,8 +13,11 @@ import (
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/trace"
 )
 
 type appmodule struct {
@@ -31,7 +34,7 @@ func (a *appmodule) Inject(root *config.Area, router *web.Router, logger flaming
 	a.logger = logger
 	a.server = &http.Server{
 		Addr:    ":3322",
-		Handler: a.router,
+		Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router, StartOptions: trace.StartOptions{Sampler: opencensus.Sampler}},
 	}
 }
 
@@ -101,6 +104,8 @@ type appconfig struct {
 	childAreas []*config.Area
 }
 
+type eventRouterProvider func() flamingo.EventRouter
+
 // App is a simple app-runner for flamingo
 func App(modules []dingo.Module, options ...option) {
 	cfg := &appconfig{
@@ -123,7 +128,7 @@ func App(modules []dingo.Module, options ...option) {
 	config.Load(root, cfg.configDir)
 
 	rootCmd := root.Injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
-	root.Injector.GetInstance(new(web.EventRouterProvider)).(web.EventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
+	root.Injector.GetInstance(new(eventRouterProvider)).(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

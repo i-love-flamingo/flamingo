@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -12,8 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
+
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"github.com/gorilla/sessions"
@@ -36,30 +36,34 @@ const (
 )
 
 type (
-	// EventRouterProvider for event injection
-	EventRouterProvider func() flamingo.EventRouter
-	// FilterProvider for filter injection
-	FilterProvider func() []Filter
-	// RegistryProvider is called to retrieve registered routes
-	RegistryProvider func() []RoutesModule
+	eventRouterProvider func() flamingo.EventRouter
+	filterProvider      func() []Filter
+	registryProvider    func() []RoutesModule
 
 	// Router defines the basic Router which is used for holding a context-scoped setup
-	// This includes DI resolving etc
+	// A request is handled as follows:
+	// the filter chain is called
+	// -> within the filter chain, as the last action, the controller is called
+	// possible errors:
+	// - error result: normal handling as a response/result
+	// - panic:
+	// - apply error:
+	// - apply panic:
 	Router struct {
-		base *url.URL
-
+		base                   *url.URL
 		sessionStore           sessions.Store
 		sessionName            string
-		eventRouterProvider    EventRouterProvider
+		eventRouterProvider    eventRouterProvider
 		eventrouter            flamingo.EventRouter
 		injector               *dingo.Injector
-		routerRegistryProvider RegistryProvider
+		routerRegistryProvider registryProvider
 		routerRegistry         *RouterRegistry
 		routerTimeout          float64
 		notFoundHandler        string
 		errorHandler           string
-		filterProvider         FilterProvider
+		filterProvider         filterProvider
 		filters                []Filter
+		logger                 flamingo.Logger
 	}
 
 	// errorKey for context errors
@@ -82,17 +86,18 @@ func init() {
 
 // Inject dependencies
 func (router *Router) Inject(
-	eventRouterProvider EventRouterProvider,
+	eventRouterProvider eventRouterProvider,
 	injector *dingo.Injector,
-	routerRegistryProvider RegistryProvider,
+	routerRegistryProvider registryProvider,
 	routerRegistry *RouterRegistry,
+	logger flamingo.Logger,
 	cfg *struct {
 		SessionName     string         `inject:"config:session.name"`
 		SessionStore    sessions.Store `inject:",optional"`
 		RouterTimeout   float64        `inject:"config:flamingo.router.timeout"`
 		NotFoundHandler string         `inject:"config:flamingo.router.notfound"`
 		ErrorHandler    string         `inject:"config:flamingo.router.error"`
-		FilterProvider  FilterProvider `inject:",optional"`
+		FilterProvider  filterProvider `inject:",optional"`
 	},
 ) *Router {
 	router.eventRouterProvider = eventRouterProvider
@@ -105,6 +110,7 @@ func (router *Router) Inject(
 	router.notFoundHandler = cfg.NotFoundHandler
 	router.errorHandler = cfg.ErrorHandler
 	router.filterProvider = cfg.FilterProvider
+	router.logger = logger
 	return router
 }
 
@@ -173,32 +179,52 @@ func (router *Router) URL(name string, params map[string]string) (*url.URL, erro
 	return url.Parse(strings.TrimRight(router.base.Path, "/") + "/" + strings.TrimLeft(p, "/"))
 }
 
-func (router *Router) recover(ctx context.Context, r *Request, rw http.ResponseWriter, err interface{}) {
-	defer func() {
-		if err := recover(); err != nil {
-			// bad bad recover
-			rw.WriteHeader(http.StatusInternalServerError)
-			if err, ok := err.(error); ok {
-				fmt.Fprintf(rw, "%+v", errors.WithStack(err))
-				return
-			}
-			fmt.Fprintf(rw, "%+v", errors.Errorf("%+v", err))
-		}
-	}()
+func (router *Router) getSession(ctx context.Context, httpRequest *http.Request) (gs *sessions.Session) {
+	// initialize the session
+	if router.sessionStore != nil {
+		var span *trace.Span
+		var err error
 
-	if e, ok := err.(error); ok {
-		router.routerRegistry.handler[router.errorHandler].any(context.WithValue(ctx, ERROR, errors.WithStack(e)), r).Apply(ctx, rw)
-	} else if err, ok := err.(string); ok {
-		router.routerRegistry.handler[router.errorHandler].any(context.WithValue(ctx, ERROR, errors.New(err)), r).Apply(ctx, rw)
-	} else {
-		router.routerRegistry.handler[router.errorHandler].any(ctx, r).Apply(ctx, rw)
+		ctx, span = trace.StartSpan(ctx, "router/sessions/get")
+		gs, err = router.sessionStore.Get(httpRequest, router.sessionName)
+		if err != nil {
+			router.logger.WithContext(ctx).Warn(err)
+			_, span := trace.StartSpan(ctx, "router/sessions/new")
+			gs, err = router.sessionStore.New(httpRequest, router.sessionName)
+			if err != nil {
+				router.logger.WithContext(ctx).Warn(err)
+			}
+			span.End()
+		}
+		span.End()
 	}
+
+	return
+}
+
+func panicToError(p interface{}) error {
+	if p == nil {
+		return nil
+	}
+
+	var err error
+	switch errIface := p.(type) {
+	case error:
+		err = errors.WithStack(errIface)
+	case string:
+		err = errors.New(errIface)
+	default:
+		err = errors.Errorf("router/controller: %+v", errIface)
+	}
+	return err
 }
 
 // ServeHTTP shadows the internal mux.Router's ServeHTTP to defer panic recoveries and logging.
 func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
-	// TODO simplify and merge with `handle`
+	var err error
+
 	ctx, span := trace.StartSpan(httpRequest.Context(), "router/ServeHTTP")
+	defer span.End()
 
 	var cancelFunc context.CancelFunc
 	ctx, cancelFunc = context.WithTimeout(
@@ -207,30 +233,7 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Reques
 	)
 	defer cancelFunc()
 
-	var gs *sessions.Session
-	var err error
-
-	// initialize the session
-	if router.sessionStore != nil {
-		var span *trace.Span
-		ctx, span = trace.StartSpan(ctx, "router/sessions/get")
-		gs, err = router.sessionStore.Get(httpRequest, router.sessionName)
-		if err != nil {
-			log.Println(err)
-			_, span := trace.StartSpan(ctx, "router/sessions/new")
-			gs, err = router.sessionStore.New(httpRequest, router.sessionName)
-			if err != nil {
-				log.Println(err)
-			}
-			span.End()
-		}
-		span.End()
-	}
-
-	// dispatch OnRequest event, the request might be changed
-	//req = e.Request
-
-	span.End()
+	gs := router.getSession(ctx, httpRequest)
 
 	ctx, span = trace.StartSpan(ctx, "router/matchRequest")
 	controller, params, handler := router.routerRegistry.matchRequest(httpRequest)
@@ -253,66 +256,70 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Reques
 	}
 	ctx = ContextWithRequest(ContextWithSession(ctx, req.Session()), req)
 
+	defer func() {
+		// fire finish event
+		router.eventrouter.Dispatch(ctx, &OnFinishEvent{OnRequestEvent{req, rw}, err})
+	}()
+
 	e := &OnRequestEvent{req, rw}
 	router.eventrouter.Dispatch(ctx, e)
 
-	span.End()
+	span.End() // router/matchRequest
 
 	ctx, span = trace.StartSpan(ctx, "router/request")
 	defer span.End()
 
 	chain := &FilterChain{
-		Filters: make([]Filter, 0, len(router.filters)+1),
+		filters: router.filters,
+		final: func(ctx context.Context, r *Request, rw http.ResponseWriter) (response Result) {
+			ctx, span := trace.StartSpan(ctx, "router/controller")
+			defer span.End()
+
+			defer func() {
+				if err := panicToError(recover()); err != nil {
+					response = router.routerRegistry.handler[router.errorHandler].any(context.WithValue(ctx, ERROR, err), r)
+					span.SetStatus(trace.Status{Code: trace.StatusCodeAborted, Message: "controller panic"})
+				}
+			}()
+
+			defer router.eventrouter.Dispatch(ctx, &OnResponseEvent{OnRequestEvent{req, rw}, response})
+
+			if c, ok := controller.method[req.Request().Method]; ok && c != nil {
+				response = c(ctx, r)
+			} else if controller.any != nil {
+				response = controller.any(ctx, r)
+			} else {
+				response = router.routerRegistry.handler[router.notFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("action for method %q not found and no any fallback", req.Request().Method)), r)
+				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
+			}
+
+			return response
+		},
 	}
 
-	chain.Filters = append(router.filters, lastFilter(func(ctx context.Context, r *Request, rw http.ResponseWriter) Result {
-		ctx, span := trace.StartSpan(ctx, "router/controller")
-		defer span.End()
-
-		// catch errors
-		defer func() {
-			if err := recover(); err != nil {
-				router.recover(ctx, r, rw, err)
-			}
-			// fire finish event
-			router.eventrouter.Dispatch(ctx, &OnFinishEvent{OnRequestEvent{req, rw}, err})
-		}()
-
-		var response Result
-
-		if c, ok := controller.method[req.Request().Method]; ok && c != nil {
-			response = c(ctx, r)
-		} else if controller.any != nil {
-			response = controller.any(ctx, r)
-		} else {
-			response = router.routerRegistry.handler[router.notFoundHandler].any(context.WithValue(ctx, ERROR, errors.Errorf("action for method %q not found and no any fallback", req.Request().Method)), r)
-		}
-
-		if response, ok := response.(onResponse); ok {
-			response.OnResponse(ctx, r, rw)
-		}
-
-		// fire response event
-		router.eventrouter.Dispatch(ctx, &OnResponseEvent{OnRequestEvent{req, rw}, response})
-
-		return response
-	}))
-
-	response := chain.Next(ctx, req, rw)
+	result := chain.Next(ctx, req, rw)
 
 	if router.sessionStore != nil {
 		_, span := trace.StartSpan(ctx, "router/sessions/save")
 		if err := router.sessionStore.Save(req.Request(), rw, gs); err != nil {
-			log.Println(err)
+			router.logger.WithContext(ctx).Warn(err)
 		}
 		span.End()
 	}
 
-	if response != nil {
+	var finalErr error
+	if result != nil {
 		_, span := trace.StartSpan(ctx, "router/responseApply")
-		if err := response.Apply(ctx, rw); err != nil {
-			panic(err) // bail out?
-		}
+
+		func() {
+			defer func() {
+				if err := panicToError(recover()); err != nil {
+					finalErr = err
+				}
+			}()
+			finalErr = result.Apply(ctx, rw)
+		}()
+
 		span.End()
 	}
 
@@ -320,9 +327,31 @@ func (router *Router) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Reques
 	if router.sessionStore != nil {
 		_, span := trace.StartSpan(ctx, "router/sessions/persist")
 		if err := router.sessionStore.Save(req.Request(), emptyResponseWriter{}, gs); err != nil {
-			log.Println(err)
+			router.logger.WithContext(ctx).Warn(err)
 		}
 		span.End()
+	}
+
+	for _, cb := range chain.postApply {
+		cb(finalErr, result)
+	}
+
+	if finalErr != nil {
+		func() {
+			defer func() {
+				if err := panicToError(recover()); err != nil {
+					router.logger.WithContext(ctx).Error(err)
+					rw.WriteHeader(http.StatusInternalServerError)
+					_, _ = fmt.Fprintf(rw, "%+v", err)
+				}
+			}()
+
+			if err := router.routerRegistry.handler[router.errorHandler].any(context.WithValue(ctx, ERROR, finalErr), req).Apply(ctx, rw); err != nil {
+				router.logger.WithContext(ctx).Error(err)
+				rw.WriteHeader(http.StatusInternalServerError)
+				_, _ = fmt.Fprintf(rw, "%+v", err)
+			}
+		}()
 	}
 }
 

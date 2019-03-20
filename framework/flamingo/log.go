@@ -19,6 +19,8 @@ const (
 	LogKeyCode                     = "code"
 	LogKeyConnectionStatus         = "connection_status"
 	LogKeyCorrelationID            = "correlationId"
+	LogKeyTraceID                  = "traceID"
+	LogKeySpanID                   = "spanID"
 	LogKeyLevel                    = "level"
 	LogKeyMessage                  = "message"
 	LogKeyMethod                   = "method"

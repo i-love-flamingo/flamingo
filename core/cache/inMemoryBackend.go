@@ -1,10 +1,9 @@
 package cache
 
 import (
-	"log"
 	"time"
 
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 const lurkerPeriod = 1 * time.Minute
@@ -70,12 +69,11 @@ func (m *inMemoryCache) Flush() error {
 }
 
 func (m *inMemoryCache) lurker() {
-	for tick := range time.Tick(lurkerPeriod) {
+	for range time.Tick(lurkerPeriod) {
 		for _, key := range m.pool.Keys() {
 			item, ok := m.pool.Peek(key)
 			if ok && item.(inMemoryCacheEntry).valid.Before(time.Now()) {
 				m.pool.Remove(key)
-				log.Println("cache lurker", tick, "cleared", key)
 				break
 			}
 		}

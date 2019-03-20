@@ -74,7 +74,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			// Register the Jaeger exporter to be able to retrieve
 			// the collected spans.
 			exporter, err := jaeger.NewExporter(jaeger.Options{
-				Endpoint: m.Endpoint,
+				CollectorEndpoint: m.Endpoint,
 				Process: jaeger.Process{
 					ServiceName: m.ServiceName,
 					Tags: []jaeger.Tag{
@@ -103,7 +103,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"opencensus": config.Map{
-			"jaeger.endpoint": "http://localhost:14268",
+			"jaeger.endpoint": "http://localhost:14268/api/traces",
 			"jaeger.enable":   false,
 			"serviceName":     "flamingo",
 			"serviceAddr":     ":13210",

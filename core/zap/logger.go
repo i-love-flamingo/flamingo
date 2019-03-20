@@ -6,6 +6,7 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
+	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -14,13 +15,9 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
+		fieldMap map[string]string
 	}
 )
-
-// WithCorrelationID returns a logger with a correlation ID field
-func (l *Logger) WithCorrelationID(cid string) flamingo.Logger {
-	return l.WithField("correlationId", cid)
-}
 
 // WithContext returns a logger with fields filled from the context
 // businessId:    From Header X-Business-ID
@@ -31,30 +28,21 @@ func (l *Logger) WithCorrelationID(cid string) flamingo.Logger {
 // referer:       referer from request
 // request:       received payload from request
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
+	span := trace.FromContext(ctx)
+	fields := map[flamingo.LogKey]interface{}{
+		flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
+		flamingo.LogKeySpanID:  span.SpanContext().SpanID.String(),
+	}
+
 	req := web.RequestFromContext(ctx)
 
-	if req == nil {
-		return l
+	if req != nil {
+		request := req.Request()
+		fields[flamingo.LogKeyMethod] = request.Method
+		fields[flamingo.LogKeyPath] = request.URL.Path
 	}
 
-	request := req.Request()
-	clientIP := request.RemoteAddr
-	if request.Header.Get("X-Forwarded-For") != "" {
-		clientIP += ", " + request.Header.Get("X-Forwarded-For")
-	}
-	//body, _ := ioutil.ReadAll(request.Body)
-
-	return l.WithFields(
-		map[flamingo.LogKey]interface{}{
-			flamingo.LogKeyBusinessID: request.Header.Get("X-Business-ID"),
-			flamingo.LogKeyClientIP:   clientIP,
-			//flamingo.LogKeyCorrelationID: ctx.ID(),
-			flamingo.LogKeyMethod:  request.Method,
-			flamingo.LogKeyPath:    request.URL.Path,
-			flamingo.LogKeyReferer: request.Referer(),
-			//flamingo.LogKeyRequest:       string(body),
-		},
-	)
+	return l.WithFields(fields)
 }
 
 // Debug logs a message at debug level
@@ -96,10 +84,18 @@ func (l *Logger) Panic(args ...interface{}) {
 
 // WithField creates a child logger and adds structured context to it.
 func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	if alias, ok := l.fieldMap[string(key)]; ok {
+		// skip field
+		if alias == "-" {
+			return l
+		}
+
+		key = flamingo.LogKey(alias)
+	}
+
 	return &Logger{
-		Logger: l.Logger.With(
-			zap.Any(string(key), value),
-		),
+		Logger:   l.Logger.With(zap.Any(string(key), value)),
+		fieldMap: l.fieldMap,
 	}
 }
 
@@ -108,12 +104,22 @@ func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Log
 	zapFields := make([]zapcore.Field, len(fields))
 	i := 0
 	for key, value := range fields {
+		if alias, ok := l.fieldMap[string(key)]; ok {
+			// skip field
+			if alias == "-" {
+				continue
+			}
+
+			key = flamingo.LogKey(alias)
+		}
+
 		zapFields[i] = zap.Any(string(key), value)
 		i++
 	}
 
 	return &Logger{
-		Logger: l.Logger.With(zapFields...),
+		Logger:   l.Logger.With(zapFields[:i]...),
+		fieldMap: l.fieldMap,
 	}
 }
 

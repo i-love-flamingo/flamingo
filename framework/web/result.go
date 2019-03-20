@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -20,17 +23,12 @@ type (
 		Apply(ctx context.Context, rw http.ResponseWriter) error
 	}
 
-	// OnResponse hook
-	// deprecated: necessary?
-	onResponse interface {
-		OnResponse(ctx context.Context, r *Request, rw http.ResponseWriter)
-	}
-
 	// Responder generates responses
 	Responder struct {
 		engine flamingo.TemplateEngine
 		router *Router
 		logger flamingo.Logger
+		debug  bool
 
 		templateForbidden     string
 		templateNotFound      string
@@ -80,19 +78,22 @@ type (
 )
 
 // Inject Responder dependencies
-func (r *Responder) Inject(engine flamingo.TemplateEngine, router *Router, logger flamingo.Logger, cfg *struct {
-	TemplateForbidden     string `inject:"config:flamingo.template.err403"`
-	TemplateNotFound      string `inject:"config:flamingo.template.err404"`
-	TemplateUnavailable   string `inject:"config:flamingo.template.err503"`
-	TemplateErrorWithCode string `inject:"config:flamingo.template.errWithCode"`
+func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
+	Engine                flamingo.TemplateEngine `inject:",optional"`
+	Debug                 bool                    `inject:"config:debug.mode"`
+	TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
+	TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
+	TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`
+	TemplateErrorWithCode string                  `inject:"config:flamingo.template.errWithCode"`
 }) *Responder {
-	r.engine = engine
+	r.engine = cfg.Engine
 	r.router = router
 	r.templateForbidden = cfg.TemplateForbidden
 	r.templateNotFound = cfg.TemplateNotFound
 	r.templateUnavailable = cfg.TemplateUnavailable
 	r.templateErrorWithCode = cfg.TemplateErrorWithCode
-	r.logger = logger.WithField("module","framework.web").WithField("category","responder")
+	r.logger = logger.WithField("module", "framework.web").WithField("category", "responder")
+	r.debug = cfg.Debug
 
 	return r
 }
@@ -293,6 +294,10 @@ func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) er
 
 // ServerErrorWithCodeAndTemplate error response with template and http status code
 func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status uint) *ServerErrorResponse {
+	errstr := err.Error()
+	if r.debug {
+		errstr = fmt.Sprintf("%+v", err)
+	}
 	return &ServerErrorResponse{
 		Error: err,
 		RenderResponse: RenderResponse{
@@ -300,8 +305,8 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 			engine:   r.engine,
 			DataResponse: DataResponse{
 				Data: map[string]interface{}{
-					"code": status,
-					"error": err.Error(),
+					"code":  status,
+					"error": errstr,
 				},
 				Response: Response{
 					Status: status,
@@ -314,22 +319,29 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 
 // ServerError creates a 500 error response
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
-	r.logger.Error(err)
+	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
 }
 
 // Unavailable creates a 503 error response
 func (r *Responder) Unavailable(err error) *ServerErrorResponse {
+	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateUnavailable, http.StatusServiceUnavailable)
 }
 
 // NotFound creates a 404 error response
 func (r *Responder) NotFound(err error) *ServerErrorResponse {
+	r.getLogger().Warn(err)
+
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateNotFound, http.StatusNotFound)
 }
 
 // Forbidden creates a 403 error response
 func (r *Responder) Forbidden(err error) *ServerErrorResponse {
+	r.getLogger().Warn(err)
+
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
 }
 
@@ -339,4 +351,11 @@ func (r *Responder) TODO() *Response {
 		Status: http.StatusNotImplemented,
 		Header: make(http.Header),
 	}
+}
+
+func (r *Responder) getLogger() flamingo.Logger {
+	if r.logger != nil {
+		return r.logger
+	}
+	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
 }

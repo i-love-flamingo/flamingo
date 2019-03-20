@@ -12,7 +12,6 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 )
 
@@ -21,12 +20,14 @@ type Module struct{}
 
 var once = sync.Once{}
 
+type eventRouterProvider func() flamingo.EventRouter
+
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(cobra.Command)).AnnotatedWith("flamingo").ToProvider(
 		func(
 			commands []*cobra.Command,
-			eventRouterProvider web.EventRouterProvider,
+			eventRouterProvider eventRouterProvider,
 			logger flamingo.Logger,
 			config *struct {
 				Name string `inject:"config:cmd.name"`
@@ -92,7 +93,7 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, comple
 // Run the root command
 func Run(injector *dingo.Injector) error {
 	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
-	injector.GetInstance(new(web.EventRouterProvider)).(web.EventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
+	injector.GetInstance(new(eventRouterProvider)).(eventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
 
 	return cmd.Execute()
 }

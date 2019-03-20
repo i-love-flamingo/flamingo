@@ -21,10 +21,10 @@ type (
 		samplingEnabled    bool
 		samplingInitial    float32
 		samplingThereafter float32
+		fieldMap           map[string]string
 	}
 
-	// ShutdownEventSubscriber handles the logger sync on flamingo shutdown
-	ShutdownEventSubscriber struct {
+	shutdownEventSubscriber struct {
 		logger flamingo.Logger
 	}
 )
@@ -41,14 +41,15 @@ var logLevels = map[string]zapcore.Level{
 
 // Inject dependencies
 func (m *Module) Inject(config *struct {
-	Area               string  `inject:"config:area"`
-	JSON               bool    `inject:"config:zap.json,optional"`
-	LogLevel           string  `inject:"config:zap.loglevel,optional"`
-	ColoredOutput      bool    `inject:"config:zap.colored,optional"`
-	DevelopmentMode    bool    `inject:"config:zap.devmode,optional"`
-	SamplingEnabled    bool    `inject:"config:zap.sampling.enabled,optional"`
-	SamplingInitial    float32 `inject:"config:zap.sampling.initial,optional"`
-	SamplingThereafter float32 `inject:"config:zap.sampling.thereafter,optional"`
+	Area               string     `inject:"config:area"`
+	JSON               bool       `inject:"config:zap.json,optional"`
+	LogLevel           string     `inject:"config:zap.loglevel,optional"`
+	ColoredOutput      bool       `inject:"config:zap.colored,optional"`
+	DevelopmentMode    bool       `inject:"config:zap.devmode,optional"`
+	SamplingEnabled    bool       `inject:"config:zap.sampling.enabled,optional"`
+	SamplingInitial    float32    `inject:"config:zap.sampling.initial,optional"`
+	SamplingThereafter float32    `inject:"config:zap.sampling.thereafter,optional"`
+	FieldMap           config.Map `inject:"config:zap.fieldmap,optional"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -58,6 +59,15 @@ func (m *Module) Inject(config *struct {
 	m.samplingEnabled = config.SamplingEnabled
 	m.samplingInitial = config.SamplingInitial
 	m.samplingThereafter = config.SamplingThereafter
+
+	if config.FieldMap != nil {
+		m.fieldMap = make(map[string]string, len(config.FieldMap))
+		for k, v := range config.FieldMap {
+			if v, ok := v.(string); ok {
+				m.fieldMap[k] = v
+			}
+		}
+	}
 }
 
 // Configure the logrus logger as flamingo.Logger (in JSON mode kibana compatible)
@@ -103,7 +113,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			EncodeLevel:    encoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.FullCallerEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 			EncodeName:     zapcore.FullNameEncoder,
 		},
 		OutputPaths:      []string{"stderr"},
@@ -115,23 +125,25 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	if err != nil {
 		panic(err)
 	}
-	logger = logger.With(zap.String(flamingo.LogKeyArea, m.area))
 
 	zapLogger := &Logger{
-		Logger: logger,
+		Logger:   logger,
+		fieldMap: m.fieldMap,
 	}
 
+	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)
+
 	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
-	flamingo.BindEventSubscriber(injector).To(ShutdownEventSubscriber{})
+	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
 }
 
 // Inject dependencies
-func (subscriber *ShutdownEventSubscriber) Inject(logger flamingo.Logger) {
+func (subscriber *shutdownEventSubscriber) Inject(logger flamingo.Logger) {
 	subscriber.logger = logger
 }
 
 // Notify handles the incoming event if it is a AppShutdownEvent
-func (subscriber *ShutdownEventSubscriber) Notify(_ context.Context, event flamingo.Event) {
+func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if logger, ok := subscriber.logger.(*Logger); ok {
 			logger.Debug("Zap Logger shutdown event")

@@ -2,10 +2,11 @@ package domain
 
 import (
 	"encoding/gob"
+
 	"flamingo.me/flamingo/v3/core/security/domain"
 
 	"flamingo.me/flamingo/v3/framework/web"
-	oidc "github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 )
 
@@ -28,6 +29,7 @@ type (
 		Country      string
 		CustomFields map[string]string
 		Type         UserType
+		Groups       []string
 	}
 
 	// LoginEvent for the current session

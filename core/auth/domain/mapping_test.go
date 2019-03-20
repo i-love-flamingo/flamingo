@@ -44,6 +44,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_Default() {
 		Email:        "email@domain.com",
 		CustomFields: map[string]string{},
 		Type:         USER,
+		Groups:       []string{""},
 	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
@@ -60,6 +61,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		"city":        "Whitecity",
 		"dateOfBirth": "01.01.2000",
 		"country":     "Mars",
+		"groups":      "GROUP1,GROUP2,GROUP3",
 		"whatever":    "whatever",
 	}
 
@@ -75,6 +77,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		"city":        "city",
 		"dateOfBirth": "dateOfBirth",
 		"country":     "country",
+		"groups":      "groups",
 	}
 
 	t.Equal(&User{
@@ -91,6 +94,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllMainFields() {
 		Country:      "Mars",
 		CustomFields: map[string]string{},
 		Type:         USER,
+		Groups:       []string{"GROUP1", "GROUP2", "GROUP3"},
 	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
@@ -107,7 +111,8 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_CustomFields() {
 		CustomFields: map[string]string{
 			"whatever": "value",
 		},
-		Type: USER,
+		Groups: []string{""},
+		Type:   USER,
 	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }
 
@@ -125,6 +130,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		"someDateOfBirth": "01.01.2000",
 		"someCountry":     "Mars",
 		"whatever":        "value",
+		"userType":        "RU",
 	}
 
 	t.mappingService.idTokenMapping = config.Map{
@@ -140,6 +146,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		"dateOfBirth":  "someDateOfBirth",
 		"country":      "someCountry",
 		"customFields": config.Slice{"whatever"},
+		"groups":       "userType",
 	}
 
 	t.Equal(&User{
@@ -157,6 +164,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		CustomFields: map[string]string{
 			"whatever": "value",
 		},
-		Type: USER,
+		Type:   USER,
+		Groups: []string{"RU"},
 	}, t.mappingService.MapToUser(claims, web.EmptySession()))
 }

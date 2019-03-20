@@ -2,10 +2,11 @@ package domain
 
 import (
 	"encoding/gob"
+	"strings"
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
-	oidc "github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc"
 )
 
 type (
@@ -22,6 +23,7 @@ type (
 		DateOfBirth  string
 		Country      string
 		CustomFields []string
+		Groups       string
 	}
 
 	// UserMappingService maps a user based on data available via the idTokenMapping setting
@@ -78,6 +80,7 @@ func (ums *UserMappingService) MapToUser(claims map[string]interface{}, session 
 		Country:      ums.mapField(mapping.Country, claims),
 		CustomFields: ums.mapCustomFields(mapping.CustomFields, claims),
 		Type:         USER,
+		Groups:       ums.mapSliceField(mapping.Groups, claims),
 	}
 }
 
@@ -127,4 +130,8 @@ func (ums *UserMappingService) mapField(mappedFieldName string, claims map[strin
 		return ""
 	}
 	return value
+}
+
+func (ums *UserMappingService) mapSliceField(mappedFieldName string, claims map[string]interface{}) []string {
+	return strings.Split(ums.mapField(mappedFieldName, claims), ",")
 }

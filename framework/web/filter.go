@@ -25,6 +25,14 @@ func (fnc lastFilter) Filter(ctx context.Context, req *Request, w http.ResponseW
 	return fnc(ctx, req, w)
 }
 
+// NewFilterChain constructs and sets the final filter and optional filters
+func NewFilterChain(final lastFilter, filters ...Filter) *FilterChain {
+	return &FilterChain{
+		final:   final,
+		filters: filters,
+	}
+}
+
 // Next calls the next filter and deletes it of the chain
 func (fc *FilterChain) Next(ctx context.Context, req *Request, w http.ResponseWriter) Result {
 	if len(fc.filters) == 0 {

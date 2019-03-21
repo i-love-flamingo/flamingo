@@ -46,6 +46,11 @@ export CONTEXT="dev" && go run project.go serve
 ```
 Will cause flamingo to additionaly load the configfile "config/config_dev.yml"
 
+You can also load multiple extra configuration files - e.g. starting flamingo with
+```bash
+export CONTEXT="dev:testdata" && go run project.go serve
+```
+Will cause flamingo to additionaly load the configfiles "config/config_dev.yml" and "config/config_testdata.yml"
 
 Configuration values can also be read from environment variables with the syntax:
 

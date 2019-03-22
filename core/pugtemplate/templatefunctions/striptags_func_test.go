@@ -1,40 +1,51 @@
 package templatefunctions_test
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/template"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestStriptagsFunc(t *testing.T) {
+	tests := []struct {
+		name        string
+		in          string
+		out         string
+		allowedTags config.Slice
+	}{
+		{"should keep plain text", "do not modify me", "do not modify me", config.Slice{}},
+		{"should keep linebreaks", "Hello\nWorld", "Hello\nWorld", config.Slice{}},
+		{"should remove tags by default", "<h1>Headline<h1> <p>Paragraph</p>", "Headline Paragraph", config.Slice{}},
+		{"should keep defined tags", "<h1>Headline</h1>", "<h1>Headline</h1>", config.Slice{"h1", "h2"}},
+		{
+			"should remove non whitelisted attributes",
+			"<h1 style=\"font-size: 500px\">Keep me</h1><script src=\"http://miner.tld/x.js\">",
+			"<h1>Keep me</h1>",
+			config.Slice{"h1"},
+		},
+		{
+			"should keep whitelisted attributes",
+			"<p>I'm a paragraph containing a <a href=\"http://tld.com\" style=\"font-size:100px\">link</a></p>",
+			"<p>I'm a paragraph containing a <a href=\"http://tld.com\">link</a></p>",
+			config.Slice{"p", "a(href)"},
+		},
+		{
+			"should keep multiple whitelisted attributes",
+			"<a href=\"http://domain.tld\" target=\"_blank\" rel=\"nofollow\">Link with target</a>",
+			"<a href=\"http://domain.tld\" target=\"_blank\">Link with target</a>",
+			config.Slice{"a(href target)"},
+		},
+	}
 
-	var striptagsFunc template.Func = new(templatefunctions.StriptagsFunc)
-	striptags := striptagsFunc.Func().(func(htmlString string, allowedTagsConfig ...config.Slice) string)
+	var stripTagsFunc template.Func = new(templatefunctions.StriptagsFunc)
+	stripTags := stripTagsFunc.Func().(func(htmlString string, allowedTagsConfig ...config.Slice) string)
 
-	// basic test without parameter
-	// should remove all tags and keep only text
-	assert.Equal(t, "should be ok", striptags("should be ok"))
-	assert.Equal(t, "Headline\nHello world", striptags("<h1>Headline</h1>\n<p>Hello world</p>"))
-
-	// advanced test with parameter
-	// should only keep wanted tags
-	var res string
-	res = striptags("<h1>Hello</h1>", config.Slice{"h1", "h2", "h3", "p"})
-	assert.Equal(t, "<h1>Hello</h1>", res)
-
-	res = striptags("<h1>Remove Headline</h1>", config.Slice{"p"})
-	assert.Equal(t, "Remove Headline", res)
-
-	res = striptags("<h1>Remove Headline</h1><p>Keep paragraphs</p>", config.Slice{"p"})
-	assert.Equal(t, "Remove Headline<p>Keep paragraphs</p>", res)
-
-	// remove invalid attributes and tags
-	res = striptags("<h1 style=\"font-size: 500px\">Remove Scripts</h1><script src=\"http://miner.tld/x.js\">", config.Slice{"h1"})
-	assert.Equal(t, "<h1>Remove Scripts</h1>", res, "should remove invalid attributes")
-
-	//keep allowed attributes
-	res = striptags("<p>I'm a paragraph containing a <a href=\"http://tld.com\">link</a></p>", config.Slice{"p", "a(href link rel)"})
-	assert.Equal(t, "<p>I'm a paragraph containing a <a href=\"http://tld.com\">link</a></p>", res, "should remove invalid attributes")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.out, stripTags(tt.in, tt.allowedTags), tt.name)
+		})
+	}
 }

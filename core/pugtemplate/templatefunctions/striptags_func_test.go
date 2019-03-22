@@ -1,6 +1,7 @@
-package templatefunctions
+package templatefunctions_test
 
 import (
+	"flamingo.me/flamingo/core/pugtemplate/templatefunctions"
 	"flamingo.me/flamingo/framework/config"
 	"flamingo.me/flamingo/framework/template"
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func TestStriptagsFunc(t *testing.T) {
 
-	var striptagsFunc template.Func = new(StriptagsFunc)
+	var striptagsFunc template.Func = new(templatefunctions.StriptagsFunc)
 	striptags := striptagsFunc.Func().(func(htmlString string, allowedTagsConfig ...config.Slice) string)
 
 	// basic test without parameter

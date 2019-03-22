@@ -18,8 +18,20 @@ type (
 )
 
 var (
-	nameRe       = regexp.MustCompile(`[a-z0-9\-]+`)
-	attributesRe = regexp.MustCompile(`[a-z0-9]+([a-z]+)`)
+	nameRe          = regexp.MustCompile(`[a-z0-9\-]+`)
+	attributesRe    = regexp.MustCompile(`[a-z0-9]+([a-z]+)`)
+	selfClosingTags = map[string]struct{}{
+		"area":   {},
+		"base":   {},
+		"br":     {},
+		"col":    {},
+		"embed":  {},
+		"hr":     {},
+		"img":    {},
+		"input":  {},
+		"link":   {},
+		"source": {},
+	}
 )
 
 func createTag(definition string) allowedTag {
@@ -75,6 +87,9 @@ func cleanTags(n *html.Node, allowedTags allowedTags) string {
 		res += "<"
 		res += n.Data
 		res += getAllowedAttributes(n.Attr, allowedTag.attributes)
+		if isSelfClosingTag(n) {
+			res += " /"
+		}
 		res += ">"
 	}
 
@@ -88,11 +103,20 @@ func cleanTags(n *html.Node, allowedTags allowedTags) string {
 		}
 	}
 
-	if allowedTag.name != "" {
+	if allowedTag.name != "" && !isSelfClosingTag(n) {
 		res += "</" + n.Data + ">"
 	}
 
 	return res
+}
+
+func isSelfClosingTag(n *html.Node) bool {
+	if n.Type == html.ElementNode {
+		if _, ok := selfClosingTags[n.Data]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 func getAllowedAttributes(attributes []html.Attribute, allowedAttributes allowedAttributes) string {

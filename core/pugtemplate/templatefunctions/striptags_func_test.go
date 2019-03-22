@@ -20,6 +20,7 @@ func TestStriptagsFunc(t *testing.T) {
 		{"should keep linebreaks", "Hello\nWorld", "Hello\nWorld", config.Slice{}},
 		{"should remove tags by default", "<h1>Headline<h1> <p>Paragraph</p>", "Headline Paragraph", config.Slice{}},
 		{"should keep defined tags", "<h1>Headline</h1>", "<h1>Headline</h1>", config.Slice{"h1", "h2"}},
+		{"should handle self-closing tags", "<h1>Hello<br />World</h1>", "<h1>Hello<br />World</h1>", config.Slice{"h1", "br"}},
 		{
 			"should remove non whitelisted attributes",
 			"<h1 style=\"font-size: 500px\">Keep me</h1><script src=\"http://miner.tld/x.js\">",

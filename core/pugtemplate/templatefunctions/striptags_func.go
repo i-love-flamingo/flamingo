@@ -9,8 +9,8 @@ import (
 
 type (
 	StriptagsFunc     struct{}
-	allowedAttributes map[string]bool
-	allowedTags       []allowedTag
+	allowedAttributes map[string]struct{}
+	allowedTags       map[string]allowedTag
 	allowedTag        struct {
 		name       string
 		attributes allowedAttributes
@@ -26,29 +26,13 @@ func createTag(definition string) allowedTag {
 	definition = strings.ToLower(definition)
 	attributes := make(allowedAttributes)
 	for _, attr := range attributesRe.FindAllString(definition, -1) {
-		attributes[attr] = true
+		attributes[attr] = struct{}{}
 	}
 
 	return allowedTag{
 		nameRe.FindString(definition),
 		attributes,
 	}
-}
-
-func (at allowedTags) Find(tagName string) *allowedTag {
-	for _, tag := range at {
-		if tag.name == tagName {
-			return &tag
-		}
-	}
-	return nil
-}
-
-func (at allowedTags) Contains(tagName string) bool {
-	if tag := at.Find(tagName); tag != nil {
-		return true
-	}
-	return false
 }
 
 // Func as implementation of debug method
@@ -59,11 +43,12 @@ func (df StriptagsFunc) Func() interface{} {
 			return ""
 		}
 
-		var allowedTags allowedTags
+		allowedTags := make(allowedTags)
 		if len(allowedTagsConfig) == 1 {
 			for _, item := range allowedTagsConfig[0] {
 				if definition, ok := item.(string); ok {
-					allowedTags = append(allowedTags, createTag(definition))
+					tag := createTag(definition)
+					allowedTags[tag.name] = tag
 				}
 			}
 		}
@@ -77,12 +62,19 @@ func (df StriptagsFunc) Func() interface{} {
 }
 
 func cleanTags(n *html.Node, allowedTags allowedTags) string {
+	var allowedTag allowedTag
 	res := ""
 
-	if n.Type == html.ElementNode && allowedTags.Contains(n.Data) {
+	if n.Type == html.ElementNode {
+		if tag, ok := allowedTags[n.Data]; ok {
+			allowedTag = tag
+		}
+	}
+
+	if allowedTag.name != "" {
 		res += "<"
 		res += n.Data
-		res += getAllowedAttributes(n.Attr, allowedTags.Find(n.Data).attributes)
+		res += getAllowedAttributes(n.Attr, allowedTag.attributes)
 		res += ">"
 	}
 
@@ -96,7 +88,7 @@ func cleanTags(n *html.Node, allowedTags allowedTags) string {
 		}
 	}
 
-	if n.Type == html.ElementNode && allowedTags.Contains(n.Data) {
+	if allowedTag.name != "" {
 		res += "</" + n.Data + ">"
 	}
 
@@ -106,7 +98,7 @@ func cleanTags(n *html.Node, allowedTags allowedTags) string {
 func getAllowedAttributes(attributes []html.Attribute, allowedAttributes allowedAttributes) string {
 	res := ""
 	for _, attr := range attributes {
-		if allowedAttributes[attr.Key] {
+		if _, ok := allowedAttributes[attr.Key]; ok {
 			res += " " + attr.Key + "=\"" + html.EscapeString(attr.Val) + "\""
 		}
 	}

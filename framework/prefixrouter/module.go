@@ -18,20 +18,27 @@ import (
 
 // Module for core/prefix_router
 type Module struct {
-	server *http.Server
-	logger flamingo.Logger
+	server                    *http.Server
+	logger                    flamingo.Logger
+	enableRootRedirectHandler bool
 }
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(http.ServeMux)).ToInstance(http.NewServeMux())
 	injector.BindMulti(new(cobra.Command)).ToProvider(serveCmd(m))
+	if m.enableRootRedirectHandler {
+		injector.BindMulti((*OptionalHandler)(nil)).AnnotatedWith("fallback").To(rootRedirectHandler{})
+	}
 	flamingo.BindEventSubscriber(injector).ToInstance(m)
 }
 
 // Inject dependencies
-func (m *Module) Inject(l flamingo.Logger) {
+func (m *Module) Inject(l flamingo.Logger, config *struct {
+	EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
+}) {
 	m.logger = l
+	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
 }
 
 func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {

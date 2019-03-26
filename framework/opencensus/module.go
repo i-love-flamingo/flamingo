@@ -10,8 +10,11 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
+	openzipkin "github.com/openzipkin/zipkin-go"
+	reporterHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/exporter/jaeger"
 	"go.opencensus.io/exporter/prometheus"
+	"go.opencensus.io/exporter/zipkin"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -50,10 +53,12 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 
 // Module registers the opencensus module which in turn enables jaeger & co
 type Module struct {
-	Endpoint     string `inject:"config:opencensus.jaeger.endpoint"`
-	ServiceName  string `inject:"config:opencensus.serviceName"`
-	ServiceAddr  string `inject:"config:opencensus.serviceAddr"`
-	JaegerEnable bool   `inject:"config:opencensus.jaeger.enable"`
+	Endpoint       string `inject:"config:opencensus.jaeger.endpoint"`
+	ServiceName    string `inject:"config:opencensus.serviceName"`
+	ServiceAddr    string `inject:"config:opencensus.serviceAddr"`
+	JaegerEnable   bool   `inject:"config:opencensus.jaeger.enable"`
+	ZipkinEnable   bool   `inject:"config:opencensus.zipkin.enable"`
+	ZipkinEndpoint string `inject:"config:opencensus.zipkin.endpoint"`
 }
 
 // Configure the opencensus Module
@@ -85,6 +90,24 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			trace.RegisterExporter(exporter)
 		}
 
+		if m.ZipkinEnable {
+			// The localEndpoint stores the name and address of the local service
+			// todo fix this?
+			localEndpoint, err := openzipkin.NewEndpoint(m.ServiceName, fmt.Sprintf("127.%d.%d.%d:3210", rand.Intn(255), rand.Intn(255), rand.Intn(255)))
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// The Zipkin reporter takes collected spans from the app and reports them to the backend
+			// http://localhost:9411/api/v2/spans is the default for the Zipkin Span v2
+			reporter := reporterHttp.NewReporter(m.ZipkinEndpoint)
+			// defer reporter.Close()
+
+			// The OpenCensus exporter wraps the Zipkin reporter
+			exporter := zipkin.NewExporter(reporter, localEndpoint)
+			trace.RegisterExporter(exporter)
+		}
+
 		{
 			exporter, err := prometheus.NewExporter(prometheus.Options{})
 			if err != nil {
@@ -100,8 +123,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"opencensus": config.Map{
-			"jaeger.endpoint": "http://localhost:14268/api/traces",
 			"jaeger.enable":   false,
+			"jaeger.endpoint": "http://localhost:14268/api/traces",
+			"zipkin.enable":   false,
+			"zipkin.endpoint": "http://localhost:9411/api/v2/spans",
 			"serviceName":     "flamingo",
 			"serviceAddr":     ":13210",
 			"tracing": config.Map{

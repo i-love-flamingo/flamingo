@@ -14,7 +14,6 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/trace"
 )
 
 // Module for core/prefix_router
@@ -35,11 +34,11 @@ func (m *Module) Inject(l flamingo.Logger) {
 	m.logger = l
 }
 
-func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, config *struct {
+func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {
 	PrimaryHandlers  []OptionalHandler `inject:"primaryHandlers,optional"` // Optional Register a PrimaryHandlersHandlers which is passed to the FrontendRouter
 	FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter
 }) *cobra.Command {
-	return func(area *config.Area, defaultmux *http.ServeMux, config *struct {
+	return func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {
 		PrimaryHandlers  []OptionalHandler `inject:"primaryHandlers,optional"` // Optional Register a PrimaryHandlersHandlers which is passed to the FrontendRouter
 		FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter
 	}) *cobra.Command {
@@ -49,7 +48,7 @@ func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, conf
 			Use:     "serve",
 			Short:   "run the prefix router",
 			Aliases: []string{"server"},
-			Run:     m.serve(area, defaultmux, &addr, config.PrimaryHandlers, config.FallbackHandlers),
+			Run:     m.serve(area, defaultmux, &addr, configuredURLPrefixSampler, config.PrimaryHandlers, config.FallbackHandlers),
 		}
 
 		cmd.Flags().StringVarP(&addr, "addr", "a", ":3210", "addr on which flamingo runs")
@@ -59,7 +58,14 @@ func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, conf
 }
 
 // serve HTTP Requests
-func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *string, primaryHandlers []OptionalHandler, fallbackHandlers []OptionalHandler) func(cmd *cobra.Command, args []string) {
+func (m *Module) serve(
+	root *config.Area,
+	defaultRouter *http.ServeMux,
+	addr *string,
+	configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler,
+	primaryHandlers []OptionalHandler,
+	fallbackHandlers []OptionalHandler) func(cmd *cobra.Command, args []string,
+) {
 	return func(cmd *cobra.Command, args []string) {
 		frontRouter := NewFrontRouter()
 		frontRouter.SetFinalFallbackHandler(defaultRouter)
@@ -91,10 +97,35 @@ func (m *Module) serve(root *config.Area, defaultRouter *http.ServeMux, addr *st
 			frontRouter.Add(bu.Path, routerHandler{area: area.Name, handler: areaRouter})
 		}
 
+		whitelist := make([]string, 0, len(configuredURLPrefixSampler.Whitelist)*len(frontRouter.router)+1)
+		blacklist := make([]string, 0, len(configuredURLPrefixSampler.Blacklist)*len(frontRouter.router)+1)
+
+		// default routes
+		for _, p := range configuredURLPrefixSampler.Whitelist {
+			whitelist = append(whitelist, p.(string))
+		}
+		for _, p := range configuredURLPrefixSampler.Blacklist {
+			blacklist = append(blacklist, p.(string))
+		}
+
+		// prefixed routes
+		for k := range frontRouter.router {
+			for _, p := range configuredURLPrefixSampler.Whitelist {
+				whitelist = append(whitelist, k+p.(string))
+			}
+			for _, p := range configuredURLPrefixSampler.Blacklist {
+				blacklist = append(blacklist, k+p.(string))
+			}
+		}
+
 		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server (Prefixrouter) at ", *addr, ".....")
 		m.server = &http.Server{
-			Addr:    *addr,
-			Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: frontRouter, StartOptions: trace.StartOptions{Sampler: opencensus.Sampler}},
+			Addr: *addr,
+			Handler: &ochttp.Handler{
+				IsPublicEndpoint: true,
+				Handler:          frontRouter,
+				GetStartOptions:  opencensus.URLPrefixSampler(whitelist, blacklist, configuredURLPrefixSampler.AllowParentTrace),
+			},
 		}
 
 		e := m.server.ListenAndServe()

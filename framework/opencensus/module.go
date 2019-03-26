@@ -23,8 +23,6 @@ var (
 	registerOnce = new(sync.Once)
 	// KeyArea is the key to represent the current flamingo area
 	KeyArea, _ = tag.NewKey("area")
-	// Sampler is used as default sampler
-	Sampler = trace.NeverSample()
 )
 
 // View helps to register opencensus views with the default "area" tag
@@ -63,7 +61,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
 		// For demoing purposes, always sample.
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.NeverSample()})
-		Sampler = trace.AlwaysSample()
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {
@@ -107,6 +104,13 @@ func (m *Module) DefaultConfig() config.Map {
 			"jaeger.enable":   false,
 			"serviceName":     "flamingo",
 			"serviceAddr":     ":13210",
+			"tracing": config.Map{
+				"sampler": config.Map{
+					"whitelist":        config.Slice{},
+					"blacklist":        config.Slice{},
+					"allowParentTrace": true,
+				},
+			},
 		},
 	}
 }

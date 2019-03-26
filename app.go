@@ -17,7 +17,6 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
-	"go.opencensus.io/trace"
 )
 
 type appmodule struct {
@@ -28,13 +27,18 @@ type appmodule struct {
 }
 
 // Inject basic application dependencies
-func (a *appmodule) Inject(root *config.Area, router *web.Router, logger flamingo.Logger) {
+func (a *appmodule) Inject(
+	root *config.Area,
+	router *web.Router,
+	logger flamingo.Logger,
+	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
+) {
 	a.root = root
 	a.router = router
 	a.logger = logger
 	a.server = &http.Server{
 		Addr:    ":3322",
-		Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router, StartOptions: trace.StartOptions{Sampler: opencensus.Sampler}},
+		Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router, GetStartOptions: configuredSampler.GetStartOptions()},
 	}
 }
 

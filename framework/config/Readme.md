@@ -10,7 +10,7 @@ The modules should come with a documentation which configurations/featureflags t
 ## Basics
 Configurations are yml files located in **config** folder.
 
-The configuration syntax is to specify areas either with `.` or as yaml maps:
+The configuration syntax is to specify sections either with `.` or as yaml maps:
 
 ```yaml
 foo:
@@ -80,3 +80,7 @@ The result struct must match exactly the structure and types of the config map a
 ```go
 err := m.MarshalTo(&result)
 ```
+
+## Using multiple configuration areas:
+A flamingo application can have multiple `config.Area` - that is essentially useful for localisation.
+See [Flamingo Bootstrap](../1. Flamingo Basics/7. Flamingo Bootstrap.md)

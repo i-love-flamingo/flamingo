@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"sync"
 
@@ -61,6 +62,31 @@ type Module struct {
 	ZipkinEndpoint string `inject:"config:opencensus.zipkin.endpoint"`
 }
 
+// find first not-loopback ipv4 address
+func localAddr() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, addr := range addrs {
+		ipnet, ok := addr.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		if ipnet.IP.IsLoopback() {
+			continue
+		}
+		if ipnet.IP.To4() == nil {
+			continue
+		}
+		return ipnet.IP.To4().String()
+	}
+
+	// return a random loopback addr, to ensure this is unqiue at least
+	return fmt.Sprintf("127.%d.%d.%d:3210", rand.Intn(255), rand.Intn(255), rand.Intn(255))
+}
+
 // Configure the opencensus Module
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
@@ -69,10 +95,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		if m.JaegerEnable {
-			// generate a random IP in 127.0.0.0/8 network to trick jaegers clock skew detection
-			// todo fix this?
-			randomIP := fmt.Sprintf("127.%d.%d.%d", rand.Intn(255), rand.Intn(255), rand.Intn(255))
-
 			// Register the Jaeger exporter to be able to retrieve
 			// the collected spans.
 			exporter, err := jaeger.NewExporter(jaeger.Options{
@@ -80,7 +102,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Process: jaeger.Process{
 					ServiceName: m.ServiceName,
 					Tags: []jaeger.Tag{
-						jaeger.StringTag("ip", randomIP),
+						jaeger.StringTag("ip", localAddr()),
 					},
 				},
 			})
@@ -91,9 +113,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		}
 
 		if m.ZipkinEnable {
-			// The localEndpoint stores the name and address of the local service
-			// todo fix this?
-			localEndpoint, err := openzipkin.NewEndpoint(m.ServiceName, fmt.Sprintf("127.%d.%d.%d:3210", rand.Intn(255), rand.Intn(255), rand.Intn(255)))
+			localEndpoint, err := openzipkin.NewEndpoint(m.ServiceName, localAddr())
 			if err != nil {
 				log.Fatal(err)
 			}

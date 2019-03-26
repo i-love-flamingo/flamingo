@@ -112,13 +112,12 @@ func (ts *TranslationService) translateWithLib(localeCode string, key string, co
 	if err != nil {
 		ts.logger.Info("Error - locale.translationservice", err)
 		return "", err
-	} else {
-		label := T(key, count, translationArguments)
-		if key == label {
-			return label, errors.New("label not found")
-		}
-		return label, nil
 	}
+	label := T(key, count, translationArguments)
+	if key == label {
+		return label, errors.New("label not found")
+	}
+	return label, nil
 }
 func (ts *TranslationService) loadFiles() {
 	if ts.filesLoaded { //&& !ts.devmode

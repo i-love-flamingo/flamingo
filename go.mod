@@ -21,7 +21,7 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
-	github.com/openzipkin/zipkin-go v0.1.6 // indirect
+	github.com/openzipkin/zipkin-go v0.1.6
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect

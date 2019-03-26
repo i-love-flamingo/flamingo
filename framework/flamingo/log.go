@@ -13,6 +13,7 @@ const (
 	LogKeyApicall                  = "apicall"   // LogKeyApicall marks a logmessage belonging to an (outgoing) api call (value should be 1)
 	LogKeyArea                     = "area"
 	LogKeyBusinessID               = "businessId"
+	LogKeyModule                   = "module"
 	LogKeyCategory                 = "category"
 	LogKeyModule                   = "module"
 	LogKeySubCategory              = "sub_category"

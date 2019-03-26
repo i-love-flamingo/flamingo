@@ -11,6 +11,8 @@ This package provides localization features:
 ```
 locale:
   locale: en-gb                                    # the locale used for labels
+  fallbackLocales:                                 # a list of (optional) locales that should be used for fallback
+  - en-gb
   translationFile: translations/en_GB.all.json     # the label file location
   translationFiles:                                # or a list of label file locations
   - translations/merged/en-gb.all.yaml

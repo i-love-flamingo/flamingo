@@ -17,7 +17,7 @@ type (
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind(new(domain.TranslationService)).To(infrastructure.TranslationService{})
+	injector.Bind(new(domain.TranslationService)).In(dingo.ChildSingleton).To(infrastructure.TranslationService{})
 	injector.Bind(new(application.DateTimeServiceInterface)).To(application.DateTimeService{})
 
 	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.Label))

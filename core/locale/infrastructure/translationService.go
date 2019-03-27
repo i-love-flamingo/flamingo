@@ -120,7 +120,7 @@ func (ts *TranslationService) translateWithLib(localeCode string, key string, co
 	return label, nil
 }
 func (ts *TranslationService) loadFiles() {
-	if ts.filesLoaded { //&& !ts.devmode
+	if ts.filesLoaded && !ts.devmode {
 		return
 	}
 	ts.logger.Debug("loading translationfiles..")

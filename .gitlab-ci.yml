@@ -21,18 +21,19 @@ docker 1.12:
     - __gopath/pkg/mod
   before_script:
   - export GOPATH="$(pwd -P)/__gopath"
-  - /pact/pact-go_linux_amd64 daemon &
 
 cover flamingo:
   extends: .init
   script:
+  - /pact/pact-go_linux_amd64 daemon &
   - go test -coverprofile cover.out ./...
   - go tool cover -func cover.out
 
 test flamingo:
   extends: .init
   script:
-  - go test -race ./...
+  - /pact/pact-go_linux_amd64 daemon &
+  - go test -race -vet 'all' ./...
 
 static-check flamingo:
   extends: .init
@@ -40,7 +41,3 @@ static-check flamingo:
   - golint -set_exit_status ./...
   - go vet ./...
 
-vet flamingo:
-  extends: .init
-  script:
-  - go test -vet 'all' -race ./...

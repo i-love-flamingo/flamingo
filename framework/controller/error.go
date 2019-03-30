@@ -20,8 +20,8 @@ func (controller *Error) Inject(responder *web.Responder) {
 // Error responder
 func (controller *Error) Error(ctx context.Context, request *web.Request) web.Result {
 	var err error
-	if ctx.Value(web.ERROR) != nil {
-		err = ctx.Value(web.ERROR).(error)
+	if ctx.Value(web.RouterError) != nil {
+		err = ctx.Value(web.RouterError).(error)
 	} else {
 		err = errors.New("no error found in provided context")
 	}
@@ -31,8 +31,8 @@ func (controller *Error) Error(ctx context.Context, request *web.Request) web.Re
 // NotFound responder
 func (controller *Error) NotFound(ctx context.Context, request *web.Request) web.Result {
 	var err error
-	if ctx.Value(web.ERROR) != nil {
-		err = ctx.Value(web.ERROR).(error)
+	if ctx.Value(web.RouterError) != nil {
+		err = ctx.Value(web.RouterError).(error)
 	} else {
 		err = errors.New("no error found in provided context")
 	}

@@ -21,6 +21,7 @@ type (
 		responder      *web.Responder
 		authManager    *application.AuthManager
 		parameterHooks []LoginGetParameterHook
+		router         web.ReverseRouter
 	}
 
 	// LoginGetParameterHook helper to inject additional GET parameters for logins
@@ -34,10 +35,12 @@ func (l *LoginController) Inject(
 	responder *web.Responder,
 	authManager *application.AuthManager,
 	ph []LoginGetParameterHook,
+	router web.ReverseRouter,
 ) {
 	l.responder = responder
 	l.authManager = authManager
 	l.parameterHooks = ph
+	l.router = router
 }
 
 // Get handler for logins (redirect)
@@ -48,7 +51,7 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Resul
 	}
 
 	if refURL, err := url.Parse(redirecturl); err != nil || refURL.Host != request.Request().Host {
-		u, _ := l.authManager.URL(c, "")
+		u, _ := l.router.Absolute(request, "", nil)
 		redirecturl = u.String()
 	}
 
@@ -64,6 +67,6 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Resul
 		}
 	}
 
-	redirectURL, _ := url.Parse(l.authManager.OAuth2Config(c).AuthCodeURL(state, parameters...))
+	redirectURL, _ := url.Parse(l.authManager.OAuth2Config(c, request).AuthCodeURL(state, parameters...))
 	return l.responder.URLRedirect(redirectURL)
 }

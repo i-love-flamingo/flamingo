@@ -14,6 +14,7 @@ type (
 		responder     *web.Responder
 		authManager   *application.AuthManager
 		loginTemplate string
+		router        web.ReverseRouter
 	}
 )
 
@@ -24,10 +25,12 @@ func (l *LoginController) Inject(
 	cfg *struct {
 		FakeLoginTemplate string `inject:"config:auth.fakeLoginTemplate"`
 	},
+	router web.ReverseRouter,
 ) {
 	l.responder = responder
 	l.authManager = authManager
 	l.loginTemplate = cfg.FakeLoginTemplate
+	l.router = router
 }
 
 // Get http action
@@ -38,7 +41,7 @@ func (l *LoginController) Get(ctx context.Context, request *web.Request) web.Res
 	}
 
 	if refURL, err := url.Parse(redirectURL); err != nil || refURL.Host != request.Request().Host {
-		u, _ := l.authManager.URL(ctx, "")
+		u, _ := l.router.Absolute(request, "", nil)
 		redirectURL = u.String()
 	}
 

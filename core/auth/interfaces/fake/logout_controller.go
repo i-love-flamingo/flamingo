@@ -10,11 +10,12 @@ import (
 )
 
 type (
-	//LogoutController fake implementation
+	// LogoutController fake implementation
 	LogoutController struct {
 		responder      *web.Responder
 		authManager    *application.AuthManager
 		eventPublisher *application.EventPublisher
+		router         web.ReverseRouter
 	}
 )
 
@@ -23,10 +24,12 @@ func (l *LogoutController) Inject(
 	responder *web.Responder,
 	authManager *application.AuthManager,
 	eventPublisher *application.EventPublisher,
+	router web.ReverseRouter,
 ) {
 	l.responder = responder
 	l.authManager = authManager
 	l.eventPublisher = eventPublisher
+	l.router = router
 }
 
 // Get HTTP action
@@ -36,7 +39,7 @@ func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Re
 		Session: request.Session(),
 	})
 
-	redirectURL, _ := l.authManager.URL(ctx, "")
+	redirectURL, _ := l.router.Absolute(request, "", nil)
 
 	return l.responder.URLRedirect(redirectURL)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/gob"
 	"net/http"
-	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -41,27 +40,21 @@ type (
 		server              string
 		secret              string
 		clientID            string
-		myHost              string
-		allowHostFromReq    bool
 		disableOfflineToken bool
 		scopes              config.Slice
 		idTokenMapping      config.Slice
 		userInfoMapping     config.Slice
 		logger              flamingo.Logger
 		router              *web.Router
-
-		openIDProvider *oidc.Provider
-		oauth2Config   map[string]*oauth2.Config
+		openIDProvider      *oidc.Provider
 	}
 )
 
 // Inject authManager dependencies
-func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config *struct {
+func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openIDProvider *oidc.Provider, config *struct {
 	Server              string       `inject:"config:auth.server"`
 	Secret              string       `inject:"config:auth.secret"`
 	ClientID            string       `inject:"config:auth.clientid"`
-	MyHost              string       `inject:"config:auth.myhost"`
-	AllowHostFromReq    bool         `inject:"config:auth.allowHostFromReq,optional"`
 	DisableOfflineToken bool         `inject:"config:auth.disableOfflineToken"`
 	Scopes              config.Slice `inject:"config:auth.scopes"`
 	IDTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
@@ -72,40 +65,16 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 	am.server = config.Server
 	am.secret = config.Secret
 	am.clientID = config.ClientID
-	am.myHost = config.MyHost
-	am.allowHostFromReq = config.AllowHostFromReq
 	am.disableOfflineToken = config.DisableOfflineToken
 	am.scopes = config.Scopes
 	am.idTokenMapping = config.IDTokenMapping
 	am.userInfoMapping = config.UserInfoMapping
-	am.oauth2Config = make(map[string]*oauth2.Config)
-}
 
-// URL tries to generate complete url from passed path, including scheme
-func (am *AuthManager) URL(ctx context.Context, path string) (*url.URL, error) {
-	ubase := *am.router.Base()
-	u := &ubase
-	if path != "" {
-		parsed, err := url.Parse(path)
-		if err != nil {
-			return nil, err
-		}
-		u.Path = parsed.Path
-		u.RawQuery = parsed.RawQuery
-	}
-
-	myhost, err := url.Parse(am.myHost)
+	var err error
+	am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	u.Host = myhost.Host
-	if r := web.RequestFromContext(ctx); r != nil && am.allowHostFromReq {
-		u.Host = r.Request().Host
-	}
-	u.Scheme = myhost.Scheme
-
-	return u, nil
 }
 
 // Auth tries to retrieve the authentication context for a active session
@@ -127,32 +96,19 @@ func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Aut
 
 // OpenIDProvider is a lazy initialized OID provider
 func (am *AuthManager) OpenIDProvider() *oidc.Provider {
-	if am.openIDProvider == nil {
-		var err error
-		am.openIDProvider, err = oidc.NewProvider(context.Background(), am.server)
-		if err != nil {
-			panic(err)
-		}
-	}
 	return am.openIDProvider
 }
 
 // OAuth2Config is lazy setup oauth2config
-func (am *AuthManager) OAuth2Config(ctx context.Context) *oauth2.Config {
-	url, _ := am.router.URL("auth.callback", nil)
-	callbackURL, err := am.URL(ctx, url.Path)
-	if err != nil {
-		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not get url", err)
+func (am *AuthManager) OAuth2Config(ctx context.Context, req *web.Request) *oauth2.Config {
+	var redirectUrl string
+	if req != nil {
+		callbackURL, _ := am.router.Absolute(req, "auth.callback", nil)
+		redirectUrl = callbackURL.String()
 	}
-
-	if cfg, ok := am.oauth2Config[callbackURL.String()]; ok {
-		return cfg
-	}
-
-	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am Callback", am, callbackURL)
 
 	var scopes []string
-	err = am.scopes.MapInto(&scopes)
+	err := am.scopes.MapInto(&scopes)
 	if err != nil {
 		am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not parse scopes from config", am.scopes, err)
 	}
@@ -162,13 +118,11 @@ func (am *AuthManager) OAuth2Config(ctx context.Context) *oauth2.Config {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
-	am.oauth2Config[callbackURL.String()] = &oauth2.Config{
+	oauth2Config := &oauth2.Config{
 		ClientID:     am.clientID,
 		ClientSecret: am.secret,
-		RedirectURL:  callbackURL.String(),
+		RedirectURL:  redirectUrl,
 
-		// Discovery returns the OAuth2 endpoints.
-		// It might panic here if Endpoint cannot be discovered
 		Endpoint: am.OpenIDProvider().Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
@@ -177,8 +131,8 @@ func (am *AuthManager) OAuth2Config(ctx context.Context) *oauth2.Config {
 		ClaimSet: am.getClaimsRequestParameter(),
 	}
 
-	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", am.oauth2Config)
-	return am.oauth2Config[callbackURL.String()]
+	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", oauth2Config)
+	return oauth2Config
 }
 
 // Verifier creates an OID verifier
@@ -309,7 +263,7 @@ func (am *AuthManager) TokenSource(c context.Context, session *web.Session) (oau
 		return nil, err
 	}
 
-	return am.OAuth2Config(c).TokenSource(c, oauth2Token), nil
+	return am.OAuth2Config(c, nil).TokenSource(c, oauth2Token), nil
 }
 
 // HTTPClient to retrieve a client with automatic tokensource

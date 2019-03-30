@@ -339,6 +339,11 @@ func MergeFrom(baseContext, incomingContext Area) *Area {
 		}
 	}
 
+	var err error
+	if baseContext.Injector, err = baseContext.GetInitializedInjector(); err != nil {
+		panic(err)
+	}
+
 	return &baseContext
 }
 

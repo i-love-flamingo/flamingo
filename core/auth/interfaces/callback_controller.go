@@ -66,7 +66,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		cc.logger.Error("core.auth.callback Missing parameter", err)
 		return cc.responder.ServerError(errors.WithStack(err))
 	} else if code != "" {
-		oauth2Token, err := cc.authManager.OAuth2Config(ctx).Exchange(ctx, code)
+		oauth2Token, err := cc.authManager.OAuth2Config(ctx, request).Exchange(ctx, code)
 		if err != nil {
 			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 			return cc.responder.ServerError(errors.WithStack(err))

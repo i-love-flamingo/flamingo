@@ -21,7 +21,7 @@ func (s *Auth) Inject(authManager *application.AuthManager) {
 
 // Status checks the status
 func (s *Auth) Status() (bool, string) {
-	path := s.authManager.OAuth2Config(context.Background()).AuthCodeURL("")
+	path := s.authManager.OAuth2Config(context.Background(), nil).AuthCodeURL("")
 	_, err := http.Get(path)
 	if err == nil {
 		return true, "success"

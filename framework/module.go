@@ -45,11 +45,14 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind(new(flamingo.EventRouter)).To(flamingo.DefaultEventRouter{})
 
 	injector.Bind(web.Router{}).In(dingo.ChildSingleton)
+	injector.Bind(new(web.ReverseRouter)).To(web.Router{})
 	injector.Bind(web.RouterRegistry{}).In(dingo.Singleton).ToProvider(web.NewRegistry)
 
 	flamingo.BindTemplateFunc(injector, "config", new(config.TemplateFunc))
 	flamingo.BindTemplateFunc(injector, "setPartialData", new(web.SetPartialDataFunc))
 	flamingo.BindTemplateFunc(injector, "getPartialData", new(web.GetPartialDataFunc))
+	flamingo.BindTemplateFunc(injector, "canonicalDomain", new(web.CanonicalDomainFunc))
+	flamingo.BindTemplateFunc(injector, "isExternalUrl", new(web.IsExternalURL))
 }
 
 // Inject controller for flamingo default handler

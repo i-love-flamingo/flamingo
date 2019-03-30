@@ -20,10 +20,11 @@ import (
 )
 
 type appmodule struct {
-	root   *config.Area
-	router *web.Router
-	server *http.Server
-	logger flamingo.Logger
+	root              *config.Area
+	router            *web.Router
+	server            *http.Server
+	logger            flamingo.Logger
+	configuredSampler *opencensus.ConfiguredURLPrefixSampler
 }
 
 // Inject basic application dependencies
@@ -37,9 +38,9 @@ func (a *appmodule) Inject(
 	a.router = router
 	a.logger = logger
 	a.server = &http.Server{
-		Addr:    ":3322",
-		Handler: &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router, GetStartOptions: configuredSampler.GetStartOptions()},
+		Addr: ":3322",
 	}
+	a.configuredSampler = configuredSampler
 }
 
 // Configure dependency injection
@@ -56,8 +57,8 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.router.Init(a.root)
 			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", a.server.Addr))
+			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
 			err := a.server.ListenAndServe()
 			if err != nil {
 				if err == http.ErrServerClosed {

@@ -7,8 +7,11 @@ flamingo.me/flamingo v2.3.3+incompatible/go.mod h1:GRoZVwa+naG8ApN+RbADWLed3o9sw
 git.apache.org/thrift.git v0.12.0 h1:CMxsZlAmxKs+VAZMlDDL0wXciMblJcutQbEe3A9CYUM=
 git.apache.org/thrift.git v0.12.0/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 flamingo.me/flamingo v2.3.0+incompatible h1:AEufFKnpXNyMVQKb6Rdm+zza1gxaDCg6ih76pHaxM0s=
+flamingo.me/flamingo v2.3.3+incompatible h1:XDMDpNvs5yTEV8nMTIzoEzm2toN0LhaCeP63Ilc+yKY=
 git.apache.org/thrift.git v0.0.0-20180807212849-6e67faa92827 h1:VHUAl8nd+JayBhMdOyHpkeosrDu7V7LDWrsXw7nUa0s=
 git.apache.org/thrift.git v0.0.0-20180807212849-6e67faa92827/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
+git.apache.org/thrift.git v0.12.0 h1:CMxsZlAmxKs+VAZMlDDL0wXciMblJcutQbEe3A9CYUM=
+git.apache.org/thrift.git v0.12.0/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b7626857 h1:Bf+OK2VS8KJScWjLcgrzWK+5QOFlwYZzS29kCIz0oqo=

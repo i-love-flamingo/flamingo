@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"net/url"
 )
 
 type (
@@ -51,5 +52,47 @@ func (*GetPartialDataFunc) Func(c context.Context) interface{} {
 		}
 
 		return data.(map[string]interface{})
+	}
+}
+
+// CanonicalDomainFunc is exported as a template function
+type CanonicalDomainFunc struct {
+	router ReverseRouter
+}
+
+// Inject dependencies
+func (c *CanonicalDomainFunc) Inject(router ReverseRouter) *CanonicalDomainFunc {
+	c.router = router
+	return c
+}
+
+// Func returns the canonicalDomain func
+func (c *CanonicalDomainFunc) Func(ctx context.Context) interface{} {
+	return func() string {
+		u, _ := c.router.Absolute(RequestFromContext(ctx), "", nil)
+		return u.String()
+	}
+}
+
+// IsExternalURL is exported as a template function
+type IsExternalURL struct {
+	router ReverseRouter
+}
+
+// Inject dependencies
+func (c *IsExternalURL) Inject(router ReverseRouter) *IsExternalURL {
+	c.router = router
+	return c
+}
+
+// Func returns a boolean if a given URL is external
+func (c *IsExternalURL) Func(ctx context.Context) interface{} {
+	return func(urlStr string) bool {
+		if u, err := url.Parse(urlStr); err == nil {
+			au, _ := c.router.Absolute(RequestFromContext(ctx), "", nil)
+			return au.Host != u.Host
+		}
+
+		return false
 	}
 }

@@ -8,19 +8,21 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
-	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRouter(t *testing.T) {
-	router := new(Router)
+	router := &Router{
+		eventRouter:    new(flamingo.DefaultEventRouter),
+		routesProvider: func() []RoutesModule { return nil },
+		filterProvider: func() []Filter { return nil },
+	}
 
-	router.eventrouter = new(flamingo.DefaultEventRouter)
+	h := router.Handler()
 
-	server := httptest.NewServer(router)
+	server := httptest.NewServer(h)
 	defer server.Close()
 
 	testReq := func(method, path string) error {
@@ -40,7 +42,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("Test Legacy Fallback", func(t *testing.T) {
 		registry := NewRegistry()
-		router.routerRegistry = registry
+		h.(*handler).routerRegistry = registry
 
 		_, err := registry.Route("/test", "test")
 		assert.NoError(t, err)
@@ -71,7 +73,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("Test Any", func(t *testing.T) {
 		registry := NewRegistry()
-		router.routerRegistry = registry
+		h.(*handler).routerRegistry = registry
 
 		_, err := registry.Route("/test", "test")
 		assert.NoError(t, err)
@@ -102,7 +104,7 @@ func TestRouter(t *testing.T) {
 
 	t.Run("Test HTTP Methods", func(t *testing.T) {
 		registry := NewRegistry()
-		router.routerRegistry = registry
+		h.(*handler).routerRegistry = registry
 
 		_, err := registry.Route("/test", "test")
 		assert.NoError(t, err)
@@ -143,17 +145,21 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterTestify(t *testing.T) {
-	router := new(Router)
-
 	registry := NewRegistry()
 	_, err := registry.Route("/test", "test")
 	assert.NoError(t, err)
 	registry.HandleAny("test", func(context.Context, *Request) Result { return nil })
-	router.routerRegistry = registry
 
-	router.eventrouter = new(flamingo.DefaultEventRouter)
+	router := &Router{
+		eventRouter:    new(flamingo.DefaultEventRouter),
+		routesProvider: func() []RoutesModule { return nil },
+		filterProvider: func() []Filter { return nil },
+	}
 
-	server := httptest.NewServer(router)
+	h := router.Handler()
+	h.(*handler).routerRegistry = registry
+
+	server := httptest.NewServer(h)
 	defer server.Close()
 
 	request, err := http.NewRequest("GET", "/test", nil)
@@ -173,108 +179,4 @@ func TestRouterTestify(t *testing.T) {
 	}
 
 	fmt.Printf("%s", greeting)
-}
-
-func TestRouterMiniMocks(t *testing.T) {
-	routerVar := new(Router)
-	routerVar.eventrouter = new(flamingo.DefaultEventRouter)
-
-	registry := NewRegistry()
-	_, err := registry.Route("/test", "test")
-	assert.NoError(t, err)
-	registry.HandleAny("test", func(context.Context, *Request) Result { return nil })
-
-	routerVar.routerRegistry = registry
-
-	server := httptest.NewServer(routerVar)
-	defer server.Close()
-
-	request, err := http.NewRequest("GET", "/test", nil)
-	assert.True(t, err == nil)
-	request.URL, err = url.Parse(server.URL + "/test")
-	assert.True(t, err == nil)
-
-	defaultClient := &http.Client{}
-	res, err := defaultClient.Do(request)
-	require.NoError(t, err)
-
-	greeting, err := ioutil.ReadAll(res.Body)
-	assert.NoError(t, res.Body.Close())
-	require.NoError(t, err)
-
-	fmt.Printf("%s", greeting)
-}
-
-func TestRouterTimeout(t *testing.T) {
-	tests := []struct {
-		name            string
-		exceededTimeout float64
-		controller      func(context.Context, *Request) Result
-	}{
-		{
-			name:            "Timeout enforced",
-			exceededTimeout: float64(10),
-			controller: testControllerFactory(t, 18*time.Millisecond, func(t *testing.T, ctx context.Context) {
-				t.Helper()
-				select {
-				case <-ctx.Done():
-				default:
-					t.Error("Timeout was not caught")
-				}
-			}),
-		},
-		{
-			name:            "Timeout not enforced",
-			exceededTimeout: float64(10),
-			controller: testControllerFactory(t, 0, func(t *testing.T, ctx context.Context) {
-				t.Helper()
-				select {
-				case <-ctx.Done():
-					t.Error("Timeout was caught but shouldn't have")
-				default:
-				}
-			}),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			routerVar := &Router{
-				routerTimeout: tt.exceededTimeout,
-			}
-
-			routerVar.eventrouter = new(flamingo.DefaultEventRouter)
-
-			registry := NewRegistry()
-			_, err := registry.Route("/test", "test")
-			assert.NoError(t, err)
-
-			registry.HandleAny("test", tt.controller)
-
-			routerVar.routerRegistry = registry
-
-			server := httptest.NewServer(routerVar)
-			defer server.Close()
-
-			request, err := http.NewRequest("GET", "/test", nil)
-
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			responseRecorder := httptest.NewRecorder()
-
-			routerVar.ServeHTTP(responseRecorder, request)
-		})
-	}
-}
-
-func testControllerFactory(t *testing.T, timeout time.Duration, validator func(*testing.T, context.Context)) func(context.Context, *Request) Result {
-	t.Helper()
-	return func(ctx context.Context, _ *Request) Result {
-		time.Sleep(timeout)
-
-		validator(t, ctx)
-
-		return nil
-	}
 }

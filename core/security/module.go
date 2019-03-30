@@ -2,7 +2,6 @@ package security
 
 import (
 	"flamingo.me/dingo"
-	authApplication "flamingo.me/flamingo/v3/core/auth/application"
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/core/security/application/voter"
@@ -42,7 +41,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(voter.SecurityVoter)).To(voter.PermissionVoter{})
 	injector.Bind(new(role.Service)).To(role.ServiceImpl{})
 	injector.Bind(new(application.SecurityService)).To(application.SecurityServiceImpl{})
-	injector.Bind(new(middleware.RedirectURLMaker)).To(authApplication.AuthManager{})
+	injector.Bind(new(middleware.RedirectURLMaker)).To(middleware.RedirectURLMakerImpl{})
 }
 
 // DefaultConfig for core security module

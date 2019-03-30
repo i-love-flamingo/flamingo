@@ -23,30 +23,33 @@ type (
 		authManager    *application.AuthManager
 		eventPublisher *application.EventPublisher
 		logoutRedirect LogoutRedirectAware
+		router         web.ReverseRouter
 	}
 
 	// DefaultLogoutRedirect helper
 	DefaultLogoutRedirect struct {
 		authManager *application.AuthManager
+		router      web.ReverseRouter
 	}
 
 	// LogoutRedirectAware to retrieve redirect urls
 	LogoutRedirectAware interface {
-		GetRedirectURL(context context.Context, u *url.URL) (*url.URL, error)
+		GetRedirectURL(context context.Context, r *web.Request, u *url.URL) (*url.URL, error)
 	}
 )
 
 var _ LogoutRedirectAware = new(DefaultLogoutRedirect)
 
 // Inject DefaultLogoutRedirect dependencies
-func (d *DefaultLogoutRedirect) Inject(manager *application.AuthManager) {
+func (d *DefaultLogoutRedirect) Inject(manager *application.AuthManager, router web.ReverseRouter) {
 	d.authManager = manager
+	d.router = router
 }
 
 // GetRedirectURL builds default redirect URL for logout
-func (d *DefaultLogoutRedirect) GetRedirectURL(c context.Context, u *url.URL) (*url.URL, error) {
+func (d *DefaultLogoutRedirect) GetRedirectURL(c context.Context, r *web.Request, u *url.URL) (*url.URL, error) {
 	query := url.Values{}
-	ru, _ := d.authManager.URL(c, "")
+	ru, _ := d.router.Absolute(r, "", nil)
 	query.Set("redirect_uri", ru.String())
 	u.RawQuery = query.Encode()
 	return u, nil
@@ -59,12 +62,14 @@ func (l *LogoutController) Inject(
 	authManager *application.AuthManager,
 	eventPublisher *application.EventPublisher,
 	logoutRedirect LogoutRedirectAware,
+	router web.ReverseRouter,
 ) {
 	l.responder = responder
 	l.logger = logger
 	l.authManager = authManager
 	l.eventPublisher = eventPublisher
 	l.logoutRedirect = logoutRedirect
+	l.router = router
 }
 
 // Get handler for logout
@@ -73,7 +78,7 @@ func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Re
 		EndSessionEndpoint string `json:"end_session_endpoint"`
 	}
 
-	ru, _ := l.authManager.URL(ctx, "")
+	ru, _ := l.router.Absolute(request, "", nil)
 
 	err := l.authManager.OpenIDProvider().Claims(&claims)
 	if err != nil {
@@ -89,7 +94,7 @@ func (l *LogoutController) Get(ctx context.Context, request *web.Request) web.Re
 		return l.responder.URLRedirect(ru)
 	}
 
-	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectURL(ctx, endURL)
+	redirectURL, redirectURLError := l.logoutRedirect.GetRedirectURL(ctx, request, endURL)
 	if redirectURLError != nil {
 		l.logoutLocally(ctx, request)
 		l.logger.Error("Logout locally only. Could not fetch redirect URL for IDP logout", redirectURLError.Error())

@@ -147,7 +147,7 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 
 // Apply response
 func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
-	to, err := r.router.URL(r.To, r.Data)
+	to, err := r.router.Relative(r.To, r.Data)
 	if err != nil {
 		return err
 	}

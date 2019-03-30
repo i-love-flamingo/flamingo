@@ -34,7 +34,7 @@ type (
 	}
 
 	urlRouter interface {
-		URL(name string, params map[string]string) (*url.URL, error)
+		Relative(name string, params map[string]string) (*url.URL, error)
 		Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{}
 	}
 
@@ -282,7 +282,7 @@ func (u *urlFunc) Func(context.Context) interface{} {
 				p[k] = fmt.Sprint(v)
 			}
 		}
-		url, _ := u.router.URL(where, p)
+		url, _ := u.router.Relative(where, p)
 		return template.URL(url.String())
 	}
 }

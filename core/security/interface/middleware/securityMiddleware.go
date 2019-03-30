@@ -26,6 +26,10 @@ type (
 		URL(context.Context, string) (*url.URL, error)
 	}
 
+	RedirectURLMakerImpl struct {
+		router web.ReverseRouter
+	}
+
 	// SecurityMiddleware to be used to secure controllers/routes
 	SecurityMiddleware struct {
 		responder        *web.Responder
@@ -41,6 +45,22 @@ type (
 		eventLogging                  bool
 	}
 )
+
+var _ RedirectURLMaker = new(RedirectURLMakerImpl)
+
+func (r *RedirectURLMakerImpl) Inject(router web.ReverseRouter) {
+	r.router = router
+}
+
+func (r *RedirectURLMakerImpl) URL(ctx context.Context, path string) (*url.URL, error) {
+	req := web.RequestFromContext(ctx)
+	u, err := r.router.Absolute(req, "", nil)
+	if err != nil {
+		return u, err
+	}
+	u.Path += path
+	return u, nil
+}
 
 // Inject dependencies
 func (m *SecurityMiddleware) Inject(r *web.Responder, s application.SecurityService, u RedirectURLMaker, l flamingo.Logger, cfg *struct {

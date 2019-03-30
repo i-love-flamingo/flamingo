@@ -43,7 +43,7 @@ func HandlerCmd(router *Router, area *config.Area) *cobra.Command {
 }
 
 func dumpRoutes(router *Router, area *config.Area) {
-	router.Init(area)
+	// router.Init(area)
 	fmt.Println()
 	fmt.Println("***************************************************************************")
 	fmt.Println(" Route                						| Handler-Name:               ")
@@ -56,7 +56,7 @@ func dumpRoutes(router *Router, area *config.Area) {
 }
 
 func dumpHandler(router *Router, area *config.Area) {
-	router.Init(area)
+	// router.Init(area)
 	fmt.Println()
 	fmt.Println("***************************************************************************")
 	fmt.Println(" Handle-name                	 | registered actions               ")

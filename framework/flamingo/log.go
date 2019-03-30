@@ -14,6 +14,7 @@ const (
 	LogKeyArea                     = "area"
 	LogKeyBusinessID               = "businessId"
 	LogKeyCategory                 = "category"
+	LogKeyModule                   = "module"
 	LogKeySubCategory              = "sub_category"
 	LogKeyClientIP                 = "client_ip"
 	LogKeyCode                     = "code"

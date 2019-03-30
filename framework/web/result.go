@@ -127,8 +127,9 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 }
 
 // SetNoCache helper
-func (r *Response) SetNoCache() {
+func (r *Response) SetNoCache() *Response {
 	r.Header.Set("Cache-Control", "no-cache, max-age=0, must-revalidate, no-store")
+	return r
 }
 
 // RouteRedirect generator

@@ -89,10 +89,12 @@ func (r *Router) Handler() http.Handler {
 		m.Routes(r.routerRegistry)
 	}
 
-	for _, route := range r.configArea.Routes {
-		r.routerRegistry.Route(route.Path, route.Controller)
-		if route.Name != "" {
-			r.routerRegistry.Alias(route.Name, route.Controller)
+	if r.configArea != nil {
+		for _, route := range r.configArea.Routes {
+			r.routerRegistry.Route(route.Path, route.Controller)
+			if route.Name != "" {
+				r.routerRegistry.Alias(route.Name, route.Controller)
+			}
 		}
 	}
 

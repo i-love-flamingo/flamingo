@@ -31,12 +31,23 @@ type (
 	// DefaultEventRouter is a default event routing implementation
 	DefaultEventRouter struct {
 		provider eventSubscriberProvider
+		logger   Logger
 	}
 )
 
 // Inject eventSubscriberProvider dependency
-func (d *DefaultEventRouter) Inject(provider eventSubscriberProvider) {
+func (d *DefaultEventRouter) Inject(provider eventSubscriberProvider, logger Logger) {
 	d.provider = provider
+	d.logger = logger
+}
+
+func catched(ctx context.Context, logger Logger, s eventSubscriber, e Event) {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error(err)
+		}
+	}()
+	s.Notify(ctx, e)
 }
 
 // Dispatch calls the event's Dispatch method on each subscriber
@@ -46,7 +57,7 @@ func (d *DefaultEventRouter) Dispatch(ctx context.Context, event Event) {
 	}
 
 	for _, s := range d.provider() {
-		s.Notify(ctx, event)
+		catched(ctx, d.logger, s, event)
 	}
 }
 

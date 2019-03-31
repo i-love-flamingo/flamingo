@@ -34,9 +34,9 @@ func (s *SystemServer) Inject(
 // Notify handles required actions on startup and shutdown
 func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 	switch e.(type) {
-	case *flamingo.StartupEvent:
+	case *flamingo.ServerStartEvent:
 		s.startup()
-	case *flamingo.ShutdownEvent:
+	case *flamingo.ServerShutdownEvent:
 		s.shutdown()
 	}
 }

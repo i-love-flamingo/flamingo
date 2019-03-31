@@ -137,7 +137,7 @@ func (m *Module) serve(
 
 // Notify handles the app shutdown event
 func (m *Module) Notify(ctx context.Context, event flamingo.Event) {
-	if _, ok := event.(*flamingo.ShutdownEvent); ok {
+	if _, ok := event.(*flamingo.ServerShutdownEvent); ok {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		m.logger.WithField("category", "prefixrouter").Info("Shutdown server on ", m.server.Addr)

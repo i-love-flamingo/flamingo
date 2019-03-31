@@ -161,6 +161,12 @@ func (r *RouteRedirectResponse) Permanent() *RouteRedirectResponse {
 	return r
 }
 
+// SetNoCache helper
+func (r *RouteRedirectResponse) SetNoCache() *RouteRedirectResponse {
+	r.SetNoCache()
+	return r
+}
+
 // URLRedirect returns a 303 redirect to a given URL
 func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 	return &URLRedirectResponse{
@@ -181,6 +187,12 @@ func (r *URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) er
 // Permanent marks a redirect as being permanent (http 301)
 func (r *URLRedirectResponse) Permanent() *URLRedirectResponse {
 	r.Status = http.StatusMovedPermanently
+	return r
+}
+
+// SetNoCache helper
+func (r *URLRedirectResponse) SetNoCache() *URLRedirectResponse {
+	r.SetNoCache()
 	return r
 }
 
@@ -207,9 +219,15 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	return r.Response.Apply(c, w)
 }
 
-//Status - changes status in the response
+// Status changes response status code
 func (r *DataResponse) Status(status uint) *DataResponse {
 	r.Response.Status = status
+	return r
+}
+
+// SetNoCache helper
+func (r *DataResponse) SetNoCache() *DataResponse {
+	r.SetNoCache()
 	return r
 }
 
@@ -344,6 +362,12 @@ func (r *Responder) Forbidden(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
+}
+
+// SetNoCache helper
+func (r *ServerErrorResponse) SetNoCache() *ServerErrorResponse {
+	r.SetNoCache()
+	return r
 }
 
 // TODO creates a 501 Not Implemented response

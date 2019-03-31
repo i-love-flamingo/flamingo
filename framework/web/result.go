@@ -163,7 +163,7 @@ func (r *RouteRedirectResponse) Permanent() *RouteRedirectResponse {
 
 // SetNoCache helper
 func (r *RouteRedirectResponse) SetNoCache() *RouteRedirectResponse {
-	r.SetNoCache()
+	r.Response.SetNoCache()
 	return r
 }
 
@@ -192,7 +192,7 @@ func (r *URLRedirectResponse) Permanent() *URLRedirectResponse {
 
 // SetNoCache helper
 func (r *URLRedirectResponse) SetNoCache() *URLRedirectResponse {
-	r.SetNoCache()
+	r.Response.SetNoCache()
 	return r
 }
 
@@ -227,7 +227,7 @@ func (r *DataResponse) Status(status uint) *DataResponse {
 
 // SetNoCache helper
 func (r *DataResponse) SetNoCache() *DataResponse {
-	r.SetNoCache()
+	r.Response.SetNoCache()
 	return r
 }
 
@@ -366,7 +366,7 @@ func (r *Responder) Forbidden(err error) *ServerErrorResponse {
 
 // SetNoCache helper
 func (r *ServerErrorResponse) SetNoCache() *ServerErrorResponse {
-	r.SetNoCache()
+	r.Response.SetNoCache()
 	return r
 }
 

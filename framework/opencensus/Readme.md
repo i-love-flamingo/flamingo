@@ -5,7 +5,7 @@
 First, if you're not sure what opencensus is, please visit [https://opencensus.io/](https://opencensus.io/) to learn more about it.
 
 Opencensus allows you to collect data for your application and process them via e.g. Prometheus, Jaeger, etc.
-The core package already collects metrics automatically for routers, prefixrouters and pugtemplate rendering times out of the box.
+The core package already collects metrics automatically for routers and prefixrouters rendering times out of the box.
 Also traces for request handling are done by default.
 
 ## Adding your own metrics
@@ -22,36 +22,35 @@ Then, create a variable for your metric. See below example:
 var stat = stats.Int64("flamingo/package/mystat", "my stat records 5 milliseconds per call", stats.UnitMilliseconds)
 ```
 
-The Variable name of rt is totally arbitrary here. But "flamingo/package/mystat" is actually the metric id you're recording to. Normally, this should be a pattern of
-"yourproject/subpackage/yourstat". Followed up by a description of your metric and the Unit which is recorded (use stats.UnitDimensionless for simple counters).
+The Variable name of `stat` is totally arbitrary here. But "flamingo/package/mystat" is actually the metric id you're recording to. Normally, this should be a pattern of
+"yourproject/subpackage/yourstat". Followed up by a description of your metric and the Unit which is recorded (use `stats.UnitDimensionless` for simple counters).
 
-To be actuall able to transmit this metic, register it in an init method:
+To be able to transmit this metric, register it in an init method:
 
 ```go
-	// register view in opencensus
-	func init() {
-		opencensus.View("flamingo/package/mystat/sum", stat, view.Sum())
-		opencensus.View("flamingo/package/mystat/count", stat, view.Count())
-	}
+// register view in opencensus
+func init() {
+  opencensus.View("flamingo/package/mystat/sum", stat, view.Sum())
+  opencensus.View("flamingo/package/mystat/count", stat, view.Count())
+}
 ```
 
-Thats all that is needed as Setup. You can add to your metric in your code now. It's as simple as adding an increment:
+That's all that is needed as Setup. You can add to your metric in your code now. It's as simple as adding an increment:
 
 ```go
-    // measure mystat
-	func (c *Controller) Get(ctx context.Context, r *web.Request) web.Response {
-		// ...
+func (c *Controller) Get(ctx context.Context, r *web.Request) web.Result {
+  // ...
 
-		// record 5ms per call
-		stats.Record(ctx, stat.M(5))
+  // record 5ms per call
+  stats.Record(ctx, stat.M(5))
 
-		// ...
-	}
+  // ...
+}
 ```
 
-For a simple counter where rt is a stats.UnitDimensionless metric, you´d simply increment by one, i.e. 
+For a simple counter where `stat` is a stats.UnitDimensionless metric, you'd simply increment by one, i.e. 
 
 ```go
-		// record increment of 1 per call
-		stats.Record(ctx, stat.M(1))
+// record increment of 1 per call
+stats.Record(ctx, stat.M(1))
 ```

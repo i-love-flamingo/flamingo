@@ -6,17 +6,19 @@ Used to handle permissions for handlers defined in controllers.
 
 To add security middleware, simply inject it into routes struct and use it
 as a wrapper for any handler.
-There are three possibilities:
-* HandleIfLoggedOut - will forward to handler only if user is not logged in. Otherwise,
-it will return redirect response either to homepage for authenticated users, either to
-http referrer, depending on configuration (see bellow).
-* HandleIfLoggedIn - will forward to handler only if user is logged in. Otherwise,
-it will return redirect response to login page with redirect url either to specific path, 
-either to requested path, depending on configuration (see bellow).
-* HandleIfGranted - will forward to handler only if specific permission is granted to user. 
-Otherwise, it will return 403 page.
 
-```
+There are three possibilities:
+
+* HandleIfLoggedOut - will forward to handler only if the user is not logged in. Otherwise,
+it will return a redirect response either to the homepage for authenticated users or to
+http referrer, depending on configuration (see below).
+* HandleIfLoggedIn - will forward to handler only if the user is logged in. Otherwise,
+it will return a redirect response to the login page with redirect url either to specific path
+or to requested path, depending on configuration (see below).
+* HandleIfGranted - will forward to handler only if a specific permission is granted to the user. 
+Otherwise, it will return a 403 page.
+
+```go
 type routes struct {
   someController      *controller.SomeController
   securityMiddleware  *middleware.SecurityMiddleware
@@ -32,19 +34,19 @@ func (r *routes) Routes(registry *router.Registry) {
 
 ## Security Service
 
-Security service provides more detailed security checks. Beside checking if user is 
-logged in or not, it's possible to check for permission.
-If IsGranted method is called with no object, it will check only permissions added to
-user in session. Otherwise, if item implements security domain.PermissionSet interface, it will
-check if permission is attached to item itself.
+Security service provides more detailed security checks. Beside checking if the user is 
+logged in or not, it's possible to check for a permission.
+If `IsGranted` is called with no object, it will check only permissions added to the
+user in session. Otherwise, if the item implements security `domain.PermissionSet` interface, it will
+check if the permission is attached to the item itself.
 
-```
+```go
 type SomeController struct {
   securityService  application.SecurityService
   repository       *SomeRepository
 }
 
-func (c *SomeController) Handle(ctx context.Context, r *web.Request) web.Response {
+func (c *SomeController) Handle(ctx context.Context, r *web.Request) web.Result {
   if c.securityService.IsLoggedIn(ctx, r.Session().G()) {
     ...
   }
@@ -60,8 +62,9 @@ func (c *SomeController) Handle(ctx context.Context, r *web.Request) web.Respons
   }
 }
 ```
+
 PermissionSet interface:
-```
+```go
 type PermissionSet interface {
   Permissions() []Role
 }
@@ -69,31 +72,29 @@ type PermissionSet interface {
 
 ## Security Voters
 
-Security voters are used inside Security Service to decide on final access permissions for user
-and on object. By default, there are three Security Voters: IsLoggedInVoter, IsLoggedOutVoter, RoleVoter.
-Voters can return three different statuses (defined as constants):
-* AccessAbstained - vote is not relevant
-* AccessDeny - voter declares permission for resource as denied
-* AccessGranted - voter declares permission for resource as granted
+Security voters are used inside security service to decide on final access permissions for the user
+and on the object. By default, there are three security voters: `IsLoggedInVoter`, `IsLoggedOutVoter`, `RoleVoter`.
+Voters can return three different status (defined as constants):
+* `AccessAbstained` - vote is not relevant
+* `AccessDeny` - voter declares permission for resource as denied
+* `AccessGranted` - voter declares permission for resource as granted
 
-After all voters vote, final decision is made on voters strategy (see configuration bellow):
-* affirmative - grants access if there is at least one voter which grants access
-* consensus - grants access if there is at more voters which grant access then ones which deny
-* unanimous - grants access if there is at least one voter which grants access and none which denies
-If there is no clear decision between voters, final mediator is defined by configuration
-parameter "allowIfAllAbstain"
+After all voters vote, final decision is made on the voters strategy (see configuration below):
+* `affirmative` - grants access if there is at least one voter which grants access
+* `consensus` - grants access if there are more voters which grant access then voters which deny
+* `unanimous` - grants access if there is at least one voter which grants access and none which denies
+If there is no clear decision between voters, a final mediator is defined by configuration parameter "allowIfAllAbstain"
 
-To add new voter simply provide struct which implements SecurityVoter interface and inject
-it into list of Security Voters:
+To add a new voter simply implement the `SecurityVoter` interface and inject it into the list of Security Voters:
 
-```
+```go
 func (m *Module) Configure(injector *dingo.Injector) {
   injector.BindMulti(new(voter.SecurityVoter))).To(voter.CustomVoter{})
 }
 ```
 
 SecurityVoter interface:
-```
+```go
 type SecurityVoter interface {
   Vote(allPermissions []string, desiredPermisssion string, forObject interface{}) int
 }
@@ -101,17 +102,17 @@ type SecurityVoter interface {
 
 ## Roles Providers
 
-Role providers are used to fetch all roles granted for user in session.
-To provide more roles it's possible to define additional Role Provider:
+Role providers are used to fetch all roles granted for the user in a session.
+To provide more roles it's possible to define additional role providers:
 
-```
+```go
 func (m *Module) Configure(injector *dingo.Injector) {
   injector.BindMulti(new(role.Provider))).To(provider.CustomProvider{})
 }
 ```
 
 Role Provider interface:
-```
+```go
 type Provider interface {
   All(context.Context, *sessions.Session) []domain.Role
 }
@@ -120,9 +121,9 @@ type Provider interface {
 ## Configuration example
 
 Permissions hierarchy provides automatic inclusion of child permissions into list of permissions if 
-their parent is fetched via Role Providers.
+their parent is fetched via role providers.
 
-```
+```yaml
 security: 
     login:
         handler: "auth.log"

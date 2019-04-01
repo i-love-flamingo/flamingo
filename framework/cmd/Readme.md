@@ -1,17 +1,14 @@
 # Command package
 
-The flamingo command package provides the *Flamingo Root Command* and allows to add additional commands under the Flamingo root command.
-It is based on the popular spf13/cobra package.
+The Flamingo command package provides the *Flamingo root command* and allows to add additional commands under the Flamingo root command.
+It is based on the popular [spf13/cobra](https://github.com/spf13/cobra) package.
 
 ## How to add new commands for the root command
 
-Register your own commands via dingo multibindings to `*cobra.Command` inside your flamingo `module.go` file:
+Register your own commands via Dingo multibindings to `*cobra.Command` inside your Flamingo `module.go` file:
 
 E.g.:
 ```go
-
-
-
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToInstance(myCommand())
 }
@@ -29,38 +26,33 @@ func myCommand() *cobra.Command {
 
 ```
 
-Or if you need Dingo to inject some configurations or other useful stuff then use a Dingo Provider function to bind your command:
+Or, if you need Dingo to inject some configurations or other useful stuff then use a Dingo provider function to bind your command:
 
-``` 
-// Configure method which belongs to dingo.Module interface.
-// Responsible for module configuration (dependency injection, setting up handlers etc)
+```go
+// Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(MyCommand)
 }
 
-
-
+// MyCommand gets called by Dingo and all arguments are resolved and injected
 func MyCommand(router *Router, area *config.Area) *cobra.Command {
   ... 
 }
-   
-
 ``` 
 
-If your module is part of a flamingo project, then you can call the command simply with:
+If your module is part of a Flamingo project, then you can call the command simply with:
 
-```go run main.go myCommand```
+```bash
+go run main.go myCommand
+```
 
+### About the Flamingo root command
 
-### About the flamingo Root Command
+The *Flamingo root command* is a `*cobra.Command` command annotated with `flamingo`.
 
-The *Flamingo Root Command* is a `*cobra.Command` command annotated with `flamingo`.
+It is normally used by the default bootstrap of Flamingo (see `flamingo/app.go`)
 
-It is normaly used by the default bootstrap of flamingo (see `flamingo/app.go`)
-
-This is why the default outpout of a plain flamingo project (using the default app bootstrap)
-
-Looks something like this:
+This is why the default output of a plain Flamingo project (using the default app bootstrap) looks like this:
 
 ```sh
 $ go run main.go

@@ -2,7 +2,7 @@
 
 This package provides a second endpoint intended for internal use.
 
-You can register simple `http.Handler` to a desired route via dingo map binding:
+You can register simple `http.Handler` to a desired route via Dingo map binding:
 
 ```go
 injector.BindMap((*domain.Handler)(nil), "/my/route").To(&myHandler{})

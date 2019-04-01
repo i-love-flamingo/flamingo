@@ -2,13 +2,13 @@
 
 This package provides localization features:
 
- * Translations of Labels: with the template func `__()`  (which uses https://github.com/nicksnyder/go-i18n)
+ * Translations of Labels: with the template func `__()`  (which uses [github.com/nicksnyder/go-i18n](https://github.com/nicksnyder/go-i18n))
  * Local display of Dates (In local timezone or given timezone): with the template func `dateTimeFormat` or `dateTimeFormatFromIso`
- * Local display of prices and numbers: with the template func `priceFormat` and `numberFormat` (Using https://github.com/leekchan/accounting)
+ * Local display of prices and numbers: with the template func `priceFormat` and `numberFormat` (Using [github.com/leekchan/accounting](https://github.com/leekchan/accounting))
 
 ## Configuration
 
-```
+```yaml
 locale:
   locale: en-gb                                    # the locale used for labels
   fallbackLocales:                                 # a list of (optional) locales that should be used for fallback
@@ -33,7 +33,7 @@ locale:
     location: LOCATIONCODE                          # required for formatLocaleTime
 ```
 
-By providing different configurations for the different configuration areas (see prefixrouter) you can easily build multilanguage applications.
+By providing different configurations for the different configuration areas (see prefixrouter module) you can easily build multilanguage applications.
 
 ## Usage in Templates:
 
@@ -62,12 +62,14 @@ By providing different configurations for the different configuration areas (see
 
 We propose to put the translations in a folder *translations* like this:
 
-* translations
-    * src (put the original label files here. This is where developers should work.)
-    * merged (contains the generated files)
-    * translated (optional - can contain the files returned from a translation tool or agency)
+```
+translations
+└───src (put the original label files here. This is where developers should work.)
+└───merged (contains the generated files)
+└───translated (optional - can contain the files returned from a translation tool or agency)
+```
 
-The label files in *translations/src* can either be json or yaml.
+The label files in `translations/src` can either be json or yaml.
 Example:
  
 ```json
@@ -84,34 +86,34 @@ Example:
 ```
 
 You can then run this command to generate the merged label file for the contained language codes:
-```sh
+
+```bash
 goi18n merge -sourceLanguage en-us -format yaml -outdir translations/merged/ translations/src/*.json
 ```
 
-
-Read more about label files and translation workflows here:  https://github.com/nicksnyder/go-i18n
+Read more about label files and translation workflows here: [github.com/nicksnyder/go-i18n](https://github.com/nicksnyder/go-i18n)
 
 ### Formatting of dates:
 
-Two tenplatefunctions are provided:
+Two template functions are provided:
 
- * dateTimeFormatFromIso - can get an ISO date format and returns the formatter object
- * dateTimeFormat - need to get a go time.Time object as input and returns the formatter
+ * `dateTimeFormatFromIso` - can get an ISO date format and returns the formatter object
+ * `dateTimeFormat` - need to get a go `time.Time` object as input and returns the formatter
 
 The formatter can format a date in the configured format - either in the timezone passed - or converted to the local timezone. 
 
 E.g.:
-```
+```pug
 dateTimeFormatFromIso("2006-01-02T15:04:05Z").formatDate()
 dateTimeFormat(timeObject).formatToLocalDate()
 ```
-Other functions are formalToLocalDate() or formatTime() etc..
+Other functions are `formalToLocalDate()` or `formatTime()` etc..
 
-Note: For displaying locale formats set the correct date locationcode - see https://golang.org/pkg/time/#LoadLocation
+**Note:** For displaying locale formats set the correct date `locationcode` - see [golang.org/pkg/time/#LoadLocation](https://golang.org/pkg/time/#LoadLocation)
 
 ### Formatting of prices:
 
-```
+```pug
 priceFormat(90,"GBP")
 priceFormatLong(90,"GBP","british pound")
 ```
@@ -122,7 +124,7 @@ Formatting of numbers can be configured like described above. The delimiter for 
 decimal can be configured. The precision for the decimal places can be configured with a default
 value, but can also be overwritten.
 
-```
+```pug
 // with defaul precision
 numberFormat(12300)
 // with overwritten precision

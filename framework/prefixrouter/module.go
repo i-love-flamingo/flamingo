@@ -83,9 +83,15 @@ func (m *Module) serve(
 			b, _ := area.Configuration.Get("flamingo.router.path")
 			baseURL, _ := b.(string)
 
+			// allow to override the baseurl
+			if baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl"); ok {
+				baseURL = baseurlVal.(string)
+			}
+
 			if strings.HasPrefix(baseURL, "/") {
 				baseURL = "scheme://host" + baseURL
 			}
+
 			if baseURL == "" {
 				m.logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
 				continue
@@ -94,7 +100,12 @@ func (m *Module) serve(
 			m.logger.WithField("category", "prefixrouter").Info("Routing ", area.Name, " at ", baseURL)
 			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(web.Router{}).(*web.Router)
-			frontRouter.Add(areaRouter.Base().Host+areaRouter.Base().Path, routerHandler{area: area.Name, handler: areaRouter.Handler()})
+			prefix := areaRouter.Base().Host + areaRouter.Base().Path
+			// allow to override the baseurl
+			if baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl"); ok {
+				prefix = baseurlVal.(string)
+			}
+			frontRouter.Add(prefix, routerHandler{area: area.Name, handler: areaRouter.Handler()})
 		}
 
 		whitelist := make([]string, 0, len(configuredURLPrefixSampler.Whitelist)*len(frontRouter.router)+1)

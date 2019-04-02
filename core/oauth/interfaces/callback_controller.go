@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/url"
 
-	"flamingo.me/flamingo/v3/core/auth/application"
-	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/core/oauth/application"
+	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"

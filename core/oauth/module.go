@@ -2,10 +2,10 @@ package auth
 
 import (
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/core/auth/application"
-	fakeService "flamingo.me/flamingo/v3/core/auth/application/fake"
-	"flamingo.me/flamingo/v3/core/auth/interfaces"
-	fakeController "flamingo.me/flamingo/v3/core/auth/interfaces/fake"
+	"flamingo.me/flamingo/v3/core/oauth/application"
+	fakeService "flamingo.me/flamingo/v3/core/oauth/application/fake"
+	"flamingo.me/flamingo/v3/core/oauth/interfaces"
+	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"

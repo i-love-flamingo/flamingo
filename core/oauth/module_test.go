@@ -1,10 +1,11 @@
 package auth_test
 
 import (
-	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/core/auth"
-	"flamingo.me/flamingo/v3/framework/config"
 	"testing"
+
+	"flamingo.me/dingo"
+	auth "flamingo.me/flamingo/v3/core/oauth"
+	"flamingo.me/flamingo/v3/framework/config"
 )
 
 func TestModule_Configure(t *testing.T) {

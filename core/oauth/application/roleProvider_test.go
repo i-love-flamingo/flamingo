@@ -4,12 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"flamingo.me/flamingo/v3/core/auth/application/fake"
-	authDomain "flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/core/oauth/application/fake"
+	authDomain "flamingo.me/flamingo/v3/core/oauth/domain"
 	securityDomain "flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/stretchr/testify/suite"
 )
 
 type (

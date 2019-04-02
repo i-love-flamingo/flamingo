@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 

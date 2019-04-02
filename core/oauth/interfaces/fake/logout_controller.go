@@ -3,9 +3,9 @@ package fake
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/core/auth/application"
-	"flamingo.me/flamingo/v3/core/auth/application/fake"
-	"flamingo.me/flamingo/v3/core/auth/domain"
+	"flamingo.me/flamingo/v3/core/oauth/application"
+	"flamingo.me/flamingo/v3/core/oauth/application/fake"
+	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 

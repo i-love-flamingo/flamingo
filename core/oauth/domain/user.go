@@ -4,9 +4,8 @@ import (
 	"encoding/gob"
 
 	"flamingo.me/flamingo/v3/core/security/domain"
-
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/coreos/go-oidc"
+	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 )
 

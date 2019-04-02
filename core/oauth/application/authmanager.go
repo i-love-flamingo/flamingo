@@ -60,7 +60,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 }) {
-	am.logger = logger
+	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
 	am.server = config.Server
 	am.secret = config.Secret
@@ -73,7 +73,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	var err error
 	am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
 	if err != nil {
-		panic(err)
+		am.logger.Error(err)
 	}
 }
 

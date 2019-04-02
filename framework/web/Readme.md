@@ -192,3 +192,18 @@ A Filter must implement the `web.Filter` interface by providing a Filter functio
 The filters are handled in order of `dingo.Modules` as defined in `flamingo.App()` call.
 You will have to return `fc.Next(ctx, req, w)` in your `Filter` function to call the next filter. If you return something else,
 the chain will be aborted and the actual controller action will not be executed.
+
+## Routing config
+
+You can define the URL under which the routing takes place:
+```
+flamingo.router.scheme=https
+flamingo.router.host=www.example.com
+flamingo.router.path=subpath
+```
+
+This will result in:
+* the router can generate correct absolute URLs ("https://www.example.com/subpath/yourcontrollerroute")
+* the router will route after removing the prefix "subpath" from the request
+
+If the config is not set, then the router will generate URLs based on the current hostname.

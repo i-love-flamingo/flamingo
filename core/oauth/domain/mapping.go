@@ -34,7 +34,7 @@ type (
 
 // Inject dependencies
 func (ums *UserMappingService) Inject(config *struct {
-	IDTokenMapping config.Map `inject:"config:auth.mapping.idToken"`
+	IDTokenMapping config.Map `inject:"config:oauth.mapping.idToken"`
 }) {
 	ums.idTokenMapping = config.IDTokenMapping
 }

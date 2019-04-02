@@ -52,13 +52,13 @@ type (
 
 // Inject authManager dependencies
 func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openIDProvider *oidc.Provider, config *struct {
-	Server              string       `inject:"config:auth.server"`
-	Secret              string       `inject:"config:auth.secret"`
-	ClientID            string       `inject:"config:auth.clientid"`
-	DisableOfflineToken bool         `inject:"config:auth.disableOfflineToken"`
-	Scopes              config.Slice `inject:"config:auth.scopes"`
-	IDTokenMapping      config.Slice `inject:"config:auth.claims.idToken"`
-	UserInfoMapping     config.Slice `inject:"config:auth.claims.userInfo"`
+	Server              string       `inject:"config:oauth.server"`
+	Secret              string       `inject:"config:oauth.secret"`
+	ClientID            string       `inject:"config:oauth.clientid"`
+	DisableOfflineToken bool         `inject:"config:oauth.disableOfflineToken"`
+	Scopes              config.Slice `inject:"config:oauth.scopes"`
+	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
+	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 }) {
 	am.logger = logger
 	am.router = router

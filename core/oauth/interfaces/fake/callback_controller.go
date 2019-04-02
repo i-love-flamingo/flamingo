@@ -26,7 +26,7 @@ func (c *CallbackController) Inject(
 	responder *web.Responder,
 	mappingService *domain.UserMappingService,
 	config *struct {
-		UserData config.Map `inject:"config:auth.fakeUserData"`
+		UserData config.Map `inject:"config:oauth.fakeUserData"`
 	},
 ) {
 	c.responder = responder

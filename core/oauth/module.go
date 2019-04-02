@@ -14,8 +14,8 @@ import (
 
 // Module for core.auth
 type Module struct {
-	UseFake                     bool   `inject:"config:auth.useFake"`
-	PreventSimultaneousSessions bool   `inject:"config:auth.preventSimultaneousSessions"`
+	UseFake                     bool   `inject:"config:oauth.useFake"`
+	PreventSimultaneousSessions bool   `inject:"config:oauth.preventSimultaneousSessions"`
 	SessionBackend              string `inject:"config:session.backend"`
 }
 
@@ -44,7 +44,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // DefaultConfig for auth module
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"auth": config.Map{
+		"oauth": config.Map{
 			"useFake":           false,
 			"fakeUserData":      config.Map{},
 			"fakeLoginTemplate": "",

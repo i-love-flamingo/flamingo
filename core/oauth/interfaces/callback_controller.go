@@ -37,7 +37,7 @@ func (cc *CallbackController) Inject(
 	eventPublisher *application.EventPublisher,
 	userService application.UserServiceInterface,
 	cfg *struct {
-		TokenExtras config.Slice `inject:"config:auth.tokenExtras"`
+		TokenExtras config.Slice `inject:"config:oauth.tokenExtras"`
 	},
 ) {
 	cc.responder = responder

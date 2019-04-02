@@ -123,7 +123,6 @@ func (ts *TranslationService) loadFiles() {
 	if ts.filesLoaded && !ts.devmode {
 		return
 	}
-	ts.logger.Debug("loading translationfiles..")
 
 	if ts.translationFile != "" {
 		err := ts.i18bundle.LoadTranslationFile(ts.translationFile)

@@ -1,19 +1,14 @@
 # Testing and Mocking external Services
 
-**Note:**
-
-This section explains mocking in Flamingo backend.
-This section does not cover the templating only mocks - please see [Tutorial Frontend Templating](../0. Introduction/3. Tutorial Frontend Templating.md)
-
-[todo]: <> (link frontend tut)
-
 
 ## Introduction / Context
-An important role of Flamingo is to consume external services - often via REST APIs.
+An important typical work in a Flamingo applicationis to consume external services - often via Restful APIs.
 
-Flamingo is a **Consumer** of Services provided by a **Provider**
+Flamingo acts then as a **Consumer** of Services provided by a **Provider**
 
-During development you usually want to fake or mock this external services. So lets clarify the naming:
+During development and also in certain test steps - you usually want to fake or mock this external services. 
+
+So lets clarify the naming:
 
 * ***Faking:***  Means instead of calling the actual API we are faking a result internally, e.g. by using an implementation that dont calls an API but just answers with (fixed) faked results.
 * ***Mocking:*** Means we try to use the real code that later (in production) should call the real service. But instead of using the real external service we call a separate mock. This mock needs to run.

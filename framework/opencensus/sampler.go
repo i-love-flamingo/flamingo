@@ -57,9 +57,9 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 
 // ConfiguredURLPrefixSampler constructs the prefix GetStartOptions getter with the default opencensus configuration
 type ConfiguredURLPrefixSampler struct {
-	Whitelist        config.Slice `inject:"config:opencensus.tracing.sampler.whitelist"`
-	Blacklist        config.Slice `inject:"config:opencensus.tracing.sampler.blacklist"`
-	AllowParentTrace bool         `inject:"config:opencensus.tracing.sampler.allowParentTrace"`
+	Whitelist        config.Slice `inject:"config:opencensus.tracing.sampler.whitelist,optional"`
+	Blacklist        config.Slice `inject:"config:opencensus.tracing.sampler.blacklist,optional"`
+	AllowParentTrace bool         `inject:"config:opencensus.tracing.sampler.allowParentTrace,optional"`
 }
 
 // GetStartOptions constructor for ochttp.Server

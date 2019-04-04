@@ -6,17 +6,17 @@ This way you can achieve that different configuration areas are loaded based on 
 
 ## Configuration
 
-e.g. you can set the prefix in a configuration like this:
+e.g. you can set the prefix in a configuration by using different configs for `flamingo.router.*` - for example like this:
 
 *config/config.yml:*
 ```
-prefixrouter.baseurl: /en
+flamingo.router.path: /en
 ```
 
 You might then in another config area set it to a different prefix:
 *config/de_de/config.yml:*
 ```
-prefixrouter.baseurl: /de
+flamingo.router.path: /de
 ```
 
 ## Routing logic:

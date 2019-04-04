@@ -80,31 +80,27 @@ func (m *Module) serve(
 
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
-			b, _ := area.Configuration.Get("flamingo.router.path")
-			baseURL, _ := b.(string)
 
-			// allow to override the baseurl
-			if baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl"); ok {
-				baseURL = baseurlVal.(string)
-			}
+			path, pathSet := area.Configuration.Get("flamingo.router.path")
+			host, hostSet := area.Configuration.Get("flamingo.router.host")
 
-			if strings.HasPrefix(baseURL, "/") {
-				baseURL = "scheme://host" + baseURL
-			}
-
-			if baseURL == "" {
-				m.logger.WithField("category", "prefixrouter").Warn("No baseurl configured for config area %v", area.Name)
+			if !pathSet && !hostSet {
+				m.logger.WithField("category", "prefixrouter").Warn("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
 				continue
 			}
 
-			m.logger.WithField("category", "prefixrouter").Info("Routing ", area.Name, " at ", baseURL)
 			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
 			areaRouter := area.Injector.GetInstance(web.Router{}).(*web.Router)
-			prefix := areaRouter.Base().Host + areaRouter.Base().Path
-			// allow to override the baseurl
-			if baseurlVal, ok := area.Configuration.Get("prefixrouter.baseurl"); ok {
-				prefix = baseurlVal.(string)
+
+			prefix := "/"
+			if pathSet {
+				prefix += strings.TrimLeft(path.(string), "/")
 			}
+			if hostSet && host != "" {
+				prefix = host.(string) + prefix
+			}
+
+			m.logger.WithField("category", "prefixrouter").Info("Routing area '", area.Name, "' at prefix '", prefix, "'")
 			frontRouter.Add(prefix, routerHandler{area: area.Name, handler: areaRouter.Handler()})
 		}
 

@@ -53,16 +53,16 @@ const (
 func (r *Router) Inject(
 	cfg *struct {
 		// base url configuration
-		Scheme string `inject:"config:flamingo.router.scheme,optional"`
-		Host   string `inject:"config:flamingo.router.host,optional"`
-		Path   string `inject:"config:flamingo.router.path,optional"`
+		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
+		Host         string         `inject:"config:flamingo.router.host,optional"`
+		Path         string         `inject:"config:flamingo.router.path,optional"`
+		SessionStore sessions.Store `inject:",optional"`
 	},
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
 	routesProvider routesProvider,
 	logger flamingo.Logger,
 	configArea *config.Area,
-	sessionStore sessions.Store,
 ) {
 	r.base = &url.URL{
 		Scheme: cfg.Scheme,
@@ -74,7 +74,7 @@ func (r *Router) Inject(
 	r.routesProvider = routesProvider
 	r.logger = logger
 	r.configArea = configArea
-	r.sessionStore = sessionStore
+	r.sessionStore = cfg.SessionStore
 	r.sessionName = "flamingo"
 }
 

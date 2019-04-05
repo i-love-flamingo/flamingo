@@ -30,11 +30,9 @@ It can be used to implement modern and blazing fast commerce web applications.
 
 # Getting started
 
-You may want to start reading in the docs:
-* [Getting Started](docs/0. Introductions/1. Getting Started.md)
-* [Flamingo Feature Overview](docs/1. Flamingo Basics/1_Flamingo Feature Overview.md)
-      
+Check out the hello-world example
+and read the rendered documentation under http://docs.flamingo.me
+
 # External Links:
 * http://www.flamingo.me
-* http://doc.flamingo.me
-* http://godoc.flamingo.me
+* http://docs.flamingo.me

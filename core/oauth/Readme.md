@@ -1,11 +1,11 @@
-# Auth module
+# OAuth module
 
 OpenId connect implementation to login against a configured SSO
 
 ## Configuration example
 
 ```yaml
-auth:
+oauth:
   server: '%%ENV:AUTH_SERVER%%'
   secret: '%%ENV:AUTH_CLIENT_SECRET%%'
   clientid: '%%ENV:AUTH_CLIENT_ID%%'
@@ -19,7 +19,7 @@ By default, email and profile are added into scopes list (openid scope is
 attached always to the list, so it's not necessary to add it).
 
 ```yaml
-auth:
+oauth:
   ...
   scopes:
   - email
@@ -34,7 +34,7 @@ By default, claims are empty, but it's possible to define a list of voluntaries
 claims as a list named "claims".
 
 ```yaml
-auth:
+oauth:
   ...
   claims:
   - someName
@@ -51,7 +51,7 @@ To map to a specific field, use top-level attribute mapping (in example, fields,
 `someEmail` or `someName` from `id_token`, would be mapped to desired fields `email` and `name` in the user entity).
 
 ```yaml
-auth:
+oauth:
   ...
   mapping.idToken:
     sub: someSub
@@ -65,6 +65,7 @@ auth:
     city: someCity
     dateOfBirth: someDateOfBirth
     country: someCountry
+    groups: someGroups
     customFields:
     - someField1
     - someField2
@@ -81,7 +82,7 @@ To specify using of fake services and user data, check configuration below.
 Attribute names used for fakeUserData are the same ones used for `id_token` mapping.
 
 ```yaml
-auth:
+oauth:
   ...
   useFake: true
   fakeLoginTemplate: "fake/login"

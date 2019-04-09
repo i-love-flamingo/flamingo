@@ -24,9 +24,10 @@ var (
 // Load configuration in basedir
 func Load(root *Area, basedir string) error {
 	once.Do(func() {
-		pflag.StringArrayVar(&AdditionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")
-		pflag.BoolVar(&DebugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
-		pflag.Parse()
+		fs := pflag.NewFlagSet("config", pflag.ContinueOnError)
+		fs.StringArrayVar(&AdditionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")
+		fs.BoolVar(&DebugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
+		fs.Parse(os.Args[1:])
 	})
 
 	load(root, basedir, "/")

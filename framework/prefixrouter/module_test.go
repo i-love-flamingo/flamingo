@@ -1,10 +1,12 @@
 package prefixrouter_test
 
 import (
+	"testing"
+
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/prefixrouter"
-	"testing"
 )
 
 type testingNullLogger struct{}
@@ -14,7 +16,7 @@ func (m *testingNullLogger) Configure(injector *dingo.Injector) {
 }
 
 func TestModule_Configure(t *testing.T) {
-	if err := dingo.TryModule(new(testingNullLogger), new(prefixrouter.Module)); err != nil {
+	if err := dingo.TryModule(new(framework.InitModule), new(testingNullLogger), new(prefixrouter.Module)); err != nil {
 		t.Error(err)
 	}
 }

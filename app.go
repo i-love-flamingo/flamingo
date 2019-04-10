@@ -8,6 +8,9 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
+
 	"flamingo.me/flamingo/v3/core/zap"
 	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/cmd"
@@ -15,14 +18,13 @@ import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 type appmodule struct {
 	root              *config.Area
 	router            *web.Router
 	server            *http.Server
+	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler
 }
@@ -31,11 +33,13 @@ type appmodule struct {
 func (a *appmodule) Inject(
 	root *config.Area,
 	router *web.Router,
+	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
 ) {
 	a.root = root
 	a.router = router
+	a.eventRouter = eventRouter
 	a.logger = logger
 	a.server = &http.Server{
 		Addr: ":3322",
@@ -59,7 +63,8 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", a.server.Addr))
 			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
-			err := a.server.ListenAndServe()
+
+			err := a.listenAndServe()
 			if err != nil {
 				if err == http.ErrServerClosed {
 					logger.Error(err)
@@ -72,6 +77,15 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
 
 	return serveCmd
+}
+
+func (a *appmodule) listenAndServe() error {
+	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
+
+	err := a.server.ListenAndServe()
+
+	return err
 }
 
 // Notify upon flamingo Shutdown event

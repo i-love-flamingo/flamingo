@@ -7,17 +7,19 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
+
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 // Module for core/prefix_router
 type Module struct {
 	server                    *http.Server
+	eventRouter               flamingo.EventRouter
 	logger                    flamingo.Logger
 	enableRootRedirectHandler bool
 }
@@ -33,9 +35,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 }
 
 // Inject dependencies
-func (m *Module) Inject(l flamingo.Logger, config *struct {
-	EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
-}) {
+func (m *Module) Inject(
+	eventRouter flamingo.EventRouter,
+	l flamingo.Logger,
+	config *struct {
+		EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
+	},
+) {
+	m.eventRouter = eventRouter
 	m.logger = l
 	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
 }
@@ -135,11 +142,20 @@ func (m *Module) serve(
 			},
 		}
 
-		e := m.server.ListenAndServe()
+		e := m.listenAndServe()
 		if e != nil && e != http.ErrServerClosed {
 			m.logger.WithField("category", "prefixrouter").Error("Unexpected Error ", e)
 		}
 	}
+}
+
+func (m *Module) listenAndServe() error {
+	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	defer m.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
+
+	err := m.server.ListenAndServe()
+
+	return err
 }
 
 // Notify handles the app shutdown event

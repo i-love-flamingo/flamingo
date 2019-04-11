@@ -210,7 +210,11 @@ func (r *Router) Data(ctx context.Context, handler string, params map[interface{
 		if c.data != nil {
 			return c.data(ctx, req, dataParams(params))
 		}
-		panic(errors.Errorf("%q is not a data Controller", handler))
+		err := errors.Errorf("%q is not a data Controller", handler)
+		r.logger.Error(err)
+		panic(err)
 	}
-	panic(errors.Errorf("data Controller %q not found", handler))
+	err := errors.Errorf("data Controller %q not found", handler)
+	r.logger.Error(err)
+	panic(err)
 }

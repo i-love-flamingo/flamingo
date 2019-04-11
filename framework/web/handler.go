@@ -172,12 +172,15 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	if result != nil {
 		ctx, span := trace.StartSpan(ctx, "router/responseApply")
 
-		defer func() {
-			if err := panicToError(recover()); err != nil {
-				finalErr = err
-			}
+		func() {
+			//catch panic in Apply only
+			defer func() {
+				if err := panicToError(recover()); err != nil {
+					finalErr = err
+				}
+			}()
+			finalErr = result.Apply(ctx, rw)
 		}()
-		finalErr = result.Apply(ctx, rw)
 
 		span.End()
 	}
@@ -197,7 +200,6 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	if finalErr != nil {
 		finishErr = finalErr
-
 		defer func() {
 			if err := panicToError(recover()); err != nil {
 				finishErr = err

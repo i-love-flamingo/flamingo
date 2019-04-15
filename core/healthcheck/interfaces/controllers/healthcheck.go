@@ -73,6 +73,17 @@ func (p *Ping) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	handleErr(err, w)
 }
 
+// TryServeHTTP implementation to be used in prefixrouter & co
+func (p *Ping) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (bool, error) {
+	if req.URL.Path != "/health/ping" {
+		return true, nil
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	_, err := rw.Write([]byte("OK"))
+	return false, err
+}
+
 func handleErr(err error, w http.ResponseWriter) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

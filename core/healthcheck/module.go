@@ -9,6 +9,7 @@ import (
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/v3/core/healthcheck/interfaces/controllers"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/prefixrouter"
 	"flamingo.me/flamingo/v3/framework/systemendpoint"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -76,6 +77,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMap((*domain.Handler)(nil), m.checkPath).To(&controllers.Healthcheck{})
 
 	web.BindRoutes(injector, new(routes))
+	injector.BindMulti((*prefixrouter.OptionalHandler)(nil)).AnnotatedWith("fallback").To(controllers.Ping{})
 }
 
 // DefaultConfig for healthcheck module

@@ -93,7 +93,7 @@ func pactTeardown(pact *dsl.Pact) error {
 
 		err := p.Publish(types.PublishRequest{
 			PactURLs:        []string{file},
-			PactBroker:      pactbroker,
+			PactBroker:      strings.TrimSuffix(pactbroker, "/"),
 			ConsumerVersion: os.Getenv("PACT_VERSION"),
 			Tags:            append([]string{strings.ToLower(pact.Consumer), strings.ToLower(pact.Provider)}, strings.Split(os.Getenv("PACT_TAGS"), ",")...),
 			BrokerUsername:  os.Getenv("PACT_BROKER_USERNAME"),

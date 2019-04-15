@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -52,13 +53,13 @@ func (r *RedirectURLMakerImpl) Inject(router web.ReverseRouter) {
 	r.router = router
 }
 
-func (r *RedirectURLMakerImpl) URL(ctx context.Context, path string) (*url.URL, error) {
+func (r *RedirectURLMakerImpl) URL(ctx context.Context, redirectPath string) (*url.URL, error) {
 	req := web.RequestFromContext(ctx)
 	u, err := r.router.Absolute(req, "", nil)
 	if err != nil {
 		return u, err
 	}
-	u.Path += path
+	u.Path = path.Join(u.Path, redirectPath)
 	return u, nil
 }
 

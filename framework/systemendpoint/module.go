@@ -17,7 +17,7 @@ type (
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	flamingo.BindEventSubscriber(injector).To(&application.SystemServer{})
+	flamingo.BindEventSubscriber(injector).To(&application.SystemServer{}).In(dingo.Singleton)
 }
 
 // DefaultConfig for the module

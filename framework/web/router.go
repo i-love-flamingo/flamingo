@@ -33,6 +33,7 @@ type (
 
 	Router struct {
 		base           *url.URL
+		external       *url.URL
 		eventRouter    flamingo.EventRouter
 		filterProvider filterProvider
 		routesProvider routesProvider
@@ -57,6 +58,7 @@ func (r *Router) Inject(
 		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
 		Host         string         `inject:"config:flamingo.router.host,optional"`
 		Path         string         `inject:"config:flamingo.router.path,optional"`
+		External     string         `inject:"config:flamingo.router.external,optional"`
 		SessionStore sessions.Store `inject:",optional"`
 	},
 	eventRouter flamingo.EventRouter,
@@ -70,6 +72,13 @@ func (r *Router) Inject(
 		Host:   cfg.Host,
 		Path:   path.Join("/", cfg.Path) + "/",
 	}
+
+	if e, err := url.Parse(cfg.External); cfg.External != "" && err == nil {
+		r.external = e
+	} else if cfg.External != "" {
+		r.logger.Warn("External URL Error: " + err.Error())
+	}
+
 	r.eventRouter = eventRouter
 	r.filterProvider = filterProvider
 	r.routesProvider = routesProvider
@@ -132,6 +141,15 @@ func (r *Router) URL(to string, params map[string]string) (*url.URL, error) {
 	return r.Relative(to, params)
 }
 
+func (r *Router) relative(to string, params map[string]string) (string, error) {
+	if to[0] == '/' {
+		return to, nil
+	}
+
+	p, err := r.routerRegistry.Reverse(to, params)
+	return strings.TrimLeft(p, "/"), err
+}
+
 // Relative returns a root-relative URL, starting with `/`
 func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
 	if to == "" {
@@ -139,11 +157,7 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 		return &a, nil
 	}
 
-	if to[0] == '/' {
-		return url.Parse(r.base.Path + strings.TrimLeft(to, "/"))
-	}
-
-	p, err := r.routerRegistry.Reverse(to, params)
+	p, err := r.relative(to, params)
 	if err != nil {
 		return nil, err
 	}
@@ -153,6 +167,16 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 // Absolute returns an absolute URL, with scheme and host.
 // It takes the request to construct as many information as possible
 func (r *Router) Absolute(req *Request, to string, params map[string]string) (*url.URL, error) {
+	if r.external != nil {
+		e := *r.external
+		p, err := r.relative(to, params)
+		if err != nil {
+			return nil, err
+		}
+		e.Path = path.Join(e.Path, p)
+		return &e, nil
+	}
+
 	scheme := r.base.Scheme
 	host := r.base.Host
 

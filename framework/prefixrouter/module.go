@@ -101,7 +101,7 @@ func (m *Module) serve(
 
 			prefix := "/"
 			if pathSet {
-				prefix = path.Join(pathValue.(string), "/")
+				prefix = path.Join("/", pathValue.(string), "/")
 			}
 			if hostSet && hostValue != "" {
 				prefix = hostValue.(string) + prefix

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -67,7 +68,7 @@ func (r *Router) Inject(
 	r.base = &url.URL{
 		Scheme: cfg.Scheme,
 		Host:   cfg.Host,
-		Path:   strings.TrimRight(cfg.Path, "/") + "/",
+		Path:   path.Join("/", cfg.Path) + "/",
 	}
 	r.eventRouter = eventRouter
 	r.filterProvider = filterProvider

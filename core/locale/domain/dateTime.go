@@ -1,9 +1,15 @@
 package domain
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
+)
 
 // DateTimeFormatter has a couple of helpful methods to format date and times
 type DateTimeFormatter struct {
+	logger         flamingo.Logger
 	DateFormat     string
 	TimeFormat     string
 	DateTimeFormat string
@@ -15,6 +21,27 @@ type DateTimeFormatter struct {
 func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
 	dtf.dateTime = time
 	dtf.localDateTime = localtime
+}
+
+// SetLocation sets location for local time
+func (dtf *DateTimeFormatter) SetLocation(loc string) *DateTimeFormatter {
+	location, err := time.LoadLocation(loc)
+
+	if err != nil && dtf.logger != nil {
+		dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
+			fmt.Sprintf("%s: failed to load time zone location: %v", loc, err),
+		)
+	} else {
+		dtf.localDateTime = dtf.dateTime.In(location)
+	}
+
+	return dtf
+}
+
+// SetLogger sets the logger instance
+func (dtf *DateTimeFormatter) SetLogger(logger flamingo.Logger) {
+	dtf.logger = logger
+	dtf.logger.WithField(flamingo.LogKeyCategory, "DateTimeFormatter")
 }
 
 // Format datetime

@@ -3,7 +3,7 @@ package prefixrouter
 import (
 	"context"
 	"net/http"
-	"strings"
+	"path"
 	"time"
 
 	"flamingo.me/dingo"
@@ -88,8 +88,8 @@ func (m *Module) serve(
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
 
-			path, pathSet := area.Configuration.Get("flamingo.router.path")
-			host, hostSet := area.Configuration.Get("flamingo.router.host")
+			pathValue, pathSet := area.Configuration.Get("flamingo.router.path")
+			hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
 
 			if !pathSet && !hostSet {
 				m.logger.WithField("category", "prefixrouter").Warn("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
@@ -101,10 +101,10 @@ func (m *Module) serve(
 
 			prefix := "/"
 			if pathSet {
-				prefix += strings.TrimLeft(path.(string), "/")
+				prefix = path.Join("/", pathValue.(string), "/")
 			}
-			if hostSet && host != "" {
-				prefix = host.(string) + prefix
+			if hostSet && hostValue != "" {
+				prefix = hostValue.(string) + prefix
 			}
 
 			m.logger.WithField("category", "prefixrouter").Info("Routing area '", area.Name, "' at prefix '", prefix, "'")

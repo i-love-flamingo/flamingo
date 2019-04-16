@@ -27,10 +27,12 @@ func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
 func (dtf *DateTimeFormatter) SetLocation(loc string) *DateTimeFormatter {
 	location, err := time.LoadLocation(loc)
 
-	if err != nil && dtf.logger != nil {
-		dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
-			fmt.Sprintf("%s: failed to load time zone location: %v", loc, err),
-		)
+	if err != nil {
+		if dtf.logger != nil {
+			dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
+				fmt.Sprintf("%s: failed to load time zone location: %v", loc, err),
+			)
+		}
 	} else {
 		dtf.localDateTime = dtf.dateTime.In(location)
 	}

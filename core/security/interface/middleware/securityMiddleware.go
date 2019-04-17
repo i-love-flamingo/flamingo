@@ -27,6 +27,7 @@ type (
 		URL(context.Context, string) (*url.URL, error)
 	}
 
+	// RedirectURLMakerImpl is actual implementation for RedirectURLMaker interface
 	RedirectURLMakerImpl struct {
 		router web.ReverseRouter
 	}
@@ -49,10 +50,12 @@ type (
 
 var _ RedirectURLMaker = new(RedirectURLMakerImpl)
 
+// Inject dependencies
 func (r *RedirectURLMakerImpl) Inject(router web.ReverseRouter) {
 	r.router = router
 }
 
+// URL generates absolute url depending on provided path
 func (r *RedirectURLMakerImpl) URL(ctx context.Context, redirectPath string) (*url.URL, error) {
 	req := web.RequestFromContext(ctx)
 	u, err := r.router.Absolute(req, "", nil)

@@ -39,6 +39,7 @@ var (
 	// ControllerKey exposes the current controller/handler key
 	ControllerKey, _ = tag.NewKey("controller")
 
+	// RouterError defines error value for issues appearing during routing process
 	RouterError contextKeyType = "error"
 )
 

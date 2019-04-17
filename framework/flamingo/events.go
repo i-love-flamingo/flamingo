@@ -20,11 +20,17 @@ type (
 		Notify(ctx context.Context, event Event)
 	}
 
-	// Flamingo default lifecycle events
-	StartupEvent        struct{} // dispatched when the application starts
-	ServerStartEvent    struct{} // dispatched when a server is started (not for CLI commands)
-	ServerShutdownEvent struct{} // dispatched when a server is stopped (not for CLI commands)
-	ShutdownEvent       struct{} // dispatched when the application shuts down
+	// StartupEvent is dispatched when the application starts
+	StartupEvent        struct{}
+
+	// ServerStartEvent is dispatched when a server is started (not for CLI commands)
+	ServerStartEvent    struct{}
+
+	// ServerShutdownEvent is dispatched when a server is stopped (not for CLI commands)
+	ServerShutdownEvent struct{}
+
+	// ShutdownEvent is  dispatched when the application shuts down
+	ShutdownEvent       struct{}
 
 	eventSubscriberProvider func() []eventSubscriber
 

@@ -31,6 +31,7 @@ type (
 	filterProvider func() []Filter
 	routesProvider func() []RoutesModule
 
+	// Router represents actual implementation of ReverseRouter interface
 	Router struct {
 		base           *url.URL
 		external       *url.URL
@@ -52,6 +53,7 @@ const (
 	FlamingoNotfound = "flamingo.notfound"
 )
 
+// Inject dependencies
 func (r *Router) Inject(
 	cfg *struct {
 		// base url configuration
@@ -88,6 +90,7 @@ func (r *Router) Inject(
 	r.sessionName = "flamingo"
 }
 
+// Handler creates and returns new instance of http.Handler interface
 func (r *Router) Handler() http.Handler {
 	r.routerRegistry = NewRegistry()
 
@@ -125,6 +128,7 @@ func (r *Router) Handler() http.Handler {
 	}
 }
 
+// ListenAndServe starts flamingo server
 func (r *Router) ListenAndServe(addr string) error {
 	r.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
 	defer r.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
@@ -132,11 +136,13 @@ func (r *Router) ListenAndServe(addr string) error {
 	return http.ListenAndServe(addr, r.Handler())
 }
 
+// Base returns full base urls, containing scheme, domain and base path
 func (r *Router) Base() *url.URL {
 	return r.base
 }
 
-// deprecated
+// URL returns returns a root-relative URL, starting with `/`
+// Deprecated: use Relative instead
 func (r *Router) URL(to string, params map[string]string) (*url.URL, error) {
 	return r.Relative(to, params)
 }

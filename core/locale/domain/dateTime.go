@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -17,6 +18,8 @@ type DateTimeFormatter struct {
 	dateTime       time.Time
 }
 
+const errInvalidLocation = "datetimeformatter.invalidlocation"
+
 // SetDateTime setter for private member
 func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
 	dtf.dateTime = time
@@ -24,20 +27,19 @@ func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
 }
 
 // SetLocation sets location for local time
-func (dtf *DateTimeFormatter) SetLocation(loc string) *DateTimeFormatter {
+func (dtf *DateTimeFormatter) SetLocation(loc string) error {
 	location, err := time.LoadLocation(loc)
 
 	if err != nil {
-		if dtf.logger != nil {
-			dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
-				fmt.Sprintf("%s: failed to load time zone location: %v", loc, err),
-			)
-		}
-	} else {
-		dtf.localDateTime = dtf.dateTime.In(location)
+		dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
+			fmt.Sprintf("%s: failed to get the given location: %v", loc, err),
+		)
+		return errors.New(errInvalidLocation)
 	}
 
-	return dtf
+	dtf.localDateTime = dtf.dateTime.In(location)
+
+	return nil
 }
 
 // SetLogger sets the logger instance

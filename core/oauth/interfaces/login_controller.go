@@ -50,9 +50,10 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Resul
 		redirecturl = request.Request().Referer()
 	}
 
-	if refURL, err := url.Parse(redirecturl); err != nil || refURL.Host != request.Request().Host {
-		u, _ := l.router.Absolute(request, "", nil)
-		redirecturl = u.String()
+	absolute, _ := l.router.Absolute(request, "", nil)
+	if refURL, err := url.Parse(redirecturl); err != nil ||
+		(refURL.Host != request.Request().Host && refURL.Host != absolute.Host) {
+		redirecturl = absolute.String()
 	}
 
 	state := uuid.NewV4().String()

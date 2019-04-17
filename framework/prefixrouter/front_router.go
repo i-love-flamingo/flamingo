@@ -3,7 +3,6 @@ package prefixrouter
 import (
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 	"time"
 
@@ -109,7 +108,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	urlPath := req.RequestURI
-	urlPath = path.Join("/", urlPath, "/")
+	urlPath = "/" + strings.TrimLeft(urlPath, "/")
 
 	for prefix, router := range fr.router {
 		if strings.HasPrefix(host+urlPath, prefix) {

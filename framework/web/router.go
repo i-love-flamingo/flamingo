@@ -70,7 +70,7 @@ func (r *Router) Inject(
 	r.base = &url.URL{
 		Scheme: cfg.Scheme,
 		Host:   cfg.Host,
-		Path:   path.Join("/", cfg.Path) + "/",
+		Path:   path.Join("/", cfg.Path, "/"),
 	}
 
 	if e, err := url.Parse(cfg.External); cfg.External != "" && err == nil {

@@ -142,6 +142,10 @@ func (r *Router) URL(to string, params map[string]string) (*url.URL, error) {
 }
 
 func (r *Router) relative(to string, params map[string]string) (string, error) {
+	if to == "" {
+		return "", nil
+	}
+
 	if to[0] == '/' {
 		return to, nil
 	}

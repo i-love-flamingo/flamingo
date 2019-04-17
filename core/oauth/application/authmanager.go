@@ -101,10 +101,10 @@ func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 
 // OAuth2Config is lazy setup oauth2config
 func (am *AuthManager) OAuth2Config(ctx context.Context, req *web.Request) *oauth2.Config {
-	var redirectUrl string
+	var redirectURL string
 	if req != nil {
 		callbackURL, _ := am.router.Absolute(req, "auth.callback", nil)
-		redirectUrl = callbackURL.String()
+		redirectURL = callbackURL.String()
 	}
 
 	var scopes []string
@@ -121,7 +121,7 @@ func (am *AuthManager) OAuth2Config(ctx context.Context, req *web.Request) *oaut
 	oauth2Config := &oauth2.Config{
 		ClientID:     am.clientID,
 		ClientSecret: am.secret,
-		RedirectURL:  redirectUrl,
+		RedirectURL:  redirectURL,
 
 		Endpoint: am.OpenIDProvider().Endpoint(),
 

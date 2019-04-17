@@ -54,13 +54,13 @@ const (
 
 func (r *Router) Inject(
 	cfg *struct {
-		// base url configuration
-		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
-		Host         string         `inject:"config:flamingo.router.host,optional"`
-		Path         string         `inject:"config:flamingo.router.path,optional"`
-		External     string         `inject:"config:flamingo.router.external,optional"`
-		SessionStore sessions.Store `inject:",optional"`
-	},
+	// base url configuration
+	Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
+	Host         string         `inject:"config:flamingo.router.host,optional"`
+	Path         string         `inject:"config:flamingo.router.path,optional"`
+	External     string         `inject:"config:flamingo.router.external,optional"`
+	SessionStore sessions.Store `inject:",optional"`
+},
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
 	routesProvider routesProvider,
@@ -157,15 +157,27 @@ func (r *Router) relative(to string, params map[string]string) (string, error) {
 // Relative returns a root-relative URL, starting with `/`
 func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
 	if to == "" {
-		a := *r.base
-		return &a, nil
+		relativePath := r.base.Path
+		if r.external != nil {
+			relativePath = r.external.Path
+		}
+
+		return &url.URL{
+			Path: path.Join(relativePath),
+		}, nil
 	}
 
 	p, err := r.relative(to, params)
 	if err != nil {
 		return nil, err
 	}
-	return url.Parse(path.Join("/", r.base.Path, p, "/"))
+
+	basePath := r.base.Path
+	if r.external != nil {
+		basePath = r.external.Path
+	}
+
+	return url.Parse(path.Join("/", basePath, p, "/"))
 }
 
 // Absolute returns an absolute URL, with scheme and host.

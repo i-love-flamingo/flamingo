@@ -165,7 +165,7 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 	if err != nil {
 		return nil, err
 	}
-	return url.Parse(r.base.Path + strings.TrimLeft(p, "/"))
+	return url.Parse(path.Join("/", r.base.Path, p, "/"))
 }
 
 // Absolute returns an absolute URL, with scheme and host.

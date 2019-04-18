@@ -1,13 +1,11 @@
 package web
 
 import (
-	"bytes"
 	"context"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/zemirco/memorystore"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -32,13 +30,11 @@ func (t *HandlerTestSuite) SetupSuite() {
 	t.action = func(ctx context.Context, req *Request) Result {
 		return &Response{
 			Status: http.StatusCreated,
-			Body:   strings.NewReader("Action"),
 		}
 	}
 	t.error = func(ctx context.Context, req *Request) Result {
 		return &Response{
 			Status: http.StatusNotFound,
-			Body:   strings.NewReader("Not found"),
 		}
 	}
 }
@@ -71,7 +67,6 @@ func (t *HandlerTestSuite) TestServeHTTP_Found() {
 
 	t.handler.ServeHTTP(t.recorder, request)
 	t.Equal(http.StatusCreated, t.recorder.Code)
-	t.Equal(bytes.NewBuffer([]byte("Action")), t.recorder.Body)
 }
 
 func (t *HandlerTestSuite) TestServeHTTP_NotFound() {
@@ -80,5 +75,4 @@ func (t *HandlerTestSuite) TestServeHTTP_NotFound() {
 
 	t.handler.ServeHTTP(t.recorder, request)
 	t.Equal(http.StatusNotFound, t.recorder.Code)
-	t.Equal(bytes.NewBuffer([]byte("Not found")), t.recorder.Body)
 }

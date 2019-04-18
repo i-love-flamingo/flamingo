@@ -70,7 +70,11 @@ func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.D
 		TimeFormat:     dts.timeFormat,
 		DateTimeFormat: dts.dateTimeFormat,
 	}
-	dateTime.SetLogger(dts.logger)
+
+	if dts.logger != nil {
+		dateTime.SetLogger(dts.logger)
+	}
+
 	dateTime.SetDateTime(timeValue, timeValue.In(loc))
 
 	return &dateTime, nil

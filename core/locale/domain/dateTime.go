@@ -18,7 +18,8 @@ type DateTimeFormatter struct {
 	dateTime       time.Time
 }
 
-const errInvalidLocation = "datetimeformatter.invalidlocation"
+// ErrInvalidLocation represents invalid location, i.e. time zone error
+const ErrInvalidLocation = "datetimeformatter.invalidlocation"
 
 // SetDateTime setter for private member
 func (dtf *DateTimeFormatter) SetDateTime(time time.Time, localtime time.Time) {
@@ -34,7 +35,7 @@ func (dtf *DateTimeFormatter) SetLocation(loc string) error {
 		dtf.logger.WithField(flamingo.LogKeyMethod, "SetLocation").Error(
 			fmt.Sprintf("%s: failed to get the given location: %v", loc, err),
 		)
-		return errors.New(errInvalidLocation)
+		return errors.New(ErrInvalidLocation)
 	}
 
 	dtf.localDateTime = dtf.dateTime.In(location)

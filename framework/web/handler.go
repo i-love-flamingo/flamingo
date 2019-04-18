@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -28,7 +27,6 @@ type (
 
 		sessionStore sessions.Store
 		sessionName  string
-		prefix       string
 	}
 
 	emptyResponseWriter struct{}
@@ -91,8 +89,6 @@ func panicToError(p interface{}) error {
 }
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
-	httpRequest.URL.Path = strings.TrimPrefix(httpRequest.URL.Path, h.prefix)
-
 	ctx, span := trace.StartSpan(httpRequest.Context(), "router/ServeHTTP")
 	defer span.End()
 

@@ -3,6 +3,7 @@ package prefixrouter
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -111,12 +112,13 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	urlPath = "/" + strings.TrimLeft(urlPath, "/")
 
 	for prefix, router := range fr.router {
-		if strings.HasPrefix(host+urlPath, prefix) {
+		if strings.HasPrefix(path.Join(host, urlPath), prefix) {
 			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 			req = req.WithContext(r)
 
-			req.URL, _ = url.Parse(urlPath[len(prefix)-len(host):])
-			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+			req.URL, _ = url.Parse(urlPath)
+			joined := path.Join(host, urlPath)
+			req.URL.Path = path.Join("/", joined[len(prefix):])
 
 			span.End()
 			router.handler.ServeHTTP(w, req)
@@ -129,8 +131,9 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 			req = req.WithContext(r)
 
-			req.URL, _ = url.Parse(urlPath[len(prefix):])
-			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+			req.URL, _ = url.Parse(urlPath)
+			joined := path.Join("/", urlPath)
+			req.URL.Path = path.Join("/", joined[len(prefix):])
 
 			span.End()
 			router.handler.ServeHTTP(w, req)

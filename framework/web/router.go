@@ -128,7 +128,6 @@ func (r *Router) Handler() http.Handler {
 		logger:         r.logger.WithField(flamingo.LogKeyModule, "web").WithField(flamingo.LogKeyCategory, "handler"),
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
-		prefix:         strings.TrimRight(r.base.Path, "/"),
 	}
 }
 

@@ -3,15 +3,16 @@ package web
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/sessions"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
+	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
+	
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 func TestRouter(t *testing.T) {
@@ -215,306 +216,306 @@ func TestRouterRelativeAndAbsolute(t *testing.T) {
 	t.Run("Test without scheme, without host, without path, without external", func(t *testing.T) {
 		router := setupRouter("", "", "", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/", relativeUrl.String())
+		assert.Equal(t, "/", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/test", relativeUrl.String())
+		assert.Equal(t, "/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http:///test", absoluteUrl.String())
+		assert.Equal(t, "http:///test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http:///", absoluteUrl.String())
+		assert.Equal(t, "http:///", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http:///test", absoluteUrl.String())
+		assert.Equal(t, "http:///test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://flamingo.me/test", absoluteUrl.String())
+		assert.Equal(t, "http://flamingo.me/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, without host, without path, without external", func(t *testing.T) {
 		router := setupRouter("https", "", "", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/", relativeUrl.String())
+		assert.Equal(t, "/", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/test", relativeUrl.String())
+		assert.Equal(t, "/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https:///test", absoluteUrl.String())
+		assert.Equal(t, "https:///test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https:///", absoluteUrl.String())
+		assert.Equal(t, "https:///", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https:///test", absoluteUrl.String())
+		assert.Equal(t, "https:///test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://flamingo.me/test", absoluteUrl.String())
+		assert.Equal(t, "https://flamingo.me/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, without path, without external", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/", relativeUrl.String())
+		assert.Equal(t, "/", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/test", relativeUrl.String())
+		assert.Equal(t, "/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path no slashes, without external", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "sub-path", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path", relativeUrl.String())
+		assert.Equal(t, "/sub-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path/test", relativeUrl.String())
+		assert.Equal(t, "/sub-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path starting slashes, without external", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "/sub-path", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path", relativeUrl.String())
+		assert.Equal(t, "/sub-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path/test", relativeUrl.String())
+		assert.Equal(t, "/sub-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path ending slashes, without external", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "sub-path/", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path", relativeUrl.String())
+		assert.Equal(t, "/sub-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path/test", relativeUrl.String())
+		assert.Equal(t, "/sub-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path all slashes, without external", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "/sub-path/", "")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path", relativeUrl.String())
+		assert.Equal(t, "/sub-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/sub-path/test", relativeUrl.String())
+		assert.Equal(t, "/sub-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "https://other.host/sub-path/test", absoluteUrl.String())
+		assert.Equal(t, "https://other.host/sub-path/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path all slashes, with external no ending slashes", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "/sub-path/", "http://external.domain/external-path")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/external-path", relativeUrl.String())
+		assert.Equal(t, "/external-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/external-path/test", relativeUrl.String())
+		assert.Equal(t, "/external-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 	})
 
 	t.Run("Test with scheme, with host, with path all slashes, with external and ending slashes", func(t *testing.T) {
 		router := setupRouter("https", "other.host", "/sub-path/", "http://external.domain/external-path/")
 
-		relativeUrl, err := router.Relative("", nil)
+		relativeURL, err := router.Relative("", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/external-path", relativeUrl.String())
+		assert.Equal(t, "/external-path", relativeURL.String())
 
-		relativeUrl, err = router.Relative("test", nil)
+		relativeURL, err = router.Relative("test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "/external-path/test", relativeUrl.String())
+		assert.Equal(t, "/external-path/test", relativeURL.String())
 
-		absoluteUrl, err := router.Absolute(nil, "test", nil)
+		absoluteURL, err := router.Absolute(nil, "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 
 		req, err := http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 
 		req, err = http.NewRequest(http.MethodGet, "https://flamingo.me/flamingo", nil)
 		assert.NoError(t, err)
-		absoluteUrl, err = router.Absolute(CreateRequest(req, nil), "test", nil)
+		absoluteURL, err = router.Absolute(CreateRequest(req, nil), "test", nil)
 		assert.NoError(t, err)
-		assert.Equal(t, "http://external.domain/external-path/test", absoluteUrl.String())
+		assert.Equal(t, "http://external.domain/external-path/test", absoluteURL.String())
 	})
 }

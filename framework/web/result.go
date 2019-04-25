@@ -161,11 +161,9 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 	return err
 }
 
-// SetNoCache helper
+// SetNoCache helper - DEPRICATED
 func (r *Response) SetNoCache() *Response {
 	r.CacheControlHeader.NoCache = true
-	r.CacheControlHeader.MaxAge = 0
-	r.CacheControlHeader.SMaxAge = 0
 	return r
 }
 

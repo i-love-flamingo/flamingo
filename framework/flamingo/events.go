@@ -13,7 +13,6 @@ type (
 	// EventRouter routes events
 	EventRouter interface {
 		Dispatch(ctx context.Context, event Event)
-		DispatchAll(ctx context.Context, events []Event)
 	}
 
 	// eventSubscriber is notified of an event, and gets the current ctx passed
@@ -67,15 +66,6 @@ func (d *DefaultEventRouter) Dispatch(ctx context.Context, event Event) {
 		catched(ctx, d.logger, s, event)
 	}
 }
-
-
-// DispatchAll calls the event's Dispatch method on each subscriber
-func (d *DefaultEventRouter) DispatchAll(ctx context.Context, events []Event) {
-	for _, event := range events {
-		d.Dispatch(ctx,event)
-	}
-}
-
 
 // BindEventSubscriber is a helper to bind a private event Subscriber via Dingo
 func BindEventSubscriber(injector *dingo.Injector) *dingo.Binding {

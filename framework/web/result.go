@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -30,17 +31,19 @@ type (
 		logger flamingo.Logger
 		debug  bool
 
-		templateForbidden     string
-		templateNotFound      string
-		templateUnavailable   string
-		templateErrorWithCode string
+		templateForbidden         string
+		templateNotFound          string
+		templateUnavailable       string
+		templateErrorWithCode     string
+		defaultCacheControlHeader CacheControlHeader
 	}
 
 	// Response contains a status and a body
 	Response struct {
-		Status uint
-		Body   io.Reader
-		Header http.Header
+		Status             uint
+		Body               io.Reader
+		Header             http.Header
+		CacheControlHeader CacheControlHeader
 	}
 
 	// RouteRedirectResponse redirects to a certain route
@@ -75,16 +78,44 @@ type (
 		RenderResponse
 		Error error
 	}
+
+	//CacheControlHeader - holds the possible directives for Cache Control Headers
+	CacheControlHeader struct {
+		//Visibility: private or public
+		// a response marked “private” can be cached (by the browser) but such responses are typically intended for single users hence they aren’t cacheable by intermediate caches
+		// A response that is marked “public” can be cached even in cases where it is associated with a HTTP authentication or the HTTP response status code is not cacheable normally. In most cases, a response marked “public” isn’t necessary, since explicit caching information (i.e. “max-age”) shows that a response is cacheable anyway.
+		Visibility string
+		//NoCache directive to tell this response can’t be used for subsequent requests to the same URL (browser might revalidate or not cache at all)
+		NoCache bool
+		//NoStore directive: disallows browsers and all intermediate caches from storing any versions of returned responses i.e. responses containing private/personal information or banking data. Every time users request this asset, requests are sent to the server. The assets are downloaded every time.
+		NoStore bool
+		// tells intermediate caches to not modify headers - especialle The Content-Encoding, Content-Range, and Content-Type headers must remain unchanged
+		NoTransform bool
+		//MustRevalidate directive is used to tell a cache that it must first revalidate an asset with the origin after it becomes stale
+		MustRevalidate bool
+		//ProxyRevalidate - ame as MustRevalidate for shared caches
+		ProxyRevalidate bool
+		//MaxAge - max-age directive states the maximum amount of time in seconds that fetched responses are allowed to be used again
+		MaxAge int
+		//SMaxAge - maxAgae for shared caches. Supposed to override max-age for CDN for example
+		SMaxAge int
+		//ETag  the key for the Reponse
+		ETag string
+		//LastModifiedSince indicates the time a document last changed
+		LastModifiedSince *time.Time
+	}
 )
 
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
-	Engine                flamingo.TemplateEngine `inject:",optional"`
-	Debug                 bool                    `inject:"config:debug.mode"`
-	TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
-	TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
-	TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`
-	TemplateErrorWithCode string                  `inject:"config:flamingo.template.errWithCode"`
+	Engine                     flamingo.TemplateEngine `inject:",optional"`
+	Debug                      bool                    `inject:"config:debug.mode"`
+	DefaultCacheControlNoCache bool                    `inject:"config:flamingo.defaultCacheControlHeader.noCache,optional"`
+	DefaultCacheControlMaxAge  float64                 `inject:"config:flamingo.defaultCacheControlHeader.maxAge,optional"`
+	TemplateForbidden          string                  `inject:"config:flamingo.template.err403"`
+	TemplateNotFound           string                  `inject:"config:flamingo.template.err404"`
+	TemplateUnavailable        string                  `inject:"config:flamingo.template.err503"`
+	TemplateErrorWithCode      string                  `inject:"config:flamingo.template.errWithCode"`
 }) *Responder {
 	r.engine = cfg.Engine
 	r.router = router
@@ -94,6 +125,10 @@ func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	r.templateErrorWithCode = cfg.TemplateErrorWithCode
 	r.logger = logger.WithField("module", "framework.web").WithField("category", "responder")
 	r.debug = cfg.Debug
+	r.defaultCacheControlHeader = CacheControlHeader{
+		NoCache: cfg.DefaultCacheControlNoCache,
+		MaxAge:  int(cfg.DefaultCacheControlMaxAge),
+	}
 
 	return r
 }
@@ -111,6 +146,7 @@ func (r *Responder) HTTP(status uint, body io.Reader) *Response {
 
 // Apply response
 func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
+	r.CacheControlHeader.SetHeaders(r.Header)
 	for name, vals := range r.Header {
 		for _, val := range vals {
 			w.Header().Add(name, val)
@@ -128,7 +164,9 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 
 // SetNoCache helper
 func (r *Response) SetNoCache() *Response {
-	r.Header.Set("Cache-Control", "no-cache, max-age=0, must-revalidate, no-store")
+	r.CacheControlHeader.NoCache = true
+	r.CacheControlHeader.MaxAge = 0
+	r.CacheControlHeader.SMaxAge = 0
 	return r
 }
 
@@ -139,8 +177,9 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 		Data:   data,
 		router: r.router,
 		Response: Response{
-			Status: http.StatusSeeOther,
-			Header: make(http.Header),
+			Status:             http.StatusSeeOther,
+			Header:             make(http.Header),
+			CacheControlHeader: r.defaultCacheControlHeader,
 		},
 	}
 }
@@ -172,8 +211,9 @@ func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 	return &URLRedirectResponse{
 		URL: url,
 		Response: Response{
-			Status: http.StatusSeeOther,
-			Header: make(http.Header),
+			Status:             http.StatusSeeOther,
+			Header:             make(http.Header),
+			CacheControlHeader: r.defaultCacheControlHeader,
 		},
 	}
 }
@@ -201,8 +241,9 @@ func (r *Responder) Data(data interface{}) *DataResponse {
 	return &DataResponse{
 		Data: data,
 		Response: Response{
-			Status: http.StatusOK,
-			Header: make(http.Header),
+			Status:             http.StatusOK,
+			Header:             make(http.Header),
+			CacheControlHeader: r.defaultCacheControlHeader,
 		},
 	}
 }
@@ -264,7 +305,6 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	if r.engine == nil {
 		return r.DataResponse.Apply(c, w)
 	}
-
 	if req := RequestFromContext(c); req != nil && r.engine != nil {
 		partialRenderer, ok := r.engine.(flamingo.PartialTemplateEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
@@ -383,4 +423,45 @@ func (r *Responder) getLogger() flamingo.Logger {
 		return r.logger
 	}
 	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
+}
+
+//SetHeaders - sets the correct cache control headers
+func (c *CacheControlHeader) SetHeaders(header http.Header) {
+	cacheControlValues := []string{}
+	if c.ETag != "" {
+		header.Set("ETag", c.ETag)
+	}
+	if c.LastModifiedSince != nil {
+		header.Set("Last-Modified", c.LastModifiedSince.Local().Format(time.RFC1123))
+	}
+
+	if c.MustRevalidate {
+		cacheControlValues = append(cacheControlValues, "must-revalidate")
+	}
+	if c.ProxyRevalidate {
+		cacheControlValues = append(cacheControlValues, "proxy-revalidate")
+	}
+	if c.NoCache {
+		cacheControlValues = append(cacheControlValues, "no-cache")
+	} else {
+		if c.MaxAge > 0 {
+			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge)) * time.Second).Local().Format(time.RFC1123))
+			cacheControlValues = append(cacheControlValues, fmt.Sprintf("max-age=%d", c.MaxAge))
+		}
+		if c.SMaxAge > 0 {
+			cacheControlValues = append(cacheControlValues, fmt.Sprintf("s-maxage=%d", c.SMaxAge))
+		}
+	}
+	if c.NoTransform {
+		cacheControlValues = append(cacheControlValues, "no-transform")
+	}
+	if c.Visibility == "public" {
+		cacheControlValues = append(cacheControlValues, "public")
+	}
+	if c.Visibility == "private" {
+		cacheControlValues = append(cacheControlValues, "private")
+	}
+	if len(cacheControlValues) > 0 {
+		header.Set("Cache-Control", strings.Join(cacheControlValues, ", "))
+	}
 }

@@ -152,7 +152,6 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 			w.Header().Add(name, val)
 		}
 	}
-
 	w.WriteHeader(int(r.Status))
 	if r.Body == nil {
 		return nil
@@ -428,13 +427,14 @@ func (r *Responder) getLogger() flamingo.Logger {
 //SetHeaders - sets the correct cache control headers
 func (c *CacheControlHeader) SetHeaders(header http.Header) {
 	cacheControlValues := []string{}
-	if c.ETag != "" {
-		header.Set("ETag", c.ETag)
-	}
-	if c.LastModifiedSince != nil {
-		header.Set("Last-Modified", c.LastModifiedSince.Local().Format(time.RFC1123))
+
+	if c.NoStore {
+		//No store makes all other headers obsolete
+		header.Set("Cache-Control", "no-store")
+		return
 	}
 
+	//Revalidation header:
 	if c.MustRevalidate {
 		cacheControlValues = append(cacheControlValues, "must-revalidate")
 	}
@@ -452,6 +452,16 @@ func (c *CacheControlHeader) SetHeaders(header http.Header) {
 			cacheControlValues = append(cacheControlValues, fmt.Sprintf("s-maxage=%d", c.SMaxAge))
 		}
 	}
+
+	//Add Validation Headers
+	if c.ETag != "" {
+		header.Set("ETag", c.ETag)
+	}
+	if c.LastModifiedSince != nil {
+		header.Set("Last-Modified", c.LastModifiedSince.Local().Format(time.RFC1123))
+	}
+
+	//Other directives for caches
 	if c.NoTransform {
 		cacheControlValues = append(cacheControlValues, "no-transform")
 	}
@@ -461,6 +471,8 @@ func (c *CacheControlHeader) SetHeaders(header http.Header) {
 	if c.Visibility == "private" {
 		cacheControlValues = append(cacheControlValues, "private")
 	}
+
+
 	if len(cacheControlValues) > 0 {
 		header.Set("Cache-Control", strings.Join(cacheControlValues, ", "))
 	}

@@ -15,5 +15,5 @@ type (
 
 // Configure the InitModule
 func (m *CacheStrategyModule) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*web.Filter)(nil)).To(CacheStrategy{})
+	injector.BindMulti((*web.Filter)(nil)).To(cacheStrategy{})
 }

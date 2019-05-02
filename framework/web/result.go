@@ -31,19 +31,18 @@ type (
 		logger flamingo.Logger
 		debug  bool
 
-		templateForbidden         string
-		templateNotFound          string
-		templateUnavailable       string
-		templateErrorWithCode     string
-		defaultCacheControlHeader CacheControlHeader
+		templateForbidden     string
+		templateNotFound      string
+		templateUnavailable   string
+		templateErrorWithCode string
 	}
 
 	// Response contains a status and a body
 	Response struct {
-		Status             uint
-		Body               io.Reader
-		Header             http.Header
-		CacheControlHeader CacheControlHeader
+		Status        uint
+		Body          io.Reader
+		Header        http.Header
+		CacheDirectives *CacheDirectives
 	}
 
 	// RouteRedirectResponse redirects to a certain route
@@ -79,8 +78,17 @@ type (
 		Error error
 	}
 
-	//CacheControlHeader - holds the possible directives for Cache Control Headers
-	CacheControlHeader struct {
+	//CacheStrategy - helper to
+	CacheStrategy struct {
+		isReusable bool
+		revalidateEachTime bool
+		allowIntermediateCaches bool
+		maxCacheLifetime int
+		etag string
+	}
+
+	//CacheDirectives - holds the possible directives for Cache Control Headers and other Http Caching
+	CacheDirectives struct {
 		//Visibility: private or public
 		// a response marked “private” can be cached (by the browser) but such responses are typically intended for single users hence they aren’t cacheable by intermediate caches
 		// A response that is marked “public” can be cached even in cases where it is associated with a HTTP authentication or the HTTP response status code is not cacheable normally. In most cases, a response marked “public” isn’t necessary, since explicit caching information (i.e. “max-age”) shows that a response is cacheable anyway.
@@ -106,12 +114,17 @@ type (
 	}
 )
 
+const (
+	//CacheVisibilityPrivate - use as visibility in CacheDirectives to indiate no store in intermediate caches
+	CacheVisibilityPrivate = "private"
+	//CacheVisibilityPublic - use as visibility in CacheDirectives to indicate that response can be stored also in intermediate caches
+	CacheVisibilityPublic = "public"
+)
+
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	Engine                     flamingo.TemplateEngine `inject:",optional"`
 	Debug                      bool                    `inject:"config:debug.mode"`
-	DefaultCacheControlNoCache bool                    `inject:"config:flamingo.defaultCacheControlHeader.noCache,optional"`
-	DefaultCacheControlMaxAge  float64                 `inject:"config:flamingo.defaultCacheControlHeader.maxAge,optional"`
 	TemplateForbidden          string                  `inject:"config:flamingo.template.err403"`
 	TemplateNotFound           string                  `inject:"config:flamingo.template.err404"`
 	TemplateUnavailable        string                  `inject:"config:flamingo.template.err503"`
@@ -125,11 +138,6 @@ func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	r.templateErrorWithCode = cfg.TemplateErrorWithCode
 	r.logger = logger.WithField("module", "framework.web").WithField("category", "responder")
 	r.debug = cfg.Debug
-	r.defaultCacheControlHeader = CacheControlHeader{
-		NoCache: cfg.DefaultCacheControlNoCache,
-		MaxAge:  int(cfg.DefaultCacheControlMaxAge),
-	}
-
 	return r
 }
 
@@ -146,7 +154,9 @@ func (r *Responder) HTTP(status uint, body io.Reader) *Response {
 
 // Apply response
 func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
-	r.CacheControlHeader.SetHeaders(r.Header)
+	if r.CacheDirectives != nil {
+		r.CacheDirectives.ApplyHeaders(r.Header)
+	}
 	for name, vals := range r.Header {
 		for _, val := range vals {
 			w.Header().Add(name, val)
@@ -161,9 +171,10 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 	return err
 }
 
-// SetNoCache helper - DEPRICATED
+// SetNoCache helper
+// deprecated: use CacheControlHeader instead
 func (r *Response) SetNoCache() *Response {
-	r.CacheControlHeader.NoCache = true
+	r.CacheDirectives = NewCacheStrategy().SetIsReusable(false).Build()
 	return r
 }
 
@@ -174,9 +185,8 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 		Data:   data,
 		router: r.router,
 		Response: Response{
-			Status:             http.StatusSeeOther,
-			Header:             make(http.Header),
-			CacheControlHeader: r.defaultCacheControlHeader,
+			Status: http.StatusSeeOther,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -208,9 +218,8 @@ func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 	return &URLRedirectResponse{
 		URL: url,
 		Response: Response{
-			Status:             http.StatusSeeOther,
-			Header:             make(http.Header),
-			CacheControlHeader: r.defaultCacheControlHeader,
+			Status: http.StatusSeeOther,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -238,9 +247,8 @@ func (r *Responder) Data(data interface{}) *DataResponse {
 	return &DataResponse{
 		Data: data,
 		Response: Response{
-			Status:             http.StatusOK,
-			Header:             make(http.Header),
-			CacheControlHeader: r.defaultCacheControlHeader,
+			Status: http.StatusOK,
+			Header: make(http.Header),
 		},
 	}
 }
@@ -422,8 +430,8 @@ func (r *Responder) getLogger() flamingo.Logger {
 	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
 }
 
-//SetHeaders - sets the correct cache control headers
-func (c *CacheControlHeader) SetHeaders(header http.Header) {
+//ApplyHeaders - sets the correct cache control headers
+func (c *CacheDirectives) ApplyHeaders(header http.Header) {
 	cacheControlValues := []string{}
 
 	if c.NoStore {
@@ -470,8 +478,65 @@ func (c *CacheControlHeader) SetHeaders(header http.Header) {
 		cacheControlValues = append(cacheControlValues, "private")
 	}
 
-
 	if len(cacheControlValues) > 0 {
 		header.Set("Cache-Control", strings.Join(cacheControlValues, ", "))
 	}
 }
+
+//NewCacheStrategy returns new cache Strategy
+func NewCacheStrategy() *CacheStrategy {
+	return &CacheStrategy{}
+}
+
+//SetIsReusable - decide if the response can be reused at all
+func (c *CacheStrategy) SetIsReusable(isReusable bool) *CacheStrategy {
+	c.isReusable = isReusable
+	return c
+}
+
+//SetRevalidateEachTime - decide if the response should be revalidated each time
+func (c *CacheStrategy) SetRevalidateEachTime(revalidateEachTime bool) *CacheStrategy {
+	c.revalidateEachTime = revalidateEachTime
+	return c
+}
+
+//SetEtag - sets the etag for revalidation
+func (c *CacheStrategy) SetEtag(etag string) *CacheStrategy {
+	c.etag = etag
+	return c
+}
+
+//SetMaxCacheLifetime - sets the maximum lifetime
+func (c *CacheStrategy) SetMaxCacheLifetime(maxCacheLifetime int) *CacheStrategy {
+	c.maxCacheLifetime = maxCacheLifetime
+	return c
+}
+
+//SetAllowIntermediateCaches - set if intermediate caches are allowed to store
+func (c *CacheStrategy) SetAllowIntermediateCaches(allowIntermediateCaches bool) *CacheStrategy {
+	c.allowIntermediateCaches = allowIntermediateCaches
+	return c
+}
+
+
+//Build - returns the CacheDirectives based on the settings
+func (c *CacheStrategy) Build() *CacheDirectives {
+	if !c.isReusable {
+		return &CacheDirectives{
+			NoStore: true,
+		}
+	}
+	cd := &CacheDirectives{}
+	if !c.revalidateEachTime {
+		cd.NoCache = true
+	}
+	if c.allowIntermediateCaches {
+		cd.Visibility = CacheVisibilityPublic
+	} else {
+		cd.Visibility = CacheVisibilityPrivate
+	}
+	cd.MaxAge = c.maxCacheLifetime
+	cd.ETag = c.etag
+	return cd
+}
+

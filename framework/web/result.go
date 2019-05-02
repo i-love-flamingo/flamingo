@@ -39,10 +39,10 @@ type (
 
 	// Response contains a status and a body
 	Response struct {
-		Status        uint
-		Body          io.Reader
-		Header        http.Header
-		CacheDirectives *CacheDirective
+		Status         uint
+		Body           io.Reader
+		Header         http.Header
+		CacheDirective *CacheDirective
 	}
 
 	// RouteRedirectResponse redirects to a certain route
@@ -78,8 +78,8 @@ type (
 		Error error
 	}
 
-	//CacheStrategy - helper to
-	CacheStrategy struct {
+	//CacheDirectiveBuilder - helper to
+	CacheDirectiveBuilder struct {
 		isReusable bool
 		revalidateEachTime bool
 		allowIntermediateCaches bool
@@ -154,8 +154,8 @@ func (r *Responder) HTTP(status uint, body io.Reader) *Response {
 
 // Apply response
 func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
-	if r.CacheDirectives != nil {
-		r.CacheDirectives.ApplyHeaders(r.Header)
+	if r.CacheDirective != nil {
+		r.CacheDirective.ApplyHeaders(r.Header)
 	}
 	for name, vals := range r.Header {
 		for _, val := range vals {
@@ -174,7 +174,7 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 // SetNoCache helper
 // deprecated: use CacheControlHeader instead
 func (r *Response) SetNoCache() *Response {
-	r.CacheDirectives = NewCacheStrategy().SetIsReusable(false).Build()
+	r.CacheDirective = NewCacheDirectiveBuilder().SetIsReusable(false).Build()
 	return r
 }
 
@@ -483,44 +483,44 @@ func (c *CacheDirective) ApplyHeaders(header http.Header) {
 	}
 }
 
-//NewCacheStrategy returns new cache Strategy
-func NewCacheStrategy() *CacheStrategy {
-	return &CacheStrategy{}
+//NewCacheDirectiveBuilder returns new CacheDirectiveBuilder
+func NewCacheDirectiveBuilder() *CacheDirectiveBuilder {
+	return &CacheDirectiveBuilder{}
 }
 
 //SetIsReusable - decide if the response can be reused at all
-func (c *CacheStrategy) SetIsReusable(isReusable bool) *CacheStrategy {
+func (c *CacheDirectiveBuilder) SetIsReusable(isReusable bool) *CacheDirectiveBuilder {
 	c.isReusable = isReusable
 	return c
 }
 
 //SetRevalidateEachTime - decide if the response should be revalidated each time
-func (c *CacheStrategy) SetRevalidateEachTime(revalidateEachTime bool) *CacheStrategy {
+func (c *CacheDirectiveBuilder) SetRevalidateEachTime(revalidateEachTime bool) *CacheDirectiveBuilder {
 	c.revalidateEachTime = revalidateEachTime
 	return c
 }
 
 //SetEtag - sets the etag for revalidation
-func (c *CacheStrategy) SetEtag(etag string) *CacheStrategy {
+func (c *CacheDirectiveBuilder) SetEtag(etag string) *CacheDirectiveBuilder {
 	c.etag = etag
 	return c
 }
 
 //SetMaxCacheLifetime - sets the maximum lifetime
-func (c *CacheStrategy) SetMaxCacheLifetime(maxCacheLifetime int) *CacheStrategy {
+func (c *CacheDirectiveBuilder) SetMaxCacheLifetime(maxCacheLifetime int) *CacheDirectiveBuilder {
 	c.maxCacheLifetime = maxCacheLifetime
 	return c
 }
 
 //SetAllowIntermediateCaches - set if intermediate caches are allowed to store
-func (c *CacheStrategy) SetAllowIntermediateCaches(allowIntermediateCaches bool) *CacheStrategy {
+func (c *CacheDirectiveBuilder) SetAllowIntermediateCaches(allowIntermediateCaches bool) *CacheDirectiveBuilder {
 	c.allowIntermediateCaches = allowIntermediateCaches
 	return c
 }
 
 
 //Build - returns the CacheDirective based on the settings
-func (c *CacheStrategy) Build() *CacheDirective {
+func (c *CacheDirectiveBuilder) Build() *CacheDirective {
 	if !c.isReusable {
 		return &CacheDirective{
 			NoStore: true,

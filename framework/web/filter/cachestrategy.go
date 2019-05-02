@@ -29,16 +29,14 @@ func (f *cacheStrategy) Filter(ctx context.Context, r *web.Request, w http.Respo
 	return response
 }
 
-
 //setDefault - sets default on Basic response
 func (f *cacheStrategy) setDefault(response *web.Response) {
-	if response.CacheDirectives != nil {
+	if response.CacheDirective != nil {
 		return
 	}
-	cacheStrategy := web.CacheStrategy{}
-	cacheStrategy.SetIsReusable(f.DefaultIsReuseable)
-	cacheStrategy.SetRevalidateEachTime(f.DefaultRevalidateEachTime)
-	cacheStrategy.SetAllowIntermediateCaches(f.DefaultAllowIntermediateCaches)
-	cacheStrategy.SetMaxCacheLifetime(int(f.DefaultMaxCacheLifetime))
-	response.CacheDirectives = cacheStrategy.Build()
+	response.CacheDirective = web.NewCacheDirectiveBuilder().SetIsReusable(f.DefaultIsReuseable).
+		SetRevalidateEachTime(f.DefaultRevalidateEachTime).
+		SetAllowIntermediateCaches(f.DefaultAllowIntermediateCaches).
+		SetMaxCacheLifetime(int(f.DefaultMaxCacheLifetime)).
+		Build()
 }

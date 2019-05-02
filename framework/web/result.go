@@ -42,7 +42,7 @@ type (
 		Status        uint
 		Body          io.Reader
 		Header        http.Header
-		CacheDirectives *CacheDirectives
+		CacheDirectives *CacheDirective
 	}
 
 	// RouteRedirectResponse redirects to a certain route
@@ -87,8 +87,8 @@ type (
 		etag string
 	}
 
-	//CacheDirectives - holds the possible directives for Cache Control Headers and other Http Caching
-	CacheDirectives struct {
+	//CacheDirective - holds the possible directives for Cache Control Headers and other Http Caching
+	CacheDirective struct {
 		//Visibility: private or public
 		// a response marked “private” can be cached (by the browser) but such responses are typically intended for single users hence they aren’t cacheable by intermediate caches
 		// A response that is marked “public” can be cached even in cases where it is associated with a HTTP authentication or the HTTP response status code is not cacheable normally. In most cases, a response marked “public” isn’t necessary, since explicit caching information (i.e. “max-age”) shows that a response is cacheable anyway.
@@ -115,9 +115,9 @@ type (
 )
 
 const (
-	//CacheVisibilityPrivate - use as visibility in CacheDirectives to indiate no store in intermediate caches
+	//CacheVisibilityPrivate - use as visibility in CacheDirective to indiate no store in intermediate caches
 	CacheVisibilityPrivate = "private"
-	//CacheVisibilityPublic - use as visibility in CacheDirectives to indicate that response can be stored also in intermediate caches
+	//CacheVisibilityPublic - use as visibility in CacheDirective to indicate that response can be stored also in intermediate caches
 	CacheVisibilityPublic = "public"
 )
 
@@ -431,7 +431,7 @@ func (r *Responder) getLogger() flamingo.Logger {
 }
 
 //ApplyHeaders - sets the correct cache control headers
-func (c *CacheDirectives) ApplyHeaders(header http.Header) {
+func (c *CacheDirective) ApplyHeaders(header http.Header) {
 	cacheControlValues := []string{}
 
 	if c.NoStore {
@@ -451,7 +451,7 @@ func (c *CacheDirectives) ApplyHeaders(header http.Header) {
 		cacheControlValues = append(cacheControlValues, "no-cache")
 	} else {
 		if c.MaxAge > 0 {
-			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge)) * time.Second).Local().Format(time.RFC1123))
+			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge)) * time.Second).Format(time.RFC1123))
 			cacheControlValues = append(cacheControlValues, fmt.Sprintf("max-age=%d", c.MaxAge))
 		}
 		if c.SMaxAge > 0 {
@@ -519,15 +519,15 @@ func (c *CacheStrategy) SetAllowIntermediateCaches(allowIntermediateCaches bool)
 }
 
 
-//Build - returns the CacheDirectives based on the settings
-func (c *CacheStrategy) Build() *CacheDirectives {
+//Build - returns the CacheDirective based on the settings
+func (c *CacheStrategy) Build() *CacheDirective {
 	if !c.isReusable {
-		return &CacheDirectives{
+		return &CacheDirective{
 			NoStore: true,
 		}
 	}
-	cd := &CacheDirectives{}
-	if !c.revalidateEachTime {
+	cd := &CacheDirective{}
+	if c.revalidateEachTime {
 		cd.NoCache = true
 	}
 	if c.allowIntermediateCaches {

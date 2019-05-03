@@ -7,7 +7,7 @@ You can do this by using the CacheStrategy Helper like this:
 
 ```
 	response := cc.responder.Render("checkout/review", viewData)
-	response.CacheDirectives = web.NewCacheStrategy().SetIsReusable(false).Build()
+	response.CacheDirectives = web.NewCacheDirectiveBuilder().SetIsReusable(false).Build()
 	return response
 ```
 

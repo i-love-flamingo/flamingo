@@ -2,8 +2,9 @@ package filter
 
 import (
 	"context"
-	"flamingo.me/flamingo/v3/framework/web"
 	"net/http"
+
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (

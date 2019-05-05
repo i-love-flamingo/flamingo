@@ -80,11 +80,11 @@ type (
 
 	//CacheDirectiveBuilder - helper to
 	CacheDirectiveBuilder struct {
-		isReusable bool
-		revalidateEachTime bool
+		isReusable              bool
+		revalidateEachTime      bool
 		allowIntermediateCaches bool
-		maxCacheLifetime int
-		etag string
+		maxCacheLifetime        int
+		etag                    string
 	}
 
 	//CacheDirective - holds the possible directives for Cache Control Headers and other Http Caching
@@ -123,12 +123,12 @@ const (
 
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
-	Engine                     flamingo.TemplateEngine `inject:",optional"`
-	Debug                      bool                    `inject:"config:debug.mode"`
-	TemplateForbidden          string                  `inject:"config:flamingo.template.err403"`
-	TemplateNotFound           string                  `inject:"config:flamingo.template.err404"`
-	TemplateUnavailable        string                  `inject:"config:flamingo.template.err503"`
-	TemplateErrorWithCode      string                  `inject:"config:flamingo.template.errWithCode"`
+	Engine                flamingo.TemplateEngine `inject:",optional"`
+	Debug                 bool                    `inject:"config:debug.mode"`
+	TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
+	TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
+	TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`
+	TemplateErrorWithCode string                  `inject:"config:flamingo.template.errWithCode"`
 }) *Responder {
 	r.engine = cfg.Engine
 	r.router = router
@@ -451,7 +451,7 @@ func (c *CacheDirective) ApplyHeaders(header http.Header) {
 		cacheControlValues = append(cacheControlValues, "no-cache")
 	} else {
 		if c.MaxAge > 0 {
-			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge)) * time.Second).Format(time.RFC1123))
+			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge))*time.Second).Format(time.RFC1123))
 			cacheControlValues = append(cacheControlValues, fmt.Sprintf("max-age=%d", c.MaxAge))
 		}
 		if c.SMaxAge > 0 {
@@ -518,7 +518,6 @@ func (c *CacheDirectiveBuilder) SetAllowIntermediateCaches(allowIntermediateCach
 	return c
 }
 
-
 //Build - returns the CacheDirective based on the settings
 func (c *CacheDirectiveBuilder) Build() *CacheDirective {
 	if !c.isReusable {
@@ -539,4 +538,3 @@ func (c *CacheDirectiveBuilder) Build() *CacheDirective {
 	cd.ETag = c.etag
 	return cd
 }
-

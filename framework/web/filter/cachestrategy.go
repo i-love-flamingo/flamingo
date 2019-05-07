@@ -4,40 +4,51 @@ import (
 	"context"
 	"net/http"
 
+	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type (
-	//CacheStrategy - a filter that sets CacheDirective if not present
-	cacheStrategy struct {
-		DefaultIsReuseable             bool    `inject:"config:flamingo.web.filter.cachestrategy.default.isReusable,optional"`
-		DefaultRevalidateEachTime      bool    `inject:"config:flamingo.web.filter.cachestrategy.default.revalidateEachTime,optional"`
-		DefaultMaxCacheLifetime        float64 `inject:"config:flamingo.web.filter.cachestrategy.default.maxCacheLifetime,optional"`
-		DefaultAllowIntermediateCaches bool    `inject:"config:flamingo.web.filter.cachestrategy.default.allowIntermediateCaches,optional"`
-	}
-)
+// DefaultCacheStrategyModule is a flamingo module to set up a web filter which injects a default cache strategy
+type DefaultCacheStrategyModule struct{}
 
-//Filter - implements flamingo filter interface
-func (f *cacheStrategy) Filter(ctx context.Context, r *web.Request, w http.ResponseWriter, chain *web.FilterChain) web.Result {
+// Configure the Module
+func (m *DefaultCacheStrategyModule) Configure(injector *dingo.Injector) {
+	injector.BindMulti((*web.Filter)(nil)).To(cacheStrategyFilter{})
+}
+
+type cacheStrategyFilter struct {
+	DefaultIsReuseable             bool    `inject:"config:flamingo.web.filter.cachestrategy.default.isReusable,optional"`
+	DefaultRevalidateEachTime      bool    `inject:"config:flamingo.web.filter.cachestrategy.default.revalidateEachTime,optional"`
+	DefaultMaxCacheLifetime        float64 `inject:"config:flamingo.web.filter.cachestrategy.default.maxCacheLifetime,optional"`
+	DefaultAllowIntermediateCaches bool    `inject:"config:flamingo.web.filter.cachestrategy.default.allowIntermediateCaches,optional"`
+}
+
+// Filter sets the cache strategy for responses
+func (f *cacheStrategyFilter) Filter(ctx context.Context, r *web.Request, w http.ResponseWriter, chain *web.FilterChain) web.Result {
 	response := chain.Next(ctx, r, w)
 	if r.Request().Method != http.MethodGet {
 		return response
 	}
-	switch typedResponse := response.(type) {
+
+	switch response := response.(type) {
 	case *web.RenderResponse:
-		f.setDefault(&typedResponse.Response)
+		f.setDefault(&response.Response)
+	case *web.DataResponse:
+		f.setDefault(&response.Response)
 	}
+
 	return response
 }
 
-//setDefault - sets default on Basic response
-func (f *cacheStrategy) setDefault(response *web.Response) {
+func (f *cacheStrategyFilter) setDefault(response *web.Response) {
 	if response.CacheDirective != nil {
 		return
 	}
-	response.CacheDirective = web.NewCacheDirectiveBuilder().SetIsReusable(f.DefaultIsReuseable).
-		SetRevalidateEachTime(f.DefaultRevalidateEachTime).
-		SetAllowIntermediateCaches(f.DefaultAllowIntermediateCaches).
-		SetMaxCacheLifetime(int(f.DefaultMaxCacheLifetime)).
-		Build()
+
+	response.CacheDirective = web.CacheDirectiveBuilder{
+		IsReusable:              f.DefaultIsReuseable,
+		RevalidateEachTime:      f.DefaultRevalidateEachTime,
+		AllowIntermediateCaches: f.DefaultAllowIntermediateCaches,
+		MaxCacheLifetime:        int(f.DefaultMaxCacheLifetime),
+	}.Build()
 }

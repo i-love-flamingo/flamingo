@@ -78,46 +78,46 @@ type (
 		Error error
 	}
 
-	//CacheDirectiveBuilder - helper to
+	// CacheDirectiveBuilder constructs a CacheDirective with the most commonly used options
 	CacheDirectiveBuilder struct {
-		isReusable              bool
-		revalidateEachTime      bool
-		allowIntermediateCaches bool
-		maxCacheLifetime        int
-		etag                    string
+		IsReusable              bool
+		RevalidateEachTime      bool
+		AllowIntermediateCaches bool
+		MaxCacheLifetime        int
+		ETag                    string
 	}
 
-	//CacheDirective - holds the possible directives for Cache Control Headers and other Http Caching
+	// CacheDirective holds the possible directives for Cache Control Headers and other Http Caching
 	CacheDirective struct {
-		//Visibility: private or public
+		// Visibility: private or public
 		// a response marked “private” can be cached (by the browser) but such responses are typically intended for single users hence they aren’t cacheable by intermediate caches
 		// A response that is marked “public” can be cached even in cases where it is associated with a HTTP authentication or the HTTP response status code is not cacheable normally. In most cases, a response marked “public” isn’t necessary, since explicit caching information (i.e. “max-age”) shows that a response is cacheable anyway.
 		Visibility string
-		//NoCache directive to tell this response can’t be used for subsequent requests to the same URL (browser might revalidate or not cache at all)
+		// NoCache directive to tell this response can’t be used for subsequent requests to the same URL (browser might revalidate or not cache at all)
 		NoCache bool
-		//NoStore directive: disallows browsers and all intermediate caches from storing any versions of returned responses i.e. responses containing private/personal information or banking data. Every time users request this asset, requests are sent to the server. The assets are downloaded every time.
+		// NoStore directive: disallows browsers and all intermediate caches from storing any versions of returned responses i.e. responses containing private/personal information or banking data. Every time users request this asset, requests are sent to the server. The assets are downloaded every time.
 		NoStore bool
 		// tells intermediate caches to not modify headers - especialle The Content-Encoding, Content-Range, and Content-Type headers must remain unchanged
 		NoTransform bool
-		//MustRevalidate directive is used to tell a cache that it must first revalidate an asset with the origin after it becomes stale
+		// MustRevalidate directive is used to tell a cache that it must first revalidate an asset with the origin after it becomes stale
 		MustRevalidate bool
-		//ProxyRevalidate - ame as MustRevalidate for shared caches
+		// ProxyRevalidate is the same as MustRevalidate for shared caches
 		ProxyRevalidate bool
-		//MaxAge - max-age directive states the maximum amount of time in seconds that fetched responses are allowed to be used again
+		// MaxAge defines the max-age directive states the maximum amount of time in seconds that fetched responses are allowed to be used again
 		MaxAge int
-		//SMaxAge - maxAgae for shared caches. Supposed to override max-age for CDN for example
+		// SMaxAge defines the maxAge for shared caches. Supposed to override max-age for CDN for example
 		SMaxAge int
-		//ETag  the key for the Reponse
+		// ETag the key for the Reponse
 		ETag string
-		//LastModifiedSince indicates the time a document last changed
+		// LastModifiedSince indicates the time a document last changed
 		LastModifiedSince *time.Time
 	}
 )
 
 const (
-	//CacheVisibilityPrivate - use as visibility in CacheDirective to indiate no store in intermediate caches
+	// CacheVisibilityPrivate is used as visibility in CacheDirective to indiate no store in intermediate caches
 	CacheVisibilityPrivate = "private"
-	//CacheVisibilityPublic - use as visibility in CacheDirective to indicate that response can be stored also in intermediate caches
+	// CacheVisibilityPublic is used as visibility in CacheDirective to indicate that response can be stored also in intermediate caches
 	CacheVisibilityPublic = "public"
 )
 
@@ -174,7 +174,7 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 // SetNoCache helper
 // deprecated: use CacheControlHeader instead
 func (r *Response) SetNoCache() *Response {
-	r.CacheDirective = NewCacheDirectiveBuilder().SetIsReusable(false).Build()
+	r.CacheDirective = CacheDirectiveBuilder{IsReusable: false}.Build()
 	return r
 }
 
@@ -430,17 +430,17 @@ func (r *Responder) getLogger() flamingo.Logger {
 	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
 }
 
-//ApplyHeaders - sets the correct cache control headers
+// ApplyHeaders sets the correct cache control headers
 func (c *CacheDirective) ApplyHeaders(header http.Header) {
-	cacheControlValues := []string{}
+	var cacheControlValues []string
 
 	if c.NoStore {
-		//No store makes all other headers obsolete
+		// No store makes all other headers obsolete
 		header.Set("Cache-Control", "no-store")
 		return
 	}
 
-	//Revalidation header:
+	// Revalidation header:
 	if c.MustRevalidate {
 		cacheControlValues = append(cacheControlValues, "must-revalidate")
 	}
@@ -451,7 +451,7 @@ func (c *CacheDirective) ApplyHeaders(header http.Header) {
 		cacheControlValues = append(cacheControlValues, "no-cache")
 	} else {
 		if c.MaxAge > 0 {
-			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge))*time.Second).Format(time.RFC1123))
+			header.Set("Expires", time.Now().Add(time.Duration(int64(c.MaxAge))*time.Second).UTC().Format(time.RFC1123))
 			cacheControlValues = append(cacheControlValues, fmt.Sprintf("max-age=%d", c.MaxAge))
 		}
 		if c.SMaxAge > 0 {
@@ -459,15 +459,15 @@ func (c *CacheDirective) ApplyHeaders(header http.Header) {
 		}
 	}
 
-	//Add Validation Headers
+	// Add Validation Headers
 	if c.ETag != "" {
 		header.Set("ETag", c.ETag)
 	}
 	if c.LastModifiedSince != nil {
-		header.Set("Last-Modified", c.LastModifiedSince.Local().Format(time.RFC1123))
+		header.Set("Last-Modified", c.LastModifiedSince.UTC().Format(time.RFC1123))
 	}
 
-	//Other directives for caches
+	// Other directives for caches
 	if c.NoTransform {
 		cacheControlValues = append(cacheControlValues, "no-transform")
 	}
@@ -483,58 +483,23 @@ func (c *CacheDirective) ApplyHeaders(header http.Header) {
 	}
 }
 
-//NewCacheDirectiveBuilder returns new CacheDirectiveBuilder
-func NewCacheDirectiveBuilder() *CacheDirectiveBuilder {
-	return &CacheDirectiveBuilder{}
-}
-
-//SetIsReusable - decide if the response can be reused at all
-func (c *CacheDirectiveBuilder) SetIsReusable(isReusable bool) *CacheDirectiveBuilder {
-	c.isReusable = isReusable
-	return c
-}
-
-//SetRevalidateEachTime - decide if the response should be revalidated each time
-func (c *CacheDirectiveBuilder) SetRevalidateEachTime(revalidateEachTime bool) *CacheDirectiveBuilder {
-	c.revalidateEachTime = revalidateEachTime
-	return c
-}
-
-//SetEtag - sets the etag for revalidation
-func (c *CacheDirectiveBuilder) SetEtag(etag string) *CacheDirectiveBuilder {
-	c.etag = etag
-	return c
-}
-
-//SetMaxCacheLifetime - sets the maximum lifetime
-func (c *CacheDirectiveBuilder) SetMaxCacheLifetime(maxCacheLifetime int) *CacheDirectiveBuilder {
-	c.maxCacheLifetime = maxCacheLifetime
-	return c
-}
-
-//SetAllowIntermediateCaches - set if intermediate caches are allowed to store
-func (c *CacheDirectiveBuilder) SetAllowIntermediateCaches(allowIntermediateCaches bool) *CacheDirectiveBuilder {
-	c.allowIntermediateCaches = allowIntermediateCaches
-	return c
-}
-
-//Build - returns the CacheDirective based on the settings
-func (c *CacheDirectiveBuilder) Build() *CacheDirective {
-	if !c.isReusable {
+// Build returns the CacheDirective based on the settings
+func (c CacheDirectiveBuilder) Build() *CacheDirective {
+	if !c.IsReusable {
 		return &CacheDirective{
 			NoStore: true,
 		}
 	}
 	cd := &CacheDirective{}
-	if c.revalidateEachTime {
+	if c.RevalidateEachTime {
 		cd.NoCache = true
 	}
-	if c.allowIntermediateCaches {
+	if c.AllowIntermediateCaches {
 		cd.Visibility = CacheVisibilityPublic
 	} else {
 		cd.Visibility = CacheVisibilityPrivate
 	}
-	cd.MaxAge = c.maxCacheLifetime
-	cd.ETag = c.etag
+	cd.MaxAge = c.MaxCacheLifetime
+	cd.ETag = c.ETag
 	return cd
 }

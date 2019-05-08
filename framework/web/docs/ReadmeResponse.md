@@ -60,7 +60,29 @@ The image is taken from https://developers.google.com/web/fundamentals/performan
 You can add the CacheStrategy Filter to your project.
 This filter will apply a default CacheStrategy for GET requests, if no CacheDirectives are set by the controller.
 
+To add this filter, just add the Module to your bootstrap like this:
+
+```go 
+import (
+	...
+	"flamingo.me/flamingo/v3/framework/web/filter"
+	...
+)
+
+
+func main() {
+    ...
+	... config.NewArea(
+		"root",
+		[]dingo.Module{
+			...
+            new(filter.DefaultCacheStrategyModule),
+            ...
+}
 ```
+
+
+```yaml
 flamingo:
   web:
     filter:

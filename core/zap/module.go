@@ -22,6 +22,7 @@ type (
 		samplingInitial    float32
 		samplingThereafter float32
 		fieldMap           map[string]string
+		logSession         bool
 	}
 
 	shutdownEventSubscriber struct {
@@ -50,6 +51,7 @@ func (m *Module) Inject(config *struct {
 	SamplingInitial    float32    `inject:"config:zap.sampling.initial,optional"`
 	SamplingThereafter float32    `inject:"config:zap.sampling.thereafter,optional"`
 	FieldMap           config.Map `inject:"config:zap.fieldmap,optional"`
+	LogSession         bool       `inject:"config:zap.logsession,optional"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -59,7 +61,7 @@ func (m *Module) Inject(config *struct {
 	m.samplingEnabled = config.SamplingEnabled
 	m.samplingInitial = config.SamplingInitial
 	m.samplingThereafter = config.SamplingThereafter
-
+	m.logSession = config.LogSession
 	if config.FieldMap != nil {
 		m.fieldMap = make(map[string]string, len(config.FieldMap))
 		for k, v := range config.FieldMap {
@@ -129,6 +131,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	zapLogger := &Logger{
 		Logger:   logger,
 		fieldMap: m.fieldMap,
+		logSession: m.logSession,
 	}
 
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)

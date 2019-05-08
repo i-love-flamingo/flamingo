@@ -64,7 +64,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 			return rootCmd
 		},
-	)
+	).In(dingo.Singleton)
 }
 
 // DefaultConfig specifies the command name

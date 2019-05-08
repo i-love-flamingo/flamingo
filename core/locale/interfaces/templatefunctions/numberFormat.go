@@ -2,6 +2,8 @@ package templatefunctions
 
 import (
 	"context"
+	"math/big"
+
 	"flamingo.me/flamingo/v3/framework/flamingo"
 
 	"github.com/leekchan/accounting"
@@ -30,7 +32,7 @@ func (nff *NumberFormatFunc) Inject(
 	nff.logger = logger
 }
 
-// Func as implementation of debug method
+// Func returns the template function for formatting numbers
 func (nff *NumberFormatFunc) Func(context.Context) interface{} {
 	return func(value interface{}, params ...int) string {
 
@@ -44,6 +46,11 @@ func (nff *NumberFormatFunc) Func(context.Context) interface{} {
 				nff.logger.Error(err)
 			}
 		}()
+
+		valueBigFloat, ok := value.(*big.Float)
+		if ok {
+			return accounting.FormatNumberBigFloat(valueBigFloat, precision, nff.thousand, nff.decimal)
+		}
 
 		return accounting.FormatNumber(value, precision, nff.thousand, nff.decimal)
 	}

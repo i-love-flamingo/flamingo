@@ -2,6 +2,7 @@ package zap
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -17,6 +18,7 @@ type (
 		*zap.Logger
 		fieldMap map[string]string
 		logSession bool
+		sessionHashed map[string]string
 	}
 )
 
@@ -45,7 +47,15 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 
 	if l.logSession {
 		session := web.SessionFromContext(ctx)
-		fields[flamingo.LogKeySession] = session.ID()
+		if l.sessionHashed == nil {
+			l.sessionHashed = make(map[string]string)
+		}
+		if _, ok := l.sessionHashed[session.ID()]; !ok {
+			h := sha256.New()
+			h.Write([]byte(session.ID()))
+			l.sessionHashed[session.ID()] = fmt.Sprintf("%x",h.Sum(nil))
+		}
+		fields[flamingo.LogKeySession] = l.sessionHashed[session.ID()]
 	}
 	return l.WithFields(fields)
 }

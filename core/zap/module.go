@@ -19,8 +19,8 @@ type (
 		coloredOutput      bool
 		developmentMode    bool
 		samplingEnabled    bool
-		samplingInitial    float32
-		samplingThereafter float32
+		samplingInitial    float64
+		samplingThereafter float64
 		fieldMap           map[string]string
 		logSession         bool
 	}
@@ -48,8 +48,8 @@ func (m *Module) Inject(config *struct {
 	ColoredOutput      bool       `inject:"config:zap.colored,optional"`
 	DevelopmentMode    bool       `inject:"config:zap.devmode,optional"`
 	SamplingEnabled    bool       `inject:"config:zap.sampling.enabled,optional"`
-	SamplingInitial    float32    `inject:"config:zap.sampling.initial,optional"`
-	SamplingThereafter float32    `inject:"config:zap.sampling.thereafter,optional"`
+	SamplingInitial    float64    `inject:"config:zap.sampling.initial,optional"`
+	SamplingThereafter float64    `inject:"config:zap.sampling.thereafter,optional"`
 	FieldMap           config.Map `inject:"config:zap.fieldmap,optional"`
 	LogSession         bool       `inject:"config:zap.logsession,optional"`
 }) {
@@ -82,7 +82,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	var samplingConfig *zap.SamplingConfig
 
-	if m.samplingEnabled {
+	if m.samplingEnabled && m.samplingThereafter > 0 && m.samplingInitial > 0 {
 		samplingConfig = &zap.SamplingConfig{
 			Initial:    int(m.samplingInitial),
 			Thereafter: int(m.samplingThereafter),
@@ -159,5 +159,8 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"zap.loglevel": "Debug",
+		"zap.sampling.enabled": true,
+		"zap.sampling.initial": 100,
+		"zap.sampling.thereafter": 100,
 	}
 }

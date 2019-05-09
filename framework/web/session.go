@@ -130,9 +130,12 @@ func (s *Session) IDHash() string {
 	id := s.ID()
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.hashedid = hashID(id)
+	return s.hashedid
+}
 
+func hashID(id string) string {
 	h := sha256.New()
 	h.Write([]byte(id))
-	s.hashedid = fmt.Sprintf("%x",h.Sum(nil))
-	return s.hashedid
+	return fmt.Sprintf("%x",h.Sum(nil))
 }

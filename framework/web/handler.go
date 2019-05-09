@@ -49,14 +49,14 @@ func init() {
 	}
 }
 
-func (h *handler) getSession(ctx context.Context, httpRequest *http.Request) (Session) {
+func (h *handler) getSession(ctx context.Context, httpRequest *http.Request) (gs *sessions.Session) {
 	// initialize the session
 	if h.sessionStore != nil {
 		var span *trace.Span
 		var err error
 
 		ctx, span = trace.StartSpan(ctx, "router/sessions/get")
-		gs, err := h.sessionStore.Get(httpRequest, h.sessionName)
+		gs, err = h.sessionStore.Get(httpRequest, h.sessionName)
 		if err != nil {
 			h.logger.WithContext(ctx).Warn(err)
 			_, span := trace.StartSpan(ctx, "router/sessions/new")
@@ -66,15 +66,11 @@ func (h *handler) getSession(ctx context.Context, httpRequest *http.Request) (Se
 			}
 			span.End()
 		}
-		s := Session{
-			s:gs,
-		}
-		span.AddAttributes(trace.StringAttribute(flamingo.LogKeySession,s.IDHash()))
+		span.AddAttributes(trace.StringAttribute(flamingo.LogKeySession,hashID(gs.ID)))
 		span.End()
-		return s
 	}
 
-	return *EmptySession()
+	return
 }
 
 func panicToError(p interface{}) error {
@@ -100,7 +96,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	ctx, span := trace.StartSpan(httpRequest.Context(), "router/ServeHTTP")
 	defer span.End()
 
-	session := h.getSession(ctx, httpRequest)
+	gs := h.getSession(ctx, httpRequest)
 
 	_, span = trace.StartSpan(ctx, "router/matchRequest")
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
@@ -116,7 +112,9 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	req := &Request{
 		request: *httpRequest,
-		session: session,
+		session: Session{
+			s: gs,
+		},
 		Params: params,
 	}
 	ctx = ContextWithRequest(ContextWithSession(ctx, req.Session()), req)
@@ -166,7 +164,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	if h.sessionStore != nil {
 		ctx, span := trace.StartSpan(ctx, "router/sessions/save")
-		if err := h.sessionStore.Save(req.Request(), rw, session.s); err != nil {
+		if err := h.sessionStore.Save(req.Request(), rw, gs); err != nil {
 			h.logger.WithContext(ctx).Warn(err)
 		}
 		span.End()
@@ -192,7 +190,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	// ensure that the session has been saved in the backend
 	if h.sessionStore != nil {
 		ctx, span := trace.StartSpan(ctx, "router/sessions/persist")
-		if err := h.sessionStore.Save(req.Request(), emptyResponseWriter{}, session.s); err != nil {
+		if err := h.sessionStore.Save(req.Request(), emptyResponseWriter{}, gs); err != nil {
 			h.logger.WithContext(ctx).Warn(err)
 		}
 		span.End()

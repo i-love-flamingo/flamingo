@@ -69,7 +69,7 @@ func (h *handler) getSession(ctx context.Context, httpRequest *http.Request) (Se
 		s := Session{
 			s:gs,
 		}
-		span.AddAttributes(trace.StringAttribute("parentspan",s.IDHash()))
+		span.AddAttributes(trace.StringAttribute(flamingo.LogKeySession,s.IDHash()))
 		span.End()
 		return s
 	}

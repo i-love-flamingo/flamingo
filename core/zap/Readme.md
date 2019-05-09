@@ -17,9 +17,9 @@ zap:
   json: true
   colored: false
   devmode: false
-  logsession: true # to enable logging sessionid
+  logsession: true # to enable logging sessionid as sha256
   sampling: # see zap sampling doc
-    enabled: false
+    enabled: true
     initial: 100
     thereafter: 100
   fieldmap:

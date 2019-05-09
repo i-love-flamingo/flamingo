@@ -45,7 +45,9 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 
 	if l.logSession {
 		session := web.SessionFromContext(ctx)
-		fields[flamingo.LogKeySession] = session.IDHash()
+		if session != nil {
+			fields[flamingo.LogKeySession] = session.IDHash()
+		}
 	}
 	return l.WithFields(fields)
 }

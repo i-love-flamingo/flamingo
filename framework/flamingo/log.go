@@ -25,6 +25,7 @@ const (
 	LogKeyLevel                    = "level"
 	LogKeyMessage                  = "message"
 	LogKeyMethod                   = "method"
+	LogKeySession                  = "session"
 	LogKeyPath                     = "path"
 	LogKeyReferer                  = "referer"
 	LogKeyRequest                  = "request"

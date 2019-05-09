@@ -15,7 +15,8 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
-		fieldMap map[string]string
+		fieldMap   map[string]string
+		logSession bool
 	}
 )
 
@@ -42,6 +43,10 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 		fields[flamingo.LogKeyPath] = request.URL.Path
 	}
 
+	if l.logSession {
+		session := web.SessionFromContext(ctx)
+		fields[flamingo.LogKeySession] = session.IDHash()
+	}
 	return l.WithFields(fields)
 }
 
@@ -94,8 +99,9 @@ func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logg
 	}
 
 	return &Logger{
-		Logger:   l.Logger.With(zap.Any(string(key), value)),
-		fieldMap: l.fieldMap,
+		Logger:     l.Logger.With(zap.Any(string(key), value)),
+		fieldMap:   l.fieldMap,
+		logSession: l.logSession,
 	}
 }
 
@@ -118,8 +124,9 @@ func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Log
 	}
 
 	return &Logger{
-		Logger:   l.Logger.With(zapFields[:i]...),
-		fieldMap: l.fieldMap,
+		Logger:     l.Logger.With(zapFields[:i]...),
+		fieldMap:   l.fieldMap,
+		logSession: l.logSession,
 	}
 }
 

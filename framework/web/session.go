@@ -2,6 +2,8 @@ package web
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"sync"
 
 	"github.com/gorilla/sessions"
@@ -11,6 +13,7 @@ import (
 type Session struct {
 	mu sync.RWMutex
 	s  *sessions.Session
+	hashedid string
 }
 
 const contextSession contextKeyType = "session"
@@ -115,4 +118,24 @@ func (s *Session) AddFlash(value interface{}, vars ...string) {
 	defer s.mu.Unlock()
 
 	s.s.AddFlash(value, vars...)
+}
+
+
+
+// IDHash - returns the Hashed session id - useful for logs
+func (s *Session) IDHash() string {
+	if s.hashedid != "" {
+		return s.hashedid
+	}
+	id := s.ID()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.hashedid = hashID(id)
+	return s.hashedid
+}
+
+func hashID(id string) string {
+	h := sha256.New()
+	h.Write([]byte(id))
+	return fmt.Sprintf("%x",h.Sum(nil))
 }

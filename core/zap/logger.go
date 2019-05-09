@@ -2,11 +2,9 @@ package zap
 
 import (
 	"context"
-	"crypto/sha256"
-	"fmt"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
+	"fmt"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -16,9 +14,8 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
-		fieldMap map[string]string
+		fieldMap   map[string]string
 		logSession bool
-		sessionHashed map[string]string
 	}
 )
 
@@ -47,15 +44,7 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 
 	if l.logSession {
 		session := web.SessionFromContext(ctx)
-		if l.sessionHashed == nil {
-			l.sessionHashed = make(map[string]string)
-		}
-		if _, ok := l.sessionHashed[session.ID()]; !ok {
-			h := sha256.New()
-			h.Write([]byte(session.ID()))
-			l.sessionHashed[session.ID()] = fmt.Sprintf("%x",h.Sum(nil))
-		}
-		fields[flamingo.LogKeySession] = l.sessionHashed[session.ID()]
+		fields[flamingo.LogKeySession] = session.IDHash()
 	}
 	return l.WithFields(fields)
 }
@@ -109,8 +98,8 @@ func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logg
 	}
 
 	return &Logger{
-		Logger:   l.Logger.With(zap.Any(string(key), value)),
-		fieldMap: l.fieldMap,
+		Logger:     l.Logger.With(zap.Any(string(key), value)),
+		fieldMap:   l.fieldMap,
 		logSession: l.logSession,
 	}
 }
@@ -134,8 +123,8 @@ func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Log
 	}
 
 	return &Logger{
-		Logger:   l.Logger.With(zapFields[:i]...),
-		fieldMap: l.fieldMap,
+		Logger:     l.Logger.With(zapFields[:i]...),
+		fieldMap:   l.fieldMap,
 		logSession: l.logSession,
 	}
 }

@@ -121,7 +121,7 @@ func (r *Router) Handler() http.Handler {
 		routerRegistry: r.routerRegistry,
 		filter:         r.filterProvider(),
 		eventRouter:    r.eventRouter,
-		logger:         r.logger,
+		logger:         r.logger.WithField(flamingo.LogKeyModule,"web").WithField(flamingo.LogKeyCategory,"handler"),
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
 		prefix:         strings.TrimRight(r.base.Path, "/"),

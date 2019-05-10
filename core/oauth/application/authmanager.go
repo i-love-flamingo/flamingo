@@ -33,9 +33,8 @@ const (
 )
 
 func init() {
-	gob.Register(&oauth2.Token{})
-	gob.Register(&oidc.IDToken{})
-	gob.Register(&domain.TokenExtras{})
+	gob.Register(oauth2.Token{})
+	gob.Register(domain.TokenExtras{})
 }
 
 type (
@@ -91,30 +90,49 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
-	am.server = config.Server
-	am.secret = config.Secret
-	am.clientID = config.ClientID
-	am.disableOfflineToken = config.DisableOfflineToken
-	am.scopes = config.Scopes
-	am.idTokenMapping = config.IDTokenMapping
-	am.userInfoMapping = config.UserInfoMapping
-	am.tokenExtras = config.TokenExtras
-	var err error
-	am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
-	if err != nil {
-		am.logger.Error(err)
+	if config != nil {
+		am.server = config.Server
+		am.secret = config.Secret
+		am.clientID = config.ClientID
+		am.disableOfflineToken = config.DisableOfflineToken
+		am.scopes = config.Scopes
+		am.idTokenMapping = config.IDTokenMapping
+		am.userInfoMapping = config.UserInfoMapping
+		am.tokenExtras = config.TokenExtras
+
+		var err error
+		am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
+		if err != nil {
+			am.logger.Error(err)
+		}
 	}
 }
 
-// Auth tries to retrieve the authentication context for a active session
+
+// Auth tries to retrieve the authentication context for a active session - this is used to pass Authentication to services
+//	- if the stored token for the Auth is not valid anymore it will refresh the token before
 func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Auth, error) {
 	c = am.OAuthCtx(c)
+	currentToken, err := am.OAuth2Token(session)
+	if err != nil {
+		am.logger.WithContext(c).Error(err)
+		return domain.Auth{}, err
+	}
+	if !currentToken.Valid() {
+		err := am.refreshTokenAndUpdateStore(c,session)
+		if err != nil {
+			am.logger.WithContext(c).Error(err)
+			return domain.Auth{}, err
+		}
+	}
 	ts, err := am.TokenSource(c, session)
 	if err != nil {
+		am.logger.WithContext(c).Error(err)
 		return domain.Auth{}, err
 	}
 	idToken, err := am.IDToken(c, session)
 	if err != nil {
+		am.logger.WithContext(c).Error(err)
 		return domain.Auth{}, err
 	}
 
@@ -191,12 +209,13 @@ func (am *AuthManager) OAuth2Token(session *web.Session) (*oauth2.Token, error) 
 	}
 
 	value, _ := session.Load(keyToken)
-	oauth2Token, ok := value.(*oauth2.Token)
+	oauth2Token, ok := value.(oauth2.Token)
 	if !ok {
-		return nil, errors.Errorf("invalid token %#v", value)
+		am.DeleteTokenDetails(session)
+		return nil, errors.Errorf("invalid token in session %#v", value)
 	}
 
-	return oauth2Token, nil
+	return &oauth2Token, nil
 }
 
 // IDToken retrieves and validates the ID Token from the session
@@ -222,51 +241,47 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 		idtoken, err := am.Verifier().Verify(c, token.(string))
 		if err == nil {
 			return idtoken, token.(string), nil
-		} else {
-			am.logger.WithContext(c).Debug("keyRawIDToken not verified (anymore)")
 		}
-	} else {
-		am.logger.WithContext(c).Warn("keyRawIDToken not in session")
+		am.logger.WithContext(c).Debug("keyRawIDToken not verified (anymore)")
+		err = am.refreshTokenAndUpdateStore(c, session)
+		if err != nil {
+			return nil, "", err
+		}
+		token, ok = session.Load(keyRawIDToken)
+		if !ok {
+			return nil, "", errors.New("no token after refreshToken")
+		}
+		idtoken, err = am.Verifier().Verify(c, token.(string))
+		if err != nil {
+			return nil, "", errors.New("no verified id token after refreshToken")
+		}
+		return idtoken, token.(string), nil
+
 	}
 
-	token, err := am.getNewTokenAndUpdateStore(c, session)
-	if err != nil {
-		return nil, "", err
-	}
+	return nil, "", errors.New("no id token in session")
 
-	raw, err := am.ExtractRawIDToken(token)
-	if err != nil {
-		return nil, "", errors.WithStack(err)
-	}
-
-	idtoken, err := am.Verifier().Verify(c, raw)
-
-	if idtoken == nil {
-		return nil, "", errors.New("idtoken nil")
-	}
-
-	return idtoken, raw, nil
 }
 
 
-// IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewTokenAndUpdateStore(c context.Context, session *web.Session) (*oauth2.Token, error) {
+// refreshTokenAndUpdateStore
+func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *web.Session) (error) {
 	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
 	token, err := tokenSource.Token()
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 
-	err = am.StoreTokenDetails(session,token)
+	err = am.StoreTokenDetails(c,session,token)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
-	return token, err
+	return nil
 }
 
 
@@ -301,21 +316,14 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 
 // AccessToken - used to get access token
 func (am *AuthManager) AccessToken(ctx context.Context, session *web.Session) (string, error) {
-
-	token, err := am.OAuth2Token(session)
+	auth, err := am.Auth(ctx,session)
 	if err != nil {
 		return "", err
 	}
-	if token.Valid() {
-		return token.AccessToken, nil
-	}
-
-
-	token, err = am.getNewTokenAndUpdateStore(ctx,session)
+	token, err := auth.TokenSource.Token()
 	if err != nil {
 		return "", err
 	}
-
 	return token.AccessToken, nil
 }
 
@@ -330,7 +338,8 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 	return rawIDToken, nil
 }
 
-// TokenSource to be used in situations where you need it
+// TokenSource - return oauth2.TokenSource initialized with the Refreshtoken stored in the
+// to be used in situations where you need it
 func (am *AuthManager) TokenSource(c context.Context, session *web.Session) (oauth2.TokenSource, error) {
 	oauth2Token, err := am.OAuth2Token(session)
 	if err != nil {
@@ -350,11 +359,19 @@ func (am *AuthManager) HTTPClient(c context.Context, session *web.Session) (*htt
 }
 
 // StoreTokenDetails stores all token related data into session
-func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oauth2.Token) error {
-	if oauth2Token.AccessToken == "" {
-		err := errors.New("no accesstoken")
-		am.logger.Error(err)
+func (am *AuthManager) StoreTokenDetails(ctx context.Context,session *web.Session, oauth2Token *oauth2.Token) error {
+	if oauth2Token == nil {
+		err := errors.New("StoreTokenDetails got no token")
+		am.logger.WithContext(ctx).Error(err)
 		return err
+	}
+	if oauth2Token.AccessToken == "" {
+		err := errors.New("StoreTokenDetails got token without accesstoken")
+		am.logger.WithContext(ctx).Error(err)
+		return err
+	}
+	if !oauth2Token.Valid() {
+		am.logger.WithContext(ctx).Warn("StoreTokenDetails got already invalid token")
 	}
 	rawToken, err := am.ExtractRawIDToken(oauth2Token)
 	if err != nil {
@@ -367,7 +384,7 @@ func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oaut
 	if err != nil {
 		return err
 	}
-	tokenExtras := &domain.TokenExtras{}
+	tokenExtras := domain.TokenExtras{}
 	for _, extra := range extras {
 		value := oauth2Token.Extra(extra)
 		parsed, ok := value.(string)
@@ -378,7 +395,9 @@ func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oaut
 		tokenExtras.Add(extra, parsed)
 	}
 
-	session.Store(keyToken, oauth2Token)
+	var token oauth2.Token
+	token = *oauth2Token
+	session.Store(keyToken, token)
 	session.Store(keyRawIDToken, rawToken)
 	session.Store(keyTokenExtras, tokenExtras)
 	return nil

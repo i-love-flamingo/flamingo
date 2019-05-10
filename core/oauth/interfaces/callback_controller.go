@@ -68,7 +68,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
 
-		err = cc.authManager.StoreTokenDetails(request.Session(), oauth2Token)
+		err = cc.authManager.StoreTokenDetails(ctx,request.Session(), oauth2Token)
 		if err != nil {
 			cc.logger.Error("core.auth.callback Error", err)
 			return cc.responder.ServerError(errors.WithStack(err))

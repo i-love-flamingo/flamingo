@@ -222,7 +222,11 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 		idtoken, err := am.Verifier().Verify(c, token.(string))
 		if err == nil {
 			return idtoken, token.(string), nil
+		} else {
+			am.logger.WithContext(c).Debug("keyRawIDToken not verified (anymore)")
 		}
+	} else {
+		am.logger.WithContext(c).Warn("keyRawIDToken not in session")
 	}
 
 	token, err := am.getNewTokenAndUpdateStore(c, session)
@@ -320,7 +324,7 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return "", errors.Errorf("no id token %T %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
+		return "", errors.Errorf("no id token %T / %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
 	}
 
 	return rawIDToken, nil
@@ -352,9 +356,14 @@ func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oaut
 		am.logger.Error(err)
 		return err
 	}
+	rawToken, err := am.ExtractRawIDToken(oauth2Token)
+	if err != nil {
+		am.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
+		return err
+	}
 
 	var extras []string
-	err := am.tokenExtras.MapInto(&extras)
+	err = am.tokenExtras.MapInto(&extras)
 	if err != nil {
 		return err
 	}
@@ -367,12 +376,6 @@ func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oaut
 			continue
 		}
 		tokenExtras.Add(extra, parsed)
-	}
-
-	rawToken, err := am.ExtractRawIDToken(oauth2Token)
-	if err != nil {
-		am.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
-		return err
 	}
 
 	session.Store(keyToken, oauth2Token)

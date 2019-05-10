@@ -378,6 +378,7 @@ func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oaut
 	session.Store(keyToken, oauth2Token)
 	session.Store(keyRawIDToken, rawToken)
 	session.Store(keyTokenExtras, tokenExtras)
+	return nil
 }
 
 // DeleteTokenDetails deletes all token related data from session

@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"net/http"
 	"os"
+	"runtime/debug"
 
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -50,6 +51,7 @@ type (
 		logger              flamingo.Logger
 		router              *web.Router
 		openIDProvider      *oidc.Provider
+		tokenExtras         config.Slice
 	}
 
 	loggingRoundTripper struct {
@@ -63,12 +65,16 @@ func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 		return nil, errors.New("No request given")
 	}
 	b, err := httputil.DumpRequest(req, true)
+	log.Println()
 	log.Println("############### OAUTH REQUEST:")
 	log.Printf("%v  %v ", string(b), err)
 	res, err := f.originalTransport.RoundTrip(req)
 	b, err = httputil.DumpResponse(res, true)
 	log.Println("############### OAUTH RESPONSE:")
 	log.Printf("%v  %v ", string(b), err)
+	log.Println("############### OAUTH Call Stack:")
+	log.Println()
+	debug.PrintStack()
 	return res, err
 }
 
@@ -81,6 +87,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	Scopes              config.Slice `inject:"config:oauth.scopes"`
 	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
+	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -91,7 +98,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	am.scopes = config.Scopes
 	am.idTokenMapping = config.IDTokenMapping
 	am.userInfoMapping = config.UserInfoMapping
-
+	am.tokenExtras = config.TokenExtras
 	var err error
 	am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
 	if err != nil {
@@ -218,14 +225,41 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 		}
 	}
 
-	token, raw, err := am.getNewIDToken(c, session)
+	token, err := am.getNewToken(c, session)
 	if err != nil {
 		return nil, "", err
 	}
 
-	session.Store(keyRawIDToken, raw)
+	raw, err := am.ExtractRawIDToken(token)
+	if err != nil {
+		return nil, "", errors.WithStack(err)
+	}
 
-	return token, raw, nil
+	idtoken, err := am.Verifier().Verify(c, raw)
+
+	if idtoken == nil {
+		return nil, "", errors.New("idtoken nil")
+	}
+
+	return idtoken, raw, nil
+}
+
+
+// IDToken retrieves and validates the ID Token from the session
+func (am *AuthManager) getNewToken(c context.Context, session *web.Session) (*oauth2.Token, error) {
+	c = am.OAuthCtx(c)
+	tokenSource, err := am.TokenSource(c, session)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	am.StoreTokenDetails(session,token)
+	return token, err
 }
 
 // IDToken retrieves and validates the ID Token from the session
@@ -333,7 +367,29 @@ func (am *AuthManager) HTTPClient(c context.Context, session *web.Session) (*htt
 }
 
 // StoreTokenDetails stores all token related data into session
-func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oauth2.Token, rawToken string, tokenExtras *domain.TokenExtras) {
+func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oauth2.Token) error {
+	var extras []string
+	err := am.tokenExtras.MapInto(&extras)
+	if err != nil {
+		return err
+	}
+	tokenExtras := &domain.TokenExtras{}
+	for _, extra := range extras {
+		value := oauth2Token.Extra(extra)
+		parsed, ok := value.(string)
+		if !ok {
+			am.logger.Error("core.auth.callback invalid type for extras", value)
+			continue
+		}
+		tokenExtras.Add(extra, parsed)
+	}
+
+	rawToken, err := am.ExtractRawIDToken(oauth2Token)
+	if err != nil {
+		am.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
+		return err
+	}
+
 	session.Store(keyToken, oauth2Token)
 	session.Store(keyRawIDToken, rawToken)
 	session.Store(keyTokenExtras, tokenExtras)

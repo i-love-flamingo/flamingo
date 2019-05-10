@@ -24,7 +24,6 @@ type (
 		authManager    *application.AuthManager
 		logger         flamingo.Logger
 		eventPublisher *application.EventPublisher
-		tokenExtras    config.Slice
 		userService    application.UserServiceInterface
 	}
 )
@@ -36,15 +35,12 @@ func (cc *CallbackController) Inject(
 	logger flamingo.Logger,
 	eventPublisher *application.EventPublisher,
 	userService application.UserServiceInterface,
-	cfg *struct {
-		TokenExtras config.Slice `inject:"config:oauth.tokenExtras"`
-	},
 ) {
 	cc.responder = responder
 	cc.authManager = authManager
 	cc.logger = logger
 	cc.eventPublisher = eventPublisher
-	cc.tokenExtras = cfg.TokenExtras
+
 	cc.userService = userService
 }
 
@@ -76,31 +72,14 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 			return cc.responder.ServerError(errors.New("empty Access Token"))
 		}
 
-		var extras []string
-		err = cc.tokenExtras.MapInto(&extras)
+		err = cc.authManager.StoreTokenDetails(request.Session(), oauth2Token)
 		if err != nil {
-			panic(err)
-		}
-		tokenExtras := &domain.TokenExtras{}
-		for _, extra := range extras {
-			value := oauth2Token.Extra(extra)
-			parsed, ok := value.(string)
-			if !ok {
-				cc.logger.Error("core.auth.callback invalid type for extras", value)
-				continue
-			}
-			tokenExtras.Add(extra, parsed)
-		}
-
-		rawToken, err := cc.authManager.ExtractRawIDToken(oauth2Token)
-		if err != nil {
-			cc.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
+			cc.logger.Error("core.auth.callback Error", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
-		cc.authManager.StoreTokenDetails(request.Session(), oauth2Token, rawToken, tokenExtras)
-
 		cc.eventPublisher.PublishLoginEvent(ctx, &domain.LoginEvent{Session: request.Session()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
+		cc.logger.Debugf("Token expiry %v", oauth2Token.Expiry)
 		request.Session().AddFlash("successful logged in")
 	} else if errCode != "" {
 		cc.logger.Error("core.auth.callback Error parameter", errCode)

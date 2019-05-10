@@ -103,3 +103,8 @@ html
   ...
   a(href=url("auth.callback")) Login
 ```
+
+
+## Debugging
+
+Start flamingo with the environment variable "OAUTHDEBUG" - to get raw dump of http request and responses to the configured oauth provider logged to stdout.

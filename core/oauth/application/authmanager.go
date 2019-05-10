@@ -225,7 +225,7 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 		}
 	}
 
-	token, err := am.getNewToken(c, session)
+	token, err := am.getNewTokenAndUpdateStore(c, session)
 	if err != nil {
 		return nil, "", err
 	}
@@ -246,7 +246,7 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 
 
 // IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewToken(c context.Context, session *web.Session) (*oauth2.Token, error) {
+func (am *AuthManager) getNewTokenAndUpdateStore(c context.Context, session *web.Session) (*oauth2.Token, error) {
 	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
@@ -258,36 +258,13 @@ func (am *AuthManager) getNewToken(c context.Context, session *web.Session) (*oa
 		return nil, errors.WithStack(err)
 	}
 
-	am.StoreTokenDetails(session,token)
+	err = am.StoreTokenDetails(session,token)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
 	return token, err
 }
 
-// IDToken retrieves and validates the ID Token from the session
-func (am *AuthManager) getNewIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
-	c = am.OAuthCtx(c)
-	tokenSource, err := am.TokenSource(c, session)
-	if err != nil {
-		return nil, "", errors.WithStack(err)
-	}
-
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, "", errors.WithStack(err)
-	}
-
-	raw, err := am.ExtractRawIDToken(token)
-	if err != nil {
-		return nil, "", errors.WithStack(err)
-	}
-
-	idtoken, err := am.Verifier().Verify(c, raw)
-
-	if idtoken == nil {
-		return nil, "", errors.New("idtoken nil")
-	}
-
-	return idtoken, raw, err
-}
 
 func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
 	var claimSet *oauth2.ClaimSet
@@ -320,20 +297,22 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 
 // AccessToken - used to get access token
 func (am *AuthManager) AccessToken(ctx context.Context, session *web.Session) (string, error) {
-	auth, err := am.Auth(ctx, session)
+
+	token, err := am.OAuth2Token(session)
 	if err != nil {
 		return "", err
 	}
-	t, err := auth.TokenSource.Token()
+	if token.Valid() {
+		return token.AccessToken, nil
+	}
+
+
+	token, err = am.getNewTokenAndUpdateStore(ctx,session)
 	if err != nil {
 		return "", err
 	}
-	if t.AccessToken == "" {
-		err := errors.New("no accesstoken")
-		am.logger.Error(err)
-		return "", err
-	}
-	return t.AccessToken, nil
+
+	return token.AccessToken, nil
 }
 
 // ExtractRawIDToken from the provided (fresh) oatuh2token
@@ -368,6 +347,12 @@ func (am *AuthManager) HTTPClient(c context.Context, session *web.Session) (*htt
 
 // StoreTokenDetails stores all token related data into session
 func (am *AuthManager) StoreTokenDetails(session *web.Session, oauth2Token *oauth2.Token) error {
+	if oauth2Token.AccessToken == "" {
+		err := errors.New("no accesstoken")
+		am.logger.Error(err)
+		return err
+	}
+
 	var extras []string
 	err := am.tokenExtras.MapInto(&extras)
 	if err != nil {

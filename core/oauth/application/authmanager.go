@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/gob"
 	"net/http"
+	"os"
 
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	oidc "github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
+	"log"
+	"net/http/httputil"
 )
 
 const (
@@ -48,7 +51,26 @@ type (
 		router              *web.Router
 		openIDProvider      *oidc.Provider
 	}
+
+	loggingRoundTripper struct {
+		originalTransport http.RoundTripper
+	}
 )
+
+// RoundTrip implements RoundTripper interface and adds logging
+func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req == nil {
+		return nil, errors.New("No request given")
+	}
+	b, err := httputil.DumpRequest(req, true)
+	log.Println("############### OAUTH REQUEST:")
+	log.Printf("%v  %v ", string(b), err)
+	res, err := f.originalTransport.RoundTrip(req)
+	b, err = httputil.DumpResponse(res, true)
+	log.Println("############### OAUTH RESPONSE:")
+	log.Printf("%v  %v ", string(b), err)
+	return res, err
+}
 
 // Inject authManager dependencies
 func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openIDProvider *oidc.Provider, config *struct {
@@ -79,6 +101,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 
 // Auth tries to retrieve the authentication context for a active session
 func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Auth, error) {
+	c = am.OAuthCtx(c)
 	ts, err := am.TokenSource(c, session)
 	if err != nil {
 		return domain.Auth{}, err
@@ -99,8 +122,22 @@ func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 	return am.openIDProvider
 }
 
+//OAuthCtx - returns ctx that should be used to pass to oauth2 lib - it enables logging for Debug reasons
+func (am *AuthManager) OAuthCtx(ctx context.Context) context.Context {
+	if os.Getenv("OAUTHDEBUG") == "1" {
+		oauthHTTPClient := &http.Client{
+			Transport: &loggingRoundTripper{
+				originalTransport: http.DefaultTransport,
+			},
+		}
+		return context.WithValue(ctx, oauth2.HTTPClient, oauthHTTPClient)
+	}
+	return ctx
+}
+
 // OAuth2Config is lazy setup oauth2config
-func (am *AuthManager) OAuth2Config(ctx context.Context, req *web.Request) *oauth2.Config {
+func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2.Config {
+
 	var redirectURL string
 	if req != nil {
 		callbackURL, _ := am.router.Absolute(req, "auth.callback", nil)
@@ -169,6 +206,7 @@ func (am *AuthManager) GetRawIDToken(c context.Context, session *web.Session) (s
 
 // IDToken retrieves and validates the ID Token from the session
 func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
+	c = am.OAuthCtx(c)
 	if session == nil {
 		return nil, "", errors.New("no session configured")
 	}
@@ -192,6 +230,7 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 
 // IDToken retrieves and validates the ID Token from the session
 func (am *AuthManager) getNewIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
+	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
 		return nil, "", errors.WithStack(err)
@@ -244,7 +283,6 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 
 	return claimSet
 }
-
 
 // AccessToken - used to get access token
 func (am *AuthManager) AccessToken(ctx context.Context, session *web.Session) (string, error) {

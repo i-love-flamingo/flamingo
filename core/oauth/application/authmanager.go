@@ -245,6 +245,25 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 	return claimSet
 }
 
+
+// AccessToken - used to get access token
+func (am *AuthManager) AccessToken(ctx context.Context, session *web.Session) (string, error) {
+	auth, err := am.Auth(ctx, session)
+	if err != nil {
+		return "", err
+	}
+	t, err := auth.TokenSource.Token()
+	if err != nil {
+		return "", err
+	}
+	if t.AccessToken == "" {
+		err := errors.New("no accesstoken")
+		am.logger.Error(err)
+		return "", err
+	}
+	return t.AccessToken, nil
+}
+
 // ExtractRawIDToken from the provided (fresh) oatuh2token
 func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, error) {
 	// Extract the ID Token from OAuth2 token.

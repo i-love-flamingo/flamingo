@@ -71,6 +71,10 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
+		if oauth2Token.AccessToken == "" {
+			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange - empty Access Token!")
+			return cc.responder.ServerError(errors.New("empty Access Token"))
+		}
 
 		var extras []string
 		err = cc.tokenExtras.MapInto(&extras)

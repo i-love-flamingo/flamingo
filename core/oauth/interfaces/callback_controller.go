@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/oauth/application"
@@ -49,7 +50,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	defer cc.authManager.DeleteAuthState(request.Session())
 
 	if state, ok := cc.authManager.LoadAuthState(request.Session()); !ok || state != request.Request().URL.Query().Get("state") {
-		cc.logger.Error("Invalid State", state, request.Request().URL.Query().Get("state"))
+		cc.logger.Error(fmt.Sprintf("Invalid State - expected: %v  got: %v", state, request.Request().URL.Query().Get("state")))
 		return cc.responder.ServerError(errors.New("Invalid State"))
 	}
 

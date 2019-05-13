@@ -10,24 +10,21 @@ import (
 	"sync"
 
 	"github.com/ghodss/yaml"
-	"github.com/spf13/pflag"
 )
 
 var (
 	// DebugLog flag
-	DebugLog bool
+	debugLog bool
 	// AdditionalConfig to be loaded
-	AdditionalConfig []string
+	additionalConfig []string
 	once             = sync.Once{}
 )
 
 // Load configuration in basedir
 func Load(root *Area, basedir string) error {
 	once.Do(func() {
-		fs := pflag.NewFlagSet("config", pflag.ContinueOnError)
-		fs.StringArrayVar(&AdditionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")
-		fs.BoolVar(&DebugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
-		fs.Parse(os.Args[1:])
+		// we have to parse the flagset because config loading takes place before rootCmd's execute
+		flagSet.Parse(os.Args[1:])
 	})
 
 	load(root, basedir, "/")
@@ -42,8 +39,8 @@ func Load(root *Area, basedir string) error {
 		}
 	}
 
-	for _, add := range AdditionalConfig {
-		if DebugLog {
+	for _, add := range additionalConfig {
+		if debugLog {
 			log.Printf("Loading %q", add)
 		}
 		if err := loadConfig(root, []byte(add)); err != nil {
@@ -87,12 +84,12 @@ var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
 func loadConfigFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if DebugLog {
+		if debugLog {
 			log.Println(err)
 		}
 		return err
 	}
-	if DebugLog {
+	if debugLog {
 		log.Println(area.Name, "loading", filename)
 	}
 	return loadConfig(area, config)
@@ -113,7 +110,7 @@ func loadConfig(area *Area, config []byte) error {
 	cfg := make(Map)
 	err := yaml.Unmarshal(config, &cfg)
 	if err != nil {
-		if DebugLog {
+		if debugLog {
 			log.Println(err)
 		}
 		return err
@@ -129,7 +126,7 @@ func loadConfig(area *Area, config []byte) error {
 func loadRoutes(area *Area, filename string) error {
 	routes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if DebugLog {
+		if debugLog {
 			log.Println(err)
 		}
 		return err
@@ -137,13 +134,13 @@ func loadRoutes(area *Area, filename string) error {
 
 	err = yaml.Unmarshal(routes, &area.Routes)
 	if err != nil {
-		if DebugLog {
+		if debugLog {
 			log.Println(err)
 		}
 		return err
 	}
 
-	if DebugLog {
+	if debugLog {
 		log.Println(area.Name, "loading", filename)
 	}
 

@@ -2,6 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 flamingo.me/dingo v0.1.3 h1:C9O3PHpBONfA8p7KI7VX7rGFGyDeTgaJT1EExcAscaw=
 flamingo.me/dingo v0.1.3/go.mod h1:9jDIxhkRLEW9I8axzJb0S/kJ0xv3U8gPxY92uEIHEcE=
+flamingo.me/dingo v0.1.5 h1:nvhmtoSE8ihA+q5qHgh6WXrmLS5QX8jdCDwydyIrwh8=
+flamingo.me/dingo v0.1.5/go.mod h1:jLnqSPkxqE113eKreQ4uBx1fnwluGuaK3rjRi9041wU=
 git.apache.org/thrift.git v0.12.0 h1:CMxsZlAmxKs+VAZMlDDL0wXciMblJcutQbEe3A9CYUM=
 git.apache.org/thrift.git v0.12.0 h1:CMxsZlAmxKs+VAZMlDDL0wXciMblJcutQbEe3A9CYUM=
 git.apache.org/thrift.git v0.12.0/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=

@@ -72,3 +72,18 @@ Flags:
 
 Use "main [command] --help" for more information about a command.
 ```
+
+## Adding persistent flags to the root command
+
+You can add persistent [flags](https://github.com/spf13/cobra#flags) to Flamingo's root command by multi-binding a 
+[`FlagSet`](https://godoc.org/github.com/spf13/pflag#FlagSet) to `*pflag.FlagSet`:
+
+```go
+// Configure DI
+func (m *Module) Configure(injector *dingo.Injector) {
+	injector.BindMulti((*pflag.FlagSet)(nil)).ToInstance(someFlagSet)
+}
+
+```
+
+

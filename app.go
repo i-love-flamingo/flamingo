@@ -139,6 +139,7 @@ func App(modules []dingo.Module, options ...option) {
 
 	root.Modules = append([]dingo.Module{
 		new(framework.InitModule),
+		new(config.Flags),
 		new(zap.Module),
 		new(cmd.Module),
 	}, root.Modules...)

@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/spf13/cobra"
 )
 
 // Module for DI
@@ -20,7 +22,10 @@ type Module struct{}
 
 var once = sync.Once{}
 
-type eventRouterProvider func() flamingo.EventRouter
+type (
+	eventRouterProvider func() flamingo.EventRouter
+	flagSetProvider     func() []*pflag.FlagSet
+)
 
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -29,6 +34,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			commands []*cobra.Command,
 			eventRouterProvider eventRouterProvider,
 			logger flamingo.Logger,
+			flagSetProvider flagSetProvider,
 			config *struct {
 				Name string `inject:"config:cmd.name"`
 			}) *cobra.Command {
@@ -50,6 +56,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				},
 			}
 			rootCmd.FParseErrWhitelist.UnknownFlags = true
+			for _, set := range flagSetProvider() {
+				rootCmd.PersistentFlags().AddFlagSet(set)
+			}
 
 			rootCmd.AddCommand(commands...)
 

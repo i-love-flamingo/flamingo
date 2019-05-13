@@ -1,7 +1,7 @@
 module flamingo.me/flamingo/v3
 
 require (
-	flamingo.me/dingo v0.1.3
+	flamingo.me/dingo v0.1.5
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/go-oidc v2.0.0+incompatible

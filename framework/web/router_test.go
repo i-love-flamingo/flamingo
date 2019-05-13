@@ -11,15 +11,16 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
-	
+
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 func TestRouter(t *testing.T) {
 	router := &Router{
 		eventRouter:    new(flamingo.DefaultEventRouter),
-		routesProvider: func() []RoutesModule { return nil },
 		filterProvider: func() []Filter { return nil },
+		routesProvider: func() []RoutesModule { return nil },
+		logger:         flamingo.NullLogger{},
 	}
 
 	h := router.Handler()
@@ -156,6 +157,7 @@ func TestRouterTestify(t *testing.T) {
 		eventRouter:    new(flamingo.DefaultEventRouter),
 		routesProvider: func() []RoutesModule { return nil },
 		filterProvider: func() []Filter { return nil },
+		logger:         flamingo.NullLogger{},
 	}
 
 	h := router.Handler()

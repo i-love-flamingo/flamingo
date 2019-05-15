@@ -2,7 +2,6 @@ package templatefunctions_test
 
 import (
 	"context"
-	"math/big"
 	"reflect"
 	"testing"
 
@@ -38,7 +37,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 		labelService *application.LabelService
 	}
 	type args struct {
-		value    interface{}
+		value    float64
 		currency string
 	}
 	tests := []struct {
@@ -48,7 +47,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 		want   interface{}
 	}{
 		{
-			name: "float64",
+			name: "Euro",
 			fields: fields{
 				config: config.Map{
 					"decimal":    ",",
@@ -60,13 +59,13 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 				labelService: labelService,
 			},
 			args: args{
-				value:    float64(21500.99),
+				value:    21500.99,
 				currency: "€",
 			},
 			want: "€ 21.500,99",
 		},
 		{
-			name: "int",
+			name: "Dollar",
 			fields: fields{
 				config: config.Map{
 					"decimal":    ".",
@@ -78,28 +77,10 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 				labelService: labelService,
 			},
 			args: args{
-				value:    int(55),
+				value:    55,
 				currency: "$",
 			},
 			want: "$ 55.00",
-		},
-		{
-			name: "big.Float",
-			fields: fields{
-				config: config.Map{
-					"decimal":    ".",
-					"thousand":   ",",
-					"formatZero": "%s -,-",
-					"format":     "%s %v",
-					"formatLong": "%v %v",
-				},
-				labelService: labelService,
-			},
-			args: args{
-				value:    big.NewFloat(21500.99),
-				currency: "¥",
-			},
-			want: "¥ 21,500.99",
 		},
 	}
 	for _, tt := range tests {
@@ -109,7 +90,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 				Config config.Map `inject:"config:locale.accounting"`
 			}{tt.fields.config})
 
-			templateFunc := nff.Func(context.Background()).(func(value interface{}, currency string) string)
+			templateFunc := nff.Func(context.Background()).(func(value float64, currency string) string)
 
 			if got := templateFunc(tt.args.value, tt.args.currency); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NumberFormatFunc.Func() = %v, want %v", got, tt.want)

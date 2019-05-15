@@ -20,7 +20,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 		labelService *application.LabelService
 	}
 	type args struct {
-		value         interface{}
+		value         float64
 		currency      string
 		currencyLabel string
 	}
@@ -31,7 +31,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 		want   interface{}
 	}{
 		{
-			name: "float64",
+			name: "$ USD",
 			fields: fields{
 				config: config.Map{
 					"decimal":    ".",
@@ -43,7 +43,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 				labelService: labelService,
 			},
 			args: args{
-				value:         float64(21500.99),
+				value:         21500.99,
 				currency:      "$",
 				currencyLabel: "USD",
 			},
@@ -62,7 +62,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 				Config config.Map `inject:"config:locale.accounting"`
 			}{tt.fields.config})
 
-			templateFunc := priceFormatLongFunc.Func(context.Background()).(func(value interface{}, currency string, currencyLabel string) string)
+			templateFunc := priceFormatLongFunc.Func(context.Background()).(func(value float64, currency string, currencyLabel string) string)
 
 			if got := templateFunc(tt.args.value, tt.args.currency, tt.args.currencyLabel); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NumberFormatFunc.Func() = %v, want %v", got, tt.want)

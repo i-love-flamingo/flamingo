@@ -2,7 +2,6 @@ package templatefunctions
 
 import (
 	"context"
-	"math/big"
 
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -25,9 +24,8 @@ func (pff *PriceFormatFunc) Inject(labelService *application.LabelService, confi
 
 // Func formats the value and adds currency sign/symbol
 // example output could be: $ 21,500.99
-// (supported value types : int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, *big.Rat, *big.Float)
 func (pff *PriceFormatFunc) Func(context.Context) interface{} {
-	return func(value interface{}, currency string) string {
+	return func(value float64, currency string) string {
 		currency = pff.labelService.NewLabel(currency).String()
 		ac := accounting.Accounting{
 			Symbol:    currency,
@@ -48,11 +46,6 @@ func (pff *PriceFormatFunc) Func(context.Context) interface{} {
 		format, ok := pff.config["format"].(string)
 		if ok {
 			ac.Format = format
-		}
-
-		valueBigFloat, ok := value.(*big.Float)
-		if ok {
-			return ac.FormatMoneyBigFloat(valueBigFloat)
 		}
 
 		return ac.FormatMoney(value)

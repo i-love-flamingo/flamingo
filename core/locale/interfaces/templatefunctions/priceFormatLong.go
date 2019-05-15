@@ -30,10 +30,9 @@ func (pff *PriceFormatLongFunc) Inject(
 
 // Func formats the value, adds currency sign/symbol and add an additional currency code/label
 // example output could be: $ 21,500.99 USD
-// (supported value types : int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, *big.Rat, *big.Float)
 func (pff *PriceFormatLongFunc) Func(ctx context.Context) interface{} {
-	return func(value interface{}, currency string, currencyLabel string) string {
-		priceFunc := pff.priceFormat.Func(ctx).(func(value interface{}, currency string) string)
+	return func(value float64, currency string, currencyLabel string) string {
+		priceFunc := pff.priceFormat.Func(ctx).(func(value float64, currency string) string)
 		price := priceFunc(value, currency)
 		currencyLabel = pff.labelService.NewLabel(currencyLabel).String()
 		format, ok := pff.config["formatLong"].(string)

@@ -44,17 +44,17 @@ By providing different configurations for the different configuration areas (see
   __("key")
   
   # Display the label and pass a default that is used if the key is not existend in a labelfile
-	__("key").SetDefaultLabel("default")
+	__("key").setDefaultLabel("default")
 	
 	# Display the label with dynamic values replaces:
-	__("key").SetDefaultLabel("Hello Mr {{.UserName}}").SetTranslationArguments({UserName: "Max"})
+	__("key").setDefaultLabel("Hello Mr {{.UserName}}").setTranslationArguments({UserName: "Max"})
 	
 	# Support the usage of plural labels idepending on a given count:
-	__("unread_mails").SetCount(5)
+	__("unread_mails").setCount(5)
 	
 	
 	# Force the usage of another local by passing languange code as 5th paramater:
-	__("switch_to_german").SetLocale("de-DE")
+	__("switch_to_german").setLocale("de-DE")
 	
 ```
 
@@ -114,8 +114,10 @@ Other functions are `formalToLocalDate()` or `formatTime()` etc..
 ### Formatting of prices:
 
 ```pug
-priceFormat(90,"GBP")
-priceFormatLong(90,"GBP","british pound")
+priceFormat(90.25,"£")
+// £ 90.25
+priceFormatLong(42049.99,"$","USD")
+// $ 42,049.99 USD
 ```
 
 ### Formatting of numbers:

@@ -10,7 +10,7 @@ import (
 
 // PriceFormatFunc for formatting prices
 type PriceFormatFunc struct {
-	config             config.Map
+	config       config.Map
 	labelService *application.LabelService
 }
 
@@ -22,8 +22,8 @@ func (pff *PriceFormatFunc) Inject(labelService *application.LabelService, confi
 	pff.config = config.Config
 }
 
-// Func as implementation of debug method
-// todo fix
+// Func formats the value and adds currency sign/symbol
+// example output could be: $ 21,500.99
 func (pff *PriceFormatFunc) Func(context.Context) interface{} {
 	return func(value float64, currency string) string {
 		currency = pff.labelService.NewLabel(currency).String()

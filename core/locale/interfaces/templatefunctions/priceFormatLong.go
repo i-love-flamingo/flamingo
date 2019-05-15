@@ -8,11 +8,11 @@ import (
 	"flamingo.me/flamingo/v3/framework/config"
 )
 
-// PriceFormatLongFunc for formatting prices
+// PriceFormatLongFunc for formatting prices with additional currency code/label
 type PriceFormatLongFunc struct {
-	config             config.Map
+	config       config.Map
 	labelService *application.LabelService
-	priceFormat        *PriceFormatFunc
+	priceFormat  *PriceFormatFunc
 }
 
 // Inject dependencies
@@ -28,10 +28,11 @@ func (pff *PriceFormatLongFunc) Inject(
 	pff.priceFormat = formatFunc
 }
 
-// Func as implementation of debug method
+// Func formats the value, adds currency sign/symbol and add an additional currency code/label
+// example output could be: $ 21,500.99 USD
 func (pff *PriceFormatLongFunc) Func(ctx context.Context) interface{} {
-	return func(value interface{}, currency string, currencyLabel string) string {
-		priceFunc := pff.priceFormat.Func(ctx).(func(value interface{}, currency string) string)
+	return func(value float64, currency string, currencyLabel string) string {
+		priceFunc := pff.priceFormat.Func(ctx).(func(value float64, currency string) string)
 		price := priceFunc(value, currency)
 		currencyLabel = pff.labelService.NewLabel(currencyLabel).String()
 		format, ok := pff.config["formatLong"].(string)

@@ -24,17 +24,12 @@ func (tf *Label) Inject(labelService *application.LabelService, logger flamingo.
 }
 
 // Func template function factory
-// todo fix
 func (tf *Label) Func(context.Context) interface{} {
 
-	// Usage:  __("key")
-	// __("key","default")
-	// __("key","Hello Mr {{.userName}}",{UserName: "Max"})
-	// Force other than configured locale: __("switch_to_german","",{},"de-DE")
 	return func(key string, params ...interface{}) *domain.Label {
 
 		if len(params) > 0 {
-			tf.logger.Warn("Depricated unsupported paramaters given! Use the Setters provided by the returned Label " + key)
+			tf.logger.Warn("Deprecated unsupported parameters given! Use the Setters provided by the returned Label " + key)
 
 		}
 		return tf.labelService.NewLabel(key)

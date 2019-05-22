@@ -87,6 +87,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
+	DebugMode         	bool `inject:"config:debug.mode"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -103,7 +104,12 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 		var err error
 		am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
 		if err != nil {
-			am.logger.Error(err)
+			if config.DebugMode {
+				am.logger.Error(err)
+			} else {
+				//panic on err since we really expect a valid authmanager state and application is in a failed state otherwise
+				panic(err)
+			}
 		}
 	}
 }

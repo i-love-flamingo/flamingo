@@ -110,10 +110,7 @@ func loadConfig(area *Area, config []byte) error {
 	cfg := make(Map)
 	err := yaml.Unmarshal(config, &cfg)
 	if err != nil {
-		if debugLog {
-			log.Println(err)
-		}
-		return err
+		panic(err)
 	}
 
 	if area.LoadedConfig == nil {
@@ -134,10 +131,7 @@ func loadRoutes(area *Area, filename string) error {
 
 	err = yaml.Unmarshal(routes, &area.Routes)
 	if err != nil {
-		if debugLog {
-			log.Println(err)
-		}
-		return err
+		panic(err)
 	}
 
 	if debugLog {

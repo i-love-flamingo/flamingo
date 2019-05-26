@@ -9,18 +9,18 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	root := new(Area)
-
 	require.NoError(t, os.Setenv("TEST1", "test-value"))
 	require.NoError(t, os.Setenv("TEST4", "injected"))
 
 	t.Run("config dir does not exist", func(t *testing.T) {
+		root := new(Area)
 		err := Load(root, "not-existing")
 		require.NoError(t, err)
 		assert.Equal(t, Map{"area": ""}, root.Configuration.Flat())
 	})
 
 	t.Run("valid config files", func(t *testing.T) {
+		root := new(Area)
 		err := Load(root, "testdata/valid")
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
@@ -36,7 +36,11 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("valid config files with dev context", func(t *testing.T) {
+		root := new(Area)
 		require.NoError(t, os.Setenv("CONTEXT", "dev"))
+		defer func() {
+			require.NoError(t, os.Unsetenv("CONTEXT"))
+		}()
 		err := Load(root, "testdata/valid")
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
@@ -47,6 +51,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("valid config files with additional config", func(t *testing.T) {
+		root := new(Area)
 		require.NoError(t, flagSet.Set("flamingo-config", "baz: bam"))
 		require.NoError(t, flagSet.Set("flamingo-config", "foo.bar.test: 'hello'"))
 		err := Load(root, "testdata/valid")
@@ -62,12 +67,14 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("invalid config file", func(t *testing.T) {
+		root := new(Area)
 		assert.Panics(t, func() {
 			_ = Load(root, "testdata/invalid")
 		})
 	})
 
 	t.Run("valid config file with invalid additional config", func(t *testing.T) {
+		root := new(Area)
 		assert.Panics(t, func() {
 			require.NoError(t, flagSet.Set("flamingo-config", "baz"))
 

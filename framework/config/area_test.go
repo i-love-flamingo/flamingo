@@ -31,9 +31,9 @@ func SubTestMapDeepmerge(t *testing.T) {
 func TestNilValuesRemoveData(t *testing.T) {
 	config := make(Map)
 
-	cfg := readConfig(t, "testdata/config.yml")
+	cfg := readConfig(t, "testdata/valid/config.yml")
 	assert.NoError(t, config.Add(cfg))
-	cfg = readConfig(t, "testdata/config_dev.yml")
+	cfg = readConfig(t, "testdata/valid/config_dev.yml")
 	assert.NoError(t, config.Add(cfg))
 
 	fooValue, present := config.Get("foo")

@@ -56,13 +56,14 @@ const (
 // Inject dependencies
 func (r *Router) Inject(
 	cfg *struct {
-	// base url configuration
-	Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
-	Host         string         `inject:"config:flamingo.router.host,optional"`
-	Path         string         `inject:"config:flamingo.router.path,optional"`
-	External     string         `inject:"config:flamingo.router.external,optional"`
-	SessionStore sessions.Store `inject:",optional"`
-},
+		// base url configuration
+		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
+		Host         string         `inject:"config:flamingo.router.host,optional"`
+		Path         string         `inject:"config:flamingo.router.path,optional"`
+		External     string         `inject:"config:flamingo.router.external,optional"`
+		SessionStore sessions.Store `inject:",optional"`
+		SessionName  string         `inject:"config:session.name,optional"`
+	},
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
 	routesProvider routesProvider,
@@ -88,6 +89,9 @@ func (r *Router) Inject(
 	r.configArea = configArea
 	r.sessionStore = cfg.SessionStore
 	r.sessionName = "flamingo"
+	if cfg.SessionName != "" {
+		r.sessionName = cfg.SessionName
+	}
 }
 
 // Handler creates and returns new instance of http.Handler interface
@@ -121,7 +125,7 @@ func (r *Router) Handler() http.Handler {
 		routerRegistry: r.routerRegistry,
 		filter:         r.filterProvider(),
 		eventRouter:    r.eventRouter,
-		logger:         r.logger.WithField(flamingo.LogKeyModule,"web").WithField(flamingo.LogKeyCategory,"handler"),
+		logger:         r.logger.WithField(flamingo.LogKeyModule, "web").WithField(flamingo.LogKeyCategory, "handler"),
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
 		prefix:         strings.TrimRight(r.base.Path, "/"),

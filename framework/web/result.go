@@ -48,9 +48,10 @@ type (
 	// RouteRedirectResponse redirects to a certain route
 	RouteRedirectResponse struct {
 		Response
-		To     string
-		Data   map[string]string
-		router *Router
+		To       string
+		fragment string
+		Data     map[string]string
+		router   *Router
 	}
 
 	// URLRedirectResponse redirects to a certain URL
@@ -197,8 +198,15 @@ func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) 
 	if err != nil {
 		return err
 	}
+	to.Fragment = r.fragment
 	w.Header().Set("Location", to.String())
 	return r.Response.Apply(c, w)
+}
+
+// Fragment adds a fragment to the resulting URL, argument must be given without '#'
+func (r *RouteRedirectResponse) Fragment(fragment string) *RouteRedirectResponse {
+	r.fragment = fragment
+	return r
 }
 
 // Permanent marks a redirect as being permanent (http 301)

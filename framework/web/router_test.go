@@ -196,11 +196,13 @@ func TestRouterRelativeAndAbsolute(t *testing.T) {
 			Path         string         `inject:"config:flamingo.router.path,optional"`
 			External     string         `inject:"config:flamingo.router.external,optional"`
 			SessionStore sessions.Store `inject:",optional"`
+			SessionName  string         `inject:"config:session.name,optional"`
 		}{
-			Scheme:   scheme,
-			Host:     host,
-			Path:     path,
-			External: external,
+			Scheme:      scheme,
+			Host:        host,
+			Path:        path,
+			External:    external,
+			SessionName: "test",
 		}, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil)
 
 		registry.HandleGet("test", func(context.Context, *Request) Result {

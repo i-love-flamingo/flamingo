@@ -43,6 +43,7 @@ func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 	}
 }
 
+//Start - starts the systemendpoint in a sperate go routine
 func (s *SystemServer) Start() {
 	s.logger.Info("systemendpoint: Start at ", s.serviceAddress)
 	serveMux := http.NewServeMux()

@@ -31,18 +31,21 @@ func (s *SystemServer) Inject(
 	s.serviceAddress = config.ServiceAddress
 }
 
-// Notify handles required actions on startup and shutdown
+// Notify handles required actions on Start and shutdown
 func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 	switch e.(type) {
 	case *flamingo.ServerStartEvent:
-		s.startup()
+		s.Start()
 	case *flamingo.ServerShutdownEvent:
+		s.shutdown()
+	case *flamingo.ShutdownEvent:
 		s.shutdown()
 	}
 }
 
-func (s *SystemServer) startup() {
-	s.logger.Info("systemendpoint: startup at ", s.serviceAddress)
+//Start - starts the systemendpoint in a sperate go routine
+func (s *SystemServer) Start() {
+	s.logger.Info("systemendpoint: Start at ", s.serviceAddress)
 	serveMux := http.NewServeMux()
 	for route, handler := range s.handlerProvider() {
 		if handler != nil {

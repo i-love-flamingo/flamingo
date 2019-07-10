@@ -50,6 +50,10 @@ func (s *SystemServer) Start() {
 	for route, handler := range s.handlerProvider() {
 		if handler != nil {
 			s.logger.Debug("systemendpoint: register route ", route)
+			if route == "" {
+				s.logger.Error("Systemendpoint has no route")
+				continue
+			}
 			serveMux.Handle(route, handler)
 		}
 	}

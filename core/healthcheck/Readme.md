@@ -2,7 +2,8 @@
 
 The healthcheck module provides useful routes for:
 1. check if the application is up (/status/ping endpoint)
-1. Check the application status (/status/healthcheck endpoint)
+2. Check the application status (/status/healthcheck endpoint)
+3. Provide version informations (/version) - if a file "version.json" exists
 
 ## Usage
 

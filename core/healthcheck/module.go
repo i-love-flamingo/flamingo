@@ -22,6 +22,7 @@ type Module struct {
 	checkAuthServer bool
 	checkPath       string
 	pingPath        string
+	versionPath     string
 	sessionBackend  string
 }
 
@@ -32,6 +33,7 @@ func (m *Module) Inject(
 		CheckSession    bool   `inject:"config:healthcheck.checkSession"`
 		CheckAuthServer bool   `inject:"config:healthcheck.checkAuth"`
 		CheckPath       string `inject:"config:healthcheck.checkPath"`
+		VersionPath     string `inject:"config:healthcheck.versionPath"`
 		PingPath        string `inject:"config:healthcheck.pingPath"`
 		SessionBackend  string `inject:"config:session.backend"`
 	},
@@ -40,6 +42,7 @@ func (m *Module) Inject(
 	m.checkSession = config.CheckSession
 	m.checkAuthServer = config.CheckAuthServer
 	m.checkPath = config.CheckPath
+	m.versionPath = config.VersionPath
 	m.pingPath = config.PingPath
 	m.sessionBackend = config.SessionBackend
 }
@@ -75,6 +78,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.BindMap((*domain.Handler)(nil), m.pingPath).To(&controllers.Ping{})
 	injector.BindMap((*domain.Handler)(nil), m.checkPath).To(&controllers.Healthcheck{})
+	injector.BindMap((*domain.Handler)(nil), m.versionPath).To(&controllers.Version{})
 
 	web.BindRoutes(injector, new(routes))
 	injector.BindMulti((*prefixrouter.OptionalHandler)(nil)).AnnotatedWith("fallback").To(controllers.Ping{})
@@ -86,6 +90,8 @@ func (m *Module) DefaultConfig() config.Map {
 		"healthcheck": config.Map{
 			"checkSession": true,
 			"checkAuth":    false,
+			"versionPath":  "/version",
+			"versionFile":  "version.json",
 			"checkPath":    "/status/healthcheck",
 			"pingPath":     "/status/ping",
 		},

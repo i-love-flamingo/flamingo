@@ -46,8 +46,7 @@ func (us *UserService) getUser(c context.Context, session *web.Session) *domain.
 		return domain.Guest
 	}
 
-	r := web.RequestFromContext(c)
-	user, err := us.mappingService.UserFromIDToken(id, r.Session())
+	user, err := us.mappingService.UserFromIDToken(id, session)
 	if user == nil || err != nil {
 		return domain.Guest
 	}

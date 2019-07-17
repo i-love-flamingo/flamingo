@@ -130,7 +130,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		"someDateOfBirth": "01.01.2000",
 		"someCountry":     "Mars",
 		"whatever":        "value",
-		"userType":        "RU",
+		"customer_groups":        "RU",
 	}
 
 	t.mappingService.idTokenMapping = config.Map{
@@ -146,7 +146,7 @@ func (t *UserMappingServiceTestSuite) TestMapToUser_AllDifferent() {
 		"dateOfBirth":  "someDateOfBirth",
 		"country":      "someCountry",
 		"customFields": config.Slice{"whatever"},
-		"groups":       "userType",
+		"groups":       "userType;customer_groups",
 	}
 
 	t.Equal(&User{

@@ -125,11 +125,13 @@ func (ums *UserMappingService) mapCustomFields(mapping []string, claims map[stri
 }
 
 func (ums *UserMappingService) mapField(mappedFieldName string, claims map[string]interface{}) string {
-	value, ok := claims[mappedFieldName].(string)
-	if !ok {
-		return ""
+	claimKeys := strings.Split(mappedFieldName,";")
+	for _,key := range claimKeys {
+		if value, ok := claims[key].(string); ok {
+			return value
+		}
 	}
-	return value
+	return ""
 }
 
 func (ums *UserMappingService) mapSliceField(mappedFieldName string, claims map[string]interface{}) []string {

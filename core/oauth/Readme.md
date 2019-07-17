@@ -64,11 +64,13 @@ oauth:
     city: someCity
     dateOfBirth: someDateOfBirth
     country: someCountry
-    groups: someGroups
+    groups: groupfield1;groupfield2
     customFields:
     - someField1
     - someField2
 ```
+
+As you see above the mapping allows to specify multiple keys in the claim. So `groups: groupfield1;groupfield2` will map the group property of the user object from the claim `groupfield1` and if that is not present it will use `groupfield2`. 
 
 # Use fakes
 

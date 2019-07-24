@@ -2,6 +2,7 @@ package gotemplate
 
 import (
 	"flamingo.me/dingo"
+
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -18,6 +19,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	flamingo.BindTemplateFunc(injector, "url", new(urlFunc))
 	flamingo.BindTemplateFunc(injector, "get", new(getFunc))
 	flamingo.BindTemplateFunc(injector, "data", new(dataFunc))
+	flamingo.BindTemplateFunc(injector, "plainHtml", new(plainHTMLFunc))
+	flamingo.BindTemplateFunc(injector, "plainJs", new(plainJSFunc))
 }
 
 // DefaultConfig for gotemplate module

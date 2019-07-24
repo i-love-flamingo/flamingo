@@ -37,27 +37,10 @@ type (
 		Relative(name string, params map[string]string) (*url.URL, error)
 		Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{}
 	}
-
-	// urlFunc allows templates to access the routers `URL` helper method
-	urlFunc struct {
-		router urlRouter
-	}
-
-	// getFunc allows templates to access the router's `get` method
-	dataFunc struct {
-		router urlRouter
-	}
-
-	getFunc struct {
-		router urlRouter
-	}
 )
 
 var (
-	_    flamingo.TemplateFunc = new(urlFunc)
-	_    flamingo.TemplateFunc = new(getFunc)
-	_    flamingo.TemplateFunc = new(dataFunc)
-	lock                       = &sync.Mutex{}
+	lock = &sync.Mutex{}
 )
 
 // Inject engine dependencies
@@ -230,59 +213,4 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 	}
 
 	return nil
-}
-
-func (g *getFunc) Inject(router urlRouter) *getFunc {
-	g.router = router
-	return g
-}
-
-// TemplateFunc as implementation of get method
-func (g *getFunc) Func(ctx context.Context) interface{} {
-	return func(what string, params ...map[string]interface{}) interface{} {
-		var p = make(map[interface{}]interface{})
-		if len(params) == 1 {
-			for k, v := range params[0] {
-				p[k] = fmt.Sprint(v)
-			}
-		}
-		return g.router.Data(ctx, what, p)
-	}
-}
-
-func (d *dataFunc) Inject(router urlRouter) *dataFunc {
-	d.router = router
-	return d
-}
-
-// TemplateFunc as implementation of get method
-func (d *dataFunc) Func(ctx context.Context) interface{} {
-	return func(what string, params ...map[string]interface{}) interface{} {
-		var p = make(map[interface{}]interface{})
-		if len(params) == 1 {
-			for k, v := range params[0] {
-				p[k] = fmt.Sprint(v)
-			}
-		}
-		return d.router.Data(ctx, what, p)
-	}
-}
-
-func (u *urlFunc) Inject(router urlRouter) *urlFunc {
-	u.router = router
-	return u
-}
-
-// TemplateFunc as implementation of url method
-func (u *urlFunc) Func(context.Context) interface{} {
-	return func(where string, params ...map[string]interface{}) template.URL {
-		var p = make(map[string]string)
-		if len(params) == 1 {
-			for k, v := range params[0] {
-				p[k] = fmt.Sprint(v)
-			}
-		}
-		url, _ := u.router.Relative(where, p)
-		return template.URL(url.String())
-	}
 }

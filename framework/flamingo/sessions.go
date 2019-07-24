@@ -1,6 +1,7 @@
 package flamingo
 
 import (
+	"net/url"
 	"os"
 
 	"flamingo.me/dingo"
@@ -37,6 +38,7 @@ func (m *SessionModule) Inject(config *struct {
 	StoreLength          float64 `inject:"config:session.store.length"`
 	MaxAge               float64 `inject:"config:session.max.age"`
 	Path                 string  `inject:"config:session.cookie.path"`
+	RedisURL             string  `inject:"config:session.redis.url"`
 	RedisHost            string  `inject:"config:session.redis.host"`
 	RedisPassword        string  `inject:"config:session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:session.redis.idle.connections"`
@@ -49,6 +51,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
+	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
 	m.redisHost = config.RedisHost
 	m.redisPassword = config.RedisPassword
 	m.redisIdleConnections = int(config.RedisIdleConnections)
@@ -107,9 +110,29 @@ func (m *SessionModule) DefaultConfig() config.Map {
 		"session.max.age":                60 * 60 * 24 * 30,
 		"session.cookie.secure":          true,
 		"session.cookie.path":            "/",
+		"session.redis.url":              "",
 		"session.redis.host":             "redis",
 		"session.redis.password":         "",
 		"session.redis.idle.connections": 10,
 		"session.redis.maxAge":           60 * 60 * 24 * 30,
 	}
+}
+
+func getRedisConnectionInformation(redisURL, redisHost, redisPassword string) (string, string) {
+	if redisURL != "" {
+		parsedRedisURL, err := url.Parse(redisURL)
+		if err != nil {
+			return redisHost, redisPassword
+		}
+		redisHostFromURL := parsedRedisURL.Hostname()
+		if redisHostFromURL != "" {
+			redisHost = redisHostFromURL
+		}
+		redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+		if isRedisPasswordInURL {
+			redisPassword = redisPasswordFromURL
+		}
+	}
+
+	return redisHost, redisPassword
 }

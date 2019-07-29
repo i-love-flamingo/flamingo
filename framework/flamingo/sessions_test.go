@@ -16,13 +16,20 @@ type testData struct {
 }
 
 func TestGetRedisConnectionInformation(t *testing.T) {
-	redisURLHost := "redis-url-host"
-	redisURLPassword := "redis-pw"
-	redisURL := fmt.Sprintf("redis://redis-user:%s@%s:68043/0", redisURLPassword, redisURLHost)
+	redisURLHost := "redis-url-host:68043"
+	redisURLUser := "redis-url-user"
+	redisURLPassword := "redis-url-pw"
+	redisURL := fmt.Sprintf("redis://%s:%s@%s/0", redisURLUser, redisURLPassword, redisURLHost)
+	redisURLWithoutUser := fmt.Sprintf("redis://:%s@%s/0", redisURLPassword, redisURLHost)
 	redisHost := "redis-host"
 	redisPassword := "pw1234"
 
 	testSet := map[string]testData{
+		"url only without user": {
+			redisURL:              redisURLWithoutUser,
+			expectedRedisHost:     redisURLHost,
+			expectedRedisPassword: redisURLPassword,
+		},
 		"url only": {
 			redisURL:              redisURL,
 			expectedRedisHost:     redisURLHost,

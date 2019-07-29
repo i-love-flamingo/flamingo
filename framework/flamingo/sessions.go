@@ -52,8 +52,6 @@ func (m *SessionModule) Inject(config *struct {
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
 	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
-	m.redisHost = config.RedisHost
-	m.redisPassword = config.RedisPassword
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
 }
@@ -124,7 +122,7 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword string) (s
 		if err != nil {
 			return redisHost, redisPassword
 		}
-		redisHostFromURL := parsedRedisURL.Hostname()
+		redisHostFromURL := parsedRedisURL.Host
 		if redisHostFromURL != "" {
 			redisHost = redisHostFromURL
 		}

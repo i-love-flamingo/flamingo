@@ -20,8 +20,16 @@ func TestFrontRouter(t *testing.T) {
 		w.Write([]byte("Prefix 2"))
 	})})
 
+	fr.Add("/prefix22", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Prefix 22"))
+	})})
+
 	fr.Add("test.com/prefix1", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Host1, Prefix 1"))
+	})})
+
+	fr.Add("test.com/prefix11", routerHandler{handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Host1, Prefix 11"))
 	})})
 
 	fr.SetFinalFallbackHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +49,19 @@ func TestFrontRouter(t *testing.T) {
 			assert.Equal(t, []byte(`Host1, Prefix 1`), body)
 		})
 
-		t.Run("Should Match Host before Prefix", func(t *testing.T) {
+		t.Run("Should Match Host before Prefix and longer prefix first", func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest("GET", "/prefix11/test", nil)
+			request.Host = "test.com"
+
+			fr.ServeHTTP(recorder, request)
+
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, []byte(`Host1, Prefix 11`), body)
+		})
+
+		t.Run("Should Match Prefix without Host", func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			request := httptest.NewRequest("GET", "/prefix1/test", nil)
 			fr.ServeHTTP(recorder, request)
@@ -69,6 +89,16 @@ func TestFrontRouter(t *testing.T) {
 			body, err := ioutil.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(`Prefix 2`))
+		})
+
+		t.Run("Should Match longer Prefix first", func(t *testing.T) {
+			recorder := httptest.NewRecorder()
+			request := httptest.NewRequest("GET", "/prefix22/test", nil)
+			fr.ServeHTTP(recorder, request)
+
+			body, err := ioutil.ReadAll(recorder.Result().Body)
+			assert.NoError(t, err)
+			assert.Equal(t, body, []byte(`Prefix 22`))
 		})
 
 		t.Run("Should have a default", func(t *testing.T) {

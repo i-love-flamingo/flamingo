@@ -10,6 +10,9 @@ env:
 install: true
 
 script:
+  - set -e
+  - fmt=$(gofmt -l -s .)
+  - test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
   - go get -u golang.org/x/lint/golint
   - golint -set_exit_status $(go list ./...)
   - go test -v -vet=all ./...

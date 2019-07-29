@@ -107,35 +107,48 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		host = strings.Split(host, ":")[0]
 	}
 
-	urlPath := req.RequestURI
-	urlPath = "/" + strings.TrimLeft(urlPath, "/")
+	path := req.RequestURI
+	path = "/" + strings.TrimLeft(path, "/")
 
-	for prefix, router := range fr.router {
-		if strings.HasPrefix(host+urlPath, prefix) {
-			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
-			req = req.WithContext(r)
-
-			req.URL, _ = url.Parse(urlPath[len(prefix)-len(host):])
-			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
-
-			span.End()
-			router.handler.ServeHTTP(w, req)
-			return
+	var matchedPrefixes []string
+	for prefix := range fr.router {
+		if strings.HasPrefix(host+path, prefix) {
+			matchedPrefixes = append(matchedPrefixes, prefix)
 		}
 	}
+	if len(matchedPrefixes) > 0 {
+		prefix := longest(matchedPrefixes)
+		router := fr.router[prefix]
 
-	for prefix, router := range fr.router {
-		if strings.HasPrefix(urlPath, prefix) {
-			r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
-			req = req.WithContext(r)
+		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
+		req = req.WithContext(r)
 
-			req.URL, _ = url.Parse(urlPath[len(prefix):])
-			req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+		req.URL, _ = url.Parse(path[len(prefix)-len(host):])
+		req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
 
-			span.End()
-			router.handler.ServeHTTP(w, req)
-			return
+		span.End()
+		router.handler.ServeHTTP(w, req)
+		return
+	}
+
+	matchedPrefixes = nil
+	for prefix := range fr.router {
+		if strings.HasPrefix(path, prefix) {
+			matchedPrefixes = append(matchedPrefixes, prefix)
 		}
+	}
+	if len(matchedPrefixes) > 0 {
+		prefix := longest(matchedPrefixes)
+		router := fr.router[prefix]
+		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
+		req = req.WithContext(r)
+
+		req.URL, _ = url.Parse(path[len(prefix):])
+		req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
+
+		span.End()
+		router.handler.ServeHTTP(w, req)
+		return
 	}
 
 	// process registered fallbackHandlers - and if they are sucessfull exist
@@ -153,4 +166,18 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	} else {
 		w.WriteHeader(404)
 	}
+}
+
+func longest(strings []string) string {
+	var best string
+	var length int
+
+	for _, s := range strings {
+		if len(s) > length {
+			best = s
+			length = len(s)
+		}
+	}
+
+	return best
 }

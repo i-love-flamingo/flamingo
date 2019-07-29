@@ -5,7 +5,7 @@ import (
 )
 
 // PermissionVoter votes on specific permission
-type PermissionVoter struct {}
+type PermissionVoter struct{}
 
 // Vote for permission
 func (v *PermissionVoter) Vote(allAssignedPermissions []string, desiredPermission string, forObject interface{}) AccessDecision {

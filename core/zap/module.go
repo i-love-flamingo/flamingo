@@ -129,8 +129,8 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 
 	zapLogger := &Logger{
-		Logger:   logger,
-		fieldMap: m.fieldMap,
+		Logger:     logger,
+		fieldMap:   m.fieldMap,
 		logSession: m.logSession,
 	}
 
@@ -158,9 +158,9 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 // DefaultConfig for zap log level
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"zap.loglevel": "Debug",
-		"zap.sampling.enabled": true,
-		"zap.sampling.initial": 100,
+		"zap.loglevel":            "Debug",
+		"zap.sampling.enabled":    true,
+		"zap.sampling.initial":    100,
 		"zap.sampling.thereafter": 100,
 	}
 }

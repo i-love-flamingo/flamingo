@@ -5,7 +5,7 @@ import (
 )
 
 // IsLoggedInVoter votes for users who have authenticated
-type IsLoggedInVoter struct {}
+type IsLoggedInVoter struct{}
 
 // Vote for the authentication request
 func (v *IsLoggedInVoter) Vote(allAssignedPermissions []string, desiredPermission string, _ interface{}) AccessDecision {

@@ -87,7 +87,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
-	DebugMode         	bool `inject:"config:debug.mode"`
+	DebugMode           bool         `inject:"config:debug.mode"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -114,7 +114,6 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	}
 }
 
-
 // Auth tries to retrieve the authentication context for a active session - this is used to pass Authentication to services
 //	- if the stored token for the Auth is not valid anymore it will refresh the token before
 func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Auth, error) {
@@ -125,7 +124,7 @@ func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Aut
 		return domain.Auth{}, err
 	}
 	if !currentToken.Valid() {
-		err := am.refreshTokenAndUpdateStore(c,session)
+		err := am.refreshTokenAndUpdateStore(c, session)
 		if err != nil {
 			am.logger.WithContext(c).Error(err)
 			return domain.Auth{}, err
@@ -269,9 +268,8 @@ func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oid
 
 }
 
-
 // refreshTokenAndUpdateStore
-func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *web.Session) (error) {
+func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *web.Session) error {
 	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
@@ -283,13 +281,12 @@ func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *we
 		return errors.WithStack(err)
 	}
 
-	err = am.StoreTokenDetails(c,session,token)
+	err = am.StoreTokenDetails(c, session, token)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 	return nil
 }
-
 
 func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
 	var claimSet *oauth2.ClaimSet
@@ -322,7 +319,7 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 
 // AccessToken - used to get access token
 func (am *AuthManager) AccessToken(ctx context.Context, session *web.Session) (string, error) {
-	auth, err := am.Auth(ctx,session)
+	auth, err := am.Auth(ctx, session)
 	if err != nil {
 		return "", err
 	}
@@ -365,7 +362,7 @@ func (am *AuthManager) HTTPClient(c context.Context, session *web.Session) (*htt
 }
 
 // StoreTokenDetails stores all token related data into session
-func (am *AuthManager) StoreTokenDetails(ctx context.Context,session *web.Session, oauth2Token *oauth2.Token) error {
+func (am *AuthManager) StoreTokenDetails(ctx context.Context, session *web.Session, oauth2Token *oauth2.Token) error {
 	if oauth2Token == nil {
 		err := errors.New("StoreTokenDetails got no token")
 		am.logger.WithContext(ctx).Error(err)

@@ -11,8 +11,8 @@ import (
 
 // Session holds the data connected to the current user session
 type Session struct {
-	mu sync.RWMutex
-	s  *sessions.Session
+	mu       sync.RWMutex
+	s        *sessions.Session
 	hashedid string
 }
 
@@ -101,7 +101,6 @@ func (s *Session) ClearAll() *Session {
 	return s
 }
 
-
 // Flashes returns a slice of flash messages from the session
 // todo change?
 func (s *Session) Flashes(vars ...string) []interface{} {
@@ -120,8 +119,6 @@ func (s *Session) AddFlash(value interface{}, vars ...string) {
 	s.s.AddFlash(value, vars...)
 }
 
-
-
 // IDHash - returns the Hashed session id - useful for logs
 func (s *Session) IDHash() string {
 	if s.hashedid != "" {
@@ -137,5 +134,5 @@ func (s *Session) IDHash() string {
 func hashID(id string) string {
 	h := sha256.New()
 	h.Write([]byte(id))
-	return fmt.Sprintf("%x",h.Sum(nil))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

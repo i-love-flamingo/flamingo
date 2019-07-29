@@ -21,16 +21,16 @@ type (
 	}
 
 	// StartupEvent is dispatched when the application starts
-	StartupEvent        struct{}
+	StartupEvent struct{}
 
 	// ServerStartEvent is dispatched when a server is started (not for CLI commands)
-	ServerStartEvent    struct{}
+	ServerStartEvent struct{}
 
 	// ServerShutdownEvent is dispatched when a server is stopped (not for CLI commands)
 	ServerShutdownEvent struct{}
 
 	// ShutdownEvent is  dispatched when the application shuts down
-	ShutdownEvent       struct{}
+	ShutdownEvent struct{}
 
 	eventSubscriberProvider func() []eventSubscriber
 

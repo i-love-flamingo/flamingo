@@ -14,8 +14,8 @@ type (
 	PermissionVoterTestSuite struct {
 		suite.Suite
 
-		voter       *PermissionVoter
-		object      *domainMocks.PermissionSet
+		voter  *PermissionVoter
+		object *domainMocks.PermissionSet
 
 		context    context.Context
 		webSession *web.Session

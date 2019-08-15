@@ -40,6 +40,12 @@ func (c *CallbackController) Get(_ context.Context, request *web.Request) web.Re
 	if user == nil {
 		user = domain.Guest
 	}
+
+	group, err := request.Query1("group")
+	if err == nil {
+		user.Groups = append(user.Groups, group)
+	}
+
 	request.Session().Store(fake.UserSessionKey, user)
 
 	value, _ := request.Session().Load("auth.redirect")

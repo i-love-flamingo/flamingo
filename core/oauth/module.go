@@ -76,6 +76,7 @@ type routes struct {
 	logout   interfaces.LogoutControllerInterface
 	callback interfaces.CallbackControllerInterface
 	user     *interfaces.UserController
+	UseFake  bool `inject:"config:oauth.useFake"`
 }
 
 // Inject routes dependencies
@@ -84,18 +85,24 @@ func (r *routes) Inject(
 	logout interfaces.LogoutControllerInterface,
 	callback interfaces.CallbackControllerInterface,
 	user *interfaces.UserController,
+	fake *bool,
 ) {
 	r.login = login
 	r.logout = logout
 	r.callback = callback
 	r.user = user
+	r.UseFake = *fake
 }
 
 // Routes module
 func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.Route("/auth/login", `auth.login(redirecturl?="")`)
 	registry.HandleGet("auth.login", r.login.Get)
-	registry.Route("/auth/callback", "auth.callback")
+	if r.UseFake {
+		registry.Route("/auth/callback", `auth.callback(group?="")`)
+	} else {
+		registry.Route("/auth/callback", `auth.callback`)
+	}
 	registry.HandleGet("auth.callback", r.callback.Get)
 	registry.Route("/auth/logout", "auth.logout")
 	registry.HandleGet("auth.logout", r.logout.Get)

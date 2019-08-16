@@ -156,5 +156,4 @@ func recordResponseStatus(ctx context.Context, status int) {
 		tag.Update(domain.KeyArea, "root"),
 	)
 	stats.Record(c, domain.ResponseHTTPStatusCount.M(1))
-
 }

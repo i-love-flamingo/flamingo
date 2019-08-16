@@ -4,10 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/web"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
+
+	"flamingo.me/flamingo/v3/core/zap/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -75,6 +79,13 @@ func (l *Logger) Warn(args ...interface{}) {
 // Error logs a message at error level
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
+	go func() {
+		ctx, _ := tag.New(
+			context.Background(),
+			tag.Update(domain.KeyArea, "root"),
+		)
+		stats.Record(ctx, domain.ErrorCount.M(1))
+	}()
 }
 
 // Fatal logs a message at fatal level

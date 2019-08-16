@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 
+	"go.opencensus.io/stats"
+
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -58,18 +60,21 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	errCode := request.Request().URL.Query().Get("error")
 
 	if code == "" && errCode == "" {
+		recordLoginFailure(ctx)
 		err := errors.New("missing both code and error get parameter")
 		cc.logger.Error("core.auth.callback Missing parameter", err)
 		return cc.responder.ServerError(errors.WithStack(err))
 	} else if code != "" {
 		oauth2Token, err := cc.authManager.OAuth2Config(ctx, request).Exchange(cc.authManager.OAuthCtx(ctx), code)
 		if err != nil {
+			recordLoginFailure(ctx)
 			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
 
 		err = cc.authManager.StoreTokenDetails(ctx, request.Session(), oauth2Token)
 		if err != nil {
+			recordLoginFailure(ctx)
 			cc.logger.Error("core.auth.callback Error", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
@@ -78,6 +83,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		cc.logger.Debugf("Token expiry %v", oauth2Token.Expiry)
 		request.Session().AddFlash("successful logged in")
 	} else if errCode != "" {
+		recordLoginFailure(ctx)
 		cc.logger.Error("core.auth.callback Error parameter", errCode)
 	}
 
@@ -86,5 +92,10 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		redirectURL, _ := url.Parse(redirect.(string))
 		return cc.responder.URLRedirect(redirectURL)
 	}
+
 	return cc.responder.RouteRedirect("home", nil)
+}
+
+func recordLoginFailure(ctx context.Context) {
+	stats.Record(ctx, domain.LoginFailCount.M(1))
 }

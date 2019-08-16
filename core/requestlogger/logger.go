@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"flamingo.me/flamingo/v3/core/requestlogger/domain"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
+
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/labstack/gommon/color"
@@ -74,6 +78,8 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	return &loggedResponse{
 		result: webResponse,
 		logCallback: func(rwl *responseWriterLogger) {
+			go recordResponseStatus(ctx, rwl.statusCode)
+
 			var cp func(msg interface{}, styles ...string) string
 			switch {
 			case rwl.statusCode >= 200 && rwl.statusCode < 300:
@@ -141,4 +147,14 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 			)
 		},
 	}
+}
+
+func recordResponseStatus(ctx context.Context, status int) {
+	c, _ := tag.New(
+		ctx,
+		tag.Insert(domain.KeyHTTPStatus, strconv.Itoa(status)),
+		tag.Update(domain.KeyArea, "root"),
+	)
+	stats.Record(c, domain.ResponseHTTPStatusCount.M(1))
+
 }

@@ -67,6 +67,11 @@ func (m *Module) DefaultConfig() config.Map {
 				},
 			},
 			"preventSimultaneousSessions": false,
+			"metrics": config.Map{
+				"failedLoginCountTracking": config.Map{
+					"enabled": false,
+				},
+			},
 		},
 	}
 }

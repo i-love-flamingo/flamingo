@@ -22,11 +22,12 @@ type (
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
-		responder      *web.Responder
-		authManager    *application.AuthManager
-		logger         flamingo.Logger
-		eventPublisher *application.EventPublisher
-		userService    application.UserServiceInterface
+		responder        *web.Responder
+		authManager      *application.AuthManager
+		logger           flamingo.Logger
+		eventPublisher   *application.EventPublisher
+		userService      application.UserServiceInterface
+		trackFailedLogin bool
 	}
 )
 
@@ -37,6 +38,9 @@ func (cc *CallbackController) Inject(
 	logger flamingo.Logger,
 	eventPublisher *application.EventPublisher,
 	userService application.UserServiceInterface,
+	cfg *struct {
+		TrackFailedLogin bool `inject:"config:oauth.metrics.failedLoginCountTracking.enabled"`
+	},
 ) {
 	cc.responder = responder
 	cc.authManager = authManager
@@ -44,6 +48,10 @@ func (cc *CallbackController) Inject(
 	cc.eventPublisher = eventPublisher
 
 	cc.userService = userService
+
+	if cfg != nil {
+		cc.trackFailedLogin = cfg.TrackFailedLogin
+	}
 }
 
 // Get handler for callbacks
@@ -61,21 +69,21 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	errCode := request.Request().URL.Query().Get("error")
 
 	if code == "" && errCode == "" {
-		go stats.Record(ctx, domain.LoginFailCount.M(1))
+		go cc.recordFailedLogin(ctx)
 		err := errors.New("missing both code and error get parameter")
 		cc.logger.WithContext(ctx).Error("core.auth.callback Missing parameter", err)
 		return cc.responder.ServerError(errors.WithStack(err))
 	} else if code != "" {
 		oauth2Token, err := cc.authManager.OAuth2Config(ctx, request).Exchange(cc.authManager.OAuthCtx(ctx), code)
 		if err != nil {
-			go stats.Record(ctx, domain.LoginFailCount.M(1))
+			go cc.recordFailedLogin(ctx)
 			cc.logger.WithContext(ctx).Error("core.auth.callback Error OAuth2Config Exchange", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
 
 		err = cc.authManager.StoreTokenDetails(ctx, request.Session(), oauth2Token)
 		if err != nil {
-			go stats.Record(ctx, domain.LoginFailCount.M(1))
+			go cc.recordFailedLogin(ctx)
 			cc.logger.WithContext(ctx).Error("core.auth.callback Error", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
@@ -85,7 +93,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		cc.logger.Debugf("Token expiry %v", oauth2Token.Expiry)
 		request.Session().AddFlash("successful logged in")
 	} else if errCode != "" {
-		go stats.Record(ctx, domain.LoginFailCount.M(1))
+		go cc.recordFailedLogin(ctx)
 		cc.logger.WithContext(ctx).Error("core.auth.callback Error parameter", errCode)
 	}
 
@@ -96,4 +104,10 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	}
 
 	return cc.responder.RouteRedirect("home", nil)
+}
+
+func (cc *CallbackController) recordFailedLogin(ctx context.Context) {
+	if cc.trackFailedLogin {
+		stats.Record(ctx, domain.LoginFailCount.M(1))
+	}
 }

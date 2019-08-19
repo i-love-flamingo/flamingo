@@ -19,8 +19,9 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
-		fieldMap   map[string]string
-		logSession bool
+		fieldMap        map[string]string
+		logSession      bool
+		trackErrorCount bool
 	}
 )
 
@@ -79,6 +80,11 @@ func (l *Logger) Warn(args ...interface{}) {
 // Error logs a message at error level
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
+
+	if !l.trackErrorCount {
+		return
+	}
+
 	go func() {
 		ctx, _ := tag.New(
 			context.Background(),

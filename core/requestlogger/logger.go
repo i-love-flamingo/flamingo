@@ -19,8 +19,9 @@ import (
 
 type (
 	logger struct {
-		logger    flamingo.Logger
-		responder *web.Responder
+		logger             flamingo.Logger
+		responder          *web.Responder
+		trackResponseCount bool
 	}
 
 	loggedResponse struct {
@@ -64,9 +65,21 @@ func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) erro
 	return err
 }
 
-func (r *logger) Inject(flogger flamingo.Logger, responder *web.Responder) {
+// Inject performs dependency injection
+func (r *logger) Inject(
+	flogger flamingo.Logger,
+	responder *web.Responder,
+	cfg *struct {
+		TrackResponseCount bool `inject:"config:requestlogger.metrics.responseCountTracking.enabled"`
+	}) *logger {
 	r.logger = flogger
 	r.responder = responder
+
+	if cfg != nil {
+		r.trackResponseCount = cfg.TrackResponseCount
+	}
+
+	return r
 }
 
 // Filter a web request
@@ -78,7 +91,9 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	return &loggedResponse{
 		result: webResponse,
 		logCallback: func(rwl *responseWriterLogger) {
-			go recordResponseStatus(ctx, rwl.statusCode)
+			if r.trackResponseCount {
+				go recordResponseStatus(ctx, rwl.statusCode)
+			}
 
 			var cp func(msg interface{}, styles ...string) string
 			switch {
@@ -155,5 +170,5 @@ func recordResponseStatus(ctx context.Context, status int) {
 		tag.Insert(domain.KeyHTTPStatus, strconv.Itoa(status)),
 		tag.Update(domain.KeyArea, "root"),
 	)
-	stats.Record(c, domain.ResponseHTTPStatusCount.M(1))
+	stats.Record(c, domain.HTTPResponseCount.M(1))
 }

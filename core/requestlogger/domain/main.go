@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	// ResponseHTTPStatusCount counts different HTTP response type
-	ResponseHTTPStatusCount = stats.Int64("flamingo/requestlogger_response_http_status_count", "Count of specific (http) response type", stats.UnitDimensionless)
+	// HTTPResponseCount counts different HTTP responses
+	HTTPResponseCount = stats.Int64("flamingo/requestlogger_http_response_count", "Count of http responses by status code", stats.UnitDimensionless)
 
 	// KeyHTTPStatus defines response http status code
-	KeyHTTPStatus, _ = tag.NewKey("http-status")
+	KeyHTTPStatus, _ = tag.NewKey("status_code")
 
 	// KeyArea identifies the current application area
 	KeyArea, _ = tag.NewKey("area")
 )
 
 func init() {
-	if err := opencensus.View("flamingo/requestlogger_response_http_status_count", ResponseHTTPStatusCount, view.Count(), KeyHTTPStatus); err != nil {
+	if err := opencensus.View("flamingo/requestlogger_http_response_count", HTTPResponseCount, view.Count(), KeyHTTPStatus); err != nil {
 		panic(fmt.Sprintf("failed to register opencensus view: %s", err))
 	}
 }

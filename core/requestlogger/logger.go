@@ -91,9 +91,7 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	return &loggedResponse{
 		result: webResponse,
 		logCallback: func(rwl *responseWriterLogger) {
-			if r.trackResponseCount {
-				go recordResponseStatus(ctx, rwl.statusCode)
-			}
+			go r.recordResponseStatus(ctx, rwl.statusCode)
 
 			var cp func(msg interface{}, styles ...string) string
 			switch {
@@ -164,11 +162,13 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	}
 }
 
-func recordResponseStatus(ctx context.Context, status int) {
-	c, _ := tag.New(
-		ctx,
-		tag.Insert(domain.KeyHTTPStatus, strconv.Itoa(status)),
-		tag.Update(domain.KeyArea, "root"),
-	)
-	stats.Record(c, domain.HTTPResponseCount.M(1))
+func (r *logger) recordResponseStatus(ctx context.Context, status int) {
+	if r.trackResponseCount {
+		c, _ := tag.New(
+			ctx,
+			tag.Insert(domain.KeyHTTPStatus, strconv.Itoa(status)),
+			tag.Update(domain.KeyArea, "root"),
+		)
+		stats.Record(c, domain.HTTPResponseCount.M(1))
+	}
 }

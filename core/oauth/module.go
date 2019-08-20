@@ -4,19 +4,41 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	fakeService "flamingo.me/flamingo/v3/core/oauth/application/fake"
+	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/core/oauth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
+	"fmt"
+	"go.opencensus.io/stats/view"
 )
 
 // Module for core.auth
 type Module struct {
+	useFake                     bool
+	preventSimultaneousSessions bool
+	sessionBackend              string
+	trackLoginResult            bool
+}
+
+// Inject module dependencies
+func (m *Module) Inject(cfg *struct {
 	UseFake                     bool   `inject:"config:oauth.useFake"`
 	PreventSimultaneousSessions bool   `inject:"config:oauth.preventSimultaneousSessions"`
 	SessionBackend              string `inject:"config:session.backend"`
+	TrackLoginResult            bool   `inject:"config:oauth.metrics.loginResultCountTracking.enabled"`
+}) *Module {
+	if cfg != nil {
+		m.useFake = cfg.UseFake
+		m.preventSimultaneousSessions = cfg.PreventSimultaneousSessions
+		m.sessionBackend = cfg.SessionBackend
+		m.trackLoginResult = cfg.TrackLoginResult
+	}
+
+	return m
 }
 
 // Configure core.auth module
@@ -24,7 +46,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 	injector.Bind(new(interfaces.LogoutRedirectAware)).To(interfaces.DefaultLogoutRedirect{})
 	flamingo.BindEventSubscriber(injector).To(&application.EventHandler{})
-	if !m.UseFake {
+	if !m.useFake {
 		injector.Bind(new(application.UserServiceInterface)).To(application.UserService{})
 		injector.Bind(new(interfaces.LoginControllerInterface)).To(interfaces.LoginController{})
 		injector.Bind(new(interfaces.CallbackControllerInterface)).To(interfaces.CallbackController{})
@@ -39,6 +61,15 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(role.Provider)).To(application.AuthRoleProvider{})
 
 	web.BindRoutes(injector, new(routes))
+
+	if m.trackLoginResult {
+		if err := opencensus.View("flamingo/oauth_login_failed_count", domain.LoginFailedCount, view.Count()); err != nil {
+			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
+		}
+		if err := opencensus.View("flamingo/oauth_login_succeeded_count", domain.LoginFailedCount, view.Count()); err != nil {
+			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
+		}
+	}
 }
 
 // DefaultConfig for auth module
@@ -68,7 +99,7 @@ func (m *Module) DefaultConfig() config.Map {
 			},
 			"preventSimultaneousSessions": false,
 			"metrics": config.Map{
-				"failedLoginCountTracking": config.Map{
+				"loginResultCountTracking": config.Map{
 					"enabled": false,
 				},
 			},

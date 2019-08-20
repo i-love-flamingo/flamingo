@@ -2,6 +2,10 @@ package zap
 
 import (
 	"context"
+	"flamingo.me/flamingo/v3/core/zap/domain"
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"fmt"
+	"go.opencensus.io/stats/view"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -142,6 +146,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
 	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
+
+	if m.trackErrorCount {
+		if err := opencensus.View("flamingo/error_count", domain.ErrorCount, view.Count()); err != nil {
+			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
+		}
+	}
 }
 
 // Inject dependencies

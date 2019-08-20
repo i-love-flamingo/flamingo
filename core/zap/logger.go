@@ -81,17 +81,15 @@ func (l *Logger) Warn(args ...interface{}) {
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
 
-	if !l.trackErrorCount {
-		return
+	if l.trackErrorCount {
+		go func() {
+			ctx, _ := tag.New(
+				context.Background(),
+				tag.Update(domain.KeyArea, "root"),
+			)
+			stats.Record(ctx, domain.ErrorCount.M(1))
+		}()
 	}
-
-	go func() {
-		ctx, _ := tag.New(
-			context.Background(),
-			tag.Update(domain.KeyArea, "root"),
-		)
-		stats.Record(ctx, domain.ErrorCount.M(1))
-	}()
 }
 
 // Fatal logs a message at fatal level

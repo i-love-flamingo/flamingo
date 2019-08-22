@@ -2,9 +2,9 @@
 
 # Builder
 FROM golang:alpine AS builder
-RUN apk update && apk add --no-cache ca-certificates tzdata && update-ca-certificates
-COPY . .
-RUN go build -o app .
+RUN apk update && apk add --no-cache ca-certificates tzdata git && update-ca-certificates
+COPY . /app
+RUN cd /app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app .
 
 # Final image
 FROM scratch
@@ -14,11 +14,10 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # add artifacts
-ADD config /config
+#ADD config /config
 
 # add binary
-ADD app /app
+COPY --from=builder /app/app /app
 
 ENTRYPOINT ["/app"]
 CMD ["serve"]
-

@@ -1,18 +1,8 @@
 .DS_Store
 .cache
 .idea
-.gradle
-.sass-cache
 .temp
-dist
-node_modules
-npm-debug.log
-yarn-error.log
-src/sass/.includes
 coverage
-junit.xml
-/vendor
-/integration-test/shared
 context_local.yml
 
 docs/docs/3. Core Packages

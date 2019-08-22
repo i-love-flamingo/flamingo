@@ -15,6 +15,66 @@ It's architecture is especially useful to build "frontends" for your headless mi
 Go as simple, powerful and typesafe language is great to implement and scale serverside logic.
 Flamingo has a clean architecture and uses "Domain Driven Design" and "Ports and Adapters" Layering - with clean and clear dependencies in mind.
 
+# Getting Started / Hello World
+
+Initialize your Project
+
+```bash
+mkdir helloworld
+cd helloworld
+go mod init helloworld
+```
+
+Create `main.go`:
+```go
+package main
+
+import (
+	"context"
+	"net/http"
+	"strings"
+
+	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3"
+	"flamingo.me/flamingo/v3/core/requestlogger"
+	"flamingo.me/flamingo/v3/framework/web"
+)
+
+func main() {
+	flamingo.App([]dingo.Module{
+		new(requestlogger.Module),
+		new(module),
+	})
+}
+
+type module struct{}
+
+func (*module) Configure(injector *dingo.Injector) {
+	web.BindRoutes(injector, new(routes))
+}
+
+type routes struct{}
+
+func (*routes) Routes(registry *web.RouterRegistry) {
+	registry.Route("/", "home")
+	registry.HandleAny("home", indexHandler)
+}
+
+func indexHandler(ctx context.Context, req *web.Request) web.Result {
+	return &web.Response{
+		Status: http.StatusOK,
+		Body:   strings.NewReader("Hello World!"),
+	}
+}
+```
+
+Start server
+```bash
+go run main.go serve
+``` 
+
+Open http://localhost:3322
+
 # The Flamingo Ecosystem 
 With "Flamingo Commerce" and "Flamingo Carotene" you get your toolkit for building **Blazing fast commerce experience layers**
 

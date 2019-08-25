@@ -34,15 +34,17 @@ func (m *Module) DefaultConfig() config.Map {
 		"locale": config.Map{
 			"locale": "en-US",
 			"accounting": config.Map{
-				"decimal":    ",",
-				"thousand":   ".",
-				"formatZero": "%s -,-",
-				"format":     "%s %v",
-				"formatLong": "%v %v",
+				"default": config.Map{
+					"decimal":    ".",
+					"thousand":   ",",
+					"formatZero": "%s 0.00",
+					"format":     "%s %v",
+					"formatLong": "%v %v",
+				},
 			},
 			"numbers": config.Map{
-				"decimal":   ",",
-				"thousand":  ".",
+				"decimal":   ".",
+				"thousand":  ",",
 				"precision": float64(2),
 			},
 			"date": config.Map{

@@ -52,10 +52,14 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			priceFormatFunc := &templatefunctions.PriceFormatFunc{}
-			priceFormatFunc.Inject(tt.fields.labelService, &struct {
+
+			priceService := application.PriceService{}
+			priceService.Inject(tt.fields.labelService, &struct {
 				Config config.Map `inject:"config:locale.accounting"`
 			}{tt.fields.config})
+
+			priceFormatFunc := &templatefunctions.PriceFormatFunc{}
+			priceFormatFunc.Inject(&priceService)
 
 			priceFormatLongFunc := &templatefunctions.PriceFormatLongFunc{}
 			priceFormatLongFunc.Inject(tt.fields.labelService, priceFormatFunc, &struct {

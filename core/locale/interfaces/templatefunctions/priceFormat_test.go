@@ -86,9 +86,11 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			nff := &templatefunctions.PriceFormatFunc{}
-			nff.Inject(tt.fields.labelService, &struct {
+			priceService := application.PriceService{}
+			priceService.Inject(tt.fields.labelService, &struct {
 				Config config.Map `inject:"config:locale.accounting"`
 			}{tt.fields.config})
+			nff.Inject(&priceService)
 
 			templateFunc := nff.Func(context.Background()).(func(value float64, currency string) string)
 

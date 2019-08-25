@@ -17,11 +17,17 @@ locale:
   translationFiles:                                # or a list of label file locations
   - translations/merged/en-gb.all.yaml
   - translations/translated/en-gb.adjusted.yaml
-  accounting:                                      # configure display of prices
-    thousand: ','
-    decimal: '.'
-    formatZero: '%s -.-'
-    format: "%v %s"
+  accounting:
+    default:                                    # configure display of prices
+        thousand: ','
+        decimal: '.'
+        formatZero: '%s -.-'
+        format: "%v %s"
+    GBP:                                        # configure display of prices in currency GBP
+        thousand: ','
+        decimal: '.'
+        formatZero: '%s -.-'
+        format: "%v %s"
   numbers:                                         # configure display of numbers
     thousand: ','
     decimal: '.'

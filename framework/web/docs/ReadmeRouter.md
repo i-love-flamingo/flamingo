@@ -142,6 +142,7 @@ Currently Flamingo registers the following controllers:
 * `flamingo.redirectUrl(url)` Redirects to `url` 
 * `flamingo.redirectPermanent(to, ...)` Redirects permanently to `to`. All other parameters (but `to`) are passed on as URL parameters 
 * `flamingo.redirectPermanentUrl(url)` Redirects permanently to `url` 
+* `flamingo.static.file(name='...')` uses http.ServeFile to serve files and folders.
 
 ## Configured routes
 

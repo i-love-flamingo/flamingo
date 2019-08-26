@@ -305,6 +305,10 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 			continue
 		}
 		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+		if vf, ok := v.(float64); ok && vf == float64(int64(vf)) {
+			injector.Bind(new(int64)).AnnotatedWith("config:" + k).ToInstance(int64(vf))
+			injector.Bind(new(int)).AnnotatedWith("config:" + k).ToInstance(int(int64(vf)))
+		}
 	}
 
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {

@@ -49,7 +49,7 @@ func (r *responseWriterLogger) WriteHeader(statusCode int) {
 // Apply logger to request
 func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) error {
 	var err error
-	var rwl = &responseWriterLogger{rw: rw}
+	var rwl = &responseWriterLogger{rw: rw, statusCode: http.StatusOK}
 
 	defer l.logCallback(rwl)
 

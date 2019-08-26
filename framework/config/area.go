@@ -240,6 +240,29 @@ func (m Map) Get(key string) (interface{}, bool) {
 	return val, ok
 }
 
+// resolveDependencies tries to get a complete list of all modules, including all dependencies
+// known can be empty initially, and will then be used for subsequent recursive calls
+func resolveDependencies(modules []dingo.Module, known map[reflect.Type]struct{}) []dingo.Module {
+	final := make([]dingo.Module, 0, len(modules))
+
+	if known == nil {
+		known = make(map[reflect.Type]struct{})
+	}
+
+	for _, module := range modules {
+		if _, ok := known[reflect.TypeOf(module)]; ok {
+			continue
+		}
+		known[reflect.TypeOf(module)] = struct{}{}
+		if depender, ok := module.(dingo.Depender); ok {
+			final = append(final, resolveDependencies(depender.Depends(), known)...)
+		}
+		final = append(final, module)
+	}
+
+	return final
+}
+
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
 func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
@@ -250,6 +273,8 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		injector = dingo.NewInjector()
 	}
 	injector.Bind(Area{}).ToInstance(area)
+
+	area.Modules = resolveDependencies(area.Modules, nil)
 
 	area.Configuration = make(Map)
 	for _, module := range area.Modules {

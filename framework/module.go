@@ -31,6 +31,7 @@ type (
 		render          *controller.Render
 		redirect        *controller.Redirect
 		errorController *controller.Error
+		static          *controller.Static
 	}
 )
 
@@ -61,11 +62,13 @@ func (r *routes) Inject(
 	render *controller.Render,
 	redirect *controller.Redirect,
 	errorController *controller.Error,
+	staticController *controller.Static,
 ) {
 	r.flashController = flashController
 	r.render = render
 	r.redirect = redirect
 	r.errorController = errorController
+	r.static = staticController
 }
 
 func (r *routes) Routes(registry *web.RouterRegistry) {
@@ -77,6 +80,7 @@ func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleAny("flamingo.redirectUrl", r.redirect.RedirectURL)
 	registry.HandleAny("flamingo.redirectPermanent", r.redirect.RedirectPermanent)
 	registry.HandleAny("flamingo.redirectPermanentUrl", r.redirect.RedirectPermanentURL)
+	registry.HandleAny("flamingo.static.file", r.static.File)
 
 	registry.HandleAny(web.FlamingoError, r.errorController.Error)
 	registry.HandleAny(web.FlamingoNotfound, r.errorController.NotFound)

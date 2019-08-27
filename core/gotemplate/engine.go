@@ -210,6 +210,12 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 			continue
 		}
 		e.templates[templateName] = template.Must(parsedTemplate, err)
+		// operating systems like windows use \ instead of /, so `c.responder.Render("foo/bar", ...)` will not
+		// resolve the template properly, as it is known as `foo\bar`. this makes sure we register the template
+		// as `foo/bar` as well as `foo\bar`.
+		if pathSeparatorString != "/" {
+			e.templates[strings.Replace(templateName, pathSeparatorString, "/", -1)] = template.Must(parsedTemplate, err)
+		}
 	}
 
 	return nil

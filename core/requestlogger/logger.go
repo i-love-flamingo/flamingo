@@ -8,10 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/core/requestlogger/domain"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/tag"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/labstack/gommon/color"
@@ -19,9 +15,8 @@ import (
 
 type (
 	logger struct {
-		logger             flamingo.Logger
-		responder          *web.Responder
-		trackResponseCount bool
+		logger    flamingo.Logger
+		responder *web.Responder
 	}
 
 	loggedResponse struct {
@@ -65,21 +60,9 @@ func (l *loggedResponse) Apply(ctx context.Context, rw http.ResponseWriter) erro
 	return err
 }
 
-// Inject performs dependency injection
-func (r *logger) Inject(
-	flogger flamingo.Logger,
-	responder *web.Responder,
-	cfg *struct {
-		TrackResponseCount bool `inject:"config:requestlogger.metrics.responseCountTracking.enabled"`
-	}) *logger {
+func (r *logger) Inject(flogger flamingo.Logger, responder *web.Responder) {
 	r.logger = flogger
 	r.responder = responder
-
-	if cfg != nil {
-		r.trackResponseCount = cfg.TrackResponseCount
-	}
-
-	return r
 }
 
 // Filter a web request
@@ -91,8 +74,6 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	return &loggedResponse{
 		result: webResponse,
 		logCallback: func(rwl *responseWriterLogger) {
-			go r.recordResponseStatus(ctx, rwl.statusCode)
-
 			var cp func(msg interface{}, styles ...string) string
 			switch {
 			case rwl.statusCode >= 200 && rwl.statusCode < 300:
@@ -159,16 +140,5 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 				),
 			)
 		},
-	}
-}
-
-func (r *logger) recordResponseStatus(ctx context.Context, status int) {
-	if r.trackResponseCount {
-		c, _ := tag.New(
-			ctx,
-			tag.Insert(domain.KeyHTTPStatus, strconv.Itoa(status)),
-			tag.Update(domain.KeyArea, "root"),
-		)
-		stats.Record(c, domain.HTTPResponseCount.M(1))
 	}
 }

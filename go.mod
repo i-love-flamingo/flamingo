@@ -24,6 +24,7 @@ require (
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
+	github.com/prometheus/common v0.2.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3

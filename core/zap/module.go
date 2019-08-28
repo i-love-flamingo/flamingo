@@ -2,14 +2,14 @@ package zap
 
 import (
 	"context"
-	"flamingo.me/flamingo/v3/core/zap/domain"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"fmt"
-	"go.opencensus.io/stats/view"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/zap/application"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"go.opencensus.io/stats/view"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -25,7 +25,6 @@ type (
 		samplingEnabled    bool
 		samplingInitial    float64
 		samplingThereafter float64
-		trackErrorCount    bool
 		fieldMap           map[string]string
 		logSession         bool
 	}
@@ -57,7 +56,6 @@ func (m *Module) Inject(config *struct {
 	SamplingThereafter float64    `inject:"config:zap.sampling.thereafter,optional"`
 	FieldMap           config.Map `inject:"config:zap.fieldmap,optional"`
 	LogSession         bool       `inject:"config:zap.logsession,optional"`
-	TrackErrorCount    bool       `inject:"config:zap.metrics.errorCountTracking.enabled"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -67,7 +65,6 @@ func (m *Module) Inject(config *struct {
 	m.samplingEnabled = config.SamplingEnabled
 	m.samplingInitial = config.SamplingInitial
 	m.samplingThereafter = config.SamplingThereafter
-	m.trackErrorCount = config.TrackErrorCount
 	m.logSession = config.LogSession
 	if config.FieldMap != nil {
 		m.fieldMap = make(map[string]string, len(config.FieldMap))
@@ -139,7 +136,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		Logger:          logger,
 		fieldMap:        m.fieldMap,
 		logSession:      m.logSession,
-		trackErrorCount: m.trackErrorCount,
 	}
 
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)
@@ -147,11 +143,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
 	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
 
-	if m.trackErrorCount {
-		if err := opencensus.View("flamingo/error_count", domain.ErrorCount, view.Count()); err != nil {
+		if err := opencensus.View("flamingo/zap/errors", application.ErrorCount, view.Count()); err != nil {
 			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
 		}
-	}
 }
 
 // Inject dependencies
@@ -176,6 +170,5 @@ func (m *Module) DefaultConfig() config.Map {
 		"zap.sampling.enabled":                   true,
 		"zap.sampling.initial":                   100,
 		"zap.sampling.thereafter":                100,
-		"zap.metrics.errorCountTracking.enabled": false,
 	}
 }

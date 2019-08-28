@@ -2,6 +2,8 @@ package zap
 
 import (
 	"context"
+	"flamingo.me/flamingo/v3/core/zap/application"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 	"fmt"
 
 	"go.opencensus.io/stats"
@@ -9,7 +11,6 @@ import (
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 
-	"flamingo.me/flamingo/v3/core/zap/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"go.uber.org/zap/zapcore"
@@ -21,7 +22,6 @@ type (
 		*zap.Logger
 		fieldMap        map[string]string
 		logSession      bool
-		trackErrorCount bool
 	}
 )
 
@@ -81,15 +81,13 @@ func (l *Logger) Warn(args ...interface{}) {
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
 
-	if l.trackErrorCount {
-		go func() {
-			ctx, _ := tag.New(
-				context.Background(),
-				tag.Update(domain.KeyArea, "root"),
-			)
-			stats.Record(ctx, domain.ErrorCount.M(1))
-		}()
-	}
+	go func() {
+		ctx, _ := tag.New(
+			context.Background(),
+			tag.Update(opencensus.KeyArea, "root"),
+		)
+		stats.Record(ctx, application.ErrorCount.M(1))
+	}()
 }
 
 // Fatal logs a message at fatal level

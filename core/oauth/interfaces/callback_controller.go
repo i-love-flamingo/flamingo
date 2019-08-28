@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"net/url"
 
-	"go.opencensus.io/stats"
-
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/pkg/errors"
+	"go.opencensus.io/stats"
 )
 
 type (
@@ -27,7 +26,6 @@ type (
 		logger           flamingo.Logger
 		eventPublisher   *application.EventPublisher
 		userService      application.UserServiceInterface
-		trackLoginResult bool
 	}
 )
 
@@ -38,9 +36,6 @@ func (cc *CallbackController) Inject(
 	logger flamingo.Logger,
 	eventPublisher *application.EventPublisher,
 	userService application.UserServiceInterface,
-	cfg *struct {
-		TrackLoginResult bool `inject:"config:oauth.metrics.loginResultCountTracking.enabled"`
-	},
 ) {
 	cc.responder = responder
 	cc.authManager = authManager
@@ -48,10 +43,6 @@ func (cc *CallbackController) Inject(
 	cc.eventPublisher = eventPublisher
 
 	cc.userService = userService
-
-	if cfg != nil {
-		cc.trackLoginResult = cfg.TrackLoginResult
-	}
 }
 
 // Get handler for callbacks
@@ -60,7 +51,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	defer cc.authManager.DeleteAuthState(request.Session())
 
 	if state, ok := cc.authManager.LoadAuthState(request.Session()); !ok || state != request.Request().URL.Query().Get("state") {
-		go stats.Record(ctx, domain.LoginFailedCount.M(1))
+		go stats.Record(ctx, application.LoginFailedCount.M(1))
 		cc.logger.WithContext(ctx).Error(fmt.Sprintf("Invalid State - expected: %v  got: %v", state, request.Request().URL.Query().Get("state")))
 		return cc.responder.ServerError(errors.New("Invalid State"))
 	}
@@ -108,11 +99,9 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 }
 
 func (cc *CallbackController) recordLoginResult(ctx context.Context, success bool) {
-	if cc.trackLoginResult {
 		if success {
-			stats.Record(ctx, domain.LoginSucceededCount.M(1))
+			stats.Record(ctx, application.LoginSucceededCount.M(1))
 		} else {
-			stats.Record(ctx, domain.LoginFailedCount.M(1))
+			stats.Record(ctx, application.LoginFailedCount.M(1))
 		}
-	}
 }

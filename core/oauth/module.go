@@ -4,7 +4,6 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	fakeService "flamingo.me/flamingo/v3/core/oauth/application/fake"
-	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/core/oauth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
@@ -21,7 +20,6 @@ type Module struct {
 	useFake                     bool
 	preventSimultaneousSessions bool
 	sessionBackend              string
-	trackLoginResult            bool
 }
 
 // Inject module dependencies
@@ -29,13 +27,11 @@ func (m *Module) Inject(cfg *struct {
 	UseFake                     bool   `inject:"config:oauth.useFake"`
 	PreventSimultaneousSessions bool   `inject:"config:oauth.preventSimultaneousSessions"`
 	SessionBackend              string `inject:"config:session.backend"`
-	TrackLoginResult            bool   `inject:"config:oauth.metrics.loginResultCountTracking.enabled"`
 }) *Module {
 	if cfg != nil {
 		m.useFake = cfg.UseFake
 		m.preventSimultaneousSessions = cfg.PreventSimultaneousSessions
 		m.sessionBackend = cfg.SessionBackend
-		m.trackLoginResult = cfg.TrackLoginResult
 	}
 
 	return m
@@ -62,13 +58,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 	web.BindRoutes(injector, new(routes))
 
-	if m.trackLoginResult {
-		if err := opencensus.View("flamingo/oauth_login_failed_count", domain.LoginFailedCount, view.Count()); err != nil {
-			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
-		}
-		if err := opencensus.View("flamingo/oauth_login_succeeded_count", domain.LoginFailedCount, view.Count()); err != nil {
-			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
-		}
+	if err := opencensus.View("flamingo/oauth/login_failed", application.LoginFailedCount, view.Count()); err != nil {
+		panic(fmt.Sprintf("failed to register opencensus view: %s", err))
+	}
+	if err := opencensus.View("flamingo/oauth/login_succeeded_count", application.LoginFailedCount, view.Count()); err != nil {
+		panic(fmt.Sprintf("failed to register opencensus view: %s", err))
 	}
 }
 
@@ -98,11 +92,6 @@ func (m *Module) DefaultConfig() config.Map {
 				},
 			},
 			"preventSimultaneousSessions": false,
-			"metrics": config.Map{
-				"loginResultCountTracking": config.Map{
-					"enabled": false,
-				},
-			},
 		},
 	}
 }

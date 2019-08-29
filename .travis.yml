@@ -10,6 +10,12 @@ env:
 
 install: true
 
+before_script:
+  - cd /tmp && mkdir tools && cd -
+  - sudo curl -s -L "https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.5/nancy-linux.amd64-0.0.5" -o "/tmp/tools/nancy"
+  - sudo chmod +x /tmp/tools/nancy
+  - export PATH=$PATH:/tmp/tools/
+
 script:
   - set -e
   - fmt=$(gofmt -l -s .)
@@ -17,4 +23,5 @@ script:
   - go get golang.org/x/lint/golint
   - golint -set_exit_status $(go list ./...)
   - go test -race -vet=all ./...
+  - nancy go.sum
 

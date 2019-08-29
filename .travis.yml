@@ -12,7 +12,7 @@ install: true
 
 before_script:
   - cd /tmp && mkdir tools && cd -
-  - sudo curl -s -L "https://github.com/sonatype-nexus-community/nancy/releases/download/0.0.5/nancy-linux.amd64-0.0.5" -o "/tmp/tools/nancy"
+  - sudo curl -s -L "https://github.com/sonatype-nexus-community/nancy/releases/download/v0.0.21/nancy-linux.amd64-v0.0.21" -o "/tmp/tools/nancy"
   - sudo chmod +x /tmp/tools/nancy
   - export PATH=$PATH:/tmp/tools/
 

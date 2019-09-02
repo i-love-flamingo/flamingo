@@ -9,6 +9,10 @@ import (
 	"sync"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/opencensus/request"
+	"flamingo.me/flamingo/v3/framework/systemendpoint"
+	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	openzipkin "github.com/openzipkin/zipkin-go"
 	reporterHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/exporter/jaeger"
@@ -19,10 +23,6 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
-
-	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/systemendpoint"
-	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
 var (
@@ -162,6 +162,7 @@ func (m *Module) DefaultConfig() config.Map {
 // Depends on other modules
 func (m *Module) Depends() []dingo.Module {
 	return []dingo.Module{
+		new(request.Module),
 		new(systemendpoint.Module),
 	}
 }

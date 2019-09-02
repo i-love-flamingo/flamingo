@@ -14,8 +14,7 @@ import (
 
 type (
 	// Module for record request status codes
-	Module struct {
-	}
+	Module struct{}
 )
 
 var (

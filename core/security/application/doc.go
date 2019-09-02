@@ -1,3 +1,3 @@
 package application
 
-//go:generate mockery -name "(SecurityService)" -case=underscore
+//go:generate go run github.com/vektra/mockery/cmd/mockery -name "(SecurityService)" -case=underscore

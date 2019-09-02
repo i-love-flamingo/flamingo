@@ -20,7 +20,7 @@ type (
 
 		middleware       *SecurityMiddleware
 		securityService  *applicationMocks.SecurityService
-		redirectURLMaker *interfaceMocks.RedirectUrlMaker
+		redirectURLMaker *interfaceMocks.RedirectURLMaker
 
 		context    context.Context
 		request    *web.Request
@@ -57,7 +57,7 @@ func (t *SecurityMiddlewareTestSuite) SetupSuite() {
 
 func (t *SecurityMiddlewareTestSuite) SetupTest() {
 	t.securityService = &applicationMocks.SecurityService{}
-	t.redirectURLMaker = &interfaceMocks.RedirectUrlMaker{}
+	t.redirectURLMaker = &interfaceMocks.RedirectURLMaker{}
 	t.middleware = &SecurityMiddleware{}
 	t.middleware.Inject(&web.Responder{}, t.securityService, t.redirectURLMaker, flamingo.NullLogger{}, &struct {
 		LoginPathHandler              string `inject:"config:security.loginPath.handler"`

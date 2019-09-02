@@ -5,8 +5,6 @@ import (
 	"log"
 )
 
-//go:generate mockery -name "Logger"
-
 // Common logger field keys
 const (
 	LogKeyAccesslog         LogKey = "accesslog" // LogKeyAccesslog marks a logmessage belonging to an (incoming) call (value should be 1)

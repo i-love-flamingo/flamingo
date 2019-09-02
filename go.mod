@@ -2,7 +2,6 @@ module flamingo.me/flamingo/v3
 
 require (
 	flamingo.me/dingo v0.1.6
-	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -27,13 +26,15 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/objx v0.2.0 // indirect
+	github.com/stretchr/testify v1.4.0
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
-	go.opencensus.io v0.19.1
+	go.opencensus.io v0.20.2
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
-	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635
+	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
 )
 

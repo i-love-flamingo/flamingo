@@ -21,11 +21,11 @@ type (
 
 	// CallbackController handles the oauth2.0 callback
 	CallbackController struct {
-		responder        *web.Responder
-		authManager      *application.AuthManager
-		logger           flamingo.Logger
-		eventPublisher   *application.EventPublisher
-		userService      application.UserServiceInterface
+		responder      *web.Responder
+		authManager    *application.AuthManager
+		logger         flamingo.Logger
+		eventPublisher *application.EventPublisher
+		userService    application.UserServiceInterface
 	}
 )
 
@@ -99,9 +99,9 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 }
 
 func (cc *CallbackController) recordLoginResult(ctx context.Context, success bool) {
-		if success {
-			stats.Record(ctx, application.LoginSucceededCount.M(1))
-		} else {
-			stats.Record(ctx, application.LoginFailedCount.M(1))
-		}
+	if success {
+		stats.Record(ctx, application.LoginSucceededCount.M(1))
+	} else {
+		stats.Record(ctx, application.LoginFailedCount.M(1))
+	}
 }

@@ -3,16 +3,14 @@ package zap
 import (
 	"context"
 	"flamingo.me/flamingo/v3/core/zap/application"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"fmt"
 
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
-
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/web"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -20,8 +18,8 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
-		fieldMap        map[string]string
-		logSession      bool
+		fieldMap   map[string]string
+		logSession bool
 	}
 )
 
@@ -84,8 +82,8 @@ func (l *Logger) Error(args ...interface{}) {
 	go func() {
 		ctx, _ := tag.New(
 			context.Background(),
-			tag.Update(opencensus.KeyArea, "root"),
 		)
+
 		stats.Record(ctx, application.ErrorCount.M(1))
 	}()
 }

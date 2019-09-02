@@ -133,9 +133,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 
 	zapLogger := &Logger{
-		Logger:          logger,
-		fieldMap:        m.fieldMap,
-		logSession:      m.logSession,
+		Logger:     logger,
+		fieldMap:   m.fieldMap,
+		logSession: m.logSession,
 	}
 
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)
@@ -143,9 +143,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
 	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
 
-		if err := opencensus.View("flamingo/zap/errors", application.ErrorCount, view.Count()); err != nil {
-			panic(fmt.Sprintf("failed to register opencensus view: %s", err))
-		}
+	if err := opencensus.View("flamingo/zap/errors", application.ErrorCount, view.Count()); err != nil {
+		panic(fmt.Sprintf("failed to register opencensus view: %s", err))
+	}
 }
 
 // Inject dependencies
@@ -166,9 +166,9 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 // DefaultConfig for zap log level
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
-		"zap.loglevel":                           "Debug",
-		"zap.sampling.enabled":                   true,
-		"zap.sampling.initial":                   100,
-		"zap.sampling.thereafter":                100,
+		"zap.loglevel":            "Debug",
+		"zap.sampling.enabled":    true,
+		"zap.sampling.initial":    100,
+		"zap.sampling.thereafter": 100,
 	}
 }

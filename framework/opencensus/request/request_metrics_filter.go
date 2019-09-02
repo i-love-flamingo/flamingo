@@ -8,6 +8,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
+
 )
 
 type (
@@ -15,9 +16,9 @@ type (
 	}
 
 	responseWriterMetrics struct {
-		ctx                context.Context
-		rw                 http.ResponseWriter
-		statusCode         int
+		ctx        context.Context
+		rw         http.ResponseWriter
+		statusCode int
 	}
 
 	responseMetrics struct {
@@ -43,7 +44,7 @@ func (r *responseWriterMetrics) WriteHeader(statusCode int) {
 func (r *responseWriterMetrics) recordResponseStatus(ctx context.Context, status int) {
 	c, _ := tag.New(
 		ctx,
-		tag.Insert(KeyHTTPStatus, strconv.Itoa(status)),
+		tag.Insert(KeyHTTPStatus, strconv.Itoa(status/100*100)),
 	)
 	stats.Record(c, HTTPResponseCount.M(1))
 }
@@ -65,7 +66,7 @@ func (r *metricsFilter) Filter(ctx context.Context, req *web.Request, w http.Res
 	response := chain.Next(ctx, req, w)
 
 	return &responseMetrics{
-		result:             response,
+		result: response,
 		callback: func(rw *responseWriterMetrics) {
 			go rw.recordResponseStatus(ctx, rw.statusCode)
 		},

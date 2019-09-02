@@ -18,6 +18,7 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
+		ctx        *context.Context
 		fieldMap   map[string]string
 		logSession bool
 	}
@@ -32,6 +33,7 @@ type (
 // referer:       referer from request
 // request:       received payload from request
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
+	l.ctx = &ctx
 	span := trace.FromContext(ctx)
 	fields := map[flamingo.LogKey]interface{}{
 		flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
@@ -80,11 +82,15 @@ func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
 
 	go func() {
-		ctx, _ := tag.New(
-			context.Background(),
+		ctx := context.Background()
+		if l.ctx != nil {
+			ctx = *l.ctx
+		}
+		statCtx, _ := tag.New(
+			ctx,
 		)
 
-		stats.Record(ctx, application.ErrorCount.M(1))
+		stats.Record(statCtx, application.ErrorCount.M(1))
 	}()
 }
 

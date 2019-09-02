@@ -8,7 +8,6 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
-
 )
 
 type (
@@ -41,14 +40,7 @@ func (r *responseWriterMetrics) WriteHeader(statusCode int) {
 	r.rw.WriteHeader(statusCode)
 }
 
-func (r *responseWriterMetrics) recordResponseStatus(ctx context.Context, status int) {
-	c, _ := tag.New(
-		ctx,
-		tag.Insert(KeyHTTPStatus, strconv.Itoa(status/100*100)),
-	)
-	stats.Record(c, HTTPResponseCount.M(1))
-}
-
+// Apply metricsFilter to request
 func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) error {
 	var err error
 	var rWriter = &responseWriterMetrics{ctx: ctx, rw: rw}
@@ -62,13 +54,22 @@ func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) erro
 	return err
 }
 
+// Filter a web request
 func (r *metricsFilter) Filter(ctx context.Context, req *web.Request, w http.ResponseWriter, chain *web.FilterChain) web.Result {
 	response := chain.Next(ctx, req, w)
 
 	return &responseMetrics{
 		result: response,
 		callback: func(rw *responseWriterMetrics) {
-			go rw.recordResponseStatus(ctx, rw.statusCode)
+			go recordResponseStatus(ctx, rw.statusCode)
 		},
 	}
+}
+
+func recordResponseStatus(ctx context.Context, status int) {
+	c, _ := tag.New(
+		ctx,
+		tag.Insert(KeyHTTPStatus, strconv.Itoa(status/100*100)),
+	)
+	stats.Record(c, HTTPResponseCount.M(1))
 }

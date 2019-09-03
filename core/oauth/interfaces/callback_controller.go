@@ -51,7 +51,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	defer cc.authManager.DeleteAuthState(request.Session())
 
 	if state, ok := cc.authManager.LoadAuthState(request.Session()); !ok || state != request.Request().URL.Query().Get("state") {
-		go stats.Record(ctx, application.LoginFailedCount.M(1))
+		cc.recordLoginResult(ctx, false)
 		cc.logger.WithContext(ctx).Error(fmt.Sprintf("Invalid State - expected: %v  got: %v", state, request.Request().URL.Query().Get("state")))
 		return cc.responder.ServerError(errors.New("Invalid State"))
 	}
@@ -60,32 +60,32 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	errCode := request.Request().URL.Query().Get("error")
 
 	if code == "" && errCode == "" {
-		go cc.recordLoginResult(ctx, false)
+		cc.recordLoginResult(ctx, false)
 		err := errors.New("missing both code and error get parameter")
 		cc.logger.WithContext(ctx).Error("core.auth.callback Missing parameter", err)
 		return cc.responder.ServerError(errors.WithStack(err))
 	} else if code != "" {
 		oauth2Token, err := cc.authManager.OAuth2Config(ctx, request).Exchange(cc.authManager.OAuthCtx(ctx), code)
 		if err != nil {
-			go cc.recordLoginResult(ctx, false)
+			cc.recordLoginResult(ctx, false)
 			cc.logger.WithContext(ctx).Error("core.auth.callback Error OAuth2Config Exchange", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
 
 		err = cc.authManager.StoreTokenDetails(ctx, request.Session(), oauth2Token)
 		if err != nil {
-			go cc.recordLoginResult(ctx, false)
+			cc.recordLoginResult(ctx, false)
 			cc.logger.WithContext(ctx).Error("core.auth.callback Error", err)
 			return cc.responder.ServerError(errors.WithStack(err))
 		}
 
-		go cc.recordLoginResult(ctx, true)
+		cc.recordLoginResult(ctx, true)
 		cc.eventPublisher.PublishLoginEvent(ctx, &domain.LoginEvent{Session: request.Session()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)
 		cc.logger.Debugf("Token expiry %v", oauth2Token.Expiry)
 		request.Session().AddFlash("successful logged in")
 	} else if errCode != "" {
-		go cc.recordLoginResult(ctx, false)
+		cc.recordLoginResult(ctx, false)
 		cc.logger.WithContext(ctx).Error("core.auth.callback Error parameter", errCode)
 	}
 
@@ -99,9 +99,12 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 }
 
 func (cc *CallbackController) recordLoginResult(ctx context.Context, success bool) {
-	if success {
-		stats.Record(ctx, application.LoginSucceededCount.M(1))
-	} else {
-		stats.Record(ctx, application.LoginFailedCount.M(1))
-	}
+	go func() {
+		if success {
+			stats.Record(ctx, application.LoginSucceededCount.M(1))
+		} else {
+			stats.Record(ctx, application.LoginFailedCount.M(1))
+		}
+	}()
+
 }

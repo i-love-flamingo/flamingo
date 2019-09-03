@@ -2,13 +2,15 @@ package zap
 
 import (
 	"context"
-	"flamingo.me/flamingo/v3/core/zap/application"
 	"fmt"
+
+	"flamingo.me/flamingo/v3/core/zap/application"
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -18,11 +20,22 @@ type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
-		ctx        *context.Context
+		configArea string
 		fieldMap   map[string]string
 		logSession bool
 	}
 )
+
+// Inject dependencies
+func (l *Logger) Inject(config *struct {
+	ConfigArea string `inject:"config:area"`
+}) *Logger {
+	if config != nil {
+		l.configArea = config.ConfigArea
+	}
+
+	return l
+}
 
 // WithContext returns a logger with fields filled from the context
 // businessId:    From Header X-Business-ID
@@ -33,7 +46,6 @@ type (
 // referer:       referer from request
 // request:       received payload from request
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
-	l.ctx = &ctx
 	span := trace.FromContext(ctx)
 	fields := map[flamingo.LogKey]interface{}{
 		flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
@@ -80,17 +92,14 @@ func (l *Logger) Warn(args ...interface{}) {
 // Error logs a message at error level
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
-
 	go func() {
-		ctx := context.Background()
-		if l.ctx != nil {
-			ctx = *l.ctx
-		}
-		statCtx, _ := tag.New(
-			ctx,
+		ctx, err := tag.New(
+			context.Background(),
+			tag.Update(opencensus.KeyArea, l.configArea),
 		)
-
-		stats.Record(statCtx, application.ErrorCount.M(1))
+		if err == nil {
+			stats.Record(ctx, application.ErrorCount.M(1))
+		}
 	}()
 }
 

@@ -26,7 +26,7 @@ You can create your own one by implementing the `sessions.Store` interface and r
 
 ### Authentication
 
-Flamingo's [`core/auth`](../3. Core Modules/Auth (OpenId Connect).md) module provides basic OpenID connect authentication.
+Flamingo's [`core/auth`](../3. Core Modules/OAuth.md) module provides basic OpenID connect authentication.
 
 Given that the module is used in your project (that means registered) you can inject
 the `application.AuthManager` in your controller, and use that to retrieve

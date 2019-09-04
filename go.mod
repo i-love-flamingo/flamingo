@@ -41,4 +41,3 @@ require (
 )
 
 replace golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190121141151-b76268579942
-

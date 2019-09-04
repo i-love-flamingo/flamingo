@@ -1,5 +1,7 @@
 module flamingo.me/flamingo/v3
 
+go 1.13
+
 require (
 	flamingo.me/dingo v0.1.6
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
@@ -38,7 +40,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
 )
 
-replace (
-	github.com/robertkrimen/otto => github.com/thebod/otto v0.0.0-20180101010101-83d297c4b64aeb2de4268d9a54c9a503ae2d8139
-	golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190101010101-b7626857
-)
+replace golang.org/x/oauth2 => github.com/Ompluscator/oauth2 v0.0.0-20190121141151-b76268579942
+

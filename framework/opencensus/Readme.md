@@ -8,6 +8,7 @@ Opencensus allows you to collect data for your application and process them via 
 The core package already collects metrics automatically for routers and prefixrouters rendering times out of the box.
 Also traces for request handling are done by default.
 
+The metrics endpoint is provided under the systemendpoint. Once the module is activate you can access them via `http://localhost:13210/metrics`
 ## Adding your own metrics
 
 The most likely usecase is in a controller, but to have your own metric, please import the following packages:

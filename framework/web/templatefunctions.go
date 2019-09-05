@@ -90,7 +90,7 @@ func (c *IsExternalURL) Func(ctx context.Context) interface{} {
 	return func(urlStr string) bool {
 		if u, err := url.Parse(urlStr); err == nil {
 			au, _ := c.router.Absolute(RequestFromContext(ctx), "", nil)
-			return au.Host != u.Host
+			return u.Host != "" && au.Host != u.Host
 		}
 
 		return false

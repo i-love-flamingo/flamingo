@@ -14,6 +14,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/controller"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
+	"flamingo.me/flamingo/v3/framework/web/filter"
 	"github.com/spf13/cobra"
 )
 
@@ -48,6 +49,7 @@ func (initmodule *InitModule) Configure(injector *dingo.Injector) {
 	injector.Bind(web.Router{}).In(dingo.ChildSingleton)
 	injector.Bind(new(web.ReverseRouter)).To(web.Router{})
 	injector.Bind(web.RouterRegistry{}).In(dingo.Singleton).ToProvider(web.NewRegistry)
+	injector.BindMulti(new(web.Filter)).To(new(filter.MetricsFilter))
 
 	flamingo.BindTemplateFunc(injector, "config", new(config.TemplateFunc))
 	flamingo.BindTemplateFunc(injector, "setPartialData", new(web.SetPartialDataFunc))

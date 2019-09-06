@@ -4,17 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/web"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"flamingo.me/flamingo/v3/core/zap/application"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
 	// Logger is a Wrapper for the zap logger fulfilling the flamingo.Logger interface
 	Logger struct {
 		*zap.Logger
+		configArea string
 		fieldMap   map[string]string
 		logSession bool
 	}
@@ -75,6 +81,13 @@ func (l *Logger) Warn(args ...interface{}) {
 // Error logs a message at error level
 func (l *Logger) Error(args ...interface{}) {
 	l.Logger.Error(fmt.Sprint(args...))
+	func() {
+		ctx, _ := tag.New(
+			context.Background(),
+			tag.Insert(opencensus.KeyArea, l.configArea),
+		)
+		stats.Record(ctx, application.ErrorCount.M(1))
+	}()
 }
 
 // Fatal logs a message at fatal level
@@ -91,6 +104,11 @@ func (l *Logger) Panic(args ...interface{}) {
 
 // WithField creates a child logger and adds structured context to it.
 func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	area := l.configArea
+	if key == flamingo.LogKeyArea {
+		area = value.(string)
+	}
+
 	if alias, ok := l.fieldMap[string(key)]; ok {
 		// skip field
 		if alias == "-" {
@@ -102,6 +120,7 @@ func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logg
 
 	return &Logger{
 		Logger:     l.Logger.With(zap.Any(string(key), value)),
+		configArea: area,
 		fieldMap:   l.fieldMap,
 		logSession: l.logSession,
 	}
@@ -110,8 +129,13 @@ func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logg
 // WithFields creates a child logger and adds structured context to it.
 func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
 	zapFields := make([]zapcore.Field, len(fields))
+	area := l.configArea
 	i := 0
 	for key, value := range fields {
+		if key == flamingo.LogKeyArea {
+			area = value.(string)
+		}
+
 		if alias, ok := l.fieldMap[string(key)]; ok {
 			// skip field
 			if alias == "-" {
@@ -127,6 +151,7 @@ func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Log
 
 	return &Logger{
 		Logger:     l.Logger.With(zapFields[:i]...),
+		configArea: area,
 		fieldMap:   l.fieldMap,
 		logSession: l.logSession,
 	}

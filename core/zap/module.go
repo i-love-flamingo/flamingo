@@ -132,6 +132,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		Logger:     logger,
 		fieldMap:   m.fieldMap,
 		logSession: m.logSession,
+		configArea: m.area,
 	}
 
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)

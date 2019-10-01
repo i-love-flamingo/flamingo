@@ -50,11 +50,13 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 			name: "Euro",
 			fields: fields{
 				config: config.Map{
-					"decimal":    ",",
-					"thousand":   ".",
-					"formatZero": "%s -,-",
-					"format":     "%s %v",
-					"formatLong": "%v %v",
+					"default": config.Map{
+						"decimal":    ",",
+						"thousand":   ".",
+						"formatZero": "%s -,-",
+						"format":     "%s %v",
+						"formatLong": "%v %v",
+					},
 				},
 				labelService: labelService,
 			},
@@ -68,11 +70,13 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 			name: "Dollar",
 			fields: fields{
 				config: config.Map{
-					"decimal":    ".",
-					"thousand":   ",",
-					"formatZero": "%s -,-",
-					"format":     "%s %v",
-					"formatLong": "%v %v",
+					"default": config.Map{
+						"decimal":    ".",
+						"thousand":   ",",
+						"formatZero": "%s -,-",
+						"format":     "%s %v",
+						"formatLong": "%v %v",
+					},
 				},
 				labelService: labelService,
 			},
@@ -81,6 +85,32 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 				currency: "$",
 			},
 			want: "$ 55.00",
+		}, {
+			name: "Dollar non default with no space",
+			fields: fields{
+				config: config.Map{
+					"default": config.Map{
+						"decimal":    ".",
+						"thousand":   ",",
+						"formatZero": "%s -,-",
+						"format":     "%s %v",
+						"formatLong": "%v %v",
+					},
+					"€": config.Map{
+						"decimal":    ".",
+						"thousand":   ",",
+						"formatZero": "%s -,-",
+						"format":     "%s%v",
+						"formatLong": "%v %v",
+					},
+				},
+				labelService: labelService,
+			},
+			args: args{
+				value:    55,
+				currency: "€",
+			},
+			want: "€55.00",
 		},
 	}
 	for _, tt := range tests {

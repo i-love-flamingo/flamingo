@@ -9,8 +9,8 @@ import (
 // RunWithDetachedContext returns a context which is detached from the original deadlines, timeouts & co
 func RunWithDetachedContext(origCtx context.Context, fnc func(ctx context.Context)) {
 	request := RequestFromContext(origCtx)
-	session  := SessionFromContext(origCtx)
-	if request != nil && session == nil{
+	session := SessionFromContext(origCtx)
+	if request != nil && session == nil {
 		session = request.Session()
 	}
 	ctx := ContextWithRequest(context.Background(), request)

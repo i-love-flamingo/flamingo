@@ -36,6 +36,7 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
+	github.com/vektra/mockery v0.0.0-20181123154057-e78b021dcbb5 // indirect
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.22.2-0.20191001044506-fa651b05963c
 	go.uber.org/atomic v1.3.2 // indirect

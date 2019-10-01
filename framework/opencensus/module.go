@@ -15,6 +15,7 @@ import (
 	openzipkin "github.com/openzipkin/zipkin-go"
 	reporterHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/plugin/ochttp"
+	"go.opencensus.io/plugin/runmetrics"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -130,6 +131,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			trace.RegisterExporter(exporter)
 		}
 	})
+
+	if err := runmetrics.Enable(runmetrics.RunMetricOptions{
+		EnableCPU:    true,
+		EnableMemory: true,
+	}); err != nil {
+		log.Fatal(err)
+	}
+
 	exporter, err := prometheus.NewExporter(prometheus.Options{})
 	if err != nil {
 		log.Fatal(err)

@@ -1,6 +1,6 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/i-love-flamingo/flamingo)](https://goreportcard.com/report/github.com/i-love-flamingo/flamingo)
 
 # Flamingo
+[![Go Report Card](https://goreportcard.com/badge/github.com/i-love-flamingo/flamingo)](https://goreportcard.com/report/github.com/i-love-flamingo/flamingo) [![GoDoc](https://godoc.org/github.com/i-love-flamingo/flamingo?status.svg)](https://godoc.org/github.com/i-love-flamingo/flamingo) [![Build Status](https://travis-ci.org/i-love-flamingo/flamingo.svg)](https://travis-ci.org/i-love-flamingo/flamingo)
 
 ## What is Flamingo
 

@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/i-love-flamingo/flamingo)](https://goreportcard.com/report/github.com/i-love-flamingo/flamingo)
+
 # Flamingo
 
 ## What is Flamingo

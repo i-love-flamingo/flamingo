@@ -34,6 +34,7 @@ require (
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.20.2
 	go.uber.org/atomic v1.3.2 // indirect
+	go.uber.org/automaxprocs v1.2.0
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect

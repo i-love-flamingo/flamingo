@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.opencensus.io/plugin/ochttp"
 
+	"flamingo.me/flamingo/v3/core/runtime"
 	"flamingo.me/flamingo/v3/core/zap"
 	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/cmd"
@@ -141,6 +142,7 @@ func App(modules []dingo.Module, options ...option) {
 		new(framework.InitModule),
 		new(config.Flags),
 		new(zap.Module),
+		new(runtime.Module),
 		new(cmd.Module),
 	}, root.Modules...)
 

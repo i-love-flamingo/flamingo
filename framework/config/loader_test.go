@@ -54,6 +54,7 @@ func TestLoad(t *testing.T) {
 		root := new(Area)
 		require.NoError(t, flagSet.Set("flamingo-config", "baz: bam"))
 		require.NoError(t, flagSet.Set("flamingo-config", "foo.bar.test: 'hello'"))
+		defer func() { initFlagSet() }()
 		err := Load(root, "testdata/valid")
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
@@ -77,6 +78,7 @@ func TestLoad(t *testing.T) {
 		root := new(Area)
 		assert.Panics(t, func() {
 			require.NoError(t, flagSet.Set("flamingo-config", "baz"))
+			defer func() { initFlagSet() }()
 
 			_ = Load(root, "testdata/valid")
 		})

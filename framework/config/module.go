@@ -32,6 +32,10 @@ type (
 var flagSet *pflag.FlagSet
 
 func init() {
+	initFlagSet()
+}
+
+func initFlagSet() {
 	flagSet = pflag.NewFlagSet("flamingo.config", pflag.ContinueOnError)
 	flagSet.BoolVar(&debugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
 	flagSet.StringArrayVar(&additionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")

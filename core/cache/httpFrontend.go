@@ -36,9 +36,11 @@ type (
 )
 
 // Inject HTTPFrontend dependencies
-func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) {
+func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) *HTTPFrontend {
 	hf.backend = backend
 	hf.logger = logger
+
+	return hf
 }
 
 // GetHTTPFrontendCacheWithNullBackend helper for tests

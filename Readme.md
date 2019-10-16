@@ -4,18 +4,38 @@
 
 ## What is Flamingo
 
-Flamingo is a go based, framework for pluggable web projects.
-It is used to build scalable and maintainable web-applications. 
-It's architecture is especially useful to build "frontends" for your headless microservice architecture.
+Flamingo is a high productivity go based framework for building fast and pluggable web projects.
+It is used to build scalable and maintainable (web)applications.
 
+Flamingo is:
 
-* open source 
+* open source
 * written in go
 * easy to learn
 * fast and flexible
 
 Go as simple, powerful and typesafe language is great to implement and scale serverside logic.
-Flamingo has a clean architecture and uses "Domain Driven Design" and "Ports and Adapters" Layering - with clean and clear dependencies in mind.
+Flamingo has a clean architecture with clear dependencies in mind and offers a typical features and support for nowadays web applications:
+
+* Configuration with yml - supporting multiple areas and contexts
+* Powerful Dependency Injection
+* a Module Concept
+* Authentication Concepts and Security Middleware
+* Flexible Routing with support for Prefix Routes and Reverse Routing
+* Controller: Request / Response / Form Handling 
+* Operational Readyness: Logging, (distributed) Tracing, Metrics and Healthchecks with seperate endpoint
+* Localisation support
+* Commands
+* Sessionmanagement
+* Powerful templating support with PUG - supporting mixins and easy scripting
+* GraphQL support and therefore support to build nice SPA and PWAs on top of it
+* Resilience and Caching to external APIs
+
+Flamingo itself does not contain ORM Mapper or libraries - instead it emphasizes "ports and adapters" architecture - so that you have a technology free (domain) model and any possible (and replaceable) persitence behind it.
+That makes Flamingo useful to build microservices and applications - especially to build "frontends" or portals that require interaction with other (micro) services in a distributed architecture. 
+When sticking to the architectural recommendation you can build modular applications with replaceable adapters that gives you independed testability.
+
+With **"Flamingo Commerce"** there is an additional active projects that offer rich and flexible features to build modern e-commerce applications.
 
 # Getting Started / Hello World
 

@@ -4,7 +4,7 @@
 
 ## What is Flamingo
 
-Flamingo is a high productivity go based framework for building fast and pluggable web projects.
+Flamingo is a high productivity go based framework for rapidly building fast and pluggable web projects.
 It is used to build scalable and maintainable (web)applications.
 
 Flamingo is:
@@ -17,19 +17,19 @@ Flamingo is:
 Go as simple, powerful and typesafe language is great to implement and scale serverside logic.
 Flamingo has a clean architecture with clear dependencies in mind and offers a typical features and support for nowadays web applications:
 
-* Configuration with yml - supporting multiple areas and contexts
+* Powerful Templating Engines. E.g. support for Pug templates with reusable mixins and lightweight scripting.
+* Configuration concepts using yml and support for multiple areas and contexts
 * Powerful Dependency Injection
-* a Module Concept
-* Authentication Concepts and Security Middleware
-* Flexible Routing with support for Prefix Routes and Reverse Routing
-* Controller: Request / Response / Form Handling 
+* A Module concept for building modular and pluggable applications
+* Authentication concepts and security middleware
+* Flexible routing with support for prefix routes and reverse routing
+* Web Controller Support with: Request / Response / Form Handling etc
 * Operational Readyness: Logging, (distributed) Tracing, Metrics and Healthchecks with seperate endpoint
-* Localisation support
+* Localisation
 * Commands
-* Sessionmanagement
-* Powerful templating support with PUG - supporting mixins and easy scripting
+* Sessionhandling and Management
 * GraphQL support and therefore support to build nice SPA and PWAs on top of it
-* Resilience and Caching to external APIs
+* Resilience and Caching for external APIs calls.
 
 Flamingo itself does not contain ORM Mapper or libraries - instead it emphasizes "ports and adapters" architecture - so that you have a technology free (domain) model and any possible (and replaceable) persitence behind it.
 That makes Flamingo useful to build microservices and applications - especially to build "frontends" or portals that require interaction with other (micro) services in a distributed architecture. 

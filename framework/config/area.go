@@ -313,18 +313,23 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
 		for _, disabled := range config.(Slice) {
-			for i, module := range area.Modules {
-				tm := reflect.TypeOf(module).Elem()
-				if tm.PkgPath()+"."+tm.Name() == disabled.(string) {
-					area.Modules = append(area.Modules[:i], area.Modules[i+1:]...)
-				}
-			}
+			area.Modules = disableModule(area.Modules, disabled.(string))
 		}
 	}
 
 	injector.InitModules(area.Modules...)
 
 	return injector, nil
+}
+
+func disableModule(input []dingo.Module, disabled string) []dingo.Module {
+	for i, module := range input {
+		tm := reflect.TypeOf(module).Elem()
+		if tm.PkgPath()+"."+tm.Name() == disabled {
+			return append(input[:i], input[i+1:]...)
+		}
+	}
+	return input
 }
 
 // Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overridden) of the parent context tree.

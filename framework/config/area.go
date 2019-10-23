@@ -327,7 +327,7 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 	return injector, nil
 }
 
-// Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overriden) of the parent context tree.
+// Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overridden) of the parent context tree.
 func (area *Area) Flat() (map[string]*Area, error) {
 	res := make(map[string]*Area)
 	res[area.Name] = area

@@ -201,10 +201,10 @@ func TestMap_Get(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, Map{"x": Map{"y": Map{"z": "test"}}}, val)
 
-	val, ok = m.Get("foo.bar.baz")
+	_, ok = m.Get("foo.bar.baz")
 	assert.False(t, ok)
 
-	val, ok = m.Get("unknown")
+	_, ok = m.Get("unknown")
 	assert.False(t, ok)
 }
 

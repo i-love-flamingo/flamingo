@@ -171,6 +171,9 @@ func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs templ
 			return nil, err
 		}
 		templateName, err := filepath.Rel(dir, file)
+		if err != nil {
+			return nil, err
+		}
 		t := tpl.New(templateName)
 
 		_, err = t.Parse(string(tContent))

@@ -94,7 +94,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(ctx)
 	defer span.End()
 
-	// process registered primaryHandlers - and if they are sucessfull exist
+	// process registered primaryHandlers - and if they are successful exist
 	for _, handler := range fr.primaryHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
 		if !proceed {
@@ -151,7 +151,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// process registered fallbackHandlers - and if they are sucessfull exist
+	// process registered fallbackHandlers - and if they are successful exist
 	for _, handler := range fr.fallbackHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
 		if !proceed {

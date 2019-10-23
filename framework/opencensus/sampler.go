@@ -38,7 +38,7 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 			}
 		}
 
-		// check sampling decision agains blacklist
+		// check sampling decision against blacklist
 		for _, p := range blacklist {
 			if strings.HasPrefix(path, p) {
 				sample = false

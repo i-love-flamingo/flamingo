@@ -33,7 +33,7 @@ var formatTestData = []formatTest{
 
 func TestFormat(t *testing.T) {
 	for _, testData := range formatTestData {
-		f := testGetFormatter(testData.timeStamp, testData.location)
+		f := testGetFormatter(t, testData.timeStamp, testData.location)
 
 		assert.Equal(
 			t,
@@ -63,7 +63,7 @@ func TestFormat(t *testing.T) {
 	}
 }
 
-func testGetFormatter(timeString string, locationString string) *DateTimeFormatter {
+func testGetFormatter(t *testing.T, timeString string, locationString string) *DateTimeFormatter {
 	f := DateTimeFormatter{
 		DateFormat:     "02 Jan 2006",
 		TimeFormat:     "15:04",
@@ -76,6 +76,7 @@ func testGetFormatter(timeString string, locationString string) *DateTimeFormatt
 		panic(e)
 	}
 	location, e := time.LoadLocation(locationString)
+	assert.NoError(t, e)
 	localTime := dateTime.In(location)
 
 	f.SetDateTime(dateTime, localTime)

@@ -7,7 +7,7 @@ import (
 
 type (
 	// Module defines a dingo module which automatically binds provided config.
-	// Normaly this module is not included in your flamingo projects bootstrap.
+	// Normally this module is not included in your flamingo projects bootstrap.
 	//
 	// Its can be useful for testing dingo.Module that require certain configuration to be set before. E.g.:
 	//

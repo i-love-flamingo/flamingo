@@ -114,7 +114,6 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 
 		defer func() {
 			if err := recover(); err != nil {
-				//resultErr = errors.WithStack(errors.Errorf("%#v", err))
 				if err2, ok := err.(error); ok {
 					resultErr = errors.WithStack(err2) //errors.Errorf("%#v", err)
 				} else {
@@ -174,7 +173,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		cached = loadedData.(cachedResponse)
 	}
 
-	hf.logger.WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
+	hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
 	hf.backend.Set(key, &Entry{
 		Data: cached,
 		Meta: Meta{

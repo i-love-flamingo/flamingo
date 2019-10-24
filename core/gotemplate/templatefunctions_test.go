@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net/url"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -16,7 +17,14 @@ func (m MockRouter) Relative(name string, params map[string]string) (*url.URL, e
 }
 
 func (m MockRouter) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
-	return fmt.Sprintf("%v %v", handler, params)
+	var stringParams []string
+	for key, value := range params {
+		stringParams = append(stringParams, fmt.Sprintf("%v:%v", key, value))
+	}
+
+	sort.Strings(stringParams)
+
+	return fmt.Sprintf("%v %v", handler, stringParams)
 }
 
 var _ urlRouter = MockRouter{}
@@ -37,7 +45,7 @@ func Test_dataFunc_Func(t *testing.T) {
 			args: args{
 				what: "test",
 			},
-			want: "test map[]",
+			want: "test []",
 		},
 		{
 			name: "valid params set",
@@ -45,7 +53,7 @@ func Test_dataFunc_Func(t *testing.T) {
 				what:   "test",
 				params: []string{"key-1", "value-1", "key-2", "value-2"},
 			},
-			want: "test map[key-1:value-1 key-2:value-2]",
+			want: "test [key-1:value-1 key-2:value-2]",
 		},
 		{
 			name: "invalid params set",
@@ -53,7 +61,7 @@ func Test_dataFunc_Func(t *testing.T) {
 				what:   "test",
 				params: []string{"key-1"},
 			},
-			want: "test map[]",
+			want: "test []",
 		},
 	}
 	for _, tt := range tests {
@@ -85,7 +93,7 @@ func Test_getFunc_Func(t *testing.T) {
 			args: args{
 				what: "test",
 			},
-			want: "test map[]",
+			want: "test []",
 		},
 		{
 			name: "valid params set",
@@ -93,7 +101,7 @@ func Test_getFunc_Func(t *testing.T) {
 				what:   "test",
 				params: []string{"key-1", "value-1", "key-2", "value-2"},
 			},
-			want: "test map[key-1:value-1 key-2:value-2]",
+			want: "test [key-1:value-1 key-2:value-2]",
 		},
 		{
 			name: "invalid params set",
@@ -101,7 +109,7 @@ func Test_getFunc_Func(t *testing.T) {
 				what:   "test",
 				params: []string{"key-1"},
 			},
-			want: "test map[]",
+			want: "test []",
 		},
 	}
 	for _, tt := range tests {

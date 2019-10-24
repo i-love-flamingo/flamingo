@@ -68,7 +68,7 @@ func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 	log.Println("############### OAUTH REQUEST:")
 	log.Printf("%v  %v ", string(b), err)
 	res, err := f.originalTransport.RoundTrip(req)
-	b, err = httputil.DumpResponse(res, true)
+	b, _ = httputil.DumpResponse(res, true)
 	log.Println("############### OAUTH RESPONSE:")
 	log.Printf("%v  %v ", string(b), err)
 	log.Println("############### OAUTH Call Stack:")

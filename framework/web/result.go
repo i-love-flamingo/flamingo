@@ -108,7 +108,7 @@ type (
 		MaxAge int
 		// SMaxAge defines the maxAge for shared caches. Supposed to override max-age for CDN for example
 		SMaxAge int
-		// ETag the key for the Reponse
+		// ETag the key for the Response
 		ETag string
 		// LastModifiedSince indicates the time a document last changed
 		LastModifiedSince *time.Time

@@ -64,14 +64,14 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	ctx, span := trace.StartSpan(ctx, "gotemplate/Render")
 	defer span.End()
 
-	lock.Lock()
 	if e.debug || e.templates == nil {
+		lock.Lock()
 		err := e.loadTemplates(ctx)
+		lock.Unlock()
 		if err != nil {
 			return nil, err
 		}
 	}
-	lock.Unlock()
 
 	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}
@@ -110,7 +110,7 @@ func (e *engine) loadTemplates(ctx context.Context) error {
 		},
 		"map": func(p ...interface{}) map[string]interface{} {
 			res := make(map[string]interface{})
-			for i := 0; i < len(p); i += 2 {
+			for i := 0; i < len(p) && len(p)%2 == 0; i += 2 {
 				res[fmt.Sprint(p[i])] = p[i+1]
 			}
 			return res

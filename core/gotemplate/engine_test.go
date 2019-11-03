@@ -17,41 +17,41 @@ var noAdditionalTemplateFuncs = func() map[string]flamingo.TemplateFunc {
 
 var additionalTemplateFuncs = func() map[string]flamingo.TemplateFunc {
 	funcs := make(map[string]flamingo.TemplateFunc)
-	funcs["customTemplateFunc"] = CustomTemplateFunc{}
+	funcs["customTemplateFunc"] = customTemplateFunc{}
 	return funcs
 }
 
-type CustomTemplateFunc struct{}
+type customTemplateFunc struct{}
 
-var _ flamingo.TemplateFunc = CustomTemplateFunc{}
+var _ flamingo.TemplateFunc = customTemplateFunc{}
 
-func (CustomTemplateFunc) Func(ctx context.Context) interface{} {
+func (customTemplateFunc) Func(ctx context.Context) interface{} {
 	return func() interface{} {
 		return "test-abc"
 	}
 }
 
 func Test_engine_Render(t *testing.T) {
-	type fields struct {
+	type engineConfig struct {
 		templatesBasePath  string
 		layoutTemplatesDir string
 		debug              bool
 		tplFuncs           func() map[string]flamingo.TemplateFunc
 	}
-	type args struct {
+	type renderArgs struct {
 		name string
 		data interface{}
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    io.Reader
-		wantErr bool
+		name         string
+		engineConfig engineConfig
+		renderArgs   renderArgs
+		want         io.Reader
+		wantErr      bool
 	}{
 		{
 			name: "Template base path not found",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath: "non-existing-dir/",
 				tplFuncs:          noAdditionalTemplateFuncs,
 			},
@@ -59,7 +59,7 @@ func Test_engine_Render(t *testing.T) {
 		},
 		{
 			name: "Layout path not found",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-simple",
 				layoutTemplatesDir: "non-existing-layout-dir",
 				tplFuncs:           noAdditionalTemplateFuncs,
@@ -68,13 +68,13 @@ func Test_engine_Render(t *testing.T) {
 		},
 		{
 			name: "Template not found",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-simple",
 				layoutTemplatesDir: "",
 				debug:              false,
 				tplFuncs:           noAdditionalTemplateFuncs,
 			},
-			args: args{
+			renderArgs: renderArgs{
 				name: "non-existing-template",
 				data: nil,
 			},
@@ -83,13 +83,13 @@ func Test_engine_Render(t *testing.T) {
 		},
 		{
 			name: "Simple template found and working",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-simple",
 				layoutTemplatesDir: "",
 				debug:              false,
 				tplFuncs:           noAdditionalTemplateFuncs,
 			},
-			args: args{
+			renderArgs: renderArgs{
 				name: "simple",
 				data: nil,
 			},
@@ -98,13 +98,13 @@ func Test_engine_Render(t *testing.T) {
 		},
 		{
 			name: "Built in template functions work",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-simple",
 				layoutTemplatesDir: "",
 				debug:              false,
 				tplFuncs:           noAdditionalTemplateFuncs,
 			},
-			args: args{
+			renderArgs: renderArgs{
 				name: "built-in-template-funcs",
 				data: struct {
 					Time time.Time
@@ -114,18 +114,18 @@ func Test_engine_Render(t *testing.T) {
 				`Upper: HELLO WORLD!
 formatDate: 1970-01-01
 map (invalid params): map[]
-map (valid params): map[a:b x:y]`)),
+map (valid params): map[a:b]`)),
 			wantErr: false,
 		},
 		{
 			name: "Additional template functions work",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-simple",
 				layoutTemplatesDir: "",
 				debug:              false,
 				tplFuncs:           additionalTemplateFuncs,
 			},
-			args: args{
+			renderArgs: renderArgs{
 				name: "additional-template-funcs",
 				data: struct {
 					Time time.Time
@@ -135,19 +135,19 @@ map (valid params): map[a:b x:y]`)),
 				`Upper: HELLO WORLD!
 formatDate: 1970-01-01
 map (invalid params): map[]
-map (valid params): map[a:b x:y]
+map (valid params): map[x:y]
 customTemplateFunc: test-abc`)),
 			wantErr: false,
 		},
 		{
 			name: "Nested layouts/templates should work",
-			fields: fields{
+			engineConfig: engineConfig{
 				templatesBasePath:  "testdata/test-nested-dirs",
 				layoutTemplatesDir: "layouts",
 				debug:              false,
 				tplFuncs:           additionalTemplateFuncs,
 			},
-			args: args{
+			renderArgs: renderArgs{
 				name: "dir-a/sub-dir-a/main",
 				data: nil,
 			},
@@ -161,16 +161,16 @@ customTemplateFunc: test-abc`)),
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &engine{}
-			e.Inject(tt.fields.tplFuncs, flamingo.NullLogger{}, &struct {
+			e.Inject(tt.engineConfig.tplFuncs, flamingo.NullLogger{}, &struct {
 				TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
 				LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
 				Debug              bool   `inject:"config:debug.mode"`
 			}{
-				tt.fields.templatesBasePath,
-				tt.fields.layoutTemplatesDir,
-				tt.fields.debug,
+				tt.engineConfig.templatesBasePath,
+				tt.engineConfig.layoutTemplatesDir,
+				tt.engineConfig.debug,
 			})
-			got, err := e.Render(context.Background(), tt.args.name, tt.args.data)
+			got, err := e.Render(context.Background(), tt.renderArgs.name, tt.renderArgs.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Render() error = %v, wantErr %v", err, tt.wantErr)
 				return

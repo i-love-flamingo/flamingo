@@ -64,14 +64,17 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	ctx, span := trace.StartSpan(ctx, "gotemplate/Render")
 	defer span.End()
 
+	lock.Lock()
 	if e.debug || e.templates == nil {
-		lock.Lock()
+
 		err := e.loadTemplates(ctx)
-		lock.Unlock()
+
 		if err != nil {
+			lock.Unlock()
 			return nil, err
 		}
 	}
+	lock.Unlock()
 
 	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}

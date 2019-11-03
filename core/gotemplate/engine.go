@@ -66,9 +66,7 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 
 	lock.Lock()
 	if e.debug || e.templates == nil {
-
 		err := e.loadTemplates(ctx)
-
 		if err != nil {
 			lock.Unlock()
 			return nil, err

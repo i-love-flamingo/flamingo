@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
-	"reflect"
 	"sort"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type MockRouter struct{}
+type mockRouter struct{}
 
-func (m MockRouter) Relative(name string, params map[string]string) (*url.URL, error) {
+func (m mockRouter) Relative(name string, params map[string]string) (*url.URL, error) {
 	return url.Parse(fmt.Sprintf("http://name-%v.com/param-amount-%d/", name, len(params)))
 }
 
-func (m MockRouter) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
+func (m mockRouter) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
 	var stringParams []string
 	for key, value := range params {
 		stringParams = append(stringParams, fmt.Sprintf("%v:%v", key, value))
@@ -27,194 +28,97 @@ func (m MockRouter) Data(ctx context.Context, handler string, params map[interfa
 	return fmt.Sprintf("%v %v", handler, stringParams)
 }
 
-var _ urlRouter = MockRouter{}
+var _ urlRouter = mockRouter{}
 
-func Test_dataFunc_Func(t *testing.T) {
-	type args struct {
-		what   string
-		params []string
-	}
+func Test_dataFunc_getFunc(t *testing.T) {
+	df := &dataFunc{}
+	df.Inject(mockRouter{})
+	gf := &getFunc{}
+	gf.Inject(mockRouter{})
 
-	tests := []struct {
-		name string
-		args args
-		want interface{}
-	}{
-		{
-			name: "no params",
-			args: args{
-				what: "test",
-			},
-			want: "test []",
-		},
-		{
-			name: "valid params set",
-			args: args{
-				what:   "test",
-				params: []string{"key-1", "value-1", "key-2", "value-2"},
-			},
-			want: "test [key-1:value-1 key-2:value-2]",
-		},
-		{
-			name: "invalid params set",
-			args: args{
-				what:   "test",
-				params: []string{"key-1"},
-			},
-			want: "test []",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			df := &dataFunc{}
-			df.Inject(MockRouter{})
+	dataTemplateFunction := df.Func(context.Background()).(func(what string, params ...string) interface{})
+	getTemplateFunction := gf.Func(context.Background()).(func(what string, params ...string) interface{})
 
-			templateFunction := df.Func(context.Background()).(func(what string, params ...string) interface{})
-			if got := templateFunction(tt.args.what, tt.args.params...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dataFunc() = %q, want %q", got, tt.want)
-			}
-		})
-	}
+	// no params
+	var what = "test"
+	var params []string
+	var want = "test []"
+
+	gotDF := dataTemplateFunction(what, params...)
+	gotGF := getTemplateFunction(what, params...)
+	assert.Equal(t, want, gotDF)
+	assert.Equal(t, want, gotGF)
+
+	// valid params
+	what = "test"
+	params = []string{"key-1", "value-1", "key-2", "value-2"}
+	want = "test [key-1:value-1 key-2:value-2]"
+
+	gotDF = dataTemplateFunction(what, params...)
+	gotGF = getTemplateFunction(what, params...)
+	assert.Equal(t, want, gotDF)
+	assert.Equal(t, want, gotGF)
+
+	// invalid params
+	what = "test"
+	params = []string{"key-1"}
+	want = "test []"
+
+	gotDF = dataTemplateFunction(what, params...)
+	gotGF = getTemplateFunction(what, params...)
+	assert.Equal(t, want, gotDF)
+	assert.Equal(t, want, gotGF)
 }
 
-func Test_getFunc_Func(t *testing.T) {
-	type args struct {
-		what   string
-		params []string
-	}
+func Test_plainHTMLFunc(t *testing.T) {
+	var in = "string abc"
+	var want template.HTML = "string abc"
 
-	tests := []struct {
-		name string
-		args args
-		want interface{}
-	}{
-		{
-			name: "no params",
-			args: args{
-				what: "test",
-			},
-			want: "test []",
-		},
-		{
-			name: "valid params set",
-			args: args{
-				what:   "test",
-				params: []string{"key-1", "value-1", "key-2", "value-2"},
-			},
-			want: "test [key-1:value-1 key-2:value-2]",
-		},
-		{
-			name: "invalid params set",
-			args: args{
-				what:   "test",
-				params: []string{"key-1"},
-			},
-			want: "test []",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gf := &getFunc{}
-			gf.Inject(MockRouter{})
+	phf := &plainHTMLFunc{}
+	templateFunction := phf.Func(context.Background()).(func(in string) template.HTML)
 
-			templateFunction := gf.Func(context.Background()).(func(what string, params ...string) interface{})
-			if got := templateFunction(tt.args.what, tt.args.params...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getFunc() = %q, want %q", got, tt.want)
-			}
-		})
-	}
+	got := templateFunction(in)
+	assert.Equal(t, want, got)
 }
 
-func Test_plainHTMLFunc_Func(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-		want template.HTML
-	}{
-		{
-			name: "string gets converted to template.HTML",
-			in:   "string abc",
-			want: "string abc",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			phf := &plainHTMLFunc{}
-			templateFunction := phf.Func(context.Background()).(func(in string) template.HTML)
-			if got := templateFunction(tt.in); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("plainHTMLFunc() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
+func Test_plainJSFunc(t *testing.T) {
+	var in = "string abc"
+	var want template.JS = "string abc"
 
-func Test_plainJSFunc_Func(t *testing.T) {
-	tests := []struct {
-		name string
-		in   string
-		want template.JS
-	}{
-		{
-			name: "string gets converted to template.JS",
-			in:   "string abc",
-			want: "string abc",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pjf := &plainJSFunc{}
-			templateFunction := pjf.Func(context.Background()).(func(in string) template.JS)
-			if got := templateFunction(tt.in); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("plainJSFunc() = %q, want %q", got, tt.want)
-			}
-		})
-	}
+	pjf := &plainJSFunc{}
+	templateFunction := pjf.Func(context.Background()).(func(in string) template.JS)
+
+	got := templateFunction(in)
+	assert.Equal(t, want, got)
 }
 
 func Test_urlFunc_Func(t *testing.T) {
-	type args struct {
-		where  string
-		params []string
-	}
+	uf := &urlFunc{}
+	uf.Inject(mockRouter{})
 
-	tests := []struct {
-		name string
-		args args
-		want template.URL
-	}{
-		{
-			name: "no params",
-			args: args{
-				where: "test",
-			},
-			want: "http://name-test.com/param-amount-0/",
-		},
-		{
-			name: "valid params set",
-			args: args{
-				where:  "abc",
-				params: []string{"key-1", "value-1", "key-2", "value-2"},
-			},
-			want: "http://name-abc.com/param-amount-2/",
-		},
-		{
-			name: "invalid params set",
-			args: args{
-				where:  "abcd",
-				params: []string{"key-1"},
-			},
-			want: "http://name-abcd.com/param-amount-0/",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			uf := &urlFunc{}
-			uf.Inject(MockRouter{})
+	templateFunction := uf.Func(context.Background()).(func(where string, params ...string) template.URL)
 
-			templateFunction := uf.Func(context.Background()).(func(where string, params ...string) template.URL)
-			if got := templateFunction(tt.args.where, tt.args.params...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("urlFunc() = %q, want %q", got, tt.want)
-			}
-		})
-	}
+	// no params
+	var where = "test"
+	var params []string
+	var want template.URL = "http://name-test.com/param-amount-0/"
+
+	got := templateFunction(where, params...)
+	assert.Equal(t, want, got)
+
+	// valid params
+	where = "test"
+	params = []string{"key-1", "value-1", "key-2", "value-2"}
+	want = "http://name-test.com/param-amount-2/"
+
+	got = templateFunction(where, params...)
+	assert.Equal(t, want, got)
+
+	// invalid params
+	where = "abcd"
+	params = []string{"key-1"}
+	want = "http://name-abcd.com/param-amount-0/"
+
+	got = templateFunction(where, params...)
+	assert.Equal(t, want, got)
 }

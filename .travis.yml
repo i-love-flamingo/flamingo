@@ -12,7 +12,7 @@ install: true
 
 jobs:
   include:
-    - stage: testcurrent
+    - stage: test
       go:
         - 1.x
       script:

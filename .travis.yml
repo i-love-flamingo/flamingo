@@ -1,10 +1,5 @@
 language: go
 
-go:
-  - 1.x
-  - 1.12.x
-  - 1.11.x
-
 env:
   - GO111MODULE=on
 
@@ -12,7 +7,9 @@ install: true
 
 jobs:
   include:
-    - stage: test
+    - stage: testcurrent
+      go:
+        - 1.x
       script:
         - set -e
         - fmt=$(gofmt -l .)
@@ -20,4 +17,15 @@ jobs:
         - go run golang.org/x/lint/golint -set_exit_status $(go list ./...)
         - go generate ./...
         - git diff --quiet || (echo 'generated go files are not up to date, check go generate, go.sum and go.mod' ; git diff ; exit 1)
+        - go test -race -vet=all ./...
+    - stage: testold
+      go:
+        - 1.12.x
+        - 1.11.x
+      script:
+        - set -e
+        - fmt=$(gofmt -l .)
+        - test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
+        - go run golang.org/x/lint/golint -set_exit_status $(go list ./...)
+        - go generate ./...
         - go test -race -vet=all ./...

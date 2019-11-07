@@ -13,7 +13,6 @@ install: true
 jobs:
   include:
     - stage: test
-      name: Common Tests
       script:
         - set -e
         - fmt=$(gofmt -l .)
@@ -21,8 +20,7 @@ jobs:
         - go run golang.org/x/lint/golint -set_exit_status $(go list ./...)
         - go generate ./...
         - go test -race -vet=all ./...
-    - stage: test
-      name: Test generated go.mod
+    - stage: testrecent
       go: 1.x
       script:
         # test is done only for recent version.

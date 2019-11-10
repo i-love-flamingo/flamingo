@@ -46,7 +46,7 @@ func (g *getFunc) Inject(router urlRouter) *getFunc {
 func (g *getFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...string) interface{} {
 		var p = make(map[interface{}]interface{})
-		for i := 0; i < len(params); i += 2 {
+		for i := 0; i < len(params) && len(params)%2 == 0; i += 2 {
 			p[params[i]] = params[i+1]
 		}
 		return g.router.Data(ctx, what, p)
@@ -58,11 +58,11 @@ func (d *dataFunc) Inject(router urlRouter) *dataFunc {
 	return d
 }
 
-// Func as implementation of get method
+// Func as implementation of data method
 func (d *dataFunc) Func(ctx context.Context) interface{} {
 	return func(what string, params ...string) interface{} {
 		var p = make(map[interface{}]interface{})
-		for i := 0; i < len(params); i += 2 {
+		for i := 0; i < len(params) && len(params)%2 == 0; i += 2 {
 			p[params[i]] = params[i+1]
 		}
 		return d.router.Data(ctx, what, p)
@@ -78,7 +78,7 @@ func (u *urlFunc) Inject(router urlRouter) *urlFunc {
 func (u *urlFunc) Func(context.Context) interface{} {
 	return func(where string, params ...string) template.URL {
 		var p = make(map[string]string)
-		for i := 0; i < len(params); i += 2 {
+		for i := 0; i < len(params) && len(params)%2 == 0; i += 2 {
 			p[params[i]] = params[i+1]
 		}
 		url, _ := u.router.Relative(where, p)

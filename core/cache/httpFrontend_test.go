@@ -1,4 +1,4 @@
-package cache
+package cache_test
 
 import (
 	"bufio"
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"flamingo.me/flamingo/v3/core/cache"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
@@ -38,15 +39,15 @@ func (_m *MockBackend) Flush() error {
 }
 
 // Get provides a mock function with given fields: key
-func (_m *MockBackend) Get(key string) (*Entry, bool) {
+func (_m *MockBackend) Get(key string) (*cache.Entry, bool) {
 	ret := _m.Called(key)
 
-	var r0 *Entry
-	if rf, ok := ret.Get(0).(func(string) *Entry); ok {
+	var r0 *cache.Entry
+	if rf, ok := ret.Get(0).(func(string) *cache.Entry); ok {
 		r0 = rf(key)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*Entry)
+			r0 = ret.Get(0).(*cache.Entry)
 		}
 	}
 
@@ -89,11 +90,11 @@ func (_m *MockBackend) PurgeTags(tags []string) error {
 }
 
 // Set provides a mock function with given fields: key, entry
-func (_m *MockBackend) Set(key string, entry *Entry) error {
+func (_m *MockBackend) Set(key string, entry *cache.Entry) error {
 	ret := _m.Called(key, entry)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, *Entry) error); ok {
+	if rf, ok := ret.Get(0).(func(string, *cache.Entry) error); ok {
 		r0 = rf(key, entry)
 	} else {
 		r0 = ret.Error(0)
@@ -102,8 +103,8 @@ func (_m *MockBackend) Set(key string, entry *Entry) error {
 	return r0
 }
 
-func createLoader(statusCode int, body string, err error) func(ctx context.Context) (*http.Response, *Meta, error) {
-	return func(ctx context.Context) (*http.Response, *Meta, error) {
+func createLoader(statusCode int, body string, err error) func(ctx context.Context) (*http.Response, *cache.Meta, error) {
+	return func(ctx context.Context) (*http.Response, *cache.Meta, error) {
 		return createResponse(statusCode, body), nil, err
 	}
 }
@@ -128,13 +129,13 @@ func TestHTTPFrontend_Get(t *testing.T) {
 
 	type args struct {
 		key    string
-		loader HTTPLoader
+		loader cache.HTTPLoader
 	}
 	tests := []struct {
 		name string
 		args args
 		// Entry returned by Backend Get
-		cacheEntry *Entry
+		cacheEntry *cache.Entry
 		// expected response from HTTPFrontend
 		want    *http.Response
 		wantErr bool
@@ -174,15 +175,16 @@ func TestHTTPFrontend_Get(t *testing.T) {
 				key:    "test",
 				loader: nil,
 			},
-			cacheEntry: &Entry{
-				Meta: Meta{
-					lifetime:  inFuture,
-					gracetime: inFuture,
-				},
-				Data: cachedResponse{
-					orig: createResponse(200, "foo"),
-					body: []byte("foo"),
-				},
+			cacheEntry: &cache.Entry{
+				Meta: cache.NewEntryMeta(
+					inFuture,
+					inFuture,
+					[]string{},
+				),
+				Data: cache.NewCachedResponse(
+					createResponse(200, "foo"),
+					[]byte("foo"),
+				),
 			},
 			want:             createResponse(200, "foo"),
 			wantedCachedData: nil,
@@ -195,15 +197,16 @@ func TestHTTPFrontend_Get(t *testing.T) {
 				key:    "test",
 				loader: createLoader(200, "body", nil),
 			},
-			cacheEntry: &Entry{
-				Meta: Meta{
-					lifetime:  inPast,
-					gracetime: inFuture,
-				},
-				Data: cachedResponse{
-					orig: createResponse(200, "foo"),
-					body: []byte("foo"),
-				},
+			cacheEntry: &cache.Entry{
+				Meta: cache.NewEntryMeta(
+					inPast,
+					inFuture,
+					[]string{},
+				),
+				Data: cache.NewCachedResponse(
+					createResponse(200, "foo"),
+					[]byte("foo"),
+				),
 			},
 			// we expect the cached value as result, but a the actual value from loader to be cached (async)
 			want:             createResponse(200, "foo"),
@@ -217,15 +220,16 @@ func TestHTTPFrontend_Get(t *testing.T) {
 				key:    "test",
 				loader: createLoader(200, "body", nil),
 			},
-			cacheEntry: &Entry{
-				Meta: Meta{
-					lifetime:  inPast,
-					gracetime: inPast,
-				},
-				Data: cachedResponse{
-					orig: createResponse(200, "foo"),
-					body: []byte("foo"),
-				},
+			cacheEntry: &cache.Entry{
+				Meta: cache.NewEntryMeta(
+					inPast,
+					inPast,
+					[]string{},
+				),
+				Data: cache.NewCachedResponse(
+					createResponse(200, "foo"),
+					[]byte("foo"),
+				),
 			},
 			// cached value is invalid, so the actual value from loader is expected as response and to be cached
 			want:             createResponse(200, "body"),
@@ -242,8 +246,12 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			setCall := backendMock.On(
 				"Set",
 				tt.args.key,
-				mock.MatchedBy(func(e *Entry) bool {
-					return assert.Equal(t, e.Data.(cachedResponse).body, tt.wantedCachedData)
+				mock.MatchedBy(func(e *cache.Entry) bool {
+					return assert.Equal(
+						t,
+						e.Data.(cache.CachedResponse).Body(),
+						tt.wantedCachedData,
+					)
 				}),
 			).Run(func(args mock.Arguments) {
 				cacheSetComplete <- struct{}{}
@@ -256,7 +264,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 				cacheSetComplete <- struct{}{}
 			}
 
-			hf := new(HTTPFrontend).Inject(
+			hf := new(cache.HTTPFrontend).Inject(
 				backendMock,
 				&flamingo.NullLogger{},
 			)

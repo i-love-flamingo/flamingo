@@ -36,3 +36,12 @@ type (
 		span trace.SpanContext
 	}
 )
+
+// NewEntryMeta builds a new Meta Object for an CacheEntry
+func NewEntryMeta(lifetime time.Time, gracetime time.Time, tags []string) Meta {
+	return Meta{
+		lifetime:  lifetime,
+		gracetime: gracetime,
+		Tags:      tags,
+	}
+}

@@ -29,11 +29,25 @@ type (
 		io.Reader
 	}
 
-	cachedResponse struct {
+	// CachedResponse represents an cache http response entry
+	CachedResponse struct {
 		orig *http.Response
 		body []byte
 	}
 )
+
+// NewCachedResponse creates an new repsonse object for http frontend cache response
+func NewCachedResponse(orig *http.Response, body []byte) CachedResponse {
+	return CachedResponse{
+		orig: orig,
+		body: body,
+	}
+}
+
+// Body is an getter for cachedResponse.body
+func (cb CachedResponse) Body() []byte {
+	return cb.body
+}
 
 // Inject HTTPFrontend dependencies
 func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) *HTTPFrontend {
@@ -54,7 +68,7 @@ func GetHTTPFrontendCacheWithNullBackend() *HTTPFrontend {
 // Close the nopCloser to implement io.Closer
 func (nopCloser) Close() error { return nil }
 
-func copyResponse(response cachedResponse, err error) (*http.Response, error) {
+func copyResponse(response CachedResponse, err error) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -84,13 +98,13 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 	if entry, ok := hf.backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Serving from cache", key)
-			return copyResponse(entry.Data.(cachedResponse), nil)
+			return copyResponse(entry.Data.(CachedResponse), nil)
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
 			go hf.load(context.Background(), key, loader)
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
-			return copyResponse(entry.Data.(cachedResponse), nil)
+			return copyResponse(entry.Data.(CachedResponse), nil)
 		}
 	}
 	hf.logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
@@ -98,7 +112,7 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 	return copyResponse(hf.load(ctx, key, loader))
 }
 
-func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader) (cachedResponse, error) {
+func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader) (CachedResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/load")
 	span.Annotate(nil, key)
 	defer span.End()
@@ -138,7 +152,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 
 		response.Body.Close()
 
-		cached := cachedResponse{
+		cached := CachedResponse{
 			orig: response,
 			body: body,
 		}
@@ -155,7 +169,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 
 	if data == nil {
 		data = loaderResponse{
-			cachedResponse{
+			CachedResponse{
 				orig: new(http.Response),
 				body: []byte{},
 			},
@@ -168,9 +182,9 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 	}
 
 	loadedData := data.(loaderResponse).data
-	var cached cachedResponse
+	var cached CachedResponse
 	if loadedData != nil {
-		cached = loadedData.(cachedResponse)
+		cached = loadedData.(CachedResponse)
 	}
 
 	hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)

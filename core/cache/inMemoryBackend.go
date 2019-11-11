@@ -10,7 +10,8 @@ const lurkerPeriod = 1 * time.Minute
 
 type (
 	inMemoryCache struct {
-		pool *lru.TwoQueueCache
+		backendMetrics BackendMetrics
+		pool           *lru.TwoQueueCache
 	}
 
 	inMemoryCacheEntry struct {
@@ -24,7 +25,8 @@ func NewInMemoryCache() Backend {
 	cache, _ := lru.New2Q(100)
 
 	m := &inMemoryCache{
-		pool: cache,
+		pool:           cache,
+		backendMetrics: NewBackendMetrics("inMemory"),
 	}
 	go m.lurker()
 	return m
@@ -34,8 +36,10 @@ func NewInMemoryCache() Backend {
 func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	entry, ok := m.pool.Get(key)
 	if !ok {
+		m.backendMetrics.countMiss()
 		return nil, ok
 	}
+	m.backendMetrics.countHit()
 	return entry.(inMemoryCacheEntry).data.(*Entry), ok
 }
 
@@ -79,3 +83,9 @@ func (m *inMemoryCache) lurker() {
 		}
 	}
 }
+
+// FlushSupport returns true, because the Backend supports it
+func (*inMemoryCache) FlushSupport() bool { return true }
+
+// TagSupport returns false, because the Backend doesn't support
+func (*inMemoryCache) TagSupport() bool { return false }

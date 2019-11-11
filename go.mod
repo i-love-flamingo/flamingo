@@ -4,16 +4,23 @@ go 1.13
 
 require (
 	flamingo.me/dingo v0.1.6
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-units v0.4.0 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20180513044358-24b0969c4cb7
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect
+	github.com/imdario/mergo v0.3.8
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91
@@ -21,7 +28,11 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
+	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
+	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/openzipkin/zipkin-go v0.1.6
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/pkg/errors v0.8.1
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect

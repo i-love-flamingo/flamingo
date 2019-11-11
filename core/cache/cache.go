@@ -28,6 +28,8 @@ type (
 		Purge(key string) error
 		PurgeTags(tags []string) error
 		Flush() error
+		TagSupport() bool
+		FlushSupport() bool
 	}
 
 	loaderResponse struct {

@@ -48,7 +48,10 @@ func (r *routes) Inject(
 
 func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleGet("api.translations", r.translationController.GetAllTranslations)
-	registry.Route("/api/translations", "api.translations")
+	_, err := registry.Route("/api/translations", "api.translations")
+	if err != nil {
+		panic(err)
+	}
 }
 
 // DefaultConfig for this module

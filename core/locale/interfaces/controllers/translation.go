@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// TranslationController
+	// TranslationController to be used to return translations for all labels as array
 	TranslationController struct {
 		responder    *web.Responder
 		labelService *application.LabelService

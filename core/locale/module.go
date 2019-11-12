@@ -15,7 +15,7 @@ import (
 type (
 	// Module registers our profiler
 	Module struct {
-		UseTranslationAPI bool `inject:"config:locale.useTranslationApi"`
+		UseTranslationAPI bool `inject:"config:locale.useTranslationApi,optional"`
 	}
 
 	routes struct {

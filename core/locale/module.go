@@ -15,7 +15,7 @@ import (
 type (
 	// Module registers our profiler
 	Module struct {
-		UseTranslationApi bool `inject:"config:locale.useTranslationApi"`
+		UseTranslationAPI bool `inject:"config:locale.useTranslationApi"`
 	}
 
 	routes struct {
@@ -28,7 +28,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(domain.TranslationService)).In(dingo.ChildSingleton).To(infrastructure.TranslationService{})
 	injector.Bind(new(application.DateTimeServiceInterface)).To(application.DateTimeService{})
 
-	if m.UseTranslationApi {
+	if m.UseTranslationAPI {
 		web.BindRoutes(injector, new(routes))
 	}
 

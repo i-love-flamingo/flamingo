@@ -7,17 +7,20 @@ import (
 )
 
 type (
+	// TranslationController
 	TranslationController struct {
 		responder    *web.Responder
 		labelService *application.LabelService
 	}
 
-	TranslationJson struct {
+	// TranslationJSON helper struct to map the result
+	TranslationJSON struct {
 		Key         string `json:"key"`
 		Translation string `json:"translation"`
 	}
 )
 
+// Inject dependencies
 func (c *TranslationController) Inject(
 	responder *web.Responder,
 	labelService *application.LabelService,
@@ -26,12 +29,13 @@ func (c *TranslationController) Inject(
 	c.labelService = labelService
 }
 
+// GetAllTranslations controller for TranslationController
 func (c *TranslationController) GetAllTranslations(ctx context.Context, r *web.Request) web.Result {
-	translations := []TranslationJson{}
-	l := c.labelService.AllLabels(ctx, *r)
+	translations := []TranslationJSON{}
+	l := c.labelService.AllLabels()
 
 	for _, la := range l {
-		translations = append(translations, TranslationJson{
+		translations = append(translations, TranslationJSON{
 			Key:         la.GetKey(),
 			Translation: la.String(),
 		})

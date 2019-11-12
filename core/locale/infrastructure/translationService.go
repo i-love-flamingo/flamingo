@@ -85,7 +85,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 
 }
 
-// Returns all keys for a given locale code
+// AllTranslationTags returns all keys for a given locale code
 func (ts *TranslationService) AllTranslationTags(localeCode string) []string {
 	ts.initAndLoad()
 	return ts.i18bundle.LanguageTranslationIDs(localeCode)

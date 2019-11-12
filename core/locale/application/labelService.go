@@ -1,11 +1,9 @@
 package application
 
 import (
-	"context"
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/core/locale/infrastructure"
 	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -39,8 +37,8 @@ func (l *LabelService) NewLabel(key string) *domain.Label {
 	return label.SetKey(key).SetDefaultLabel(key).SetLocale(l.defaultLocaleCode).SetCount(1).SetFallbackLocales(l.defaultFallbackLocaleCodes)
 }
 
-// All labels for the API request
-func (l *LabelService) AllLabels(ctx context.Context, r web.Request) []domain.Label {
+// AllLabels return a array of all labels
+func (l *LabelService) AllLabels() []domain.Label {
 	var labels []domain.Label
 	tags := l.translationService.AllTranslationTags(l.defaultLocaleCode)
 

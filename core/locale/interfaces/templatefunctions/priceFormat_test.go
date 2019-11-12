@@ -30,7 +30,7 @@ func FakeLabelProvider() *domain.Label {
 func TestPriceFormatFunc_Func(t *testing.T) {
 	labelService := &application.LabelService{}
 
-	labelService.Inject(FakeLabelProvider, nil)
+	labelService.Inject(FakeLabelProvider, nil, nil)
 
 	type fields struct {
 		config       config.Map `inject:"config:locale.accounting"`

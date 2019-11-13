@@ -2,7 +2,6 @@ package application
 
 import (
 	"flamingo.me/flamingo/v3/core/locale/domain"
-	"flamingo.me/flamingo/v3/core/locale/infrastructure"
 	"flamingo.me/flamingo/v3/framework/config"
 )
 
@@ -12,14 +11,14 @@ type (
 		labelProvider              labelProvider
 		defaultLocaleCode          string
 		defaultFallbackLocaleCodes []string
-		translationService         *infrastructure.TranslationService
+		translationService         domain.TranslationService
 	}
 
 	labelProvider func() *domain.Label
 )
 
 // Inject dependencies
-func (l *LabelService) Inject(labelProvider labelProvider, translationService *infrastructure.TranslationService, config *struct {
+func (l *LabelService) Inject(labelProvider labelProvider, translationService domain.TranslationService, config *struct {
 	DefaultLocaleCode string       `inject:"config:locale.locale"`
 	FallbackLocalCode config.Slice `inject:"config:locale.fallbackLocales,optional"`
 }) {
@@ -40,7 +39,7 @@ func (l *LabelService) NewLabel(key string) *domain.Label {
 // AllLabels return a array of all labels
 func (l *LabelService) AllLabels() []domain.Label {
 	var labels []domain.Label
-	tags := l.translationService.AllTranslationTags(l.defaultLocaleCode)
+	tags := l.translationService.AllTranslationKeys(l.defaultLocaleCode)
 
 	for _, tag := range tags {
 		label := l.NewLabel(tag)

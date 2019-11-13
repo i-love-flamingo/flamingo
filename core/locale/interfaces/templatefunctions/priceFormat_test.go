@@ -13,6 +13,13 @@ import (
 
 type FakeTranslationService struct{}
 
+func (s *FakeTranslationService) AllTranslationKeys(localeCode string) []string {
+	return []string{
+		"key1",
+		"key2",
+	}
+}
+
 func (s *FakeTranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
 	return defaultLabel
 }

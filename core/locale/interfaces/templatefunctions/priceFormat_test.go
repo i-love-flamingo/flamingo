@@ -13,6 +13,13 @@ import (
 
 type FakeTranslationService struct{}
 
+func (s *FakeTranslationService) AllTranslationKeys(localeCode string) []string {
+	return []string{
+		"key1",
+		"key2",
+	}
+}
+
 func (s *FakeTranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
 	return defaultLabel
 }
@@ -30,7 +37,7 @@ func FakeLabelProvider() *domain.Label {
 func TestPriceFormatFunc_Func(t *testing.T) {
 	labelService := &application.LabelService{}
 
-	labelService.Inject(FakeLabelProvider, nil)
+	labelService.Inject(FakeLabelProvider, nil, nil)
 
 	type fields struct {
 		config       config.Map `inject:"config:locale.accounting"`

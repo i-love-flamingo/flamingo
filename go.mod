@@ -25,8 +25,6 @@ require (
 	github.com/leekchan/accounting v0.0.0-20191104051123-0b9b0bd19c36
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/openzipkin/zipkin-go v0.2.0
 	github.com/pact-foundation/pact-go v0.0.13
@@ -38,7 +36,6 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
-	github.com/vektra/mockery v0.0.0-20181123154057-e78b021dcbb5 // indirect
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.22.2-0.20191001044506-fa651b05963c
 	go.uber.org/atomic v1.3.2 // indirect

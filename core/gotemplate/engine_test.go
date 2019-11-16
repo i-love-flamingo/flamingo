@@ -1,12 +1,12 @@
 package gotemplate
 
 import (
-	"bytes"
 	"context"
-	"io"
-	"reflect"
+	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -46,7 +46,7 @@ func Test_engine_Render(t *testing.T) {
 		name         string
 		engineConfig engineConfig
 		renderArgs   renderArgs
-		want         io.Reader
+		want         string
 		wantErr      bool
 	}{
 		{
@@ -78,7 +78,7 @@ func Test_engine_Render(t *testing.T) {
 				name: "non-existing-template",
 				data: nil,
 			},
-			want:    nil,
+			want:    "",
 			wantErr: true,
 		},
 		{
@@ -93,7 +93,7 @@ func Test_engine_Render(t *testing.T) {
 				name: "simple",
 				data: nil,
 			},
-			want:    bytes.NewBuffer([]byte("Hello World!")),
+			want:    "Hello World!",
 			wantErr: false,
 		},
 		{
@@ -110,11 +110,10 @@ func Test_engine_Render(t *testing.T) {
 					Time time.Time
 				}{time.Unix(0, 0)},
 			},
-			want: bytes.NewBuffer([]byte(
-				`Upper: HELLO WORLD!
+			want: `Upper: HELLO WORLD!
 formatDate: 1970-01-01
 map (invalid params): map[]
-map (valid params): map[a:b]`)),
+map (valid params): map[a:b]`,
 			wantErr: false,
 		},
 		{
@@ -131,12 +130,11 @@ map (valid params): map[a:b]`)),
 					Time time.Time
 				}{time.Unix(0, 0)},
 			},
-			want: bytes.NewBuffer([]byte(
-				`Upper: HELLO WORLD!
+			want: `Upper: HELLO WORLD!
 formatDate: 1970-01-01
 map (invalid params): map[]
 map (valid params): map[x:y]
-customTemplateFunc: test-abc`)),
+customTemplateFunc: test-abc`,
 			wantErr: false,
 		},
 		{
@@ -151,10 +149,9 @@ customTemplateFunc: test-abc`)),
 				name: "dir-a/sub-dir-a/main",
 				data: nil,
 			},
-			want: bytes.NewBuffer([]byte(
-				`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Title</title></head><body><div>Hello World!</div></body></html>
+			want: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Title</title></head><body><div>Hello World!</div></body></html>
 
-`)),
+`,
 			wantErr: false,
 		},
 	}
@@ -170,13 +167,18 @@ customTemplateFunc: test-abc`)),
 				tt.engineConfig.layoutTemplatesDir,
 				tt.engineConfig.debug,
 			})
-			got, err := e.Render(context.Background(), tt.renderArgs.name, tt.renderArgs.data)
+
+			gotReader, err := e.Render(context.Background(), tt.renderArgs.name, tt.renderArgs.data)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Render() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Render() got = %v, want %v", got, tt.want)
+
+			if gotReader != nil {
+				got, _ := ioutil.ReadAll(gotReader)
+				if diff := cmp.Diff(string(got), tt.want); diff != "" {
+					t.Errorf("Render() -got +want: %v", diff)
+				}
 			}
 		})
 	}

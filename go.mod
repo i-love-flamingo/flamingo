@@ -13,7 +13,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/google/go-cmp v0.3.1
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.3

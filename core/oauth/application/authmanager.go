@@ -88,7 +88,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
 	DebugMode           bool         `inject:"config:debug.mode"`
-	Enabled	            bool         `inject:"config:oauth.enabled"`
+	Enabled             bool         `inject:"config:oauth.enabled"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -189,7 +189,6 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 	if !am.disableOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
-
 
 	oauth2Config := &oauth2.Config{
 		ClientID:     am.clientID,

@@ -26,10 +26,13 @@ type (
 		Set(key string, entry *Entry) error        // Set a cache entry
 		//Peek(key string) (entry *CacheEntry, found bool) // Peek for a cache entry, this should not trigger key-updates or weight/priorities to be changed
 		Purge(key string) error
-		PurgeTags(tags []string) error
 		Flush() error
-		TagSupport() bool
-		FlushSupport() bool
+	}
+
+	// TagSupportingBackend describes a cache backend, responsible for storing, flushing, setting and getting entries
+	TagSupportingBackend interface {
+		Backend
+		PurgeTags(tags []string) error
 	}
 
 	loaderResponse struct {

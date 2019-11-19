@@ -87,14 +87,26 @@ func (fb *FileBackend) Purge(key string) error {
 	return nil
 }
 
-// PurgeTags is not supported by FileBackend and does nothing
-func (*FileBackend) PurgeTags(tags []string) error { return nil }
+func (fb *FileBackend) deleteFolderContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // Flush is not supported by FileBackend and does nothing
-func (*FileBackend) Flush() error { return nil }
-
-// FlushSupport returns false, because the Backend doesn't support
-func (*FileBackend) FlushSupport() bool { return false }
-
-// TagSupport returns false, because the Backend doesn't support
-func (*FileBackend) TagSupport() bool { return false }
+func (fb *FileBackend) Flush() error {
+	return fb.deleteFolderContents(fb.baseDir)
+}

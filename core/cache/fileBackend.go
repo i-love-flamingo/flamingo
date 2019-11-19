@@ -29,6 +29,8 @@ func NewFileBackend(baseDir string) *FileBackend {
 		baseDir = defaultBaseDir
 	}
 
+	_ = os.MkdirAll(baseDir, os.ModePerm)
+
 	fb := &FileBackend{
 		baseDir:        baseDir,
 		backendMetrics: NewBackendMetrics("file"),

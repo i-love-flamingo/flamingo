@@ -80,34 +80,8 @@ func (mb *MultiLevelBackend) Purge(key string) error {
 	return nil
 }
 
-// PurgeTags purges erntries by tags
-func (mb *MultiLevelBackend) PurgeTags(tags []string) error {
-	if mb.FlushSupport() {
-		return errors.New("Not supported by this backend")
-	}
-
-	errorList := []error{}
-	for _, backend := range mb.backends {
-		err := backend.PurgeTags(tags)
-		if err != nil {
-			errorList = append(errorList, err)
-			mb.logger.WithField("category", "multiLevelBackend").Error(fmt.Sprintf("Failed PurgeTags %v with error %v", tags, err))
-		}
-	}
-
-	if 0 != len(errorList) {
-		return errors.New("not all backends succeeded")
-	}
-
-	return nil
-}
-
 // Flush the whole cache
 func (mb *MultiLevelBackend) Flush() error {
-	if !mb.FlushSupport() {
-		return errors.New("not supported by this backend")
-	}
-
 	errorList := []error{}
 	for _, backend := range mb.backends {
 		err := backend.Flush()
@@ -122,26 +96,4 @@ func (mb *MultiLevelBackend) Flush() error {
 	}
 
 	return nil
-}
-
-// FlushSupport returns true, if all registered backends supports the flush method
-func (mb *MultiLevelBackend) FlushSupport() bool {
-	for _, backend := range mb.backends {
-		if !backend.FlushSupport() {
-			return false
-		}
-	}
-
-	return true
-}
-
-// TagSupport returns true, if all registered backends supports tags
-func (mb *MultiLevelBackend) TagSupport() bool {
-	for _, backend := range mb.backends {
-		if !backend.TagSupport() {
-			return false
-		}
-	}
-
-	return true
 }

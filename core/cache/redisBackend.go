@@ -382,9 +382,3 @@ func (b *RedisBackend) unLock(conn redis.Conn, key string) (err error) {
 
 	return nil
 }
-
-// FlushSupport returns true, because the Backend supports it
-func (*RedisBackend) FlushSupport() bool { return true }
-
-// TagSupport returns true, because the Backend supports it
-func (*RedisBackend) TagSupport() bool { return true }

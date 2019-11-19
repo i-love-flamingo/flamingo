@@ -32,11 +32,9 @@ func NewBackendTestCase(t *testing.T, backend Backend, tagsInResult bool) *Backe
 func (tc *BackendTestCase) RunTests() {
 	tc.testSetGetPurge()
 
-	if tc.backend.FlushSupport() {
-		tc.testFlush()
-	}
+	tc.testFlush()
 
-	if tc.backend.TagSupport() {
+	if _, ok := tc.backend.(TagSupportingBackend); ok {
 		tc.testPurgeTags()
 	}
 }
@@ -82,7 +80,7 @@ func (tc *BackendTestCase) testPurgeTags() {
 	tc.setEntry("THIRD_KEY", entryWithoutTags)
 
 	tagsToPurge := []string{"eins"}
-	err := tc.backend.PurgeTags(tagsToPurge)
+	err := tc.backend.(TagSupportingBackend).PurgeTags(tagsToPurge)
 	if err != nil {
 		tc.t.Fatalf("Purge Tags Failed: %v", err)
 	}

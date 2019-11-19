@@ -60,11 +60,6 @@ func (m *inMemoryCache) Purge(key string) error {
 	return nil
 }
 
-// PurgeTags purges all entries with matching tags from the cache
-func (m *inMemoryCache) PurgeTags(tags []string) error {
-	panic("implement me")
-}
-
 // Flush purges all entries in the cache
 func (m *inMemoryCache) Flush() error {
 	m.pool.Purge()
@@ -83,9 +78,3 @@ func (m *inMemoryCache) lurker() {
 		}
 	}
 }
-
-// FlushSupport returns true, because the Backend supports it
-func (*inMemoryCache) FlushSupport() bool { return true }
-
-// TagSupport returns false, because the Backend doesn't support
-func (*inMemoryCache) TagSupport() bool { return false }

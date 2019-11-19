@@ -19,7 +19,7 @@ var (
 
 var (
 	// Assert the interface is matched
-	_ cache.Backend = &cache.RedisBackend{}
+	_ cache.TagSupportingBackend = &cache.RedisBackend{}
 )
 
 // TestMain set

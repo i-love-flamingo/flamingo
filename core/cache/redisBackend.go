@@ -68,6 +68,10 @@ var (
 	redisKeyRegex = regexp.MustCompile(`[^a-zA-Z0-9]`)
 )
 
+func init() {
+	gob.Register(new(RedisCacheEntry))
+}
+
 func redisConnector(network, address, password string) (redis.Conn, error) {
 	c, err := redis.Dial(network, address)
 	if err != nil {
@@ -297,10 +301,6 @@ func (b *RedisBackend) Flush() error {
 }
 
 func (b *RedisBackend) encodeEntry(entry *RedisCacheEntry) (*bytes.Buffer, error) {
-	gob.Register(entry)
-	gob.Register(entry.Data)
-	gob.Register(entry.Meta)
-
 	buffer := new(bytes.Buffer)
 	err := gob.NewEncoder(buffer).Encode(entry)
 	if err != nil {

@@ -74,7 +74,7 @@ func (mb *MultiLevelBackend) Purge(key string) error {
 	}
 
 	if 0 != len(errorList) {
-		return errors.New(fmt.Sprintf("Not all backends succeeded to Purge key %v, Errors: %v", key, errorList))
+		return fmt.Errorf("Not all backends succeeded to Purge key %v, Errors: %v", key, errorList)
 	}
 
 	return nil
@@ -92,7 +92,7 @@ func (mb *MultiLevelBackend) Flush() error {
 	}
 
 	if 0 != len(errorList) {
-		return errors.New(fmt.Sprintf("Not all backends succeeded to Flush. Errors: %v", errorList))
+		return fmt.Errorf("Not all backends succeeded to Flush. Errors: %v", errorList)
 	}
 
 	return nil

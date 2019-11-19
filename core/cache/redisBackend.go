@@ -16,7 +16,6 @@ import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gomodule/redigo/redis"
 	"github.com/imdario/mergo"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -352,7 +351,7 @@ func (b *RedisBackend) lock(conn redis.Conn, key string) (err error) {
 	)
 	lockValue, err := redis.String(reply, err)
 	if "1" == lockValue || err != nil {
-		return errors.New(fmt.Sprintf("Lock for key %v already exists", key))
+		return fmt.Errorf("Lock for key %v already exists", key)
 	}
 
 	_, err = conn.Do(
@@ -363,7 +362,7 @@ func (b *RedisBackend) lock(conn redis.Conn, key string) (err error) {
 	)
 
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to get log for key '%v' with error %v", key, err))
+		return fmt.Errorf("Failed to get log for key '%v' with error %v", key, err)
 	}
 
 	return nil
@@ -377,7 +376,7 @@ func (b *RedisBackend) unLock(conn redis.Conn, key string) (err error) {
 	)
 
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to releasing a lock for key '%v' with error %v", key, err))
+		return fmt.Errorf("Failed to releasing a lock for key '%v' with error %v", key, err)
 	}
 
 	return nil

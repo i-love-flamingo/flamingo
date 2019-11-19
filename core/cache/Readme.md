@@ -56,6 +56,32 @@ response, err := apiclient.Cache.Get(requestContext, u.String(), loadData)
 ## Cache backends
 
 Currently there are the following backends available:
-* inMemoryCache (caches in memory - and therefore is a very fast cache)
-* fileBackend (caches in filesystem )
-* nullBackend (caches nothing)
+
+### inMemoryCache
+
+Caches in memory - and therefore is a very fast cache.
+
+It is base on the LRU-Strategy witch drops least used entries. For this reason the cache will be no overcommit your memory and will automicly fit the need of your current traffic.
+
+### redisBackend
+
+Is using [redis](https://redis.io/) as an shared inMemory cache.
+Since all cache-fetched has an overhead to the inMemoryBackend, the redis is a little slower.
+The benefit of redis is the shared storage an the high efficiency in reading and writing keys. especialy if you need scale fast horizonaly, it helps to keep your backend-systems healthy.
+
+Be ware of using redis (or any other shared cache backend) as an single backend, because of network latency. (have a loo at the multiLevelBackend)
+
+### fileBackend
+
+Writes the cache content to the local filesystem.
+
+### nullBackend
+
+Caches nothing.
+
+### multiLevelBackend
+
+The multiLevelBackend was introduced to get the benefit of the extrem fast inMemorybackend and a shared backend.
+Using the inMemoryBackend in combination with an shared backend, gives you blazing fast responces and helps you to protect you backend in case of fast scaleout-scenarios.
+
+@TODO: Write example code.

@@ -102,12 +102,6 @@ func (_m *MockBackend) Set(key string, entry *Entry) error {
 	return r0
 }
 
-// FlushSupport returns false, because the Backend doesn't support
-func (*MockBackend) FlushSupport() bool { return false }
-
-// TagSupport returns false, because the Backend doesn't support
-func (*MockBackend) TagSupport() bool { return false }
-
 func createLoader(statusCode int, body string, err error) func(ctx context.Context) (*http.Response, *Meta, error) {
 	return func(ctx context.Context) (*http.Response, *Meta, error) {
 		return createResponse(statusCode, body), nil, err

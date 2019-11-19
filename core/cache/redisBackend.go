@@ -351,7 +351,7 @@ func (b *RedisBackend) lock(conn redis.Conn, key string) (err error) {
 	)
 	lockValue, err := redis.String(reply, err)
 	if "1" == lockValue || err != nil {
-		return fmt.Errorf("Lock for key %v already exists", key)
+		return fmt.Errorf("Lock for key %v already exists, %v", key, err)
 	}
 
 	_, err = conn.Do(

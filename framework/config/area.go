@@ -266,6 +266,10 @@ func resolveDependencies(modules []dingo.Module, known map[reflect.Type]struct{}
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
 func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
+	if area.Injector != nil {
+		return area.Injector, nil
+	}
+
 	var injector *dingo.Injector
 	if area.Parent != nil {
 		injector = area.Parent.Injector.Child()

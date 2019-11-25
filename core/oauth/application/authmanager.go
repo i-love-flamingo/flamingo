@@ -244,7 +244,7 @@ func (am *AuthManager) GetRawIDToken(c context.Context, session *web.Session) (s
 // IDToken retrieves and validates the ID Token from the session
 func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
 	if am.OpenIDProvider() == nil {
-		return nil, "", errors.New("OAuth not available.")
+		return nil, "", errors.New("oauth not available")
 	}
 	c = am.OAuthCtx(c)
 	if session == nil {

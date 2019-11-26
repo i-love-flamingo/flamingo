@@ -45,6 +45,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) DefaultConfig() config.Map {
 	return config.Map{
 		"oauth": config.Map{
+			"enabled":           true,
 			"useFake":           false,
 			"fakeUserData":      config.Map{},
 			"fakeLoginTemplate": "",

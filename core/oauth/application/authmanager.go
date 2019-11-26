@@ -78,7 +78,7 @@ func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 }
 
 // Inject authManager dependencies
-func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openIDProvider *oidc.Provider, config *struct {
+func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config *struct {
 	Server              string       `inject:"config:oauth.server"`
 	Secret              string       `inject:"config:oauth.secret"`
 	ClientID            string       `inject:"config:oauth.clientid"`
@@ -88,6 +88,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
 	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
 	DebugMode           bool         `inject:"config:debug.mode"`
+	Enabled             bool         `inject:"config:oauth.enabled"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -100,6 +101,10 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, openID
 		am.idTokenMapping = config.IDTokenMapping
 		am.userInfoMapping = config.UserInfoMapping
 		am.tokenExtras = config.TokenExtras
+		if !config.Enabled {
+			am.logger.Warn("OIDC is disabled. Modules depending on OAuth features cannot work properly")
+			return
+		}
 
 		var err error
 		am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
@@ -190,12 +195,13 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 		ClientSecret: am.secret,
 		RedirectURL:  redirectURL,
 
-		Endpoint: am.OpenIDProvider().Endpoint(),
-
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
 
 		ClaimSet: am.getClaimsRequestParameter(),
+	}
+	if am.OpenIDProvider() != nil {
+		oauth2Config.Endpoint = am.OpenIDProvider().Endpoint()
 	}
 
 	am.logger.WithField(flamingo.LogKeyCategory, "auth").Debug("am.oauth2Config", oauth2Config)
@@ -237,6 +243,9 @@ func (am *AuthManager) GetRawIDToken(c context.Context, session *web.Session) (s
 
 // IDToken retrieves and validates the ID Token from the session
 func (am *AuthManager) getIDToken(c context.Context, session *web.Session) (*oidc.IDToken, string, error) {
+	if am.OpenIDProvider() == nil {
+		return nil, "", errors.New("oauth not available")
+	}
 	c = am.OAuthCtx(c)
 	if session == nil {
 		return nil, "", errors.New("no session configured")

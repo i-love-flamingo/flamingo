@@ -64,7 +64,7 @@ func (ums *UserMappingService) MapToUser(claims map[string]interface{}, session 
 		panic(err)
 	}
 
-	claims = ensureClaims(claims, session)
+	claims = ums.ensureClaims(mapping, claims, session)
 
 	return &User{
 		Sub:          ums.mapField(mapping.Sub, claims),
@@ -93,15 +93,27 @@ func init() {
 	gob.Register(map[string]interface{}{})
 }
 
-func ensureClaims(claims map[string]interface{}, session *web.Session) map[string]interface{} {
+func (ums *UserMappingService) ensureClaims(mapping userMapping, claims map[string]interface{}, session *web.Session) map[string]interface{} {
 	var cached map[string]interface{}
 	if raw, ok := session.Load(sessionkey); ok {
 		cached, _ = raw.(map[string]interface{})
 	}
 
-	for k, v := range cached {
-		if _, known := claims[k]; !known {
-			claims[k] = v
+	claimsSubjectID := ""
+	if claims != nil {
+		claimsSubjectID = ums.mapField(mapping.Sub, claims)
+	}
+
+	cachedSubjectID := ""
+	if cached != nil {
+		cachedSubjectID = ums.mapField(mapping.Sub, cached)
+	}
+
+	if claimsSubjectID != "" && claimsSubjectID == cachedSubjectID {
+		for k, v := range cached {
+			if _, known := claims[k]; !known {
+				claims[k] = v
+			}
 		}
 	}
 

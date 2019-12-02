@@ -18,6 +18,7 @@ type (
 
 		context    context.Context
 		request    *web.Request
+		params     web.RequestParams
 		webSession *web.Session
 	}
 )
@@ -30,7 +31,10 @@ func (t *DataControllerTestSuite) SetupSuite() {
 	t.context = context.Background()
 	t.webSession = web.EmptySession()
 	t.request = web.CreateRequest(nil, t.webSession)
-	t.request.Params["permission"] = "SomePermission"
+	t.params = web.RequestParams{
+		"permission": "SomePermission",
+	}
+
 }
 
 func (t *DataControllerTestSuite) SetupTest() {
@@ -63,7 +67,7 @@ func (t *DataControllerTestSuite) TestIsLoggedOut() {
 
 func (t *DataControllerTestSuite) TestIsGranted() {
 	t.securityService.On("IsGranted", t.context, t.webSession, "SomePermission", nil).Return(true).Once()
-	result := t.controller.IsGranted(t.context, t.request, nil)
+	result := t.controller.IsGranted(t.context, t.request, t.params)
 	isGranted, ok := result.(bool)
 	t.True(isGranted)
 	t.True(ok)

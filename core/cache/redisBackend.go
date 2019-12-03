@@ -21,7 +21,7 @@ import (
 type (
 	// RedisBackend instance representation
 	RedisBackend struct {
-		BackendMetrics   BackendMetrics
+		CacheMetrics     CacheMetrics
 		Pool             *redis.Pool
 		logger           flamingo.Logger
 		writeLockEnabled bool
@@ -123,8 +123,8 @@ func NewRedisBackend(options RedisBackendOptions, logger flamingo.Logger) *Redis
 				return redisConnector(options.Network, fmt.Sprintf("%v:%v", options.Host, options.Port), options.Password)
 			},
 		},
-		logger:         logger,
-		BackendMetrics: NewBackendMetrics("redis"),
+		logger:       logger,
+		CacheMetrics: NewCacheMetrics("redis","test"),
 	}
 
 	runtime.SetFinalizer(b, finalizer) // close all connections on destruction
@@ -155,32 +155,32 @@ func (b *RedisBackend) Get(key string) (entry *Entry, found bool) {
 
 	reply, err := conn.Do("GET", b.createPrefixedKey(key, valuePrefix))
 	if err != nil {
-		b.BackendMetrics.countMiss()
+		b.CacheMetrics.countMiss()
 		b.logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Error getting key '%v': %v", key, err))
 		return nil, false
 	}
 	if reply == nil {
-		b.BackendMetrics.countMiss()
-		b.BackendMetrics.countError("NilReply")
+		b.CacheMetrics.countMiss()
+		b.CacheMetrics.countError("NilReply")
 		b.logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Returned nil for key: %v", key))
 		return nil, false
 	}
 
 	value, err := redis.Bytes(reply, err)
 	if err != nil {
-		b.BackendMetrics.countError("ByteConvertFailed")
+		b.CacheMetrics.countError("ByteConvertFailed")
 		b.logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Error convert value to bytes of key '%v': %v", key, err))
 		return nil, false
 	}
 
 	redisEntry, err := b.decodeEntry(value)
 	if err != nil {
-		b.BackendMetrics.countError("DecodeFailed")
+		b.CacheMetrics.countError("DecodeFailed")
 		b.logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Error decoding content of key '%v': %v", key, err))
 		return nil, false
 	}
 
-	b.BackendMetrics.countHit()
+	b.CacheMetrics.countHit()
 	return b.buildResult(redisEntry), true
 }
 
@@ -206,7 +206,7 @@ func (b *RedisBackend) Set(key string, entry *Entry) error {
 
 	buffer, err := b.encodeEntry(redisEntry)
 	if err != nil {
-		b.BackendMetrics.countError("EncodeFailed")
+		b.CacheMetrics.countError("EncodeFailed")
 		b.logger.WithField("category", "redisBackend").Error("Error encoding: %v: %v", key, redisEntry)
 		return err
 	}
@@ -218,7 +218,7 @@ func (b *RedisBackend) Set(key string, entry *Entry) error {
 		buffer,
 	)
 	if err != nil {
-		b.BackendMetrics.countError("SetFailed")
+		b.CacheMetrics.countError("SetFailed")
 		b.logger.WithField("category", "redisBackend").Error("Error setting key %v with timeout %v and buffer %v", key, int(entry.Meta.Gracetime.Seconds()), buffer)
 		return err
 	}
@@ -230,7 +230,7 @@ func (b *RedisBackend) Set(key string, entry *Entry) error {
 			b.createPrefixedKey(key, valuePrefix),
 		)
 		if err != nil {
-			b.BackendMetrics.countError("SetTagFailed")
+			b.CacheMetrics.countError("SetTagFailed")
 			b.logger.WithField("category", "redisBackend").Error("Error setting tag: %v: %v", tag, key)
 			return err
 		}

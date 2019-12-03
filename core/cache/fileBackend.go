@@ -12,8 +12,8 @@ import (
 type (
 	// FileBackend is a cache backend which saves the data in files
 	FileBackend struct {
-		backendMetrics BackendMetrics
-		baseDir        string
+		cacheMetrics CacheMetrics
+		baseDir      string
 	}
 )
 
@@ -32,8 +32,8 @@ func NewFileBackend(baseDir string) *FileBackend {
 	_ = os.MkdirAll(baseDir, os.ModePerm)
 
 	fb := &FileBackend{
-		baseDir:        baseDir,
-		backendMetrics: NewBackendMetrics("file"),
+		baseDir:      baseDir,
+		cacheMetrics: NewCacheMetrics("file","test"),
 	}
 
 	return fb
@@ -45,7 +45,7 @@ func (fb *FileBackend) Get(key string) (entry *Entry, found bool) {
 
 	b, err := ioutil.ReadFile(filepath.Join(fb.baseDir, key))
 	if err != nil {
-		fb.backendMetrics.countMiss()
+		fb.cacheMetrics.countMiss()
 		return nil, false
 	}
 
@@ -54,11 +54,11 @@ func (fb *FileBackend) Get(key string) (entry *Entry, found bool) {
 	entry = new(Entry)
 	err = d.Decode(&entry)
 	if err != nil {
-		fb.backendMetrics.countError("DecodeFailed")
+		fb.cacheMetrics.countError("DecodeFailed")
 		return nil, false
 	}
 
-	fb.backendMetrics.countHit()
+	fb.cacheMetrics.countHit()
 	return entry, true
 }
 
@@ -72,7 +72,7 @@ func (fb *FileBackend) Set(key string, entry *Entry) error {
 	b := new(bytes.Buffer)
 	err := gob.NewEncoder(b).Encode(entry)
 	if err != nil {
-		fb.backendMetrics.countError("EncodeFailed")
+		fb.cacheMetrics.countError("EncodeFailed")
 		return err
 	}
 

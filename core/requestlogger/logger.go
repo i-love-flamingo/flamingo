@@ -65,6 +65,28 @@ func (r *logger) Inject(flogger flamingo.Logger, responder *web.Responder) {
 	r.responder = responder
 }
 
+func humanBytes(bc int) string {
+	if bc > 99999 {
+		return strconv.Itoa(bc/1000) + "kb"
+	}
+	return strconv.Itoa(bc) + "b"
+}
+
+func statusCodeColor(code int) func(msg interface{}, styles ...string) string {
+	switch {
+	case code >= 200 && code < 300:
+		return color.Green
+	case code >= 300 && code < 400:
+		return color.Blue
+	case code >= 400 && code < 500:
+		return color.Yellow
+	case code == 0 || (code >= 500 && code < 600):
+		return color.Red
+	default:
+		return color.Grey
+	}
+}
+
 // Filter a web request
 func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWriter, chain *web.FilterChain) web.Result {
 	start := time.Now()
@@ -72,20 +94,7 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 	webResponse := chain.Next(ctx, req, w)
 
 	logCallbackFunc := func(rwl *responseWriterLogger) {
-		var cp func(msg interface{}, styles ...string) string
-		switch {
-		case rwl.statusCode >= 200 && rwl.statusCode < 300:
-			cp = color.Green
-		case rwl.statusCode >= 300 && rwl.statusCode < 400:
-			cp = color.Blue
-		case rwl.statusCode >= 400 && rwl.statusCode < 500:
-			cp = color.Yellow
-		case rwl.statusCode == 0 || (rwl.statusCode >= 500 && rwl.statusCode < 600):
-			cp = color.Red
-		default:
-			cp = color.Grey
-		}
-
+		cp := statusCodeColor(rwl.statusCode)
 		extra := new(strings.Builder)
 
 		switch r := webResponse.(type) {
@@ -99,12 +108,7 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 			extra.WriteString(strings.Split(fmt.Sprintf(`Error: %s`, r.Error.Error()), "\n")[0])
 		}
 
-		var sizeStr string
-		if rwl.length > 99999 {
-			sizeStr = strconv.Itoa(rwl.length/1000) + "kb"
-		} else {
-			sizeStr = strconv.Itoa(rwl.length) + "b"
-		}
+		sizeStr := humanBytes(rwl.length)
 
 		duration := time.Since(start)
 

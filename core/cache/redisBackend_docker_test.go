@@ -70,7 +70,7 @@ func Test_RunDefaultBackendTestCase_RedisBackend(t *testing.T) {
 		Host:      "127.0.0.1",
 		Port:      dockerTestResource.GetPort("6379/tcp"),
 		WriteLock: true,
-	}, flamingo.NullLogger{})
+	}, "redisBackendTest", flamingo.NullLogger{})
 
 	testcase := cache.NewBackendTestCase(t, backend, false)
 	testcase.RunTests()

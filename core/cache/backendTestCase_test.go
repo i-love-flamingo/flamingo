@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"encoding/gob"
 	"reflect"
 	"testing"
 	"time"
@@ -8,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type BackendTestEntry struct {
+type backendTestEntry struct {
 	Content string
 }
 
@@ -20,6 +21,10 @@ type (
 		tagsInResult bool
 	}
 )
+
+func init() {
+	gob.Register(new(backendTestEntry))
+}
 
 func NewBackendTestCase(t *testing.T, backend Backend, tagsInResult bool) *BackendTestCase {
 	return &BackendTestCase{
@@ -143,7 +148,7 @@ func (tc *BackendTestCase) shouldNotExists(key string) {
 
 func (tc *BackendTestCase) buildEntry(content string, tags []string) *Entry {
 	return &Entry{
-		Data: &BackendTestEntry{
+		Data: &backendTestEntry{
 			Content: content,
 		},
 		Meta: Meta{

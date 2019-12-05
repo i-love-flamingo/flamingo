@@ -21,10 +21,9 @@ import (
 type (
 	// RedisBackend instance representation
 	RedisBackend struct {
-		CacheMetrics     CacheMetrics
-		Pool             *redis.Pool
-		logger           flamingo.Logger
-		writeLockEnabled bool
+		CacheMetrics CacheMetrics
+		Pool         *redis.Pool
+		logger       flamingo.Logger
 	}
 
 	// redisCacheEntryMeta representation
@@ -53,8 +52,6 @@ type (
 		MaxIdle int
 		// Timout to close idle connections (default 5m)
 		IdleTimeout time.Duration
-		// WriteLock feature switch
-		WriteLock bool
 	}
 )
 
@@ -100,15 +97,14 @@ func DefaultRedisBackendOptions() RedisBackendOptions {
 		Password:    "",
 		MaxIdle:     8,
 		IdleTimeout: time.Minute * 30,
-		WriteLock:   false,
 	}
 }
 
 // NewRedisBackend creates an redis cache backend
-func NewRedisBackend(options RedisBackendOptions, frontendName string, logger flamingo.Logger) *RedisBackend {
+func NewRedisBackend(options RedisBackendOptions, frontendName string) *RedisBackend {
 	err := mergo.Merge(&options, DefaultRedisBackendOptions())
 	if err != nil {
-		logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Error merging options: %v", err))
+		panic(err)
 	}
 
 	b := &RedisBackend{
@@ -123,7 +119,7 @@ func NewRedisBackend(options RedisBackendOptions, frontendName string, logger fl
 				return redisConnector(options.Network, fmt.Sprintf("%v:%v", options.Host, options.Port), options.Password)
 			},
 		},
-		logger:       logger,
+		logger:       flamingo.NullLogger{},
 		CacheMetrics: NewCacheMetrics("redis", frontendName),
 	}
 

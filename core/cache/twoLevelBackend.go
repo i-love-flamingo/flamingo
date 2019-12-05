@@ -17,11 +17,11 @@ type (
 )
 
 // NewTwoLevelBackend creates a TwoLevelBackend isntance
-func NewTwoLevelBackend(firstBackend Backend, secondBackend Backend, logger flamingo.Logger) *TwoLevelBackend {
+func NewTwoLevelBackend(firstBackend Backend, secondBackend Backend) *TwoLevelBackend {
 	return &TwoLevelBackend{
 		firstBackend:  firstBackend,
 		secondBackend: secondBackend,
-		logger:        logger,
+		logger:        flamingo.NullLogger{},
 	}
 }
 

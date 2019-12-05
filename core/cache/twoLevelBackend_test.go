@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"flamingo.me/flamingo/v3/core/cache"
-
-	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 func Test_RunDefaultBackendTestCase_TwoLevelBackend(t *testing.T) {
@@ -16,7 +14,6 @@ func Test_RunDefaultBackendTestCase_TwoLevelBackend(t *testing.T) {
 	backend := cache.NewTwoLevelBackend(
 		backend1,
 		backend2,
-		flamingo.NullLogger{},
 	)
 
 	testcase := cache.NewBackendTestCase(t, backend, true)

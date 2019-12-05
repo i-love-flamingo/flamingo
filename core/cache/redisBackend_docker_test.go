@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"flamingo.me/flamingo/v3/core/cache"
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gomodule/redigo/redis"
 	"github.com/ory/dockertest"
 )
@@ -69,8 +68,7 @@ func Test_RunDefaultBackendTestCase_RedisBackend(t *testing.T) {
 	backend := cache.NewRedisBackend(cache.RedisBackendOptions{
 		Host:      "127.0.0.1",
 		Port:      dockerTestResource.GetPort("6379/tcp"),
-		WriteLock: true,
-	}, "redisBackendTest", flamingo.NullLogger{})
+	}, "redisBackendTest")
 
 	testcase := cache.NewBackendTestCase(t, backend, false)
 	testcase.RunTests()

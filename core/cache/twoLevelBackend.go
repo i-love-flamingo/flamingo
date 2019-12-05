@@ -39,6 +39,7 @@ func (mb *TwoLevelBackend) Get(key string) (entry *Entry, found bool) {
 
 	entry, found = mb.secondBackend.Get(key)
 	if found {
+		go mb.firstBackend.Set(key, entry)
 		return entry, found
 	}
 

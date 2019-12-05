@@ -66,8 +66,9 @@ func teardown() {
 
 func Test_RunDefaultBackendTestCase_RedisBackend(t *testing.T) {
 	backend := cache.NewRedisBackend(cache.RedisBackendOptions{
-		Host:      "127.0.0.1",
-		Port:      dockerTestResource.GetPort("6379/tcp"),
+		Host: "127.0.0.1",
+		Port: dockerTestResource.GetPort("6379/tcp"),
+		Db:   3,
 	}, "redisBackendTest")
 
 	testcase := cache.NewBackendTestCase(t, backend, false)

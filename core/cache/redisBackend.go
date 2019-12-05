@@ -69,13 +69,19 @@ func init() {
 	gob.Register(new(RedisCacheEntry))
 }
 
-func redisConnector(network, address, password string) (redis.Conn, error) {
+func redisConnector(network, address, password string, db int) (redis.Conn, error) {
 	c, err := redis.Dial(network, address)
 	if err != nil {
 		return nil, err
 	}
 	if password != "" {
 		if _, err := c.Do("AUTH", password); err != nil {
+			c.Close()
+			return nil, err
+		}
+	}
+	if db != 0 {
+		if _, err := c.Do("SELECT", db); err != nil {
 			c.Close()
 			return nil, err
 		}
@@ -116,7 +122,12 @@ func NewRedisBackend(options RedisBackendOptions, frontendName string) *RedisBac
 				return err
 			},
 			Dial: func() (redis.Conn, error) {
-				return redisConnector(options.Network, fmt.Sprintf("%v:%v", options.Host, options.Port), options.Password)
+				return redisConnector(
+					options.Network,
+					fmt.Sprintf("%v:%v", options.Host, options.Port),
+					options.Password,
+					options.Db,
+				)
 			},
 		},
 		logger:       flamingo.NullLogger{},

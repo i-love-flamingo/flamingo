@@ -7,7 +7,7 @@ import (
 )
 
 func Test_RunDefaultBackendTestCase_InMemoryBackend(t *testing.T) {
-	backend := cache.NewInMemoryCache()
+	backend := cache.NewInMemoryCache("memoryBackendTest")
 
 	testcase := cache.NewBackendTestCase(t, backend, true)
 	testcase.RunTests()

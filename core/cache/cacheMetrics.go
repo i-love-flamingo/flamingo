@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	backendTypeCacheKeyType, _        = tag.NewKey("backend_type")
-	frontendNameCacheKeyType, _        = tag.NewKey("frontend_name")
+	backendTypeCacheKeyType, _    = tag.NewKey("backend_type")
+	frontendNameCacheKeyType, _   = tag.NewKey("frontend_name")
 	backendCacheKeyErrorReason, _ = tag.NewKey("error_reason")
 	backendCacheHitCount          = stats.Int64("flamingo/cache/backend/hit", "Count of cache-backend hits", stats.UnitDimensionless)
 	backendCacheMissCount         = stats.Int64("flamingo/cache/backend/miss", "Count of cache-backend misses", stats.UnitDimensionless)
@@ -31,7 +31,7 @@ type (
 // NewCacheMetrics creates an backend metrics helper instance
 func NewCacheMetrics(backendType string, frontendName string) CacheMetrics {
 	b := CacheMetrics{
-		backendType: backendType,
+		backendType:  backendType,
 		frontendName: frontendName,
 	}
 	return b
@@ -50,16 +50,32 @@ func init() {
 }
 
 func (bi CacheMetrics) countHit() {
-	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, "cacheBackend"), tag.Upsert(backendTypeCacheKeyType, bi.backendType),  tag.Upsert(frontendNameCacheKeyType, bi.frontendName))
+	ctx, _ := tag.New(
+		context.Background(),
+		tag.Upsert(opencensus.KeyArea, "cacheBackend"),
+		tag.Upsert(backendTypeCacheKeyType, bi.backendType),
+		tag.Upsert(frontendNameCacheKeyType, bi.frontendName),
+	)
 	stats.Record(ctx, backendCacheHitCount.M(1))
 }
 
 func (bi CacheMetrics) countMiss() {
-	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, "cacheBackend"), tag.Upsert(backendTypeCacheKeyType, bi.backendType), tag.Upsert(frontendNameCacheKeyType, bi.frontendName))
+	ctx, _ := tag.New(
+		context.Background(),
+		tag.Upsert(opencensus.KeyArea, "cacheBackend"),
+		tag.Upsert(backendTypeCacheKeyType, bi.backendType),
+		tag.Upsert(frontendNameCacheKeyType, bi.frontendName),
+	)
 	stats.Record(ctx, backendCacheMissCount.M(1))
 }
 
 func (bi CacheMetrics) countError(reason string) {
-	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, "cacheBackend"), tag.Upsert(backendTypeCacheKeyType, bi.backendType), tag.Upsert(frontendNameCacheKeyType, bi.frontendName), tag.Upsert(backendCacheKeyErrorReason, reason))
+	ctx, _ := tag.New(
+		context.Background(),
+		tag.Upsert(opencensus.KeyArea, "cacheBackend"),
+		tag.Upsert(backendTypeCacheKeyType, bi.backendType),
+		tag.Upsert(frontendNameCacheKeyType, bi.frontendName),
+		tag.Upsert(backendCacheKeyErrorReason, reason),
+	)
 	stats.Record(ctx, backendCacheErrorCount.M(1))
 }

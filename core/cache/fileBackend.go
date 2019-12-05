@@ -24,7 +24,7 @@ var (
 )
 
 // NewFileBackend returns a FileBackend operating in the given baseDir
-func NewFileBackend(baseDir string) *FileBackend {
+func NewFileBackend(baseDir string, frontendName string) *FileBackend {
 	if baseDir == "" {
 		baseDir = defaultBaseDir
 	}
@@ -33,7 +33,7 @@ func NewFileBackend(baseDir string) *FileBackend {
 
 	fb := &FileBackend{
 		baseDir:      baseDir,
-		cacheMetrics: NewCacheMetrics("file","test"),
+		cacheMetrics: NewCacheMetrics("file", frontendName),
 	}
 
 	return fb

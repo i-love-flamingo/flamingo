@@ -21,12 +21,12 @@ type (
 )
 
 // NewInMemoryCache creates a new lru TwoQueue backed cache backend
-func NewInMemoryCache() Backend {
+func NewInMemoryCache(frontendName string) Backend {
 	cache, _ := lru.New2Q(100)
 
 	m := &inMemoryCache{
 		pool:         cache,
-		cacheMetrics: NewCacheMetrics("inMemory","test"),
+		cacheMetrics: NewCacheMetrics("inMemory", frontendName),
 	}
 	go m.lurker()
 	return m

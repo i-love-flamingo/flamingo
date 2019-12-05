@@ -84,7 +84,7 @@ func TestFileBackendGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
+			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"), "filebackendTest")
 
 			if *update && tt.wantFound {
 				t.Log("update file")
@@ -144,7 +144,7 @@ func TestFileBackendSet(t *testing.T) {
 			expectedCacheFileName := filepath.Join("testdata", "file_backend", tt.args.key)
 			defer func() { os.Remove(expectedCacheFileName) }()
 
-			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
+			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"), "filebackendTest")
 			err := f.Set(tt.args.key, tt.args.entry)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FileBackend.Set() error = %v, wantErr %v", err, tt.wantErr)
@@ -190,7 +190,7 @@ func TestFileBackendPurge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
+			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"), "fileBackendTest")
 			f.Set(tt.args.key, &cache.Entry{
 				Meta: cache.Meta{},
 				Data: "bar",

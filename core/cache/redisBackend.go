@@ -105,7 +105,7 @@ func DefaultRedisBackendOptions() RedisBackendOptions {
 }
 
 // NewRedisBackend creates an redis cache backend
-func NewRedisBackend(options RedisBackendOptions, logger flamingo.Logger) *RedisBackend {
+func NewRedisBackend(options RedisBackendOptions, frontendName string, logger flamingo.Logger) *RedisBackend {
 	err := mergo.Merge(&options, DefaultRedisBackendOptions())
 	if err != nil {
 		logger.WithField("category", "redisBackend").Error(fmt.Sprintf("Error merging options: %v", err))
@@ -124,7 +124,7 @@ func NewRedisBackend(options RedisBackendOptions, logger flamingo.Logger) *Redis
 			},
 		},
 		logger:       logger,
-		CacheMetrics: NewCacheMetrics("redis","test"),
+		CacheMetrics: NewCacheMetrics("redis", frontendName),
 	}
 
 	runtime.SetFinalizer(b, finalizer) // close all connections on destruction

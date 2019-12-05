@@ -11,8 +11,8 @@ import (
 )
 
 func Test_RunDefaultBackendTestCase_MultiLevelBackend(t *testing.T) {
-	backend1 := cache.NewInMemoryCache()
-	backend2 := cache.NewFileBackend("")
+	backend1 := cache.NewInMemoryCache("mutlilevelBackendTest")
+	backend2 := cache.NewFileBackend("", "mutlilevelBackendTest")
 	backend := cache.NewMultiLevelBackend(
 		cache.MultiLevelBackendOptions{
 			Backends: []cache.Backend{backend1, backend2},

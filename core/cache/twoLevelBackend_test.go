@@ -10,11 +10,11 @@ import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
-func Test_RunDefaultBackendTestCase_MultiLevelBackend(t *testing.T) {
+func Test_RunDefaultBackendTestCase_TwoLevelBackend(t *testing.T) {
 	backend1 := cache.NewInMemoryCache("mutlilevelBackendTest")
 	backend2 := cache.NewFileBackend("", "mutlilevelBackendTest")
-	backend := cache.NewMultiLevelBackend(
-		cache.MultiLevelBackendOptions{
+	backend := cache.NewTwoLevelBackend(
+		cache.TwoLevelBackendOptions{
 			Backends: []cache.Backend{backend1, backend2},
 		},
 		flamingo.NullLogger{},

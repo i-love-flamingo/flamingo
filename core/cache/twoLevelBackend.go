@@ -8,32 +8,32 @@ import (
 )
 
 type (
-	// MultiLevelBackend instance representation
-	MultiLevelBackend struct {
+	// TwoLevelBackend instance representation
+	TwoLevelBackend struct {
 		backends []Backend
 		logger   flamingo.Logger
 	}
-	// MultiLevelBackendOptions representation
-	MultiLevelBackendOptions struct {
+	// TwoLevelBackendOptions representation
+	TwoLevelBackendOptions struct {
 		Backends []Backend
 	}
 )
 
-// NewMultiLevelBackend creates a MultiLevelBackend isntance
-func NewMultiLevelBackend(options MultiLevelBackendOptions, logger flamingo.Logger) *MultiLevelBackend {
-	return &MultiLevelBackend{
+// NewTwoLevelBackend creates a TwoLevelBackend isntance
+func NewTwoLevelBackend(options TwoLevelBackendOptions, logger flamingo.Logger) *TwoLevelBackend {
+	return &TwoLevelBackend{
 		backends: options.Backends,
 		logger:   logger,
 	}
 }
 
-// Inject MultiLevelBackend dependencies
-func (mb *MultiLevelBackend) Inject(logger flamingo.Logger) {
+// Inject TwoLevelBackend dependencies
+func (mb *TwoLevelBackend) Inject(logger flamingo.Logger) {
 	mb.logger = logger
 }
 
 // Get entry by key
-func (mb *MultiLevelBackend) Get(key string) (entry *Entry, found bool) {
+func (mb *TwoLevelBackend) Get(key string) (entry *Entry, found bool) {
 	for _, backend := range mb.backends {
 		entry, found := backend.Get(key)
 		if found {
@@ -45,13 +45,13 @@ func (mb *MultiLevelBackend) Get(key string) (entry *Entry, found bool) {
 }
 
 // Set entry for key
-func (mb *MultiLevelBackend) Set(key string, entry *Entry) error {
+func (mb *TwoLevelBackend) Set(key string, entry *Entry) error {
 	errorList := []error{}
 	for _, backend := range mb.backends {
 		err := backend.Set(key, entry)
 		if err != nil {
 			errorList = append(errorList, err)
-			mb.logger.WithField("category", "multiLevelBackend").Error(fmt.Sprintf("Failed to set key %v with error %v", key, err))
+			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed to set key %v with error %v", key, err))
 		}
 	}
 
@@ -63,13 +63,13 @@ func (mb *MultiLevelBackend) Set(key string, entry *Entry) error {
 }
 
 // Purge entry by key
-func (mb *MultiLevelBackend) Purge(key string) error {
+func (mb *TwoLevelBackend) Purge(key string) error {
 	errorList := []error{}
 	for _, backend := range mb.backends {
 		err := backend.Purge(key)
 		if err != nil {
 			errorList = append(errorList, err)
-			mb.logger.WithField("category", "multiLevelBackend").Error(fmt.Sprintf("Failed Purge with error %v", err))
+			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Purge with error %v", err))
 		}
 	}
 
@@ -81,13 +81,13 @@ func (mb *MultiLevelBackend) Purge(key string) error {
 }
 
 // Flush the whole cache
-func (mb *MultiLevelBackend) Flush() error {
+func (mb *TwoLevelBackend) Flush() error {
 	errorList := []error{}
 	for _, backend := range mb.backends {
 		err := backend.Flush()
 		if err != nil {
 			errorList = append(errorList, err)
-			mb.logger.WithField("category", "multiLevelBackend").Error(fmt.Sprintf("Failed Flush error %v", err))
+			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Flush error %v", err))
 		}
 	}
 

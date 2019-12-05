@@ -69,7 +69,7 @@ Is using [redis](https://redis.io/) as an shared inMemory cache.
 Since all cache-fetched has an overhead to the inMemoryBackend, the redis is a little slower.
 The benefit of redis is the shared storage an the high efficiency in reading and writing keys. especialy if you need scale fast horizonaly, it helps to keep your backend-systems healthy.
 
-Be ware of using redis (or any other shared cache backend) as an single backend, because of network latency. (have a loo at the multiLevelBackend)
+Be ware of using redis (or any other shared cache backend) as an single backend, because of network latency. (have a loo at the twoLevelBackend)
 
 ### fileBackend
 
@@ -79,9 +79,9 @@ Writes the cache content to the local filesystem.
 
 Caches nothing.
 
-### multiLevelBackend
+### twoLevelBackend
 
-The multiLevelBackend was introduced to get the benefit of the extrem fast inMemorybackend and a shared backend.
+The twoLevelBackend was introduced to get the benefit of the extrem fast inMemorybackend and a shared backend.
 Using the inMemoryBackend in combination with an shared backend, gives you blazing fast responces and helps you to protect you backend in case of fast scaleout-scenarios.
 
 @TODO: Write example code.

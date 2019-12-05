@@ -189,19 +189,6 @@ func (b *RedisBackend) Set(key string, entry *Entry) error {
 	conn := b.Pool.Get()
 	defer conn.Close()
 
-	if b.writeLockEnabled {
-		err := b.lock(conn, key)
-		if err != nil {
-			return err
-		}
-		defer func() {
-			err := b.unLock(conn, key)
-			if err != nil {
-				b.logger.WithField("category", "redisBackend").Error("Error unlocking key: %v: %v", key, err)
-			}
-		}()
-	}
-
 	redisEntry := b.buildEntry(entry)
 
 	buffer, err := b.encodeEntry(redisEntry)
@@ -341,43 +328,4 @@ func (b *RedisBackend) buildResult(entry *RedisCacheEntry) *Entry {
 		},
 		Data: entry.Data,
 	}
-}
-
-// Lock tries to get an remote lock for an key
-func (b *RedisBackend) lock(conn redis.Conn, key string) (err error) {
-	reply, err := conn.Do(
-		"EXISTS",
-		b.createPrefixedKey(key, lockPrefix),
-	)
-	lockValue, err := redis.String(reply, err)
-	if "1" == lockValue || err != nil {
-		return fmt.Errorf("Lock for key %v already exists, %v", key, err)
-	}
-
-	_, err = conn.Do(
-		"SETEX",
-		b.createPrefixedKey(key, lockPrefix),
-		15,
-		"",
-	)
-
-	if err != nil {
-		return fmt.Errorf("Failed to get log for key '%v' with error %v", key, err)
-	}
-
-	return nil
-}
-
-// UnLock releases an Lock for an key
-func (b *RedisBackend) unLock(conn redis.Conn, key string) (err error) {
-	_, err = conn.Do(
-		"DEL",
-		b.createPrefixedKey(key, lockPrefix),
-	)
-
-	if err != nil {
-		return fmt.Errorf("Failed to releasing a lock for key '%v' with error %v", key, err)
-	}
-
-	return nil
 }

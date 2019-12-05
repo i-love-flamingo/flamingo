@@ -38,7 +38,6 @@ type (
 )
 
 const (
-	lockPrefix  = "lock:"
 	tagPrefix   = "tag:"
 	valuePrefix = "value:"
 )

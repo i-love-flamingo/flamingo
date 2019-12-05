@@ -14,9 +14,8 @@ func Test_RunDefaultBackendTestCase_TwoLevelBackend(t *testing.T) {
 	backend1 := cache.NewInMemoryCache("mutlilevelBackendTest")
 	backend2 := cache.NewFileBackend("", "mutlilevelBackendTest")
 	backend := cache.NewTwoLevelBackend(
-		cache.TwoLevelBackendOptions{
-			Backends: []cache.Backend{backend1, backend2},
-		},
+		backend1,
+		backend2,
 		flamingo.NullLogger{},
 	)
 

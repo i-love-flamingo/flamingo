@@ -10,20 +10,18 @@ import (
 type (
 	// TwoLevelBackend instance representation
 	TwoLevelBackend struct {
-		backends []Backend
-		logger   flamingo.Logger
-	}
-	// TwoLevelBackendOptions representation
-	TwoLevelBackendOptions struct {
-		Backends []Backend
+		firstBackend  Backend
+		secondBackend Backend
+		logger        flamingo.Logger
 	}
 )
 
 // NewTwoLevelBackend creates a TwoLevelBackend isntance
-func NewTwoLevelBackend(options TwoLevelBackendOptions, logger flamingo.Logger) *TwoLevelBackend {
+func NewTwoLevelBackend(firstBackend Backend, secondBackend Backend, logger flamingo.Logger) *TwoLevelBackend {
 	return &TwoLevelBackend{
-		backends: options.Backends,
-		logger:   logger,
+		firstBackend:  firstBackend,
+		secondBackend: secondBackend,
+		logger:        logger,
 	}
 }
 
@@ -34,28 +32,36 @@ func (mb *TwoLevelBackend) Inject(logger flamingo.Logger) {
 
 // Get entry by key
 func (mb *TwoLevelBackend) Get(key string) (entry *Entry, found bool) {
-	for _, backend := range mb.backends {
-		entry, found := backend.Get(key)
-		if found {
-			return entry, found
-		}
+	entry, found = mb.firstBackend.Get(key)
+	if found {
+		return entry, found
+	}
+
+	entry, found = mb.secondBackend.Get(key)
+	if found {
+		return entry, found
 	}
 
 	return nil, false
 }
 
 // Set entry for key
-func (mb *TwoLevelBackend) Set(key string, entry *Entry) error {
+func (mb *TwoLevelBackend) Set(key string, entry *Entry) (err error) {
 	errorList := []error{}
-	for _, backend := range mb.backends {
-		err := backend.Set(key, entry)
-		if err != nil {
-			errorList = append(errorList, err)
-			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed to set key %v with error %v", key, err))
-		}
+
+	err = mb.firstBackend.Set(key, entry)
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed to set key %v with error %v", key, err))
 	}
 
-	if len(mb.backends) == len(errorList) {
+	err = mb.secondBackend.Set(key, entry)
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed to set key %v with error %v", key, err))
+	}
+
+	if 2 == len(errorList) {
 		return errors.New("all backends failed")
 	}
 
@@ -63,14 +69,19 @@ func (mb *TwoLevelBackend) Set(key string, entry *Entry) error {
 }
 
 // Purge entry by key
-func (mb *TwoLevelBackend) Purge(key string) error {
+func (mb *TwoLevelBackend) Purge(key string) (err error) {
 	errorList := []error{}
-	for _, backend := range mb.backends {
-		err := backend.Purge(key)
-		if err != nil {
-			errorList = append(errorList, err)
-			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Purge with error %v", err))
-		}
+
+	err = mb.firstBackend.Purge(key)
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Purge with error %v", err))
+	}
+
+	err = mb.secondBackend.Purge(key)
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Purge with error %v", err))
 	}
 
 	if 0 != len(errorList) {
@@ -81,14 +92,19 @@ func (mb *TwoLevelBackend) Purge(key string) error {
 }
 
 // Flush the whole cache
-func (mb *TwoLevelBackend) Flush() error {
+func (mb *TwoLevelBackend) Flush() (err error) {
 	errorList := []error{}
-	for _, backend := range mb.backends {
-		err := backend.Flush()
-		if err != nil {
-			errorList = append(errorList, err)
-			mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Flush error %v", err))
-		}
+
+	err = mb.firstBackend.Flush()
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Flush error %v", err))
+	}
+
+	err = mb.secondBackend.Flush()
+	if err != nil {
+		errorList = append(errorList, err)
+		mb.logger.WithField("category", "twoLevelBackend").Error(fmt.Sprintf("Failed Flush error %v", err))
 	}
 
 	if 0 != len(errorList) {

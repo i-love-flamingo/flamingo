@@ -28,7 +28,7 @@ func (c *DataController) IsLoggedOut(ctx context.Context, r *web.Request, _ web.
 }
 
 // IsGranted permission check
-func (c *DataController) IsGranted(ctx context.Context, r *web.Request, _ web.RequestParams) interface{} {
-	permission := r.Params["permission"]
+func (c *DataController) IsGranted(ctx context.Context, r *web.Request, params web.RequestParams) interface{} {
+	permission := params["permission"]
 	return c.securityService.IsGranted(ctx, r.Session(), permission, nil)
 }

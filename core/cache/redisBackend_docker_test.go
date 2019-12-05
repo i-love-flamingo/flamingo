@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"flamingo.me/flamingo/v3/core/cache"
 	"github.com/gomodule/redigo/redis"
@@ -22,6 +23,26 @@ var (
 	// Assert the interface is matched
 	_ cache.Backend = &cache.RedisBackend{}
 )
+
+func redisConnector(network, address, password string, db int) (redis.Conn, error) {
+	c, err := redis.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	if password != "" {
+		if _, err := c.Do("AUTH", password); err != nil {
+			c.Close()
+			return nil, err
+		}
+	}
+	if db != 0 {
+		if _, err := c.Do("SELECT", db); err != nil {
+			c.Close()
+			return nil, err
+		}
+	}
+	return c, err
+}
 
 // TestMain set
 func TestMain(m *testing.M) {
@@ -65,12 +86,24 @@ func teardown() {
 }
 
 func Test_RunDefaultBackendTestCase_RedisBackend(t *testing.T) {
-	backend := cache.NewRedisBackend(cache.RedisBackendOptions{
-		Host: "127.0.0.1",
-		Port: dockerTestResource.GetPort("6379/tcp"),
-		Db:   3,
-	}, "redisBackendTest")
+	pool := &redis.Pool{
+		MaxIdle:     8,
+		IdleTimeout: time.Minute * 30,
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
+		Dial: func() (redis.Conn, error) {
+			return redisConnector(
+				"tcp",
+				fmt.Sprintf("%v:%v", "127.0.0.1", dockerTestResource.GetPort("6379/tcp")),
+				"",
+				0,
+			)
+		},
+	}
 
+	backend := cache.NewRedisBackend(pool, "redisBackendTest")
 	testcase := cache.NewBackendTestCase(t, backend, false)
 	testcase.RunTests()
 }

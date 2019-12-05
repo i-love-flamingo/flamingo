@@ -18,9 +18,7 @@ require (
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.0
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect
-	github.com/imdario/mergo v0.3.8
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91

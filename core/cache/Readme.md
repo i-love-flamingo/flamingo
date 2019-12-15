@@ -53,6 +53,21 @@ loadData :=  func(ctx context.Context) (*http.Response, *cache.Meta, error) {
 response, err := apiclient.Cache.Get(requestContext, u.String(), loadData)
 ```
 
+## Using Cache Factory
+
+To automatically bind a httpFrontendCache for a cache "CACHENAME" you can use the cache.Module and configure the factory:
+
+```yaml
+core:
+  cache:
+    overrideBindings: true
+    httpFrontendFactory:
+      CACHENAME:
+        backendType: inmemory
+        inMemoryBackend:
+          size: 200
+```
+
 ## Cache backends
 
 Currently there are the following backends available:

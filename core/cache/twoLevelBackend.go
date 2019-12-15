@@ -8,30 +8,47 @@ import (
 )
 
 type (
-	// TwoLevelBackend instance representation
-	TwoLevelBackend struct {
+	// twoLevelBackend instance representation
+	twoLevelBackend struct {
 		firstBackend  Backend
 		secondBackend Backend
 		logger        flamingo.Logger
 	}
+
+	TwoLevelBackendConfig struct {
+		FirstLevel  Backend
+		SecondLevel Backend
+	}
+
+	TwoLevelBackendFactory struct {
+		logger flamingo.Logger
+		config TwoLevelBackendConfig
+	}
 )
 
-// NewTwoLevelBackend creates a TwoLevelBackend isntance
-func NewTwoLevelBackend(firstBackend Backend, secondBackend Backend) *TwoLevelBackend {
-	return &TwoLevelBackend{
-		firstBackend:  firstBackend,
-		secondBackend: secondBackend,
-		logger:        flamingo.NullLogger{},
+// Inject TwoLevelBackendFactory dependencies
+func (f *TwoLevelBackendFactory) Inject(logger flamingo.Logger) *TwoLevelBackendFactory {
+	f.logger = logger
+	return f
+}
+
+// Inject TwoLevelBackendFactory dependencies
+func (f *TwoLevelBackendFactory) SetConfig(config TwoLevelBackendConfig) *TwoLevelBackendFactory {
+	f.config = config
+	return f
+}
+
+// Inject TwoLevelBackendFactory dependencies
+func (f *TwoLevelBackendFactory) Build() Backend {
+	return &twoLevelBackend{
+		firstBackend:  f.config.FirstLevel,
+		secondBackend: f.config.SecondLevel,
+		logger:        f.logger,
 	}
 }
 
-// Inject TwoLevelBackend dependencies
-func (mb *TwoLevelBackend) Inject(logger flamingo.Logger) {
-	mb.logger = logger
-}
-
 // Get entry by key
-func (mb *TwoLevelBackend) Get(key string) (entry *Entry, found bool) {
+func (mb *twoLevelBackend) Get(key string) (entry *Entry, found bool) {
 	entry, found = mb.firstBackend.Get(key)
 	if found {
 		return entry, found
@@ -49,7 +66,7 @@ func (mb *TwoLevelBackend) Get(key string) (entry *Entry, found bool) {
 }
 
 // Set entry for key
-func (mb *TwoLevelBackend) Set(key string, entry *Entry) (err error) {
+func (mb *twoLevelBackend) Set(key string, entry *Entry) (err error) {
 	errorList := []error{}
 
 	err = mb.firstBackend.Set(key, entry)
@@ -72,7 +89,7 @@ func (mb *TwoLevelBackend) Set(key string, entry *Entry) (err error) {
 }
 
 // Purge entry by key
-func (mb *TwoLevelBackend) Purge(key string) (err error) {
+func (mb *twoLevelBackend) Purge(key string) (err error) {
 	errorList := []error{}
 
 	err = mb.firstBackend.Purge(key)
@@ -95,7 +112,7 @@ func (mb *TwoLevelBackend) Purge(key string) (err error) {
 }
 
 // Flush the whole cache
-func (mb *TwoLevelBackend) Flush() (err error) {
+func (mb *twoLevelBackend) Flush() (err error) {
 	errorList := []error{}
 
 	err = mb.firstBackend.Flush()

@@ -1,20 +1,20 @@
 package cache_test
 
-// @TODO: write unit-tests for all exported methods
-
 import (
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"testing"
 
 	"flamingo.me/flamingo/v3/core/cache"
 )
 
 func Test_RunDefaultBackendTestCase_TwoLevelBackend(t *testing.T) {
-	backend1 := cache.NewInMemoryCache("mutlilevelBackendTest")
-	backend2 := cache.NewFileBackend("", "mutlilevelBackendTest")
-	backend := cache.NewTwoLevelBackend(
-		backend1,
-		backend2,
-	)
+	f := cache.TwoLevelBackendFactory{}
+	c := cache.TwoLevelBackendConfig{
+		FirstLevel:  cache.NewInMemoryCache(),
+		SecondLevel: cache.NewFileBackend("", "mutlilevelBackendTest"),
+	}
+
+	backend := f.Inject(flamingo.NullLogger{}).SetConfig(c).Build()
 
 	testcase := cache.NewBackendTestCase(t, backend, true)
 	testcase.RunTests()

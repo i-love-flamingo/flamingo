@@ -36,8 +36,12 @@ type (
 )
 
 // Inject HTTPFrontend dependencies
-func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) *HTTPFrontend {
-	hf.backend = backend
+func (hf *HTTPFrontend) Inject(logger flamingo.Logger, optional *struct {
+	DefaultBackend Backend `inject:",optional"`
+}) *HTTPFrontend {
+	if optional != nil {
+		hf.backend = optional.DefaultBackend
+	}
 	hf.logger = logger
 
 	return hf

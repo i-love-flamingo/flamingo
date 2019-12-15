@@ -12,7 +12,7 @@ import (
 type (
 	// FileBackend is a cache backend which saves the data in files
 	FileBackend struct {
-		cacheMetrics CacheMetrics
+		cacheMetrics Metrics
 		baseDir      string
 	}
 )

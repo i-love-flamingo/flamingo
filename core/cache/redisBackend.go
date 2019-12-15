@@ -1,8 +1,3 @@
-/**
- * @TODO:
- * - write documentation
- */
-
 package cache
 
 import (
@@ -18,11 +13,24 @@ import (
 )
 
 type (
-	// RedisBackend instance representation
-	RedisBackend struct {
-		cacheMetrics CacheMetrics
+	// redisBackend instance representation
+	redisBackend struct {
+		cacheMetrics Metrics
 		pool         *redis.Pool
 		logger       flamingo.Logger
+	}
+
+	RedisBackendFactory struct {
+		logger       flamingo.Logger
+		frontendName string
+		pool         *redis.Pool
+	}
+
+	RedisBackendConfig struct {
+		MaxIdle     int
+		IdleTimeOut int
+		Host        string
+		Port        string
 	}
 
 	// redisCacheEntryMeta representation
@@ -30,8 +38,8 @@ type (
 		Lifetime, Gracetime time.Duration
 	}
 
-	// RedisCacheEntry representation
-	RedisCacheEntry struct {
+	// redisCacheEntry representation
+	redisCacheEntry struct {
 		Meta redisCacheEntryMeta
 		Data interface{}
 	}
@@ -47,46 +55,92 @@ var (
 )
 
 func init() {
-	gob.Register(new(RedisCacheEntry))
+	gob.Register(new(redisCacheEntry))
 }
 
-func finalizer(b *RedisBackend) {
+func finalizer(b *redisBackend) {
 	b.close()
 }
 
-// NewRedisBackend creates an redis cache backend
-func NewRedisBackend(pool *redis.Pool, frontendName string) *RedisBackend {
-	b := &RedisBackend{
-		pool:         pool,
-		logger:       flamingo.NullLogger{},
-		cacheMetrics: NewCacheMetrics("redis", frontendName),
+// Inject redisBackend dependencies
+func (f *RedisBackendFactory) Inject(logger flamingo.Logger) *RedisBackendFactory {
+	f.logger = logger
+	return f
+}
+
+func (f *RedisBackendFactory) Build() Backend {
+	b := &redisBackend{
+		pool:         f.pool,
+		logger:       f.logger,
+		cacheMetrics: NewCacheMetrics("redis", f.frontendName),
 	}
-
 	runtime.SetFinalizer(b, finalizer) // close all connections on destruction
-
 	return b
 }
 
-// Inject RedisBackend dependencies
-func (b *RedisBackend) Inject(pool *redis.Pool, frontendName string, logger flamingo.Logger) {
-	b.pool = pool
-	b.cacheMetrics = NewCacheMetrics("redis", frontendName)
-	b.logger = logger
+func (f *RedisBackendFactory) SetFrontendName(frontendName string) *RedisBackendFactory {
+	f.frontendName = frontendName
+	return f
+}
+
+func (f *RedisBackendFactory) SetPoolByConfig(config RedisBackendConfig) *RedisBackendFactory {
+	pool := &redis.Pool{
+		MaxIdle:     config.MaxIdle,
+		IdleTimeout: time.Minute * time.Duration(config.IdleTimeOut),
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			_, err := c.Do("PING")
+			return err
+		},
+		Dial: func() (redis.Conn, error) {
+			return f.redisConnector(
+				"tcp",
+				fmt.Sprintf("%v:%v", config.Host, config.Port),
+				"",
+				0,
+			)
+		},
+	}
+	return f.SetPool(pool)
+}
+
+func (f *RedisBackendFactory) SetPool(pool *redis.Pool) *RedisBackendFactory {
+	f.pool = pool
+	return f
+}
+
+func (f *RedisBackendFactory) redisConnector(network, address, password string, db int) (redis.Conn, error) {
+	c, err := redis.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	if password != "" {
+		if _, err := c.Do("AUTH", password); err != nil {
+			c.Close()
+			return nil, err
+		}
+	}
+	if db != 0 {
+		if _, err := c.Do("SELECT", db); err != nil {
+			c.Close()
+			return nil, err
+		}
+	}
+	return c, err
 }
 
 // Close ensures all redis connections are closed
-func (b *RedisBackend) close() {
+func (b *redisBackend) close() {
 	b.pool.Close()
 }
 
 // createPrefixedKey creates an redis-compatible key
-func (b *RedisBackend) createPrefixedKey(key string, prefix string) string {
+func (b *redisBackend) createPrefixedKey(key string, prefix string) string {
 	key = redisKeyRegex.ReplaceAllString(key, "-")
 	return fmt.Sprintf("%v%v", prefix, key)
 }
 
 // Get an cache key
-func (b *RedisBackend) Get(key string) (entry *Entry, found bool) {
+func (b *redisBackend) Get(key string) (entry *Entry, found bool) {
 	conn := b.pool.Get()
 	defer conn.Close()
 
@@ -122,7 +176,7 @@ func (b *RedisBackend) Get(key string) (entry *Entry, found bool) {
 }
 
 // Set an cache key
-func (b *RedisBackend) Set(key string, entry *Entry) error {
+func (b *redisBackend) Set(key string, entry *Entry) error {
 	conn := b.pool.Get()
 	defer conn.Close()
 
@@ -165,7 +219,7 @@ func (b *RedisBackend) Set(key string, entry *Entry) error {
 }
 
 // Purge an cache key
-func (b *RedisBackend) Purge(key string) error {
+func (b *redisBackend) Purge(key string) error {
 	conn := b.pool.Get()
 	defer conn.Close()
 
@@ -178,7 +232,7 @@ func (b *RedisBackend) Purge(key string) error {
 }
 
 // PurgeTags purges all keys+tags by tag(s)
-func (b *RedisBackend) PurgeTags(tags []string) error {
+func (b *redisBackend) PurgeTags(tags []string) error {
 	conn := b.pool.Get()
 	defer conn.Close()
 
@@ -209,7 +263,7 @@ func (b *RedisBackend) PurgeTags(tags []string) error {
 }
 
 // Flush the whole cache
-func (b *RedisBackend) Flush() error {
+func (b *redisBackend) Flush() error {
 	conn := b.pool.Get()
 	defer conn.Close()
 
@@ -224,7 +278,7 @@ func (b *RedisBackend) Flush() error {
 	return nil
 }
 
-func (b *RedisBackend) encodeEntry(entry *RedisCacheEntry) (*bytes.Buffer, error) {
+func (b *redisBackend) encodeEntry(entry *redisCacheEntry) (*bytes.Buffer, error) {
 	buffer := new(bytes.Buffer)
 	err := gob.NewEncoder(buffer).Encode(entry)
 	if err != nil {
@@ -233,10 +287,10 @@ func (b *RedisBackend) encodeEntry(entry *RedisCacheEntry) (*bytes.Buffer, error
 	return buffer, nil
 }
 
-func (b *RedisBackend) decodeEntry(content []byte) (*RedisCacheEntry, error) {
+func (b *redisBackend) decodeEntry(content []byte) (*redisCacheEntry, error) {
 	buffer := bytes.NewBuffer(content)
 	decoder := gob.NewDecoder(buffer)
-	entry := new(RedisCacheEntry)
+	entry := new(redisCacheEntry)
 	err := decoder.Decode(&entry)
 	if err != nil {
 		return nil, err
@@ -246,8 +300,8 @@ func (b *RedisBackend) decodeEntry(content []byte) (*RedisCacheEntry, error) {
 }
 
 // buildEntry removes unneeded Meta.Tags before encoding
-func (b *RedisBackend) buildEntry(entry *Entry) *RedisCacheEntry {
-	return &RedisCacheEntry{
+func (b *redisBackend) buildEntry(entry *Entry) *redisCacheEntry {
+	return &redisCacheEntry{
 		Meta: redisCacheEntryMeta{
 			Lifetime:  entry.Meta.Lifetime,
 			Gracetime: entry.Meta.Gracetime,
@@ -257,7 +311,7 @@ func (b *RedisBackend) buildEntry(entry *Entry) *RedisCacheEntry {
 }
 
 // buildResult removes unneeded Meta.Tags before encoding
-func (b *RedisBackend) buildResult(entry *RedisCacheEntry) *Entry {
+func (b *redisBackend) buildResult(entry *redisCacheEntry) *Entry {
 	return &Entry{
 		Meta: Meta{
 			Lifetime:  entry.Meta.Lifetime,

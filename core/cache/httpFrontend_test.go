@@ -257,8 +257,10 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			}
 
 			hf := new(HTTPFrontend).Inject(
-				backendMock,
 				&flamingo.NullLogger{},
+				&struct {
+					DefaultBackend Backend `inject:",optional"`
+				}{backendMock},
 			)
 
 			got, err := hf.Get(context.Background(), tt.args.key, tt.args.loader)

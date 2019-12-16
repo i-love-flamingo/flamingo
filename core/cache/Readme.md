@@ -68,6 +68,31 @@ core:
           size: 200
 ```
 
+Or to configure a TwoLevel Cache:
+
+```yaml
+core:
+  cache:
+    overrideBindings: true
+    httpFrontendFactory:
+      CACHENAME:
+        backendType: twolevel
+        twoLevelBackendFirst:
+          backendType: inmemory
+          inMemoryBackend:
+            size: 200
+        twoLevelBackendSecond:
+          backendType: redis
+          redisBackend:
+            # Close connections after remaining idle for this duration. If the value
+            # is zero, then idle connections are not closed. Applications should set
+            # the timeout to a value less than the server's timeout.
+            idleTimeOutSeconds: 60
+            host: '%%ENV:REDISHOST%%'
+            port: '6379'
+            maxIdle: 8
+```
+
 ## Cache backends
 
 Currently there are the following backends available:

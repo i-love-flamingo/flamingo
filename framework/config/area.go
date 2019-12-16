@@ -2,14 +2,19 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 	"reflect"
 	"strings"
 
+	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/build"
 	"flamingo.me/dingo"
 	"github.com/pkg/errors"
 )
+
+var fmtErrorf = fmt.Errorf
 
 type (
 	// Area defines a configuration area for multi-site setups
@@ -24,23 +29,32 @@ type (
 
 		Routes        []Route
 		Configuration Map
-		LoadedConfig  Map
+		LoadedConfig  Map // Deprecated: empty and should not be used anymore
+
+		cueBuildInstance *build.Instance
+		cueInstance      *cue.Instance
+		defaultConfig    Map
+		loadedConfig     Map
 	}
 
-	// Map contains configuration
-	Map map[string]interface{}
-
-	// Slice contains a list of configuration options
-	Slice []interface{}
-
 	// DefaultConfigModule is used to get a module's default configuration
+	// Deprecated: use CueConfigModule instead
 	DefaultConfigModule interface {
 		DefaultConfig() Map
+	}
+
+	// CueConfigModule provides a cue schema with default configuration which is used to validate and set config
+	CueConfigModule interface {
+		CueConfig() string
 	}
 
 	// OverrideConfigModule allows to override config dynamically
 	OverrideConfigModule interface {
 		OverrideConfig(current Map) Map
+	}
+
+	flamingoLegacyConfigAlias interface {
+		FlamingoLegacyConfigAlias() map[string]string
 	}
 
 	// Route defines the yaml structure for a route, consisting of a path and a controller, as well as optional args
@@ -60,6 +74,9 @@ func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 		Configuration: make(Map),
 	}
 
+	cueContext := build.NewContext()
+	ctx.cueBuildInstance = cueContext.NewInstance(ctx.Name, nil)
+
 	for _, c := range childs {
 		c.Parent = ctx
 	}
@@ -69,6 +86,7 @@ func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 
 // GetFlatContexts returns a map of context-relative-name->*Area, which has been flatted to inherit all parent's
 // tree settings such as DI & co, and filtered to only list tree nodes specified by Contexts of area.
+// Deprecated: just do it yourself if necessary, with Flat()
 func (area *Area) GetFlatContexts() ([]*Area, error) {
 	var result []*Area
 	flat, err := area.Flat()
@@ -77,167 +95,11 @@ func (area *Area) GetFlatContexts() ([]*Area, error) {
 	}
 
 	for relativeContextKey, context := range flat {
-		result = append(result, &Area{
-			Name:          relativeContextKey,
-			Routes:        context.Routes,
-			Injector:      context.Injector,
-			Configuration: context.Configuration,
-		})
-
+		newArea := *context
+		newArea.Name = relativeContextKey
+		result = append(result, &newArea)
 	}
 	return result, nil
-}
-
-// Add to the map (deep merge)
-func (m Map) Add(cfg Map) error {
-	// so we can not deep merge if we have `.` in our own keys, we need to ensure our keys are clean first
-	for k, v := range m {
-		var toClean Map
-		if strings.Contains(k, ".") {
-			if toClean == nil {
-				toClean = make(Map)
-			}
-			toClean[k] = v
-			delete(m, k)
-		}
-		if toClean != nil {
-			if err := m.Add(toClean); err != nil {
-				return err
-			}
-		}
-	}
-
-	for k, v := range cfg {
-		if vv, ok := v.(map[string]interface{}); ok {
-			v = Map(vv)
-		} else if vv, ok := v.([]interface{}); ok {
-			v = Slice(vv)
-		}
-
-		if strings.Index(k, ".") > -1 {
-			k, sub := strings.SplitN(k, ".", 2)[0], strings.SplitN(k, ".", 2)[1]
-			if mm, ok := m[k]; !ok {
-				m[k] = make(Map)
-				if err := m[k].(Map).Add(Map{sub: v}); err != nil {
-					return err
-				}
-			} else if mm, ok := mm.(Map); ok {
-				if err := mm.Add(Map{sub: v}); err != nil {
-					return err
-				}
-			} else {
-				return errors.Errorf("config conflict: %q.%q: %v into %v", k, sub, v, m[k])
-			}
-		} else {
-			_, mapleft := m[k].(Map)
-			_, mapright := v.(Map)
-			// if left side already is a map and will be assigned to nil in config_dev
-			if mapleft && v == nil {
-				m[k] = nil
-			} else if mapleft && mapright {
-				if err := m[k].(Map).Add(v.(Map)); err != nil {
-					return err
-				}
-			} else if mapleft && !mapright {
-				return errors.Errorf("config conflict: %q:%v into %v", k, v, m[k])
-			} else if mapright {
-				m[k] = make(Map)
-				if err := m[k].(Map).Add(v.(Map)); err != nil {
-					return err
-				}
-			} else {
-				// convert non-float64 to float64
-				switch vv := v.(type) {
-				case int:
-					v = float64(vv)
-				case int8:
-					v = float64(vv)
-				case int16:
-					v = float64(vv)
-				case int32:
-					v = float64(vv)
-				case int64:
-					v = float64(vv)
-				case uint:
-					v = float64(vv)
-				case uint8:
-					v = float64(vv)
-				case uint16:
-					v = float64(vv)
-				case uint32:
-					v = float64(vv)
-				case uint64:
-					v = float64(vv)
-				case float32:
-					v = float64(vv)
-				}
-				m[k] = v
-			}
-		}
-	}
-	return nil
-}
-
-// Flat map
-func (m Map) Flat() Map {
-	res := make(Map)
-
-	for k, v := range m {
-		res[k] = v
-		if v, ok := v.(Map); ok {
-			for sk, sv := range v.Flat() {
-				res[k+"."+sk] = sv
-			}
-		}
-	}
-
-	return res
-}
-
-// MapInto tries to map the configuration map into a given interface
-func (m Map) MapInto(out interface{}) error {
-	jsonBytes, err := json.Marshal(m)
-
-	if err != nil {
-		return errors.Wrap(err, "Problem with marshaling map")
-	}
-
-	err = json.Unmarshal(jsonBytes, out)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
-	}
-
-	return nil
-}
-
-// MapInto tries to map the configuration map into a given interface
-func (s Slice) MapInto(out interface{}) error {
-	jsonBytes, err := json.Marshal(s)
-
-	if err != nil {
-		return errors.Wrap(err, "Problem with marshaling map")
-	}
-
-	err = json.Unmarshal(jsonBytes, &out)
-	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
-	}
-
-	return nil
-}
-
-// Get a value by it's path
-func (m Map) Get(key string) (interface{}, bool) {
-	keyParts := strings.SplitN(key, ".", 2)
-	val, ok := m[keyParts[0]]
-	if len(keyParts) == 2 {
-		mm, ok := val.(Map)
-		if ok {
-			return mm.Get(keyParts[1])
-		}
-		return mm, false
-	}
-	return val, ok
 }
 
 // resolveDependencies tries to get a complete list of all modules, including all dependencies
@@ -263,6 +125,164 @@ func resolveDependencies(modules []dingo.Module, known map[reflect.Type]struct{}
 	return final
 }
 
+func moduleName(m dingo.Module) string {
+	tm := reflect.TypeOf(m)
+	for tm.Kind() == reflect.Ptr {
+		tm = tm.Elem()
+	}
+	return tm.PkgPath() + "." + tm.Name()
+}
+
+func (area *Area) loadCueConfig() error {
+	area.Modules = resolveDependencies(area.Modules, nil)
+
+	if area.cueBuildInstance == nil {
+		cueContext := build.NewContext()
+		area.cueBuildInstance = cueContext.NewInstance(area.Name, nil)
+	}
+
+	if err := area.cueBuildInstance.AddFile("flamingo.os.env", "flamingo: os: env: [string]: string"); err != nil {
+		return err
+	}
+	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
+		return err
+	}
+
+	for _, module := range area.Modules {
+		if cuemodule, ok := module.(CueConfigModule); ok {
+			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
+				return errors.Wrapf(err, "loading config for %s failed", moduleName(module))
+			}
+		}
+	}
+
+	return nil
+}
+
+func (area *Area) loadDefaultConfig() error {
+	area.Modules = resolveDependencies(area.Modules, nil)
+	area.defaultConfig = make(Map)
+
+	for _, module := range area.Modules {
+		if cfgmodule, ok := module.(DefaultConfigModule); ok {
+			if err := area.defaultConfig.Add(cfgmodule.DefaultConfig()); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (area *Area) checkLegacyConfig(warn bool) {
+	for _, module := range area.Modules {
+		if cfgmodule, ok := module.(flamingoLegacyConfigAlias); ok {
+			for old, new := range cfgmodule.FlamingoLegacyConfigAlias() {
+				if oldval, ok := area.Configuration.Get(old); ok {
+					if warn {
+						log.Printf("WARNING: legacy config %q set, migrate to %q", old, new)
+					}
+					if newval, ok := area.Configuration.Get(new); !ok {
+						if err := area.Configuration.Add(Map{new: oldval}); err != nil {
+							log.Fatal(err)
+						}
+					} else if ok && !reflect.DeepEqual(oldval, newval) {
+						log.Fatalf("ERROR: legacy config mismatch for new %q=%q and old %q=%q", new, newval, old, oldval)
+					}
+				}
+				if newval, ok := area.Configuration.Get(new); ok {
+					if err := area.Configuration.Add(Map{old: newval}); err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+		}
+	}
+}
+
+func (area *Area) loadConfig(legacy, logLegacy bool) error {
+	if err := area.loadCueConfig(); err != nil {
+		return err
+	}
+
+	if err := area.loadDefaultConfig(); err != nil {
+		return err
+	}
+
+	area.Configuration = make(Map)
+
+	if err := area.Configuration.Add(Map{"area": area.Name}); err != nil {
+		return err
+	}
+
+	if err := area.Configuration.Add(area.defaultConfig); err != nil {
+		return err
+	}
+	if err := area.Configuration.Add(area.loadedConfig); err != nil {
+		return err
+	}
+
+	for _, module := range area.Modules {
+		if cfgmodule, ok := module.(OverrideConfigModule); ok {
+			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
+				return err
+			}
+		}
+	}
+
+	if legacy {
+		area.checkLegacyConfig(logLegacy)
+	}
+
+	// TODO workaround for issue https://github.com/cuelang/cue/issues/220
+	// we mark every nil-value as `*null | _`, which includes everything but defaults to null
+	purgeNil := ""
+	for k, v := range area.Configuration.Flat() {
+		if v == nil {
+			purgeNil += strings.Replace(k, ".", ": ", -1) + ": *null | _\n"
+		}
+	}
+	if err := area.cueBuildInstance.AddFile("flamingo.config.purgenil", purgeNil); err != nil {
+		return err
+	}
+	// end TODO
+
+	var err error
+	// build a cue runtime to verify the config
+	cueRuntime := new(cue.Runtime)
+	area.cueInstance, err = cueRuntime.Build(area.cueBuildInstance)
+	if err != nil {
+		return fmtErrorf("%s: %w", area.Name, err)
+	}
+
+	area.cueInstance, err = area.cueInstance.Fill(area.Configuration)
+	if err != nil {
+		return fmtErrorf("%s: %w", area.Name, err)
+	}
+
+	for _, v := range os.Environ() {
+		v := strings.SplitN(v, "=", 2)
+		area.cueInstance, err = area.cueInstance.Fill(v[1], "flamingo", "os", "env", v[0])
+		if err != nil {
+			return fmtErrorf("%s: %w", area.Name, err)
+		}
+	}
+
+	m := make(Map)
+	if err := area.cueInstance.Value().Decode(&m); err != nil {
+		return fmtErrorf("%s: %w", area.Name, err)
+	}
+	if err := area.Configuration.Add(m); err != nil {
+		return fmtErrorf("%s: %w", area.Name, err)
+	}
+
+	if legacy {
+		area.checkLegacyConfig(false)
+	}
+
+	return nil
+}
+
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
 func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
@@ -270,48 +290,35 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		return area.Injector, nil
 	}
 
-	var injector *dingo.Injector
 	if area.Parent != nil {
-		injector = area.Parent.Injector.Child()
+		parent, err := area.Parent.GetInitializedInjector()
+		if err != nil {
+			return nil, err
+		}
+		if area.Injector, err = parent.Child(); err != nil {
+			return nil, err
+		}
 	} else {
-		injector = dingo.NewInjector()
-	}
-	injector.Bind(Area{}).ToInstance(area)
-
-	area.Modules = resolveDependencies(area.Modules, nil)
-
-	area.Configuration = make(Map)
-	for _, module := range area.Modules {
-		if cfgmodule, ok := module.(DefaultConfigModule); ok {
-			if err := area.Configuration.Add(cfgmodule.DefaultConfig()); err != nil {
-				return nil, err
-			}
+		var err error
+		if area.Injector, err = dingo.NewInjector(); err != nil {
+			return nil, err
 		}
 	}
+	area.Injector.SetBuildEagerSingletons(false)
+	area.Injector.Bind(Area{}).ToInstance(area)
 
-	if err := area.Configuration.Add(Map{"area": area.Name}); err != nil {
+	if err := area.loadConfig(true, true); err != nil {
 		return nil, err
-	}
-	if err := area.Configuration.Add(area.LoadedConfig); err != nil {
-		return nil, err
-	}
-
-	for _, module := range area.Modules {
-		if cfgmodule, ok := module.(OverrideConfigModule); ok {
-			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	for k, v := range area.Configuration.Flat() {
 		if v == nil {
 			continue
 		}
-		injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
+		area.Injector.Bind(v).AnnotatedWith("config:" + k).ToInstance(v)
 		if vf, ok := v.(float64); ok && vf == float64(int64(vf)) {
-			injector.Bind(new(int64)).AnnotatedWith("config:" + k).ToInstance(int64(vf))
-			injector.Bind(new(int)).AnnotatedWith("config:" + k).ToInstance(int(int64(vf)))
+			area.Injector.Bind(new(int64)).AnnotatedWith("config:" + k).ToInstance(int64(vf))
+			area.Injector.Bind(new(int)).AnnotatedWith("config:" + k).ToInstance(int(int64(vf)))
 		}
 	}
 
@@ -321,9 +328,10 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		}
 	}
 
-	injector.InitModules(area.Modules...)
-
-	return injector, nil
+	if err := area.Injector.InitModules(area.Modules...); err != nil {
+		return nil, err
+	}
+	return area.Injector, nil // area.Injector.BuildEagerSingletons(false)
 }
 
 func disableModule(input []dingo.Module, disabled string) []dingo.Module {
@@ -338,13 +346,8 @@ func disableModule(input []dingo.Module, disabled string) []dingo.Module {
 
 // Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overridden) of the parent context tree.
 func (area *Area) Flat() (map[string]*Area, error) {
-	res := make(map[string]*Area)
+	res := make(map[string]*Area, 1+len(area.Childs))
 	res[area.Name] = area
-	var err error
-	area.Injector, err = area.GetInitializedInjector()
-	if err != nil {
-		return nil, err
-	}
 
 	for _, child := range area.Childs {
 		flat, err := child.Flat()
@@ -353,6 +356,7 @@ func (area *Area) Flat() (map[string]*Area, error) {
 		}
 		for cn, flatchild := range flat {
 			res[area.Name+`/`+cn] = MergeFrom(*flatchild, *area)
+			_ = res[area.Name+`/`+cn].loadConfig(true, false) // we load the config as far as possible
 		}
 	}
 
@@ -375,11 +379,6 @@ func MergeFrom(baseContext, incomingContext Area) *Area {
 		if !knownhandler[route.Controller] {
 			baseContext.Routes = append(baseContext.Routes, route)
 		}
-	}
-
-	var err error
-	if baseContext.Injector, err = baseContext.GetInitializedInjector(); err != nil {
-		panic(err)
 	}
 
 	return &baseContext

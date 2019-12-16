@@ -12,6 +12,8 @@ import (
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/zipkin"
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/systemendpoint"
+	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	openzipkin "github.com/openzipkin/zipkin-go"
 	reporterHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/plugin/ochttp"
@@ -20,10 +22,6 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
-
-	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/systemendpoint"
-	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
 var (
@@ -57,12 +55,12 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 
 // Module registers the opencensus module which in turn enables jaeger & co
 type Module struct {
-	Endpoint       string `inject:"config:opencensus.jaeger.endpoint"`
-	ServiceName    string `inject:"config:opencensus.serviceName"`
-	ServiceAddr    string `inject:"config:opencensus.serviceAddr"`
-	JaegerEnable   bool   `inject:"config:opencensus.jaeger.enable"`
-	ZipkinEnable   bool   `inject:"config:opencensus.zipkin.enable"`
-	ZipkinEndpoint string `inject:"config:opencensus.zipkin.endpoint"`
+	Endpoint       string `inject:"config:flamingo.opencensus.jaeger.endpoint"`
+	ServiceName    string `inject:"config:flamingo.opencensus.serviceName"`
+	ServiceAddr    string `inject:"config:flamingo.opencensus.serviceAddr"`
+	JaegerEnable   bool   `inject:"config:flamingo.opencensus.jaeger.enable"`
+	ZipkinEnable   bool   `inject:"config:flamingo.opencensus.zipkin.enable"`
+	ZipkinEndpoint string `inject:"config:flamingo.opencensus.zipkin.endpoint"`
 }
 
 // find first not-loopback ipv4 address
@@ -147,24 +145,41 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exporter)
 }
 
-// DefaultConfig for opencensus module
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"opencensus": config.Map{
-			"jaeger.enable":   false,
-			"jaeger.endpoint": "http://localhost:14268/api/traces",
-			"zipkin.enable":   false,
-			"zipkin.endpoint": "http://localhost:9411/api/v2/spans",
-			"serviceName":     "flamingo",
-			"serviceAddr":     ":13210",
-			"tracing": config.Map{
-				"sampler": config.Map{
-					"whitelist":        config.Slice{},
-					"blacklist":        config.Slice{},
-					"allowParentTrace": true,
-				},
-			},
-		},
+// CueConfig defines the opencensus config scheme
+func (m *Module) CueConfig() string {
+	return `
+flamingo: opencensus: {
+	jaeger: {
+		enable: bool | *false
+		endpoint: string | *"http://localhost:14268/api/traces"
+	}
+	zipkin: {
+		enable: bool | *false
+		endpoint: string | *"http://localhost:9411/api/v2/spans"
+	}
+	serviceName: string | *"flamingo"
+	serviceAddr: string | *":13210"
+	tracing: sampler: {
+		whitelist: [...string]
+		blacklist: [...string]
+		allowParentTrace: bool | *true
+	}
+}
+`
+}
+
+// FlamingoLegacyConfigAlias maps legacy config to new
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"opencensus.jaeger.enable":                    "flamingo.opencensus.jaeger.enable",
+		"opencensus.jaeger.endpoint":                  "flamingo.opencensus.jaeger.endpoint",
+		"opencensus.zipkin.enable":                    "flamingo.opencensus.zipkin.enable",
+		"opencensus.zipkin.endpoint":                  "flamingo.opencensus.zipkin.endpoint",
+		"opencensus.serviceName":                      "flamingo.opencensus.serviceName",
+		"opencensus.serviceAddr":                      "flamingo.opencensus.serviceAddr",
+		"opencensus.tracing.sampler.whitelist":        "flamingo.opencensus.tracing.sampler.whitelist",
+		"opencensus.tracing.sampler.blacklist":        "flamingo.opencensus.tracing.sampler.blacklist",
+		"opencensus.tracing.sampler.allowParentTrace": "flamingo.opencensus.tracing.sampler.allowParentTrace",
 	}
 }
 

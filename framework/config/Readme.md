@@ -153,3 +153,12 @@ err := m.MarshalTo(&result)
 ## Using multiple configuration areas:
 A Flamingo application can have multiple `config.Area` - that is essentially useful for localisation.
 See [Flamingo Bootstrap](../1. Flamingo Basics/7. Flamingo Bootstrap.md)
+
+# Convert Yaml to Cue
+
+```
+sed "s/\'%%ENV:\(.*\)%%\(.*\)%%\'/*flamingo.os.env.\1 | \"\2\"/g"
+sed "s/\"%%ENV:\(.*\)%%\(.*\)%%\"/*flamingo.os.env.\1 | \"\2\"/g"
+sed "s/\'%%ENV:\(.*\)%%\'/flamingo.os.env.\1/g"
+sed "s/\"%%ENV:\(.*\)%%\"/flamingo.os.env.\1/g"
+```

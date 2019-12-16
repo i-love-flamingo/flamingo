@@ -2,7 +2,6 @@ package config
 
 import (
 	"flamingo.me/dingo"
-	"github.com/spf13/pflag"
 )
 
 type (
@@ -24,22 +23,7 @@ type (
 	Module struct {
 		Map
 	}
-
-	// Flags handles the persistent flags provided by the config module
-	Flags struct{}
 )
-
-var flagSet *pflag.FlagSet
-
-func init() {
-	initFlagSet()
-}
-
-func initFlagSet() {
-	flagSet = pflag.NewFlagSet("flamingo.config", pflag.ContinueOnError)
-	flagSet.BoolVar(&debugLog, "flamingo-config-log", false, "enable flamingo config loader logging")
-	flagSet.StringArrayVar(&additionalConfig, "flamingo-config", []string{}, "add multiple flamingo config additions")
-}
 
 // Configure the Module
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -51,7 +35,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 }
 
-// Configure DI
-func (f *Flags) Configure(injector *dingo.Injector) {
-	injector.BindMulti((*pflag.FlagSet)(nil)).ToInstance(flagSet)
+// TryModules evaluates flamingo modules to test cue config and dingo bindings
+func TryModules(modules ...dingo.Module) error {
+	cfg := NewArea("test", modules)
+	if err := cfg.loadConfig(false, false); err != nil {
+		return err
+	}
+	return dingo.TryModule(append([]dingo.Module{&Module{Map: cfg.Configuration}}, cfg.Modules...)...)
 }

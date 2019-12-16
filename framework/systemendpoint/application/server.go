@@ -23,7 +23,7 @@ func (s *SystemServer) Inject(
 	handlerProvider domain.HandlerProvider,
 	logger flamingo.Logger,
 	config *struct {
-		ServiceAddress string `inject:"config:systemendpoint.serviceAddr"`
+		ServiceAddress string `inject:"config:flamingo.systemendpoint.serviceAddr"`
 	},
 ) {
 	s.handlerProvider = handlerProvider

@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/boj/redistore"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/sessions"
@@ -30,19 +29,19 @@ type SessionModule struct {
 // Inject dependencies
 func (m *SessionModule) Inject(config *struct {
 	// session config is optional to allow usage of the DefaultConfig
-	Backend  string `inject:"config:session.backend"`
-	Secret   string `inject:"config:session.secret"`
-	FileName string `inject:"config:session.file"`
-	Secure   bool   `inject:"config:session.cookie.secure"`
+	Backend  string `inject:"config:flamingo.session.backend"`
+	Secret   string `inject:"config:flamingo.session.secret"`
+	FileName string `inject:"config:flamingo.session.file"`
+	Secure   bool   `inject:"config:flamingo.session.cookie.secure"`
 	// float64 is used due to the injection as config from json - int is not possible on this
-	StoreLength          float64 `inject:"config:session.store.length"`
-	MaxAge               float64 `inject:"config:session.max.age"`
-	Path                 string  `inject:"config:session.cookie.path"`
-	RedisURL             string  `inject:"config:session.redis.url"`
-	RedisHost            string  `inject:"config:session.redis.host"`
-	RedisPassword        string  `inject:"config:session.redis.password"`
-	RedisIdleConnections float64 `inject:"config:session.redis.idle.connections"`
-	RedisMaxAge          float64 `inject:"config:session.redis.maxAge"`
+	StoreLength          float64 `inject:"config:flamingo.session.store.length"`
+	MaxAge               float64 `inject:"config:flamingo.session.max.age"`
+	Path                 string  `inject:"config:flamingo.session.cookie.path"`
+	RedisURL             string  `inject:"config:flamingo.session.redis.url"`
+	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
+	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
+	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
+	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
 }) {
 	m.backend = config.Backend
 	m.secret = config.Secret
@@ -98,21 +97,45 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 	}
 }
 
-// DefaultConfig for this module
-func (m *SessionModule) DefaultConfig() config.Map {
-	return config.Map{
-		"session.backend":                "memory",
-		"session.secret":                 "flamingosecret",
-		"session.file":                   "/sessions",
-		"session.store.length":           1024 * 1024,
-		"session.max.age":                60 * 60 * 24 * 30,
-		"session.cookie.secure":          true,
-		"session.cookie.path":            "/",
-		"session.redis.url":              "",
-		"session.redis.host":             "redis",
-		"session.redis.password":         "",
-		"session.redis.idle.connections": 10,
-		"session.redis.maxAge":           60 * 60 * 24 * 30,
+// CueConfig defines the session config scheme
+func (*SessionModule) CueConfig() string {
+	return `
+flamingo: session: {
+	backend: *"memory" | "redis" | "file"
+	secret: string | *"flamingosecret"
+	file: string | *"/sessions"
+	store: length: float | int | *(1024 * 1024)
+	max: age: float | int | *(60 * 60 * 24 * 30)
+	cookie: {
+		secure: bool | *true
+		path: string | *"/"
+	}
+	redis: {
+		url: string | *""
+		host: string | *"redis"
+		password: string | *""
+		idle: connections: float | int | *10
+		maxAge: float | int | *(60 * 60 * 24 * 30)
+	}
+}
+`
+}
+
+// FlamingoLegacyConfigAlias maps legacy config to new
+func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"session.backend":                "flamingo.session.backend",
+		"session.secret":                 "flamingo.session.secret",
+		"session.file":                   "flamingo.session.file",
+		"session.store.length":           "flamingo.session.store.length",
+		"session.max.age":                "flamingo.session.max.age",
+		"session.cookie.secure":          "flamingo.session.cookie.secure",
+		"session.cookie.path":            "flamingo.session.cookie.path",
+		"session.redis.url":              "flamingo.session.redis.url",
+		"session.redis.host":             "flamingo.session.redis.host",
+		"session.redis.password":         "flamingo.session.redis.password",
+		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
+		"session.redis.maxAge":           "flamingo.session.redis.maxAge",
 	}
 }
 

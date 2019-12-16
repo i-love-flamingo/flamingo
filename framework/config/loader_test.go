@@ -12,13 +12,6 @@ func TestLoad(t *testing.T) {
 	require.NoError(t, os.Setenv("TEST1", "test-value"))
 	require.NoError(t, os.Setenv("TEST4", "injected"))
 
-	t.Run("config dir does not exist", func(t *testing.T) {
-		root := new(Area)
-		err := Load(root, "not-existing")
-		require.NoError(t, err)
-		assert.Equal(t, Map{"area": ""}, root.Configuration.Flat())
-	})
-
 	t.Run("valid config files", func(t *testing.T) {
 		root := new(Area)
 		err := Load(root, "testdata/valid")
@@ -52,10 +45,7 @@ func TestLoad(t *testing.T) {
 
 	t.Run("valid config files with additional config", func(t *testing.T) {
 		root := new(Area)
-		require.NoError(t, flagSet.Set("flamingo-config", "baz: bam"))
-		require.NoError(t, flagSet.Set("flamingo-config", "foo.bar.test: 'hello'"))
-		defer func() { initFlagSet() }()
-		err := Load(root, "testdata/valid")
+		err := Load(root, "testdata/valid", AdditionalConfig([]string{"baz: bam", "foo.bar.test: 'hello'"}))
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
 		assert.Contains(t, root.Configuration.Flat(), "foo")
@@ -77,10 +67,7 @@ func TestLoad(t *testing.T) {
 	t.Run("valid config file with invalid additional config", func(t *testing.T) {
 		root := new(Area)
 		assert.Panics(t, func() {
-			require.NoError(t, flagSet.Set("flamingo-config", "baz"))
-			defer func() { initFlagSet() }()
-
-			_ = Load(root, "testdata/valid")
+			_ = Load(root, "testdata/valid", AdditionalConfig([]string{"baz"}))
 		})
 	})
 

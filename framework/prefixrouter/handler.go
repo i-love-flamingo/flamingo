@@ -12,7 +12,7 @@ type (
 
 // Inject
 func (r *rootRedirectHandler) Inject(config *struct {
-	RedirectTarget string `inject:"config:prefixrouter.rootRedirectHandler.redirectTarget,optional"`
+	RedirectTarget string `inject:"config:flamingo.prefixrouter.rootRedirectHandler.redirectTarget,optional"`
 }) {
 	r.redirectTarget = config.RedirectTarget
 }

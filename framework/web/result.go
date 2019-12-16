@@ -125,7 +125,7 @@ const (
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	Engine                flamingo.TemplateEngine `inject:",optional"`
-	Debug                 bool                    `inject:"config:debug.mode"`
+	Debug                 bool                    `inject:"config:flamingo.debug.mode"`
 	TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
 	TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
 	TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`

@@ -2,18 +2,18 @@ package prefixrouter
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"path"
 	"time"
 
 	"flamingo.me/dingo"
-	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
-
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 // Module for core/prefix_router
@@ -24,50 +24,57 @@ type Module struct {
 	enableRootRedirectHandler bool
 }
 
+// Inject dependencies
+func (m *Module) Inject(
+	eventRouter flamingo.EventRouter,
+	logger flamingo.Logger,
+	config *struct {
+		EnableRootRedirectHandler bool `inject:"config:flamingo.prefixrouter.rootRedirectHandler.enabled,optional"`
+	},
+) {
+	m.eventRouter = eventRouter
+	m.logger = logger
+	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
+}
+
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(http.ServeMux)).ToInstance(http.NewServeMux())
-	injector.BindMulti(new(cobra.Command)).ToProvider(serveCmd(m))
+	injector.BindMulti(new(cobra.Command)).ToProvider(m.serveCmd)
 	if m.enableRootRedirectHandler {
 		injector.BindMulti((*OptionalHandler)(nil)).AnnotatedWith("fallback").To(rootRedirectHandler{})
 	}
 	flamingo.BindEventSubscriber(injector).ToInstance(m)
 }
 
-// Inject dependencies
-func (m *Module) Inject(
-	eventRouter flamingo.EventRouter,
-	l flamingo.Logger,
-	config *struct {
-		EnableRootRedirectHandler bool `inject:"config:prefixrouter.rootRedirectHandler.enabled,optional"`
-	},
-) {
-	m.eventRouter = eventRouter
-	m.logger = l
-	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
+// CueConfig defines the prefixrouter configuration
+func (*Module) CueConfig() string {
+	return `
+flamingo: prefixrouter: rootRedirectHandler: enabled?: bool
+if flamingo.prefixrouter.rootRedirectHandler.enabled {
+	flamingo: prefixrouter: rootRedirectHandler: redirectTarget: string
+}
+`
 }
 
-func serveCmd(m *Module) func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {
+type serveCmdConfig struct {
 	PrimaryHandlers  []OptionalHandler `inject:"primaryHandlers,optional"` // Optional Register a PrimaryHandlersHandlers which is passed to the FrontendRouter
 	FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter
-}) *cobra.Command {
-	return func(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *struct {
-		PrimaryHandlers  []OptionalHandler `inject:"primaryHandlers,optional"` // Optional Register a PrimaryHandlersHandlers which is passed to the FrontendRouter
-		FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter
-	}) *cobra.Command {
-		var addr string
+}
 
-		cmd := &cobra.Command{
-			Use:     "serve",
-			Short:   "run the prefix router",
-			Aliases: []string{"server"},
-			Run:     m.serve(area, defaultmux, &addr, configuredURLPrefixSampler, config.PrimaryHandlers, config.FallbackHandlers),
-		}
+func (m *Module) serveCmd(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *serveCmdConfig) *cobra.Command {
+	var addr string
 
-		cmd.Flags().StringVarP(&addr, "addr", "a", ":3210", "addr on which flamingo runs")
-
-		return cmd
+	cmd := &cobra.Command{
+		Use:     "serve",
+		Short:   "run the prefix router",
+		Aliases: []string{"server"},
+		Run:     m.serve(area, defaultmux, &addr, configuredURLPrefixSampler, config.PrimaryHandlers, config.FallbackHandlers),
 	}
+
+	cmd.Flags().StringVarP(&addr, "addr", "a", ":3210", "addr on which flamingo runs")
+
+	return cmd
 }
 
 // serve HTTP Requests
@@ -77,8 +84,8 @@ func (m *Module) serve(
 	addr *string,
 	configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler,
 	primaryHandlers []OptionalHandler,
-	fallbackHandlers []OptionalHandler) func(cmd *cobra.Command, args []string,
-) {
+	fallbackHandlers []OptionalHandler,
+) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		frontRouter := NewFrontRouter()
 		frontRouter.SetFinalFallbackHandler(defaultRouter)
@@ -87,7 +94,6 @@ func (m *Module) serve(
 
 		areas, _ := root.GetFlatContexts()
 		for _, area := range areas {
-
 			pathValue, pathSet := area.Configuration.Get("flamingo.router.path")
 			hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
 
@@ -96,8 +102,17 @@ func (m *Module) serve(
 				continue
 			}
 
-			area.Injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
-			areaRouter := area.Injector.GetInstance(web.Router{}).(*web.Router)
+			injector, err := area.GetInitializedInjector()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			injector.Bind((*flamingo.Logger)(nil)).ToInstance(m.logger.WithField("area", area.Name))
+			i, err := injector.GetInstance(web.Router{})
+			if err != nil {
+				panic(err)
+			}
+			areaRouter := i.(*web.Router)
 
 			prefix := "/"
 			if pathSet {

@@ -2,7 +2,6 @@ package systemendpoint
 
 import (
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/application"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
@@ -20,9 +19,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	flamingo.BindEventSubscriber(injector).To(&application.SystemServer{}).In(dingo.Singleton)
 }
 
-// DefaultConfig for the module
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"systemendpoint.serviceAddr": ":13210",
+// CueConfig for the module
+func (*Module) CueConfig() string {
+	return `flamingo: systemendpoint: serviceAddr: string | *":13210"`
+}
+
+// FlamingoLegacyConfigAlias maps legacy config to new
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"systemendpoint.serviceAddr": "flamingo.systemendpoint.serviceAddr",
 	}
 }

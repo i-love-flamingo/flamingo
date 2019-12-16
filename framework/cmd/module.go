@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -10,21 +11,19 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/flamingo"
 )
-
-// Module for DI
-type Module struct{}
 
 var once = sync.Once{}
 
 type (
 	eventRouterProvider func() flamingo.EventRouter
 	flagSetProvider     func() []*pflag.FlagSet
+
+	// Module for DI
+	Module struct{}
 )
 
 // Configure DI
@@ -36,7 +35,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			logger flamingo.Logger,
 			flagSetProvider flagSetProvider,
 			config *struct {
-				Name string `inject:"config:cmd.name"`
+				Name string `inject:"config:flamingo.cmd.name"`
 			}) *cobra.Command {
 			signals := make(chan os.Signal, 1)
 			shutdownComplete := make(chan struct{}, 1)
@@ -54,7 +53,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 					signals <- syscall.SIGTERM
 					<-shutdownComplete
 				},
+				Example: `Run with -h or -help to see global debug flags`,
 			}
+			//rootCmd.SetHelpTemplate()
 			rootCmd.FParseErrWhitelist.UnknownFlags = true
 			for _, set := range flagSetProvider() {
 				rootCmd.PersistentFlags().AddFlagSet(set)
@@ -67,11 +68,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	).In(dingo.Singleton)
 }
 
-// DefaultConfig specifies the command name
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"cmd.name": filepath.Base(os.Args[0]),
-	}
+// CueConfig specifies the command name
+func (*Module) CueConfig() string {
+	return fmt.Sprintf(`flamingo: cmd: name: string | *"%s"`, filepath.Base(os.Args[0]))
+}
+
+// FlamingoLegacyConfigAlias maps legacy config to new
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{"cmd.name": "flamingo.cmd.name"}
 }
 
 func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, complete chan<- struct{}, logger flamingo.Logger) {
@@ -101,8 +105,16 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, comple
 
 // Run the root command
 func Run(injector *dingo.Injector) error {
-	cmd := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo").(*cobra.Command)
-	injector.GetInstance(new(eventRouterProvider)).(eventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
+	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
+	if err != nil {
+		return err
+	}
+	cmd := i.(*cobra.Command)
+	i, err = injector.GetInstance(new(eventRouterProvider))
+	if err != nil {
+		return err
+	}
+	i.(eventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
 
 	return cmd.Execute()
 }

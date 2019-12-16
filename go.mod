@@ -6,7 +6,8 @@ require (
 	contrib.go.opencensus.io/exporter/jaeger v0.1.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
-	flamingo.me/dingo v0.1.6
+	cuelang.org/go v0.0.15
+	flamingo.me/dingo v0.2.3
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -18,9 +19,7 @@ require (
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91
 	github.com/leekchan/accounting v0.0.0-20191104051123-0b9b0bd19c36
 	github.com/mattn/go-colorable v0.0.9 // indirect

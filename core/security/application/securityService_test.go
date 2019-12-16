@@ -55,8 +55,8 @@ func (t *SecurityServiceTestSuite) SetupTest() {
 	t.roleService = &roleMocks.Service{}
 	t.service = &SecurityServiceImpl{}
 	t.service.Inject(voters, t.roleService, &struct {
-		VoterStrategy     string `inject:"config:security.roles.voters.strategy"`
-		AllowIfAllAbstain bool   `inject:"config:security.roles.voters.allowIfAllAbstain"`
+		VoterStrategy     string `inject:"config:core.security.roles.voters.strategy"`
+		AllowIfAllAbstain bool   `inject:"config:core.security.roles.voters.allowIfAllAbstain"`
 	}{})
 }
 

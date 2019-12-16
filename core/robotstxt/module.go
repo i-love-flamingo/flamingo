@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/config"
 )
 
 type (
 	// Module for robotstxt
 	Module struct {
 		DefaultMux *http.ServeMux `inject:",optional"`
-		Filepath   string         `inject:"config:robotstxt.filepath"`
+		Filepath   string         `inject:"config:core.robotstxt.filepath"`
 	}
 )
 
@@ -24,9 +23,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 }
 
-// DefaultConfig for setting pug-related config options
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"robotstxt.filepath": "frontend/robots.txt",
-	}
+// CueConfig schema
+func (*Module) CueConfig() string {
+	return `
+core: robotstxt: filepath: string | *"frontend/robots.txt"
+`
+}
+
+// FlamingoLegacyConfigAlias mapping
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{"robotstxt.filepath": "core.robotstxt.filepath"}
 }

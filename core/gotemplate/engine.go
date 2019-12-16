@@ -48,9 +48,9 @@ func (e *engine) Inject(
 	tplFuncs templateFuncProvider,
 	logger flamingo.Logger,
 	config *struct {
-		TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
-		LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
-		Debug              bool   `inject:"config:debug.mode"`
+		TemplatesBasePath  string `inject:"config:core.gotemplate.engine.templates.basepath"`
+		LayoutTemplatesDir string `inject:"config:core.gotemplate.engine.layout.dir"`
+		Debug              bool   `inject:"config:flamingo.debug.mode"`
 	},
 ) {
 	e.tplFuncs = tplFuncs

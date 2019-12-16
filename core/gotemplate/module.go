@@ -3,7 +3,6 @@ package gotemplate
 import (
 	"flamingo.me/dingo"
 
-	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -23,10 +22,21 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	flamingo.BindTemplateFunc(injector, "plainJs", new(plainJSFunc))
 }
 
-// DefaultConfig for gotemplate module
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"gotemplates.engine.templates.basepath": "templates",
-		"gotemplates.engine.layout.dir":         "",
+// CueConfig definition
+func (m *Module) CueConfig() string {
+	return `
+// general config
+core gotemplate engine: {
+	templates basepath: string | *"templates"
+	layout dir: string | *""
+}
+`
+}
+
+// FlamingoLegacyConfigAlias mapping
+func (m *Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"gotemplates.engine.templates.basepath": "core.gotemplate.engine.templates.basepath",
+		"gotemplates.engine.layout.dir":         "core.gotemplate.engine.layout.dir",
 	}
 }

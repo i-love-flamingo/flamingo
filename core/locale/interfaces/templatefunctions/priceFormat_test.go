@@ -40,7 +40,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 	labelService.Inject(FakeLabelProvider, nil, nil)
 
 	type fields struct {
-		config       config.Map `inject:"config:locale.accounting"`
+		config       config.Map `inject:"config:core.locale.accounting"`
 		labelService *application.LabelService
 	}
 	type args struct {
@@ -125,7 +125,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 			nff := &templatefunctions.PriceFormatFunc{}
 			priceService := application.PriceService{}
 			priceService.Inject(tt.fields.labelService, &struct {
-				Config config.Map `inject:"config:locale.accounting"`
+				Config config.Map `inject:"config:core.locale.accounting"`
 			}{tt.fields.config})
 			nff.Inject(&priceService)
 

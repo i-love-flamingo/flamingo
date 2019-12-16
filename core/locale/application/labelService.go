@@ -19,8 +19,8 @@ type (
 
 // Inject dependencies
 func (l *LabelService) Inject(labelProvider labelProvider, translationService domain.TranslationService, config *struct {
-	DefaultLocaleCode string       `inject:"config:locale.locale"`
-	FallbackLocalCode config.Slice `inject:"config:locale.fallbackLocales,optional"`
+	DefaultLocaleCode string       `inject:"config:core.locale.locale"`
+	FallbackLocalCode config.Slice `inject:"config:core.locale.fallbackLocales,optional"`
 }) {
 	l.translationService = translationService
 	l.labelProvider = labelProvider

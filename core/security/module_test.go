@@ -1,13 +1,14 @@
 package security_test
 
 import (
-	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/core/security"
 	"testing"
+
+	"flamingo.me/flamingo/v3/core/security"
+	"flamingo.me/flamingo/v3/framework/config"
 )
 
 func TestModule_Configure(t *testing.T) {
-	if err := dingo.TryModule(new(security.Module)); err != nil {
+	if err := config.TryModules(nil, new(security.Module)); err != nil {
 		t.Error(err)
 	}
 }

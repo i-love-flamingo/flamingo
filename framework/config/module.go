@@ -35,11 +35,17 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 }
 
+// wrap to prevent the duplicated configuration issue
+type testModule struct {
+	Module
+}
+
 // TryModules evaluates flamingo modules to test cue config and dingo bindings
-func TryModules(modules ...dingo.Module) error {
+func TryModules(cm Map, modules ...dingo.Module) error {
 	cfg := NewArea("test", modules)
+	cfg.loadedConfig = cm
 	if err := cfg.loadConfig(false, false); err != nil {
 		return err
 	}
-	return dingo.TryModule(append([]dingo.Module{&Module{Map: cfg.Configuration}}, cfg.Modules...)...)
+	return dingo.TryModule(append([]dingo.Module{&testModule{Module: Module{Map: cfg.Configuration}}}, cfg.Modules...)...)
 }

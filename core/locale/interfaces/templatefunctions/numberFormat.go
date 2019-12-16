@@ -21,9 +21,9 @@ type NumberFormatFunc struct {
 func (nff *NumberFormatFunc) Inject(
 	logger flamingo.Logger,
 	config *struct {
-		Precision float64 `inject:"config:locale.numbers.precision"`
-		Decimal   string  `inject:"config:locale.numbers.decimal"`
-		Thousand  string  `inject:"config:locale.numbers.thousand"`
+		Precision float64 `inject:"config:core.locale.numbers.precision"`
+		Decimal   string  `inject:"config:core.locale.numbers.decimal"`
+		Thousand  string  `inject:"config:core.locale.numbers.thousand"`
 	},
 ) {
 	nff.precision = config.Precision

@@ -17,7 +17,7 @@ type OauthService struct {
 
 // Inject configuration
 func (os *OauthService) Inject(config *struct {
-	BaseURL string `inject:"config:internalauth.baseurl"`
+	BaseURL string `inject:"config:core.internalauth.baseurl"`
 }) {
 	os.baseURL = config.BaseURL
 }

@@ -70,9 +70,9 @@ func TestNumberFormatFunc_Func(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			nff := &templatefunctions.NumberFormatFunc{}
 			nff.Inject(tt.fields.logger, &struct {
-				Precision float64 `inject:"config:locale.numbers.precision"`
-				Decimal   string  `inject:"config:locale.numbers.decimal"`
-				Thousand  string  `inject:"config:locale.numbers.thousand"`
+				Precision float64 `inject:"config:core.locale.numbers.precision"`
+				Decimal   string  `inject:"config:core.locale.numbers.decimal"`
+				Thousand  string  `inject:"config:core.locale.numbers.thousand"`
 			}{
 				Precision: tt.fields.precision,
 				Decimal:   tt.fields.decimal,

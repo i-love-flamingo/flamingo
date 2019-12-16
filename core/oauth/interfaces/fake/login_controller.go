@@ -23,7 +23,7 @@ func (l *LoginController) Inject(
 	responder *web.Responder,
 	authManager *application.AuthManager,
 	cfg *struct {
-		FakeLoginTemplate string `inject:"config:oauth.fakeLoginTemplate"`
+		FakeLoginTemplate string `inject:"config:core.oauth.fakeLoginTemplate"`
 	},
 	router web.ReverseRouter,
 ) {

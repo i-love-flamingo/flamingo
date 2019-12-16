@@ -1,6 +1,8 @@
 package security
 
 import (
+	"fmt"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/core/security/application/role"
@@ -8,7 +10,6 @@ import (
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/core/security/interface/controller"
 	"flamingo.me/flamingo/v3/core/security/interface/middleware"
-	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -44,29 +45,48 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(middleware.RedirectURLMaker)).To(middleware.RedirectURLMakerImpl{})
 }
 
-// DefaultConfig for core security module
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"security": config.Map{
-			"loginPath": config.Map{
-				"handler":          "auth.login",
-				"redirectStrategy": middleware.ReferrerRedirectStrategy,
-				"redirectPath":     "/",
-			},
-			"authenticatedHomepage": config.Map{
-				"strategy": middleware.ReferrerRedirectStrategy,
-				"path":     "/",
-			},
-			"roles": config.Map{
-				"permissionHierarchy": config.Map{
-					domain.PermissionAuthorized: config.Slice{},
-				},
-				"voters": config.Map{
-					"strategy":          application.VoterStrategyAffirmative,
-					"allowIfAllAbstain": false,
-				},
-			},
-			"eventLogging": false,
-		},
+// CueConfig schema
+func (*Module) CueConfig() string {
+	return fmt.Sprintf(`
+core: security: {
+	loginPath: {
+		handler: string | *"auth.login"
+		redirectStrategy: string | *"%s"
+		redirectPath: string | *"/"
 	}
+	authenticatedHomepage:{
+		strategy: string | *"%s"
+		path: string | *"/"
+	}
+	roles: {
+		permissionHierarchy: {
+			%s: [..._]
+		}
+		voters: {
+			strategy: string | *"%s"
+			allowIfAllAbstain: bool | *false
+		}
+	}
+	eventLogging: bool | *false
+}
+`, middleware.ReferrerRedirectStrategy, middleware.ReferrerRedirectStrategy, domain.PermissionAuthorized, application.VoterStrategyAffirmative)
+}
+
+// FlamingoLegacyConfigAlias mapping for legacy settings
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	alias := make(map[string]string)
+	for _, v := range []string{
+		"security.loginPath.handler",
+		"security.loginPath.redirectStrategy",
+		"security.loginPath.redirectPath",
+		"security.authenticatedHomepage.strategy",
+		"security.authenticatedHomepage.path",
+		"security.roles.permissionHierarchy",
+		"security.roles.voters.strategy",
+		"security.roles.voters.allowIfAllAbstain",
+		"security.eventLogging",
+	} {
+		alias[v] = "core." + v
+	}
+	return alias
 }

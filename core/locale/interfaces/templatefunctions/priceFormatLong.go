@@ -22,7 +22,7 @@ func (pff *PriceFormatLongFunc) Inject(
 	formatFunc *PriceFormatFunc,
 	priceService *application.PriceService,
 	config *struct {
-		Config config.Map `inject:"config:locale.accounting"`
+		Config config.Map `inject:"config:core.locale.accounting"`
 	},
 ) {
 	pff.config = config.Config

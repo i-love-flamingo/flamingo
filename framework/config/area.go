@@ -187,7 +187,10 @@ func (area *Area) checkLegacyConfig(warn bool) {
 							log.Fatal(err)
 						}
 					} else if ok && !reflect.DeepEqual(oldval, newval) {
-						log.Fatalf("ERROR: legacy config mismatch for new %q=%q and old %q=%q", new, newval, old, oldval)
+						// don't warn on complext/map type
+						if _, ok := newval.(Map); !ok {
+							log.Fatalf("ERROR: legacy config mismatch for new %q=%q and old %q=%q", new, newval, old, oldval)
+						}
 					}
 				}
 				if newval, ok := area.Configuration.Get(new); ok {

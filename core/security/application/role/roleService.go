@@ -28,7 +28,7 @@ type (
 
 // Inject dependencies
 func (s *ServiceImpl) Inject(p []Provider, cfg *struct {
-	PermissionHierarchy config.Map `inject:"config:security.roles.permissionHierarchy"`
+	PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 }) {
 	s.providers = p
 

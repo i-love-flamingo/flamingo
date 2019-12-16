@@ -8,7 +8,7 @@ import (
 )
 
 func TestModule_Configure(t *testing.T) {
-	if err := config.TryModules(new(opencensus.Module)); err != nil {
+	if err := config.TryModules(nil, new(opencensus.Module)); err != nil {
 		t.Error(err)
 	}
 }

@@ -7,16 +7,15 @@ import (
 	"flamingo.me/flamingo/v3/core/oauth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
-	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 // Module for core.auth
 type Module struct {
-	UseFake                     bool   `inject:"config:oauth.useFake"`
-	PreventSimultaneousSessions bool   `inject:"config:oauth.preventSimultaneousSessions"`
-	SessionBackend              string `inject:"config:session.backend"`
+	UseFake                     bool   `inject:"config:core.oauth.useFake"`
+	PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`
+	SessionBackend              string `inject:"config:flamingo.session.backend"`
 }
 
 // Configure core.auth module
@@ -41,34 +40,69 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
 }
 
-// DefaultConfig for auth module
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"oauth": config.Map{
-			"enabled":           true,
-			"useFake":           false,
-			"fakeUserData":      config.Map{},
-			"fakeLoginTemplate": "",
-			"scopes":            config.Slice{"profile", "email"},
-			"claims": config.Map{
-				"idToken":  config.Slice{},
-				"userInfo": config.Slice{},
-			},
-			"tokenExtras": config.Slice{},
-			"mapping": config.Map{
-				"idToken": config.Map{
-					"sub":   "sub",
-					"email": "email",
-					"name":  "name",
-				},
-				"userInfo": config.Map{
-					"sub":   "sub",
-					"email": "email",
-					"name":  "name",
-				},
-			},
-			"preventSimultaneousSessions": false,
-		},
+// CueConfig for oauth module
+func (*Module) CueConfig() string {
+	return `
+core oauth: {
+	server: string
+	secret: string
+	clientid: string
+	disableOfflineToken: bool | *false
+	enabled: bool | *true
+	useFake: bool | *false
+	fakeUserData: [string]: _
+	fakeLoginTemplate: string | *""
+	scopes: [...string] | *["profile", "email"]
+	claims: {
+		idToken: [...string]
+		userInfo: [...string]
+	}
+	tokenExtras: [...string]
+	mapping: {
+		idToken: { [string]: string } & {
+			sub: string | *"sub"
+			email: string | *"email"
+			name: string | *"name"
+		}
+		userInfo: { [string]: string } & {
+			sub: string | *"sub"
+			email: string | *"email"
+			name: string | *"name"
+		}
+	}
+	preventSimultaneousSessions: bool | *false
+}
+`
+}
+
+// FlamingoLegacyConfigAlias mapping for backwards compatibility
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	alias := make(map[string]string)
+	for _, v := range []string{
+		"oauth.server",
+		"oauth.secret",
+		"oauth.clientid",
+		"oauth.disableOfflineToken",
+		"oauth.enabled",
+		"oauth.useFake",
+		"oauth.fakeUserData",
+		"oauth.fakeLoginTemplate",
+		"oauth.scopes",
+		"oauth.claims.idToken", "oauth.claims.userInfo",
+		"oauth.tokenExtras",
+		"oauth.mapping.idToken",
+		"oauth.mapping.userInfo",
+		"oauth.preventSimultaneousSessions",
+	} {
+		alias[v] = "core." + v
+	}
+	return alias
+}
+
+// Depends on the session module
+func (*Module) Depends() []dingo.Module {
+	return []dingo.Module{
+		new(flamingo.SessionModule),
 	}
 }
 
@@ -77,7 +111,7 @@ type routes struct {
 	logout   interfaces.LogoutControllerInterface
 	callback interfaces.CallbackControllerInterface
 	user     *interfaces.UserController
-	UseFake  bool `inject:"config:oauth.useFake"`
+	UseFake  bool `inject:"config:core.oauth.useFake"`
 }
 
 // Inject routes dependencies

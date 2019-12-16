@@ -45,7 +45,7 @@ func (t *ServiceImplTestSuite) SetupTest() {
 	}
 	t.service = &ServiceImpl{}
 	t.service.Inject(providers, &struct {
-		PermissionHierarchy config.Map `inject:"config:security.roles.permissionHierarchy"`
+		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 	}{})
 }
 

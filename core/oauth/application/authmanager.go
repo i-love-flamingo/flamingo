@@ -3,7 +3,9 @@ package application
 import (
 	"context"
 	"encoding/gob"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"runtime/debug"
 
@@ -14,8 +16,6 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-	"log"
-	"net/http/httputil"
 )
 
 const (
@@ -79,16 +79,16 @@ func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, erro
 
 // Inject authManager dependencies
 func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config *struct {
-	Server              string       `inject:"config:oauth.server"`
-	Secret              string       `inject:"config:oauth.secret"`
-	ClientID            string       `inject:"config:oauth.clientid"`
-	DisableOfflineToken bool         `inject:"config:oauth.disableOfflineToken"`
-	Scopes              config.Slice `inject:"config:oauth.scopes"`
-	IDTokenMapping      config.Slice `inject:"config:oauth.claims.idToken"`
-	UserInfoMapping     config.Slice `inject:"config:oauth.claims.userInfo"`
-	TokenExtras         config.Slice `inject:"config:oauth.tokenExtras"`
-	DebugMode           bool         `inject:"config:debug.mode"`
-	Enabled             bool         `inject:"config:oauth.enabled"`
+	Server              string       `inject:"config:core.oauth.server"`
+	Secret              string       `inject:"config:core.oauth.secret"`
+	ClientID            string       `inject:"config:core.oauth.clientid"`
+	DisableOfflineToken bool         `inject:"config:core.oauth.disableOfflineToken"`
+	Scopes              config.Slice `inject:"config:core.oauth.scopes"`
+	IDTokenMapping      config.Slice `inject:"config:core.oauth.claims.idToken"`
+	UserInfoMapping     config.Slice `inject:"config:core.oauth.claims.userInfo"`
+	TokenExtras         config.Slice `inject:"config:core.oauth.tokenExtras"`
+	DebugMode           bool         `inject:"config:flamingo.debug.mode"`
+	Enabled             bool         `inject:"config:core.oauth.enabled"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router

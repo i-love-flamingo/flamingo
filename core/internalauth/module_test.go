@@ -1,13 +1,14 @@
 package internalauth_test
 
 import (
-	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/core/internalauth"
 	"testing"
+
+	"flamingo.me/flamingo/v3/core/internalauth"
+	"flamingo.me/flamingo/v3/framework/config"
 )
 
 func TestModule_Configure(t *testing.T) {
-	if err := dingo.TryModule(new(internalauth.InternalAuth)); err != nil {
+	if err := config.TryModules(nil, new(internalauth.InternalAuth)); err != nil {
 		t.Error(err)
 	}
 }

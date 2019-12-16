@@ -60,12 +60,12 @@ func (t *SecurityMiddlewareTestSuite) SetupTest() {
 	t.redirectURLMaker = &interfaceMocks.RedirectURLMaker{}
 	t.middleware = &SecurityMiddleware{}
 	t.middleware.Inject(&web.Responder{}, t.securityService, t.redirectURLMaker, flamingo.NullLogger{}, &struct {
-		LoginPathHandler              string `inject:"config:security.loginPath.handler"`
-		LoginPathRedirectStrategy     string `inject:"config:security.loginPath.redirectStrategy"`
-		LoginPathRedirectPath         string `inject:"config:security.loginPath.redirectPath"`
-		AuthenticatedHomepageStrategy string `inject:"config:security.authenticatedHomepage.strategy"`
-		AuthenticatedHomepagePath     string `inject:"config:security.authenticatedHomepage.path"`
-		EventLogging                  bool   `inject:"config:security.eventLogging"`
+		LoginPathHandler              string `inject:"config:core.security.loginPath.handler"`
+		LoginPathRedirectStrategy     string `inject:"config:core.security.loginPath.redirectStrategy"`
+		LoginPathRedirectPath         string `inject:"config:core.security.loginPath.redirectPath"`
+		AuthenticatedHomepageStrategy string `inject:"config:core.security.authenticatedHomepage.strategy"`
+		AuthenticatedHomepagePath     string `inject:"config:core.security.authenticatedHomepage.path"`
+		EventLogging                  bool   `inject:"config:core.security.eventLogging"`
 	}{
 		LoginPathRedirectPath:     "/home",
 		AuthenticatedHomepagePath: "/authenticated",

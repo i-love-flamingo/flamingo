@@ -159,9 +159,9 @@ customTemplateFunc: test-abc`,
 		t.Run(tt.name, func(t *testing.T) {
 			e := &engine{}
 			e.Inject(tt.engineConfig.tplFuncs, flamingo.NullLogger{}, &struct {
-				TemplatesBasePath  string `inject:"config:gotemplates.engine.templates.basepath"`
-				LayoutTemplatesDir string `inject:"config:gotemplates.engine.layout.dir"`
-				Debug              bool   `inject:"config:debug.mode"`
+				TemplatesBasePath  string `inject:"config:core.gotemplate.engine.templates.basepath"`
+				LayoutTemplatesDir string `inject:"config:core.gotemplate.engine.layout.dir"`
+				Debug              bool   `inject:"config:flamingo.debug.mode"`
 			}{
 				tt.engineConfig.templatesBasePath,
 				tt.engineConfig.layoutTemplatesDir,

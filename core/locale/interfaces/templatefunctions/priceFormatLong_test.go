@@ -16,7 +16,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 	labelService.Inject(FakeLabelProvider, nil, nil)
 
 	type fields struct {
-		config       config.Map `inject:"config:locale.accounting"`
+		config       config.Map `inject:"config:core.locale.accounting"`
 		labelService *application.LabelService
 	}
 	type args struct {
@@ -107,7 +107,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 
 			priceService := application.PriceService{}
 			priceService.Inject(tt.fields.labelService, &struct {
-				Config config.Map `inject:"config:locale.accounting"`
+				Config config.Map `inject:"config:core.locale.accounting"`
 			}{tt.fields.config})
 
 			priceFormatFunc := &templatefunctions.PriceFormatFunc{}
@@ -115,7 +115,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 
 			priceFormatLongFunc := &templatefunctions.PriceFormatLongFunc{}
 			priceFormatLongFunc.Inject(tt.fields.labelService, priceFormatFunc, &priceService, &struct {
-				Config config.Map `inject:"config:locale.accounting"`
+				Config config.Map `inject:"config:core.locale.accounting"`
 			}{tt.fields.config})
 
 			templateFunc := priceFormatLongFunc.Func(context.Background()).(func(value float64, currency string, currencyLabel string) string)

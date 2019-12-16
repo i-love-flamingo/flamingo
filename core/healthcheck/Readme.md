@@ -17,8 +17,8 @@ The healthcheck endpoint allows to check different "things" from the view of you
 There are some available checks that you can activate by config:
 
 ```yaml
-healthcheck.checkSession: true
-healthcheck.checkAuth: true
+core.healthcheck.checkSession: true
+core.healthcheck.checkAuth: true
 ```
 
 ### Implement own Checks:

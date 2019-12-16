@@ -2,9 +2,9 @@ package application
 
 import (
 	"context"
-	"flamingo.me/flamingo/v3/core/security/application/role"
 	"fmt"
 
+	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/core/security/application/voter"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -41,8 +41,8 @@ var _ SecurityService = &SecurityServiceImpl{}
 
 // Inject dependencies
 func (s *SecurityServiceImpl) Inject(v []voter.SecurityVoter, r role.Service, cfg *struct {
-	VoterStrategy     string `inject:"config:security.roles.voters.strategy"`
-	AllowIfAllAbstain bool   `inject:"config:security.roles.voters.allowIfAllAbstain"`
+	VoterStrategy     string `inject:"config:core.security.roles.voters.strategy"`
+	AllowIfAllAbstain bool   `inject:"config:core.security.roles.voters.allowIfAllAbstain"`
 }) {
 	s.voters = v
 	s.roleService = r

@@ -43,15 +43,15 @@ var logLevels = map[string]zapcore.Level{
 // Inject dependencies
 func (m *Module) Inject(config *struct {
 	Area               string     `inject:"config:area"`
-	JSON               bool       `inject:"config:zap.json,optional"`
-	LogLevel           string     `inject:"config:zap.loglevel,optional"`
-	ColoredOutput      bool       `inject:"config:zap.colored,optional"`
-	DevelopmentMode    bool       `inject:"config:zap.devmode,optional"`
-	SamplingEnabled    bool       `inject:"config:zap.sampling.enabled,optional"`
-	SamplingInitial    float64    `inject:"config:zap.sampling.initial,optional"`
-	SamplingThereafter float64    `inject:"config:zap.sampling.thereafter,optional"`
-	FieldMap           config.Map `inject:"config:zap.fieldmap,optional"`
-	LogSession         bool       `inject:"config:zap.logsession,optional"`
+	JSON               bool       `inject:"config:core.zap.json,optional"`
+	LogLevel           string     `inject:"config:core.zap.loglevel,optional"`
+	ColoredOutput      bool       `inject:"config:core.zap.colored,optional"`
+	DevelopmentMode    bool       `inject:"config:core.zap.devmode,optional"`
+	SamplingEnabled    bool       `inject:"config:core.zap.sampling.enabled,optional"`
+	SamplingInitial    float64    `inject:"config:core.zap.sampling.initial,optional"`
+	SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
+	FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
+	LogSession         bool       `inject:"config:core.zap.logsession,optional"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -156,12 +156,27 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 	}
 }
 
-// DefaultConfig for zap log level
-func (m *Module) DefaultConfig() config.Map {
-	return config.Map{
-		"zap.loglevel":            "Debug",
-		"zap.sampling.enabled":    true,
-		"zap.sampling.initial":    100,
-		"zap.sampling.thereafter": 100,
+// CueConfig Schema
+func (m *Module) CueConfig() string {
+	// language=cue
+	return `
+core zap: {
+	loglevel: *"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
+	sampling: {
+		enabled: bool | *true
+		initial: int | *100 
+		thereafter: int | *100
+	}
+}
+`
+}
+
+// FlamingoLegacyConfigAlias mapping
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"zap.loglevel":            "core.zap.loglevel",
+		"zap.sampling.enabled":    "core.zap.sampling.enabled",
+		"zap.sampling.initial":    "core.zap.sampling.initial",
+		"zap.sampling.thereafter": "core.zap.sampling.thereafter",
 	}
 }

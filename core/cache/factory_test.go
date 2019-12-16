@@ -63,8 +63,12 @@ func TestHTTPFrontendFactory_BuildBackend(t *testing.T) {
 
 	t.Run("redis", func(t *testing.T) {
 		testConfig := BackendConfig{
-			BackendType:  "redis",
-			RedisBackend: &RedisBackendConfig{},
+			BackendType: "redis",
+			RedisBackend: &RedisBackendConfig{
+				IdleTimeOutSeconds: 1,
+				Host:               "localhost",
+				Port:               "8080",
+			},
 		}
 		backend, err := f.BuildBackend(testConfig, "test")
 		assert.NoError(t, err)

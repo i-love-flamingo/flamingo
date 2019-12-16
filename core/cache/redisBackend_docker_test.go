@@ -5,6 +5,7 @@ package cache_test
 import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
@@ -83,13 +84,14 @@ func teardown() {
 func Test_RunDefaultBackendTestCase_RedisBackend(t *testing.T) {
 
 	config := cache.RedisBackendConfig{
-		MaxIdle:     8,
-		IdleTimeOut: 30,
-		Host:        "127.0.0.1",
-		Port:        dockerTestResource.GetPort("6379/tcp"),
+		MaxIdle:            8,
+		IdleTimeOutSeconds: 30,
+		Host:               "127.0.0.1",
+		Port:               dockerTestResource.GetPort("6379/tcp"),
 	}
 	factory := cache.RedisBackendFactory{}
-	backend := factory.Inject(flamingo.NullLogger{}).SetPoolByConfig(config).SetFrontendName("testfrontend").Build()
+	backend, err := factory.Inject(flamingo.NullLogger{}).SetConfig(config).SetFrontendName("testfrontend").Build()
+	assert.NoError(t, err)
 	testcase := cache.NewBackendTestCase(t, backend, false)
 	testcase.RunTests()
 }

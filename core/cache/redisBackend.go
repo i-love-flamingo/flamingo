@@ -3,6 +3,7 @@ package cache
 import (
 	"bytes"
 	"encoding/gob"
+	"errors"
 	"fmt"
 	"regexp"
 	"runtime"
@@ -24,13 +25,14 @@ type (
 		logger       flamingo.Logger
 		frontendName string
 		pool         *redis.Pool
+		config       *RedisBackendConfig
 	}
 
 	RedisBackendConfig struct {
-		MaxIdle     int
-		IdleTimeOut int
-		Host        string
-		Port        string
+		MaxIdle            int
+		IdleTimeOutSeconds int
+		Host               string
+		Port               string
 	}
 
 	// redisCacheEntryMeta representation
@@ -68,41 +70,53 @@ func (f *RedisBackendFactory) Inject(logger flamingo.Logger) *RedisBackendFactor
 	return f
 }
 
-func (f *RedisBackendFactory) Build() Backend {
+func (f *RedisBackendFactory) Build() (Backend, error) {
+	if f.config != nil {
+		if f.config.IdleTimeOutSeconds <= 0 {
+			return nil, errors.New("IdleTimeOut must be >0")
+		}
+		if f.config.Host == "" || f.config.Port == "" {
+			return nil, errors.New("Host and Port must set")
+		}
+		f.pool = &redis.Pool{
+			MaxIdle:     f.config.MaxIdle,
+			IdleTimeout: time.Second * time.Duration(f.config.IdleTimeOutSeconds),
+			TestOnBorrow: func(c redis.Conn, t time.Time) error {
+				_, err := c.Do("PING")
+				return err
+			},
+			Dial: func() (redis.Conn, error) {
+				return f.redisConnector(
+					"tcp",
+					fmt.Sprintf("%v:%v", f.config.Host, f.config.Port),
+					"",
+					0,
+				)
+			},
+		}
+	}
 	b := &redisBackend{
 		pool:         f.pool,
 		logger:       f.logger,
 		cacheMetrics: NewCacheMetrics("redis", f.frontendName),
 	}
 	runtime.SetFinalizer(b, finalizer) // close all connections on destruction
-	return b
+	return b, nil
 }
 
+//SetFrontendName for redis cache metrics
 func (f *RedisBackendFactory) SetFrontendName(frontendName string) *RedisBackendFactory {
 	f.frontendName = frontendName
 	return f
 }
 
-func (f *RedisBackendFactory) SetPoolByConfig(config RedisBackendConfig) *RedisBackendFactory {
-	pool := &redis.Pool{
-		MaxIdle:     config.MaxIdle,
-		IdleTimeout: time.Minute * time.Duration(config.IdleTimeOut),
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			_, err := c.Do("PING")
-			return err
-		},
-		Dial: func() (redis.Conn, error) {
-			return f.redisConnector(
-				"tcp",
-				fmt.Sprintf("%v:%v", config.Host, config.Port),
-				"",
-				0,
-			)
-		},
-	}
-	return f.SetPool(pool)
+//SetConfig for redis
+func (f *RedisBackendFactory) SetConfig(config RedisBackendConfig) *RedisBackendFactory {
+	f.config = &config
+	return f
 }
 
+//SetPool directly - use instead of SetConfig if desired
 func (f *RedisBackendFactory) SetPool(pool *redis.Pool) *RedisBackendFactory {
 	f.pool = pool
 	return f

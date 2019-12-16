@@ -81,12 +81,12 @@ func (f *HTTPFrontendFactory) BuildBackend(bc BackendConfig, frontendName string
 		if bc.RedisBackend == nil {
 			return nil, errors.New("No RedisBackend config provided")
 		}
-		return f.RedisBackend(*bc.RedisBackend, frontendName), nil
+		return f.RedisBackend(*bc.RedisBackend, frontendName)
 	case "inmemory":
 		if bc.InMemoryBackend == nil {
 			return nil, errors.New("No InMemoryBackend config provided")
 		}
-		return f.MemoryBackend(*bc.InMemoryBackend, frontendName), nil
+		return f.MemoryBackend(*bc.InMemoryBackend, frontendName)
 	case "twolevel":
 		if bc.TwoLevelBackendFirst == nil || bc.TwoLevelBackendSecond == nil {
 			return nil, errors.New("No TwoLevelBackendFirst config provided")
@@ -99,22 +99,22 @@ func (f *HTTPFrontendFactory) BuildBackend(bc BackendConfig, frontendName string
 		if err != nil {
 			return nil, err
 		}
-		return f.TwoLevel(TwoLevelBackendConfig{first, second}), nil
+		return f.TwoLevel(TwoLevelBackendConfig{first, second})
 	}
 	return nil, errors.New("Unknown Backend Type")
 }
 
 //MemoryBackend - returns new MemoryBackend
-func (f *HTTPFrontendFactory) MemoryBackend(config InMemoryBackendConfig, frontendName string) Backend {
+func (f *HTTPFrontendFactory) MemoryBackend(config InMemoryBackendConfig, frontendName string) (Backend, error) {
 	return f.inMemoryBackendFactory.SetConfig(config).SetFrontendName(frontendName).Build()
 }
 
 //RedisBackend returns new RedisBackend Backend
-func (f *HTTPFrontendFactory) RedisBackend(config RedisBackendConfig, frontendName string) Backend {
-	return f.redisBackendFactory.SetPoolByConfig(config).SetFrontendName(frontendName).Build()
+func (f *HTTPFrontendFactory) RedisBackend(config RedisBackendConfig, frontendName string) (Backend, error) {
+	return f.redisBackendFactory.SetConfig(config).SetFrontendName(frontendName).Build()
 }
 
 //TwoLevel - returns new TwoLevel Backend Cache
-func (f *HTTPFrontendFactory) TwoLevel(config TwoLevelBackendConfig) Backend {
+func (f *HTTPFrontendFactory) TwoLevel(config TwoLevelBackendConfig) (Backend, error) {
 	return f.twoLevelBackendFactory.SetConfig(config).Build()
 }

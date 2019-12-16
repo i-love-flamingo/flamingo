@@ -39,12 +39,12 @@ func (f *TwoLevelBackendFactory) SetConfig(config TwoLevelBackendConfig) *TwoLev
 }
 
 // Inject TwoLevelBackendFactory dependencies
-func (f *TwoLevelBackendFactory) Build() Backend {
+func (f *TwoLevelBackendFactory) Build() (Backend, error) {
 	return &twoLevelBackend{
 		firstBackend:  f.config.FirstLevel,
 		secondBackend: f.config.SecondLevel,
 		logger:        f.logger,
-	}
+	}, nil
 }
 
 // Get entry by key

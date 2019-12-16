@@ -35,8 +35,9 @@ type (
 // Depricated - use the InMemoryBackendFactory or general CacheFactory
 func NewInMemoryCache() Backend {
 	f := InMemoryBackendFactory{}
-	return f.SetConfig(InMemoryBackendConfig{
+	c, _ := f.SetConfig(InMemoryBackendConfig{
 		Size: 100}).SetFrontendName("default").Build()
+	return c
 }
 
 //SetConfig for factory
@@ -52,7 +53,7 @@ func (f *InMemoryBackendFactory) SetFrontendName(frontendName string) *InMemoryB
 }
 
 //Build factory func
-func (f *InMemoryBackendFactory) Build() Backend {
+func (f *InMemoryBackendFactory) Build() (Backend, error) {
 	cache, _ := lru.New2Q(f.config.Size)
 
 	m := &inMemoryBackend{
@@ -60,7 +61,7 @@ func (f *InMemoryBackendFactory) Build() Backend {
 		cacheMetrics: NewCacheMetrics("inMemory", f.frontendName),
 	}
 	go m.lurker()
-	return m
+	return m, nil
 }
 
 // Get tries to get an object from cache

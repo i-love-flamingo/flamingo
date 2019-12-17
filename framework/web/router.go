@@ -134,7 +134,7 @@ func (r *Router) Handler() http.Handler {
 
 // ListenAndServe starts flamingo server
 func (r *Router) ListenAndServe(addr string) error {
-	r.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	r.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: addr})
 	defer r.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
 	return http.ListenAndServe(addr, r.Handler())

@@ -174,7 +174,7 @@ func (m *Module) serve(
 }
 
 func (m *Module) listenAndServe() error {
-	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: m.server.Addr})
 	defer m.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
 	err := m.server.ListenAndServe()

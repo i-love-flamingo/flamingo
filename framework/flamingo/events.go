@@ -24,7 +24,9 @@ type (
 	StartupEvent struct{}
 
 	// ServerStartEvent is dispatched when a server is started (not for CLI commands)
-	ServerStartEvent struct{}
+	ServerStartEvent struct {
+		Port string
+	}
 
 	// ServerShutdownEvent is dispatched when a server is stopped (not for CLI commands)
 	ServerShutdownEvent struct{}

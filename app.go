@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -93,6 +94,7 @@ func App(modules []dingo.Module, options ...option) {
 	flamingoContext := fs.String("flamingo-context", cfg.defaultContext, "set flamingo execution context")
 	var flamingoConfig arrayFlags
 	fs.Var(&flamingoConfig, "flamingo-config", "add additional flamingo yaml config")
+	dingoInspect := fs.Bool("dingo-inspect", false, "inspect dingo")
 
 	if err := fs.Parse(cfg.args); err != nil && err != flag.ErrHelp {
 		log.Fatal("app: parsing arguments:", err)
@@ -153,6 +155,10 @@ func App(modules []dingo.Module, options ...option) {
 		log.Fatal("app: get initialized injector:", err)
 	}
 
+	if *dingoInspect {
+		inspect(injector)
+	}
+
 	if cfg.eagerSingletons {
 		if err := injector.BuildEagerSingletons(false); err != nil {
 			log.Fatal("app: build eager singletons:", err)
@@ -176,6 +182,57 @@ func App(modules []dingo.Module, options ...option) {
 		fmt.Println("app: rootcmd.Execute:", err)
 		os.Exit(-1)
 	}
+}
+
+func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
+	name := of.Name()
+	if of.PkgPath() != "" {
+		name = of.PkgPath() + "." + name
+	}
+	if annotation != "" {
+		annotation = fmt.Sprintf("[%q]", annotation)
+	}
+	val := "<unset>"
+	if instance != nil {
+		val = fmt.Sprintf("value=%q", instance)
+	} else if provider != nil {
+		val = "provider=" + provider.String()
+	} else if to != nil {
+		val = "type=" + to.PkgPath() + "." + to.Name()
+	}
+	scopename := ""
+	if in != nil {
+		scopename = " (" + reflect.ValueOf(in).String() + ")"
+	}
+	fmt.Printf("%s%s: %s%s\n", name, annotation, val, scopename)
+}
+
+func inspect(injector *dingo.Injector) {
+	fmt.Println("Bindings:")
+	injector.Inspect(dingo.Inspector{
+		InspectBinding: printBinding,
+	})
+
+	fmt.Println("\nMultiBindings:")
+	injector.Inspect(dingo.Inspector{
+		InspectMultiBinding: func(of reflect.Type, index int, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
+			//fmt.Printf("%d: ", index)
+			printBinding(of, annotation, to, provider, instance, in)
+		},
+	})
+
+	fmt.Println("\nMapBindings:")
+	injector.Inspect(dingo.Inspector{
+		InspectMapBinding: func(of reflect.Type, key string, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
+			//fmt.Printf("%s: ", key)
+			printBinding(of, annotation, to, provider, instance, in)
+		},
+	})
+
+	fmt.Println("---")
+	injector.Inspect(dingo.Inspector{
+		InspectParent: inspect,
+	})
 }
 
 type appmodule struct {

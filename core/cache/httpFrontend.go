@@ -30,14 +30,18 @@ type (
 	}
 
 	cachedResponse struct {
-		orig *http.Response
-		body []byte
+		Orig *http.Response
+		Body []byte
 	}
 )
 
 // Inject HTTPFrontend dependencies
-func (hf *HTTPFrontend) Inject(backend Backend, logger flamingo.Logger) *HTTPFrontend {
-	hf.backend = backend
+func (hf *HTTPFrontend) Inject(logger flamingo.Logger, optional *struct {
+	DefaultBackend Backend `inject:",optional"`
+}) *HTTPFrontend {
+	if optional != nil {
+		hf.backend = optional.DefaultBackend
+	}
 	hf.logger = logger
 
 	return hf
@@ -59,12 +63,12 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 		return nil, err
 	}
 	var newResponse http.Response
-	if response.orig != nil {
-		newResponse = *response.orig
+	if response.Orig != nil {
+		newResponse = *response.Orig
 	}
 
-	buf := make([]byte, len(response.body))
-	copy(buf, response.body)
+	buf := make([]byte, len(response.Body))
+	copy(buf, response.Body)
 	newResponse.Body = nopCloser{bytes.NewBuffer(buf)}
 
 	return &newResponse, nil
@@ -139,8 +143,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		response.Body.Close()
 
 		cached := cachedResponse{
-			orig: response,
-			body: body,
+			Orig: response,
+			Body: body,
 		}
 
 		return loaderResponse{cached, meta, fetchRoutineSpan.SpanContext()}, err
@@ -156,8 +160,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 	if data == nil {
 		data = loaderResponse{
 			cachedResponse{
-				orig: new(http.Response),
-				body: []byte{},
+				Orig: new(http.Response),
+				Body: []byte{},
 			},
 			&Meta{
 				Lifetime:  30 * time.Second,
@@ -172,6 +176,9 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 	if loadedData != nil {
 		cached = loadedData.(cachedResponse)
 	}
+
+	cached.Orig.Body = nil
+	cached.Orig.TLS = nil
 
 	hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
 	hf.backend.Set(key, &Entry{

@@ -53,9 +53,75 @@ loadData :=  func(ctx context.Context) (*http.Response, *cache.Meta, error) {
 response, err := apiclient.Cache.Get(requestContext, u.String(), loadData)
 ```
 
+## Using Cache Factory
+
+To automatically bind a httpFrontendCache for a cache "CACHENAME" you can use the cache.Module and configure the factory:
+
+```yaml
+core:
+  cache:
+    overrideBindings: true
+    httpFrontendFactory:
+      CACHENAME:
+        backendType: inmemory
+        inMemoryBackend:
+          size: 200
+```
+
+Or to configure a TwoLevel Cache:
+
+```yaml
+core:
+  cache:
+    overrideBindings: true
+    httpFrontendFactory:
+      magento:
+        backendType: twolevel
+        twoLevelBackendFirst:
+          backendType: inmemory
+          inMemoryBackend:
+            size: 200
+        twoLevelBackendSecond:
+          backendType: redis
+          redisBackend:
+            # Close connections after remaining idle for this duration. If the value
+            # is zero, then idle connections are not closed. Applications should set
+            # the timeout to a value less than the server's timeout.
+            idleTimeOutSeconds: 60
+            host: '%%ENV:REDISHOST%%'
+            port: '6379'
+            maxIdle: 8
+```
+
 ## Cache backends
 
 Currently there are the following backends available:
-* inMemoryCache (caches in memory - and therefore is a very fast cache)
-* fileBackend (caches in filesystem )
-* nullBackend (caches nothing)
+
+### inMemoryCache
+
+Caches in memory - and therefore is a very fast cache.
+
+It is base on the LRU-Strategy witch drops least used entries. For this reason the cache will be no overcommit your memory and will automicly fit the need of your current traffic.
+
+### redisBackend
+
+Is using [redis](https://redis.io/) as an shared inMemory cache.
+Since all cache-fetched has an overhead to the inMemoryBackend, the redis is a little slower.
+The benefit of redis is the shared storage an the high efficiency in reading and writing keys. especialy if you need scale fast horizonaly, it helps to keep your backend-systems healthy.
+
+Be ware of using redis (or any other shared cache backend) as an single backend, because of network latency. (have a loo at the twoLevelBackend)
+
+### fileBackend
+
+Writes the cache content to the local filesystem.
+
+### nullBackend
+
+Caches nothing.
+
+### twoLevelBackend
+
+The twoLevelBackend was introduced to get the benefit of the extrem fast inMemorybackend and a shared backend.
+Using the inMemoryBackend in combination with an shared backend, gives you blazing fast responces and helps you to protect you backend in case of fast scaleout-scenarios.
+
+@TODO: Write example code.

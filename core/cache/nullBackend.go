@@ -23,3 +23,9 @@ func (*NullBackend) PurgeTags(tags []string) error { return nil }
 
 // Flush nothing
 func (*NullBackend) Flush() error { return nil }
+
+// FlushSupport returns false, because the Backend doesn't support
+func (*NullBackend) FlushSupport() bool { return false }
+
+// TagSupport returns false, because the Backend doesn't support
+func (*NullBackend) TagSupport() bool { return false }

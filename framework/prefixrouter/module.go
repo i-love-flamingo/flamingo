@@ -57,6 +57,14 @@ if flamingo.prefixrouter.rootRedirectHandler.enabled {
 `
 }
 
+// FlamingoLegacyConfigAlias legacy mapping
+func (*Module) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{
+		"prefixrouter.rootRedirectHandler.enabled":             "flamingo.prefixrouter.rootRedirectHandler.enabled",
+		"prefixrouter.rootRedirectHandler.rootRedirectHandler": "flamingo.prefixrouter.rootRedirectHandler.rootRedirectHandler",
+	}
+}
+
 type serveCmdConfig struct {
 	PrimaryHandlers  []OptionalHandler `inject:"primaryHandlers,optional"` // Optional Register a PrimaryHandlersHandlers which is passed to the FrontendRouter
 	FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter

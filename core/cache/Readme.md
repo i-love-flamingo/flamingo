@@ -75,7 +75,7 @@ core:
   cache:
     overrideBindings: true
     httpFrontendFactory:
-      magento:
+      CACHENAME:
         backendType: twolevel
         twoLevelBackendFirst:
           backendType: inmemory

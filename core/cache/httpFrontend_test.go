@@ -147,11 +147,11 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			name: "empty cache",
 			args: args{
 				key:    "test",
-				loader: createLoader(200, "Body", nil),
+				loader: createLoader(200, "body", nil),
 			},
 			cacheEntry:       nil,
-			want:             createResponse(200, "Body"),
-			wantedCachedData: []byte("Body"),
+			want:             createResponse(200, "body"),
+			wantedCachedData: []byte("body"),
 			wantSet:          true,
 			wantErr:          false,
 		},
@@ -159,7 +159,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			name: "empty cache, error on loader",
 			args: args{
 				key:    "test",
-				loader: createLoader(200, "Body", errors.New("test error on loader")),
+				loader: createLoader(200, "body", errors.New("test error on loader")),
 			},
 			cacheEntry: nil,
 			want:       nil,
@@ -180,8 +180,8 @@ func TestHTTPFrontend_Get(t *testing.T) {
 					gracetime: inFuture,
 				},
 				Data: cachedResponse{
-					Orig: createResponse(200, "foo"),
-					Body: []byte("foo"),
+					orig: createResponse(200, "foo"),
+					body: []byte("foo"),
 				},
 			},
 			want:             createResponse(200, "foo"),
@@ -193,7 +193,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			name: "from cache out of lifetime but in gracetime",
 			args: args{
 				key:    "test",
-				loader: createLoader(200, "Body", nil),
+				loader: createLoader(200, "body", nil),
 			},
 			cacheEntry: &Entry{
 				Meta: Meta{
@@ -201,13 +201,13 @@ func TestHTTPFrontend_Get(t *testing.T) {
 					gracetime: inFuture,
 				},
 				Data: cachedResponse{
-					Orig: createResponse(200, "foo"),
-					Body: []byte("foo"),
+					orig: createResponse(200, "foo"),
+					body: []byte("foo"),
 				},
 			},
 			// we expect the cached value as result, but a the actual value from loader to be cached (async)
 			want:             createResponse(200, "foo"),
-			wantedCachedData: []byte("Body"),
+			wantedCachedData: []byte("body"),
 			wantSet:          true,
 			wantErr:          false,
 		},
@@ -215,7 +215,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			name: "from cache out of lifetime and out of gracetime",
 			args: args{
 				key:    "test",
-				loader: createLoader(200, "Body", nil),
+				loader: createLoader(200, "body", nil),
 			},
 			cacheEntry: &Entry{
 				Meta: Meta{
@@ -223,13 +223,13 @@ func TestHTTPFrontend_Get(t *testing.T) {
 					gracetime: inPast,
 				},
 				Data: cachedResponse{
-					Orig: createResponse(200, "foo"),
-					Body: []byte("foo"),
+					orig: createResponse(200, "foo"),
+					body: []byte("foo"),
 				},
 			},
 			// cached value is invalid, so the actual value from loader is expected as response and to be cached
-			want:             createResponse(200, "Body"),
-			wantedCachedData: []byte("Body"),
+			want:             createResponse(200, "body"),
+			wantedCachedData: []byte("body"),
 			wantSet:          true,
 			wantErr:          false,
 		},
@@ -243,7 +243,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 				"Set",
 				tt.args.key,
 				mock.MatchedBy(func(e *Entry) bool {
-					return assert.Equal(t, e.Data.(cachedResponse).Body, tt.wantedCachedData)
+					return assert.Equal(t, e.Data.(cachedResponse).body, tt.wantedCachedData)
 				}),
 			).Run(func(args mock.Arguments) {
 				cacheSetComplete <- struct{}{}

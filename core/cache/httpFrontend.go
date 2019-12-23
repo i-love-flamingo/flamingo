@@ -30,8 +30,8 @@ type (
 	}
 
 	cachedResponse struct {
-		Orig *http.Response
-		Body []byte
+		orig *http.Response
+		body []byte
 	}
 )
 
@@ -63,12 +63,12 @@ func copyResponse(response cachedResponse, err error) (*http.Response, error) {
 		return nil, err
 	}
 	var newResponse http.Response
-	if response.Orig != nil {
-		newResponse = *response.Orig
+	if response.orig != nil {
+		newResponse = *response.orig
 	}
 
-	buf := make([]byte, len(response.Body))
-	copy(buf, response.Body)
+	buf := make([]byte, len(response.body))
+	copy(buf, response.body)
 	newResponse.Body = nopCloser{bytes.NewBuffer(buf)}
 
 	return &newResponse, nil
@@ -143,8 +143,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		response.Body.Close()
 
 		cached := cachedResponse{
-			Orig: response,
-			Body: body,
+			orig: response,
+			body: body,
 		}
 
 		return loaderResponse{cached, meta, fetchRoutineSpan.SpanContext()}, err
@@ -160,8 +160,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 	if data == nil {
 		data = loaderResponse{
 			cachedResponse{
-				Orig: new(http.Response),
-				Body: []byte{},
+				orig: new(http.Response),
+				body: []byte{},
 			},
 			&Meta{
 				Lifetime:  30 * time.Second,
@@ -177,8 +177,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		cached = loadedData.(cachedResponse)
 	}
 
-	cached.Orig.Body = nil
-	cached.Orig.TLS = nil
+	cached.orig.Body = nil
+	cached.orig.TLS = nil
 
 	hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
 	hf.backend.Set(key, &Entry{

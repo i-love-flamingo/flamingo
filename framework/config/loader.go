@@ -168,10 +168,16 @@ var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
 
 func loadYamlFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename + ".yml")
-	if err != nil {
-		return err
+	if err == nil {
+		return loadYamlConfig(area, config)
 	}
-	return loadYamlConfig(area, config)
+
+	config, err = ioutil.ReadFile(filename + ".yaml")
+	if err == nil {
+		return loadYamlConfig(area, config)
+	}
+
+	return err
 }
 
 func loadYamlConfig(area *Area, config []byte) error {

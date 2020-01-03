@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/format"
 	"github.com/ghodss/yaml"
 )
@@ -154,6 +155,12 @@ func loadCueFile(area *Area, filename string) error {
 	if err != nil {
 		return nil
 	}
+
+	if area.cueBuildInstance == nil {
+		cueContext := build.NewContext()
+		area.cueBuildInstance = cueContext.NewInstance(area.Name, nil)
+	}
+
 	return area.cueBuildInstance.AddFile(filename+".cue", nil)
 }
 

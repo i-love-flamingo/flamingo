@@ -82,6 +82,7 @@ func loadConfigFromBasedir(root *Area, config *LoadConfig) error {
 
 	// load additional single context file
 	for _, file := range strings.Split(os.Getenv("CONTEXTFILE"), ":") {
+		file = strings.TrimSuffix(file, filepath.Ext(file))
 		if file == "" {
 			continue
 		}

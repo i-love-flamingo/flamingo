@@ -43,6 +43,28 @@ func TestLoad(t *testing.T) {
 		assert.Equal(t, Shim(nil, true), Shim(root.Configuration.Get("foo")))
 	})
 
+	t.Run("valid config files with files in context", func(t *testing.T) {
+		root := new(Area)
+		require.NoError(t, os.Setenv("CONTEXTFILE", "testdata/contextfile/config_a.yml:testdata/contextfile/context.yaml::testdata/contextfile/cuetest.cue"))
+		defer func() {
+			require.NoError(t, os.Unsetenv("CONTEXTFILE"))
+		}()
+		err := Load(root, "testdata/valid")
+		assert.NoError(t, err)
+		assert.Contains(t, root.Configuration.Flat(), "area")
+		assert.Contains(t, root.Configuration.Flat(), "foo")
+		assert.Contains(t, root.Configuration.Flat(), "foo.bar")
+		assert.Contains(t, root.Configuration.Flat(), "foo.bar.test")
+		assert.Contains(t, root.Configuration.Flat(), "foo.bar.new")
+		assert.Contains(t, root.Configuration.Flat(), "new")
+
+		assert.Equal(t, Shim("new", true), Shim(root.Configuration.Get("foo.bar.new")))
+		assert.Equal(t, Shim("override", true), Shim(root.Configuration.Get("foo.bar.test")))
+		assert.Equal(t, Shim("test", true), Shim(root.Configuration.Get("new")))
+		assert.Equal(t, "testdata/contextfile/cuetest.cue", root.cueBuildInstance.Files[0].Filename)
+
+	})
+
 	t.Run("valid config files with additional config", func(t *testing.T) {
 		root := new(Area)
 		err := Load(root, "testdata/valid", AdditionalConfig([]string{"baz: bam", "foo.bar.test: 'hello'"}))

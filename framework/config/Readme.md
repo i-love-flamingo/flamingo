@@ -68,12 +68,12 @@ Will cause Flamingo to additionally load the config files "config/config_dev.yml
 
 ### Additional configuration files from outside
 
-Flamingo can load multiple additional yaml files, which must be given in the environment variable `CONTEXTFILE`, separated by `:`.
+Flamingo can load multiple additional yaml/cue files, which must be given in the environment variable `CONTEXTFILE`, separated by `:`.
 
 The files can be given by using relative paths from the working directory or absolute paths.
 
 ```bash
-CONTEXTFILE="../../myCfg.yml:/var/flamingo/cfg/main.yml" go run project.go serve
+CONTEXTFILE="../../myCfg.yml:/var/flamingo/cfg/main.yml:/var/flamingo/cfg/additional.cue" go run project.go serve
 ```
 
 ### Additional temporary configuration

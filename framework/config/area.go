@@ -250,6 +250,25 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 	}
 	// end TODO
 
+	// TODO performance is really bad here, especially with tons of environment variables (e.g. in kubernetes)
+	envFile := "flamingo: { os: { env: { \n[string]: string\n"
+	esc := func(s string) string {
+		s = strings.Replace(s, `"`, `\"`, -1)
+		s = strings.Replace(s, "\n", `\n`, -1)
+		s = strings.Replace(s, `\`, `\\`, -1)
+		return s
+	}
+	for _, v := range os.Environ() {
+		v := strings.SplitN(v, "=", 2)
+		envFile += fmt.Sprintf("\"%s\": \"%s\"\n", esc(v[0]), esc(v[1]))
+	}
+	envFile += "} } }\n"
+
+	if err := area.cueBuildInstance.AddFile("flamingo-os-env-file", envFile); err != nil {
+		return fmtErrorf("%s: %w", area.Name, err)
+	}
+	// end TODO
+
 	var err error
 	// build a cue runtime to verify the config
 	cueRuntime := new(cue.Runtime)
@@ -261,14 +280,6 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 	area.cueInstance, err = area.cueInstance.Fill(area.Configuration)
 	if err != nil {
 		return fmtErrorf("%s: %w", area.Name, err)
-	}
-
-	for _, v := range os.Environ() {
-		v := strings.SplitN(v, "=", 2)
-		area.cueInstance, err = area.cueInstance.Fill(v[1], "flamingo", "os", "env", v[0])
-		if err != nil {
-			return fmtErrorf("%s: %w", area.Name, err)
-		}
 	}
 
 	m := make(Map)

@@ -253,9 +253,9 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 	// TODO performance is really bad here, especially with tons of environment variables (e.g. in kubernetes)
 	envFile := "flamingo: { os: { env: { \n[string]: string\n"
 	esc := func(s string) string {
+		s = strings.Replace(s, `\`, `\\`, -1)
 		s = strings.Replace(s, `"`, `\"`, -1)
 		s = strings.Replace(s, "\n", `\n`, -1)
-		s = strings.Replace(s, `\`, `\\`, -1)
 		return s
 	}
 	for _, v := range os.Environ() {

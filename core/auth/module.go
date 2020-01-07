@@ -70,6 +70,10 @@ func (r *routes) Routes(router *web.RouterRegistry) {
 	router.HandleAny("core.auth.callback", r.controller.Callback)
 	router.Route("/core/auth/login/:broker", "core.auth.login(broker)")
 	router.HandleAny("core.auth.login", r.controller.Login)
+	router.Route("/core/auth/logout", "core.auth.logoutall")
+	router.HandleAny("core.auth.logoutall", r.controller.LogoutAll)
+	router.Route("/core/auth/logout/:broker", "core.auth.logout(broker)")
+	router.HandleAny("core.auth.logout", r.controller.Logout)
 }
 
 // CueConfig schema

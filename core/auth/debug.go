@@ -5,6 +5,7 @@ import (
 	"context"
 	"html/template"
 	"net/http"
+	"net/url"
 
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -32,8 +33,9 @@ var tpl = template.Must(template.New("debug").Parse(
 {{ end }}
 <hr/>
 <h2>Active Identities</h2>
+<a href="?__debug__action=logoutall">Logout All</a><br/>
 {{ range .Identities }}
-{{ .Broker}}/{{ .Subject }}: {{ printf "%s / %#v" . . }}
+{{ .Broker}}/{{ .Subject }}: {{ printf "%s / %#v" . . }} <a href="?__debug__action=logout&__debug__broker={{ .Broker }}">Logout</a>
 <br/>
 {{ end }}
 <hr/>
@@ -52,6 +54,13 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 			break
 		}
 		return c.identityService.AuthenticateFor(broker, ctx, request)
+	case "logoutall":
+		c.identityService.Logout(ctx, request)
+		return c.responder.URLRedirect(&url.URL{ForceQuery: true})
+	case "logout":
+		broker, _ := request.Query1("__debug__broker")
+		c.identityService.LogoutFor(broker, ctx, request)
+		return c.responder.URLRedirect(&url.URL{ForceQuery: true})
 	}
 
 	buf := new(bytes.Buffer)

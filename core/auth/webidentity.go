@@ -28,6 +28,11 @@ type (
 		Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result
 	}
 
+	// WebLogouter logs user out
+	WebLogouter interface {
+		Logout(ctx context.Context, request *web.Request)
+	}
+
 	// WebIdentityService calls one or more identifier to get all possible identities of a user
 	WebIdentityService struct {
 		identityProviders []RequestIdentifier
@@ -135,6 +140,7 @@ func (s *WebIdentityService) AuthenticateFor(broker string, ctx context.Context,
 	}
 	return nil
 }
+
 func (s *WebIdentityService) callback(ctx context.Context, request *web.Request) web.Result {
 	broker := request.Params["broker"]
 	for _, provider := range s.identityProviders {
@@ -143,4 +149,24 @@ func (s *WebIdentityService) callback(ctx context.Context, request *web.Request)
 		}
 	}
 	return nil
+}
+
+// Logout logs all user out
+func (s *WebIdentityService) Logout(ctx context.Context, request *web.Request) {
+	for _, provider := range s.identityProviders {
+		if authenticator, ok := provider.(WebLogouter); ok {
+			authenticator.Logout(ctx, request)
+		}
+	}
+}
+
+// Logout logs a specific broker out
+func (s *WebIdentityService) LogoutFor(broker string, ctx context.Context, request *web.Request) {
+	for _, provider := range s.identityProviders {
+		if provider.Broker() == broker {
+			if authenticator, ok := provider.(WebLogouter); ok {
+				authenticator.Logout(ctx, request)
+			}
+		}
+	}
 }

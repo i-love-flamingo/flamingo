@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/url"
 
+	uuid "github.com/satori/go.uuid"
+
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -69,13 +71,16 @@ func oidcFactory(cfg config.Map) auth.RequestIdentifier {
 	}
 }
 
+func (i *openIDIdentifier) sessionCode(s string) string {
+	return "core.auth.oidc." + i.broker + "." + s
+}
 func (i *openIDIdentifier) Inject(responder *web.Responder, reverseRouter web.ReverseRouter) {
 	i.responder = responder
 	i.reverseRouter = reverseRouter
 }
 
 func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) auth.Identity {
-	sessionCode := "core.auth.oidc." + i.broker + ".sessiondata"
+	sessionCode := i.sessionCode("sessiondata")
 
 	data, ok := request.Session().Load(sessionCode)
 	if !ok {
@@ -152,7 +157,9 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 }
 
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
-	u, err := url.Parse(i.config(request).AuthCodeURL("state", oauth2.AccessTypeOffline))
+	state := uuid.NewV4().String()
+	request.Session().Store(i.sessionCode("state"), state)
+	u, err := url.Parse(i.config(request).AuthCodeURL(state, oauth2.AccessTypeOffline))
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
@@ -167,13 +174,20 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
 	}
 
+	state, ok := request.Session().Load(i.sessionCode("state"))
+	if !ok {
+		return i.responder.ServerError(errors.New("no state in session"))
+	}
+	if queryState, err := request.Query1("state"); err != nil || queryState != state.(string) {
+		return i.responder.ServerError(errors.New("state mismatch"))
+	}
+	request.Session().Delete(i.sessionCode("state"))
+
 	code, err := request.Query1("code")
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
 
-	// Verify state and errors.
-	// TODO verify state
 	oauth2Token, err := i.config(request).Exchange(ctx, code)
 	if err != nil {
 		return i.responder.ServerError(err)
@@ -203,7 +217,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(err)
 	}
 
-	sessionCode := "core.auth.oidc." + i.broker + ".sessiondata"
+	sessionCode := i.sessionCode("sessiondata")
 	request.Session().Store(sessionCode, sessionData{
 		Token:      oauth2Token,
 		Subject:    idToken.Subject,

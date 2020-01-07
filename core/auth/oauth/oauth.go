@@ -27,6 +27,7 @@ func init() {
 	gob.Register(oauth2.Token{})
 }
 
+// TokenSource getter
 func (i token) TokenSource() oauth2.TokenSource {
 	return i.tokenSource
 }

@@ -9,27 +9,21 @@ import (
 )
 
 type (
+	// IdentifierFactory creates RequestIdentifier
 	IdentifierFactory func(config config.Map) RequestIdentifier
 
-	Storage interface {
-		Load(key string) (data interface{}, ok bool)
-		Store(key string, value interface{})
-		Delete(key string)
-	}
-
-	sessionStorage struct {
-		session *web.Session
-	}
-
+	// RequestIdentifier identifies an request and returns a matching identity
 	RequestIdentifier interface {
 		Broker() string
 		Identify(ctx context.Context, request *web.Request) Identity
 	}
 
+	// WebAuthenticater allows to request an authentication
 	WebAuthenticater interface {
 		Authenticate(ctx context.Context, request *web.Request) web.Result
 	}
 
+	// WebCallbacker is called for callbacks to that identity broker
 	WebCallbacker interface {
 		Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result
 	}
@@ -41,14 +35,7 @@ type (
 	}
 )
 
-func (s sessionStorage) Load(key string) (data interface{}, ok bool) {
-	return s.session.Load(key)
-}
-
-func (s sessionStorage) Store(key string, value interface{}) {
-	s.session.Store(key, value)
-}
-
+// Inject dependencies
 func (s *WebIdentityService) Inject(identityProviders []RequestIdentifier, reverseRouter web.ReverseRouter) {
 	s.identityProviders = identityProviders
 	s.reverseRouter = reverseRouter

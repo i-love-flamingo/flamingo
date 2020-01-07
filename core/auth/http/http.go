@@ -36,6 +36,7 @@ func (i *BasicAuthIdentity) Subject() string {
 	return i.User
 }
 
+// Broker identity
 func (i *BasicAuthIdentity) Broker() string {
 	return i.broker
 }

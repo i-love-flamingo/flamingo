@@ -6,18 +6,22 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type Controller struct {
+// controller manages login and callback requests
+type controller struct {
 	service *WebIdentityService
 }
 
-func (c *Controller) Inject(service *WebIdentityService) {
+// Inject WebIdentityService dependency
+func (c *controller) Inject(service *WebIdentityService) {
 	c.service = service
 }
 
-func (c *Controller) Callback(ctx context.Context, request *web.Request) web.Result {
+// Callback is called e.g. for OIDC
+func (c *controller) Callback(ctx context.Context, request *web.Request) web.Result {
 	return c.service.callback(ctx, request)
 }
 
-func (c *Controller) Login(ctx context.Context, request *web.Request) web.Result {
+// Login starts an authenticate for flow
+func (c *controller) Login(ctx context.Context, request *web.Request) web.Result {
 	return c.service.AuthenticateFor(request.Params["broker"], ctx, request)
 }

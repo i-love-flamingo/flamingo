@@ -1,0 +1,18 @@
+issuer: http://127.0.0.1:3352/dex
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:3352
+
+staticClients:
+  - id: client2
+    redirectURIs:
+      - 'http://localhost:3322/core/auth/callback/oidc2'
+    name: 'Client2 App'
+    secret: client2
+
+connectors:
+  - type: mockCallback
+    id: mock
+    name: Example

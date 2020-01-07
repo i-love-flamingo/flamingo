@@ -12,7 +12,7 @@ type WebModule struct{}
 
 // Configure dependency injection
 func (m *WebModule) Configure(injector *dingo.Injector) {
-	injector.Bind(new([]Identifier)).ToProvider(buildAuthentifier)
+	injector.Bind(new([]RequestIdentifier)).ToProvider(buildAuthentifier)
 	injector.Bind(new(WebIdentityService)).In(dingo.ChildSingleton)
 
 	web.BindRoutes(injector, new(routes))
@@ -23,11 +23,11 @@ func buildAuthentifier(
 	cfg *struct {
 		Config config.Slice `inject:"config:core.auth.web.broker"`
 	},
-) []Identifier {
+) []RequestIdentifier {
 	var broker []config.Map
 	cfg.Config.MapInto(&broker)
 
-	res := make([]Identifier, len(broker))
+	res := make([]RequestIdentifier, len(broker))
 
 	for i, broker := range broker {
 		if res[i] = provider[broker["typ"].(string)](broker); res[i] == nil {

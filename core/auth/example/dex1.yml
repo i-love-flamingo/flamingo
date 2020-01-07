@@ -2,6 +2,9 @@ issuer: http://127.0.0.1:3351/dex
 storage:
   type: memory
 
+expiry:
+  IDTokens: 20s
+
 web:
   http: 0.0.0.0:3351
 

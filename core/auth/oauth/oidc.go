@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
@@ -24,10 +23,11 @@ type (
 	}
 
 	oidcIdentity struct {
-		broker  string
-		subject string
-		token   token
-		idToken *oidc.IDToken
+		broker     string
+		subject    string
+		token      token
+		verifier   *oidc.IDTokenVerifier
+		rawIDToken string
 	}
 
 	openIDIdentifier struct {
@@ -49,7 +49,7 @@ func init() {
 	gob.Register(sessionData{})
 }
 
-func oidcFactory(cfg config.Map) auth.Identifier {
+func oidcFactory(cfg config.Map) auth.RequestIdentifier {
 	provider, err := oidc.NewProvider(context.Background(), cfg["endpoint"].(string))
 	if err != nil {
 		panic(err)
@@ -61,7 +61,7 @@ func oidcFactory(cfg config.Map) auth.Identifier {
 			ClientSecret: cfg["clientSecret"].(string),
 			Endpoint:     provider.Endpoint(),
 			RedirectURL:  "",
-			Scopes:       []string{oidc.ScopeOpenID},
+			Scopes:       []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess},
 			ClaimSet:     nil,
 		},
 		broker:   cfg["broker"].(string),
@@ -88,22 +88,39 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) a
 		return nil
 	}
 
-	verifier := i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID})
-	idToken, err := verifier.Verify(ctx, sessiondata.RawIDToken)
-	if err != nil {
-		log.Println(err)
-		return nil
+	identity := &oidcIdentity{
+		token:      token{tokenSource: i.config(request).TokenSource(ctx, sessiondata.Token)},
+		broker:     i.broker,
+		subject:    sessiondata.Subject,
+		verifier:   i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID}),
+		rawIDToken: sessiondata.RawIDToken,
 	}
 
-	return &oidcIdentity{
-		token: token{
-			config: i.config(request),
-			token:  sessiondata.Token,
-		},
-		broker:  i.broker,
-		subject: sessiondata.Subject,
-		idToken: idToken,
+	token, idtoken := identity.tokens(ctx)
+
+	request.Session().Store(sessionCode, sessionData{
+		Token:      token,
+		Subject:    idtoken.Subject,
+		RawIDToken: identity.rawIDToken,
+	})
+
+	return identity
+}
+
+func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken) {
+	token, err := i.token.tokenSource.Token()
+
+	if err != nil {
+		panic(err)
 	}
+
+	if idtoken, ok := token.Extra("id_token").(string); ok {
+		i.rawIDToken = idtoken
+	}
+
+	idToken, err := i.verifier.Verify(ctx, i.rawIDToken)
+
+	return token, idToken
 }
 
 func (i *oidcIdentity) Broker() string {
@@ -115,7 +132,12 @@ func (i *oidcIdentity) Subject() string {
 }
 
 func (i *oidcIdentity) IDToken() *oidc.IDToken {
-	return i.idToken
+	_, idtoken := i.tokens(context.Background())
+	return idtoken
+}
+
+func (i *oidcIdentity) String() string {
+	return fmt.Sprintf("%s, expiry: %s", i.subject, i.IDToken().Expiry)
 }
 
 func (i *openIDIdentifier) Broker() string {

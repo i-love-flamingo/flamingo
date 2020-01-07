@@ -224,21 +224,51 @@ func (app *Application) Run() error {
 	return rootCmd.Execute()
 }
 
-func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
-	name := of.Name()
-	if of.PkgPath() != "" {
-		name = of.PkgPath() + "." + name
+func typeName(of reflect.Type) string {
+	var name string
+
+	for of.Kind() == reflect.Ptr {
+		of = of.Elem()
 	}
+
+	if of.Kind() == reflect.Slice {
+		name += "[]"
+		of = of.Elem()
+	}
+
+	if of.Kind() == reflect.Ptr {
+		name += "*"
+		of = of.Elem()
+	}
+
+	if of.PkgPath() != "" {
+		name += of.PkgPath() + "."
+	}
+
+	name += of.Name()
+
+	return name
+}
+
+func trunc(s string) string {
+	if len(s) > 25 {
+		return s[:25] + "..."
+	}
+	return s
+}
+
+func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
+	name := typeName(of)
 	if annotation != "" {
-		annotation = fmt.Sprintf("[%q]", annotation)
+		annotation = fmt.Sprintf("(%q)", annotation)
 	}
 	val := "<unset>"
 	if instance != nil {
-		val = fmt.Sprintf("value=%q", instance)
+		val = trunc(fmt.Sprintf("%v", instance.Interface()))
 	} else if provider != nil {
 		val = "provider=" + provider.String()
 	} else if to != nil {
-		val = "type=" + to.PkgPath() + "." + to.Name()
+		val = "type=" + typeName(to)
 	}
 	scopename := ""
 	if in != nil {

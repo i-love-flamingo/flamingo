@@ -236,3 +236,8 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 
 	return i.responder.URLRedirect(returnTo(request))
 }
+
+// Logout based on a request
+func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) {
+	request.Session().Delete(i.sessionCode("sessiondata"))
+}

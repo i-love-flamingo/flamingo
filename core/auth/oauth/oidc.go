@@ -74,11 +74,14 @@ func oidcFactory(cfg config.Map) auth.RequestIdentifier {
 func (i *openIDIdentifier) sessionCode(s string) string {
 	return "core.auth.oidc." + i.broker + "." + s
 }
+
+// Inject dependencies
 func (i *openIDIdentifier) Inject(responder *web.Responder, reverseRouter web.ReverseRouter) {
 	i.responder = responder
 	i.reverseRouter = reverseRouter
 }
 
+// Identify an incoming request
 func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) auth.Identity {
 	sessionCode := i.sessionCode("sessiondata")
 
@@ -128,23 +131,28 @@ func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken
 	return token, idToken
 }
 
+// Broker information
 func (i *oidcIdentity) Broker() string {
 	return i.broker
 }
 
+// Subject getter
 func (i *oidcIdentity) Subject() string {
 	return i.subject
 }
 
+// IDToken getter
 func (i *oidcIdentity) IDToken() *oidc.IDToken {
 	_, idtoken := i.tokens(context.Background())
 	return idtoken
 }
 
+// String returns a readable token
 func (i *oidcIdentity) String() string {
 	return fmt.Sprintf("%s, expiry: %s", i.subject, i.IDToken().Expiry)
 }
 
+// Broker getter
 func (i *openIDIdentifier) Broker() string {
 	return i.broker
 }
@@ -156,6 +164,7 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 	return &oauth2Config
 }
 
+// Authenticate a user
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	state := uuid.NewV4().String()
 	request.Session().Store(i.sessionCode("state"), state)
@@ -167,6 +176,7 @@ func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Reques
 	return i.responder.URLRedirect(u)
 }
 
+// Callback for OIDC code exchange
 func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, returnTo func(request *web.Request) *url.URL) web.Result {
 	errString, err := request.Query1("error")
 	if err == nil {

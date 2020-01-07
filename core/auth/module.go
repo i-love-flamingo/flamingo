@@ -47,12 +47,12 @@ func (*WebModule) Depends() []dingo.Module {
 
 type routes struct {
 	debugController *debugController
-	controller      *Controller
+	controller      *controller
 	debug           bool
 }
 
 // Inject controller
-func (r *routes) Inject(debugController *debugController, controller *Controller, cfg *struct {
+func (r *routes) Inject(debugController *debugController, controller *controller, cfg *struct {
 	Debug bool `inject:"config:flamingo.debug.mode"`
 }) {
 	r.debugController = debugController

@@ -11,10 +11,10 @@ import (
 )
 
 func TestHTTPBasicAuthIdentifier(t *testing.T) {
-	identifier := new(basicAuthIdentifier).Inject(&struct {
-		Users config.Map `inject:"config:core.auth.httpbasicusers"`
-	}{
-		Users: config.Map{
+	identifier := identifierFactory(config.Map{
+		"realm":  "test",
+		"broker": "test",
+		"users": map[string]interface{}{
 			"alice": "secretpass123",
 			"bob":   "donothackmepls",
 		},

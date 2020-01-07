@@ -14,6 +14,7 @@ type debugController struct {
 	identityService *WebIdentityService
 }
 
+// Inject dependencies
 func (c *debugController) Inject(responder *web.Responder, identityService *WebIdentityService) {
 	c.responder = responder
 	c.identityService = identityService
@@ -38,6 +39,7 @@ var tpl = template.Must(template.New("debug").Parse(
 <hr/>
 `))
 
+// Action handles auth debugging
 func (c *debugController) Action(ctx context.Context, request *web.Request) web.Result {
 	action, _ := request.Query1("__debug__action")
 	switch action {

@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  dex1:
+    image: quay.io/dexidp/dex:v2.21.0
+    volumes:
+      - ./dex1.yml:/dex.yml
+    command: serve /dex.yml
+    ports:
+      - 3351:3351
+  dex2:
+    image: quay.io/dexidp/dex:v2.21.0
+    volumes:
+      - ./dex2.yml:/dex.yml
+    command: serve /dex.yml
+    ports:
+      - 3352:3352

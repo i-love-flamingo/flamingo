@@ -17,7 +17,7 @@ type basicAuthIdentifier struct {
 	broker string
 }
 
-func identifierFactory(cfg config.Map) auth.Identifier {
+func identifierFactory(cfg config.Map) auth.RequestIdentifier {
 	i := new(basicAuthIdentifier)
 	config.Map(cfg["users"].(map[string]interface{})).MapInto(&i.users)
 	i.realm = cfg["realm"].(string)
@@ -54,10 +54,12 @@ func (i *basicAuthIdentifier) Identify(ctx context.Context, request *web.Request
 	return nil
 }
 
+// Broker identifies itself
 func (i *basicAuthIdentifier) Broker() string {
 	return i.broker
 }
 
+// Authenticate a request by send 401 and WWW-Authenticate
 func (i *basicAuthIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	return &web.Response{
 		Status: http.StatusUnauthorized,

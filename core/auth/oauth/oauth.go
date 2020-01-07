@@ -1,7 +1,6 @@
 package oauth
 
 import (
-	"context"
 	"encoding/gob"
 
 	"golang.org/x/oauth2"
@@ -10,12 +9,11 @@ import (
 type (
 	// TokenSourcer defines a TokenSource which is can be used to get an AccessToken vor OAuth2 flows
 	TokenSourcer interface {
-		TokenSource(ctx context.Context) oauth2.TokenSource
+		TokenSource() oauth2.TokenSource
 	}
 
 	token struct {
-		token  *oauth2.Token
-		config *oauth2.Config
+		tokenSource oauth2.TokenSource
 	}
 
 	//identifier struct {
@@ -29,8 +27,8 @@ func init() {
 	gob.Register(oauth2.Token{})
 }
 
-func (i token) TokenSource(ctx context.Context) oauth2.TokenSource {
-	return i.config.TokenSource(ctx, i.token)
+func (i token) TokenSource() oauth2.TokenSource {
+	return i.tokenSource
 }
 
 //

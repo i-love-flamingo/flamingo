@@ -9,28 +9,20 @@ import (
 )
 
 type (
-	IdentifierFactory func(config config.Map) Identifier
+	IdentifierFactory func(config config.Map) RequestIdentifier
 
 	Storage interface {
 		Load(key string) (data interface{}, ok bool)
 		Store(key string, value interface{})
+		Delete(key string)
 	}
 
 	sessionStorage struct {
 		session *web.Session
 	}
 
-	Identifier interface {
-		Broker() string
-	}
-
-	StorageIdentifier interface {
-		Identifier
-		Identify(ctx context.Context, storage Storage) Identity
-	}
-
 	RequestIdentifier interface {
-		Identifier
+		Broker() string
 		Identify(ctx context.Context, request *web.Request) Identity
 	}
 
@@ -44,7 +36,7 @@ type (
 
 	// WebIdentityService calls one or more identifier to get all possible identities of a user
 	WebIdentityService struct {
-		identityProviders []Identifier
+		identityProviders []RequestIdentifier
 		reverseRouter     web.ReverseRouter
 	}
 )
@@ -57,19 +49,13 @@ func (s sessionStorage) Store(key string, value interface{}) {
 	s.session.Store(key, value)
 }
 
-func (s *WebIdentityService) Inject(identityProviders []Identifier, reverseRouter web.ReverseRouter) {
+func (s *WebIdentityService) Inject(identityProviders []RequestIdentifier, reverseRouter web.ReverseRouter) {
 	s.identityProviders = identityProviders
 	s.reverseRouter = reverseRouter
 }
 
-func identify(identifier Identifier, ctx context.Context, request *web.Request) Identity {
-	switch identifier := identifier.(type) {
-	case StorageIdentifier:
-		return identifier.Identify(ctx, sessionStorage{session: request.Session()})
-	case RequestIdentifier:
-		return identifier.Identify(ctx, request)
-	}
-	return nil
+func identify(identifier RequestIdentifier, ctx context.Context, request *web.Request) Identity {
+	return identifier.Identify(ctx, request)
 }
 
 // Identify the user, if any identity is found

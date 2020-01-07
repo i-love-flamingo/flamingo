@@ -23,7 +23,7 @@ var tpl = template.Must(template.New("debug").Parse(
 	//language=gohtml
 	`
 <h1>Auth Debug</h1><hr/>
-<h2>Registered Identifier:</h2>
+<h2>Registered RequestIdentifier:</h2>
 <br/>
 {{ range .Identifier }}
 {{ .Broker }}: {{ . }} <a href="?__debug__action=authenticate&__debug__broker={{ .Broker }}">Authenticate</a> | <a href="?__debug__action=forceauthenticate&__debug__broker={{ .Broker }}">Force Authenticate</a>
@@ -32,7 +32,7 @@ var tpl = template.Must(template.New("debug").Parse(
 <hr/>
 <h2>Active Identities</h2>
 {{ range .Identities }}
-{{ .Broker}}/{{ .Subject }}: {{ printf "%#v" . }}
+{{ .Broker}}/{{ .Subject }}: {{ printf "%s / %#v" . . }}
 <br/>
 {{ end }}
 <hr/>
@@ -54,7 +54,7 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 
 	buf := new(bytes.Buffer)
 	err := tpl.Execute(buf, struct {
-		Identifier []Identifier
+		Identifier []RequestIdentifier
 		Identities []Identity
 	}{
 		Identifier: c.identityService.identityProviders,

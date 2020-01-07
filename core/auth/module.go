@@ -68,6 +68,8 @@ func (r *routes) Routes(router *web.RouterRegistry) {
 	}
 	router.Route("/core/auth/callback/:broker", "core.auth.callback(broker)")
 	router.HandleAny("core.auth.callback", r.controller.Callback)
+	router.Route("/core/auth/login/:broker", "core.auth.login(broker)")
+	router.HandleAny("core.auth.login", r.controller.Login)
 }
 
 // CueConfig schema

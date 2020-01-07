@@ -1,0 +1,2 @@
+- controller: core.auth.callback(broker="oidc1")
+  path: /auth-special

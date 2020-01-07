@@ -102,10 +102,6 @@ func (r *Router) Handler() http.Handler {
 		r.base, _ = url.Parse("/")
 	}
 
-	for _, m := range r.routesProvider() {
-		m.Routes(r.routerRegistry)
-	}
-
 	if r.configArea != nil {
 		for _, route := range r.configArea.Routes {
 			r.routerRegistry.Route(route.Path, route.Controller)
@@ -113,6 +109,10 @@ func (r *Router) Handler() http.Handler {
 				r.routerRegistry.Alias(route.Name, route.Controller)
 			}
 		}
+	}
+
+	for _, m := range r.routesProvider() {
+		m.Routes(r.routerRegistry)
 	}
 
 	for _, handler := range r.routerRegistry.routes {

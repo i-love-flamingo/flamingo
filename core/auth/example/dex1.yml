@@ -11,7 +11,7 @@ web:
 staticClients:
   - id: client1
     redirectURIs:
-      - 'http://localhost:3322/core/auth/callback/oidc1'
+      - 'http://localhost:3322/auth-special'
     name: 'Client1 App'
     secret: client1
 

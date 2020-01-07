@@ -75,8 +75,8 @@ func (i *arrayFlags) Set(value string) error {
 	return nil
 }
 
-// App is a simple app-runner for flamingo
-func App(modules []dingo.Module, options ...option) {
+// ExecutionArea returns the area for running the Flamingo application with the given modules, loaded configs etc
+func ExecutionArea(modules []dingo.Module, options ...option) *config.Area {
 	cfg := &appconfig{
 		configDir:      "config",
 		args:           os.Args[1:],
@@ -104,15 +104,15 @@ func App(modules []dingo.Module, options ...option) {
 		dingo.EnableCircularTracing()
 	}
 
-	root := config.NewArea("root", modules, cfg.childAreas...)
-
-	root.Modules = append([]dingo.Module{
+	modules = append([]dingo.Module{
 		new(framework.InitModule),
 		new(zap.Module),
 		new(runtime.Module),
 		new(cmd.Module),
-	}, root.Modules...)
-	root.Modules = append(root.Modules, new(appmodule))
+	}, modules...)
+	modules = append(modules, new(servemodule))
+
+	root := config.NewArea("root", modules, cfg.childAreas...)
 
 	configLoadOptions := []config.LoadOption{
 		config.AdditionalConfig(flamingoConfig),
@@ -165,11 +165,27 @@ func App(modules []dingo.Module, options ...option) {
 		}
 	}
 
+	return area
+}
+
+// App is the default app-runner for flamingo
+func App(modules []dingo.Module, options ...option) {
+	area := ExecutionArea(modules, options...)
+	injector, err := area.GetInitializedInjector()
+	if err != nil {
+		log.Fatal("app: get initialized injector:", err)
+	}
+	startup(injector)
+}
+
+//startup runs the Root Cmd and triggers the standard event
+func startup(injector *dingo.Injector) {
 	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
 		log.Fatal("app: get flamingo cobra.Command:", err)
 	}
 	rootCmd := i.(*cobra.Command)
+	fs := flag.NewFlagSet("flamingo", flag.ContinueOnError)
 	rootCmd.SetArgs(fs.Args())
 
 	i, err = injector.GetInstance(new(eventRouterProvider))
@@ -235,8 +251,7 @@ func inspect(injector *dingo.Injector) {
 	})
 }
 
-type appmodule struct {
-	root              *config.Area
+type servemodule struct {
 	router            *web.Router
 	server            *http.Server
 	eventRouter       flamingo.EventRouter
@@ -245,14 +260,12 @@ type appmodule struct {
 }
 
 // Inject basic application dependencies
-func (a *appmodule) Inject(
-	root *config.Area,
+func (a *servemodule) Inject(
 	router *web.Router,
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
 ) {
-	a.root = root
 	a.router = router
 	a.eventRouter = eventRouter
 	a.logger = logger
@@ -263,7 +276,7 @@ func (a *appmodule) Inject(
 }
 
 // Configure dependency injection
-func (a *appmodule) Configure(injector *dingo.Injector) {
+func (a *servemodule) Configure(injector *dingo.Injector) {
 	flamingo.BindEventSubscriber(injector).ToInstance(a)
 
 	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
@@ -271,7 +284,7 @@ func (a *appmodule) Configure(injector *dingo.Injector) {
 	})
 }
 
-func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
+func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
@@ -294,7 +307,7 @@ func serveProvider(a *appmodule, logger flamingo.Logger) *cobra.Command {
 	return serveCmd
 }
 
-func (a *appmodule) listenAndServe() error {
+func (a *servemodule) listenAndServe() error {
 	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
 	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
@@ -304,7 +317,7 @@ func (a *appmodule) listenAndServe() error {
 }
 
 // Notify upon flamingo Shutdown event
-func (a *appmodule) Notify(ctx context.Context, event flamingo.Event) {
+func (a *servemodule) Notify(ctx context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()

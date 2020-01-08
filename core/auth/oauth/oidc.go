@@ -84,18 +84,18 @@ func (i *openIDIdentifier) Inject(responder *web.Responder, reverseRouter web.Re
 }
 
 // Identify an incoming request
-func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) auth.Identity {
+func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	sessionCode := i.sessionCode("sessiondata")
 
 	data, ok := request.Session().Load(sessionCode)
 	if !ok {
-		return nil
+		return nil, errors.New("no sessiondata")
 	}
 
 	sessiondata, ok := data.(sessionData)
 	if !ok {
 		request.Session().Delete(sessionCode)
-		return nil
+		return nil, errors.New("no sessiondata")
 	}
 
 	identity := &oidcIdentity{
@@ -106,7 +106,10 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) a
 		rawIDToken: sessiondata.RawIDToken,
 	}
 
-	token, idtoken := identity.tokens(ctx)
+	token, idtoken, err := identity.tokens(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	request.Session().Store(sessionCode, sessionData{
 		Token:      token,
@@ -114,14 +117,13 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) a
 		RawIDToken: identity.rawIDToken,
 	})
 
-	return identity
+	return identity, nil
 }
 
-func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken) {
+func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken, error) {
 	token, err := i.token.tokenSource.Token()
-
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	if idtoken, ok := token.Extra("id_token").(string); ok {
@@ -129,8 +131,11 @@ func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken
 	}
 
 	idToken, err := i.verifier.Verify(ctx, i.rawIDToken)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return token, idToken
+	return token, idToken, nil
 }
 
 // Broker information
@@ -145,7 +150,7 @@ func (i *oidcIdentity) Subject() string {
 
 // IDToken getter
 func (i *oidcIdentity) IDToken() *oidc.IDToken {
-	_, idtoken := i.tokens(context.Background())
+	_, idtoken, _ := i.tokens(context.Background())
 	return idtoken
 }
 

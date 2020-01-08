@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -19,7 +20,7 @@ type basicAuthIdentifier struct {
 
 func identifierFactory(cfg config.Map) auth.RequestIdentifier {
 	i := new(basicAuthIdentifier)
-	config.Map(cfg["users"].(map[string]interface{})).MapInto(&i.users)
+	_ = config.Map(cfg["users"].(map[string]interface{})).MapInto(&i.users)
 	i.realm = cfg["realm"].(string)
 	i.broker = cfg["broker"].(string)
 	return i
@@ -42,17 +43,17 @@ func (i *BasicAuthIdentity) Broker() string {
 }
 
 // Identify a user and match against the configured users
-func (i *basicAuthIdentifier) Identify(ctx context.Context, request *web.Request) auth.Identity {
+func (i *basicAuthIdentifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	user, pass, ok := request.Request().BasicAuth()
 	if !ok {
-		return nil
+		return nil, errors.New("no basic auth given")
 	}
 
 	if userpass, ok := i.users[user]; ok && pass == userpass {
-		return &BasicAuthIdentity{User: user, broker: i.broker}
+		return &BasicAuthIdentity{User: user, broker: i.broker}, nil
 	}
 
-	return nil
+	return nil, errors.New("invalid credentials")
 }
 
 // Broker identifies itself

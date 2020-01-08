@@ -23,7 +23,8 @@ func TestHTTPBasicAuthIdentifier(t *testing.T) {
 	t.Run("alice/correct", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
 		req.Request().SetBasicAuth("alice", "secretpass123")
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.NoError(t, err)
 		assert.NotNil(t, identity)
 		assert.Equal(t, "alice", identity.Subject())
 	})
@@ -31,14 +32,16 @@ func TestHTTPBasicAuthIdentifier(t *testing.T) {
 	t.Run("alice/wrong", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
 		req.Request().SetBasicAuth("alice", "secretpass12")
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.Error(t, err)
 		assert.Nil(t, identity)
 	})
 
 	t.Run("bob/correct", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
 		req.Request().SetBasicAuth("bob", "donothackmepls")
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.NoError(t, err)
 		assert.NotNil(t, identity)
 		assert.Equal(t, "bob", identity.Subject())
 	})
@@ -46,20 +49,23 @@ func TestHTTPBasicAuthIdentifier(t *testing.T) {
 	t.Run("alice/wrong", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
 		req.Request().SetBasicAuth("bob", "---")
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.Error(t, err)
 		assert.Nil(t, identity)
 	})
 
 	t.Run("unknown", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
 		req.Request().SetBasicAuth("unknown", "---")
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.Error(t, err)
 		assert.Nil(t, identity)
 	})
 
 	t.Run("none", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)
-		identity := identifier.Identify(context.Background(), req)
+		identity, err := identifier.Identify(context.Background(), req)
+		assert.Error(t, err)
 		assert.Nil(t, identity)
 	})
 }

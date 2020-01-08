@@ -25,7 +25,7 @@ func buildAuthentifier(
 	},
 ) []RequestIdentifier {
 	var broker []config.Map
-	cfg.Config.MapInto(&broker)
+	_ = cfg.Config.MapInto(&broker)
 
 	res := make([]RequestIdentifier, len(broker))
 
@@ -63,16 +63,16 @@ func (r *routes) Inject(debugController *debugController, controller *controller
 // Routes configuration
 func (r *routes) Routes(router *web.RouterRegistry) {
 	if r.debug {
-		router.Route("/core/auth/debug", "core.auth.debug")
+		_, _ = router.Route("/core/auth/debug", "core.auth.debug")
 		router.HandleAny("core.auth.debug", r.debugController.Action)
 	}
-	router.Route("/core/auth/callback/:broker", "core.auth.callback(broker)")
+	_, _ = router.Route("/core/auth/callback/:broker", "core.auth.callback(broker)")
 	router.HandleAny("core.auth.callback", r.controller.Callback)
-	router.Route("/core/auth/login/:broker", "core.auth.login(broker)")
+	_, _ = router.Route("/core/auth/login/:broker", "core.auth.login(broker)")
 	router.HandleAny("core.auth.login", r.controller.Login)
-	router.Route("/core/auth/logout", "core.auth.logoutall")
+	_, _ = router.Route("/core/auth/logout", "core.auth.logoutall")
 	router.HandleAny("core.auth.logoutall", r.controller.LogoutAll)
-	router.Route("/core/auth/logout/:broker", "core.auth.logout(broker)")
+	_, _ = router.Route("/core/auth/logout/:broker", "core.auth.logout(broker)")
 	router.HandleAny("core.auth.logout", r.controller.Logout)
 }
 

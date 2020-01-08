@@ -2,13 +2,14 @@ package oauth
 
 import (
 	"encoding/json"
+
 	"golang.org/x/oauth2"
 )
 
 // JSON keys for top-level member of the Claims request JSON.
 const (
 	TopLevelClaimUserInfo = "userinfo"
-	TopLevelClaimIdToken  = "id_token"
+	TopLevelClaimIDToken  = "id_token"
 )
 
 // claim describes JSON object used to specify additional information

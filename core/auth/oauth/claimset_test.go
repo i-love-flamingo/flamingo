@@ -45,7 +45,7 @@ func TestClaimSet_AddClaimWithValue_Voluntary(t *testing.T) {
 
 func TestClaimSet_AddClaimWithValues_Essential(t *testing.T) {
 	claimSet := &ClaimSet{}
-	claimSet.AddClaimWithValues(TopLevelClaimIdToken, "email", true, "emailValue", "mailValue")
+	claimSet.AddClaimWithValues(TopLevelClaimIDToken, "email", true, "emailValue", "mailValue")
 
 	opt, err := claimSet.AuthCodeOption()
 	if err != nil {
@@ -57,7 +57,7 @@ func TestClaimSet_AddClaimWithValues_Essential(t *testing.T) {
 
 func TestClaimSet_AddClaimWithValues_Voluntary(t *testing.T) {
 	claimSet := &ClaimSet{}
-	claimSet.AddClaimWithValues(TopLevelClaimIdToken, "email", false, "emailValue", "mailValue")
+	claimSet.AddClaimWithValues(TopLevelClaimIDToken, "email", false, "emailValue", "mailValue")
 
 	opt, err := claimSet.AuthCodeOption()
 	if err != nil {

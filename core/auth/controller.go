@@ -25,7 +25,7 @@ func (c *controller) Callback(ctx context.Context, request *web.Request) web.Res
 
 // Login starts an authenticate for flow
 func (c *controller) Login(ctx context.Context, request *web.Request) web.Result {
-	return c.service.AuthenticateFor(request.Params["broker"], ctx, request)
+	return c.service.AuthenticateFor(ctx, request.Params["broker"], request)
 }
 
 // LogoutAll removes all identities
@@ -36,6 +36,6 @@ func (c *controller) LogoutAll(ctx context.Context, request *web.Request) web.Re
 
 // Logout removes one identity
 func (c *controller) Logout(ctx context.Context, request *web.Request) web.Result {
-	c.service.LogoutFor(request.Params["broker"], ctx, request)
+	c.service.LogoutFor(ctx, request.Params["broker"], request)
 	return c.responder.RouteRedirect("", nil)
 }

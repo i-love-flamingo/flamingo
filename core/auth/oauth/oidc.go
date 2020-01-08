@@ -21,7 +21,7 @@ type (
 	OpenIDIdentity interface {
 		auth.Identity
 		TokenSourcer
-		IDToken() oidc.IDToken
+		IDToken() *oidc.IDToken
 	}
 
 	oidcIdentity struct {
@@ -50,6 +50,8 @@ type (
 func init() {
 	gob.Register(sessionData{})
 }
+
+var _ OpenIDIdentity = new(oidcIdentity)
 
 func oidcFactory(cfg config.Map) auth.RequestIdentifier {
 	provider, err := oidc.NewProvider(context.Background(), cfg["endpoint"].(string))
@@ -145,6 +147,11 @@ func (i *oidcIdentity) Subject() string {
 func (i *oidcIdentity) IDToken() *oidc.IDToken {
 	_, idtoken := i.tokens(context.Background())
 	return idtoken
+}
+
+// TokenSource getter
+func (i *oidcIdentity) TokenSource() oauth2.TokenSource {
+	return i.token.TokenSource()
 }
 
 // String returns a readable token

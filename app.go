@@ -24,42 +24,58 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 )
 
-type option func(config *appconfig)
+// fmtErrorf shim to allow go 1.12 backwards compatibility
+var fmtErrorf = fmt.Errorf
 
-// ConfigDir configuration option
-func ConfigDir(configdir string) func(config *appconfig) {
-	return func(config *appconfig) {
+type (
+	// Application contains a main flamingo application
+	Application struct {
+		configDir       string
+		childAreas      []*config.Area
+		area            *config.Area
+		args            []string
+		defaultContext  string
+		eagerSingletons bool
+		flagset         *flag.FlagSet
+	}
+
+	// ApplicationOption configures an Application
+	ApplicationOption func(config *Application)
+)
+
+// ConfigDir configuration ApplicationOption
+func ConfigDir(configdir string) ApplicationOption {
+	return func(config *Application) {
 		config.configDir = configdir
 	}
 }
 
 // ChildAreas allows to define additional config areas for roots
-func ChildAreas(areas ...*config.Area) func(config *appconfig) {
-	return func(config *appconfig) {
+func ChildAreas(areas ...*config.Area) ApplicationOption {
+	return func(config *Application) {
 		config.childAreas = areas
 	}
 }
 
 // DefaultContext for flamingo to start with
-func DefaultContext(name string) func(config *appconfig) {
-	return func(config *appconfig) {
+func DefaultContext(name string) ApplicationOption {
+	return func(config *Application) {
 		config.defaultContext = name
 	}
 }
 
 // SetEagerSingletons controls if eager singletons will be created
-func SetEagerSingletons(enabled bool) func(config *appconfig) {
-	return func(config *appconfig) {
+func SetEagerSingletons(enabled bool) ApplicationOption {
+	return func(config *Application) {
 		config.eagerSingletons = enabled
 	}
 }
 
-type appconfig struct {
-	configDir       string
-	childAreas      []*config.Area
-	args            []string
-	defaultContext  string
-	eagerSingletons bool
+// WithArgs sets the initial arguments different than os.Args[1:]
+func WithArgs(args ...string) ApplicationOption {
+	return func(config *Application) {
+		config.args = args
+	}
 }
 
 type eventRouterProvider func() flamingo.EventRouter
@@ -75,29 +91,29 @@ func (i *arrayFlags) Set(value string) error {
 	return nil
 }
 
-// ExecutionArea returns the area for running the Flamingo application with the given modules, loaded configs etc
-func ExecutionArea(modules []dingo.Module, options ...option) *config.Area {
-	cfg := &appconfig{
+// NewApplication loads a new application for running the Flamingo application with the given modules, loaded configs etc
+func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Application, error) {
+	app := &Application{
 		configDir:      "config",
 		args:           os.Args[1:],
 		defaultContext: "root",
 	}
 
 	for _, option := range options {
-		option(cfg)
+		option(app)
 	}
 
-	fs := flag.NewFlagSet("flamingo", flag.ContinueOnError)
-	dingoTraceCircular := fs.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
-	flamingoConfigLog := fs.Bool("flamingo-config-log", false, "enable flamingo config logging")
-	flamingoConfigCueDebug := fs.String("flamingo-config-cue-debug", "", "query the flamingo cue config loader (use . for root)")
-	flamingoContext := fs.String("flamingo-context", cfg.defaultContext, "set flamingo execution context")
+	app.flagset = flag.NewFlagSet("flamingo", flag.ContinueOnError)
+	dingoTraceCircular := app.flagset.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
+	flamingoConfigLog := app.flagset.Bool("flamingo-config-log", false, "enable flamingo config logging")
+	flamingoConfigCueDebug := app.flagset.String("flamingo-config-cue-debug", "", "query the flamingo cue config loader (use . for root)")
+	flamingoContext := app.flagset.String("flamingo-context", app.defaultContext, "set flamingo execution context")
 	var flamingoConfig arrayFlags
-	fs.Var(&flamingoConfig, "flamingo-config", "add additional flamingo yaml config")
-	dingoInspect := fs.Bool("dingo-inspect", false, "inspect dingo")
+	app.flagset.Var(&flamingoConfig, "flamingo-config", "add additional flamingo yaml config")
+	dingoInspect := app.flagset.Bool("dingo-inspect", false, "inspect dingo")
 
-	if err := fs.Parse(cfg.args); err != nil && err != flag.ErrHelp {
-		log.Fatal("app: parsing arguments:", err)
+	if err := app.flagset.Parse(app.args); err != nil && err != flag.ErrHelp {
+		return nil, fmtErrorf("app: parsing arguments: %w", err)
 	}
 
 	if dingoTraceCircular != nil && *dingoTraceCircular {
@@ -112,7 +128,7 @@ func ExecutionArea(modules []dingo.Module, options ...option) *config.Area {
 	}, modules...)
 	modules = append(modules, new(servemodule))
 
-	root := config.NewArea("root", modules, cfg.childAreas...)
+	root := config.NewArea("root", modules, app.childAreas...)
 
 	configLoadOptions := []config.LoadOption{
 		config.AdditionalConfig(flamingoConfig),
@@ -135,69 +151,77 @@ func ExecutionArea(modules []dingo.Module, options ...option) *config.Area {
 		}
 	}
 
-	if err := config.Load(root, cfg.configDir, configLoadOptions...); err != nil {
-		log.Println("app: config load:", err)
-		os.Exit(-2)
+	if err := config.Load(root, app.configDir, configLoadOptions...); err != nil {
+		return nil, fmtErrorf("app: config load: %w", err)
 	}
 
 	areas, err := root.Flat()
 	if err != nil {
-		log.Fatal("app: flat areas:", err)
+		return nil, fmtErrorf("app: flat areas: %w", err)
 	}
 
-	area, ok := areas[*flamingoContext]
+	var ok bool
+	app.area, ok = areas[*flamingoContext]
 	if !ok {
-		log.Fatalf("app: context %q not found", *flamingoContext)
+		return nil, fmtErrorf("app: context %q not found", *flamingoContext)
 	}
 
-	injector, err := area.GetInitializedInjector()
+	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		log.Fatal("app: get initialized injector:", err)
+		return nil, fmtErrorf("app: get initialized injector: %w", err)
 	}
 
 	if *dingoInspect {
 		inspect(injector)
 	}
 
-	if cfg.eagerSingletons {
+	if app.eagerSingletons {
 		if err := injector.BuildEagerSingletons(false); err != nil {
-			log.Fatal("app: build eager singletons:", err)
+			return nil, fmtErrorf("app: build eager singletons: %w", err)
 		}
 	}
 
-	return area
+	return app, nil
+}
+
+// ConfigArea returns the initialized configuration area
+func (app *Application) ConfigArea() *config.Area {
+	return app.area
 }
 
 // App is the default app-runner for flamingo
-func App(modules []dingo.Module, options ...option) {
-	area := ExecutionArea(modules, options...)
-	injector, err := area.GetInitializedInjector()
+func App(modules []dingo.Module, options ...ApplicationOption) {
+	app, err := NewApplication(modules, options...)
 	if err != nil {
-		log.Fatal("app: get initialized injector:", err)
+		log.Fatal(err)
 	}
-	startup(injector)
+	if err := app.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-//startup runs the Root Cmd and triggers the standard event
-func startup(injector *dingo.Injector) {
+// Run runs the Root Cmd and triggers the standard event
+func (app *Application) Run() error {
+	injector, err := app.area.GetInitializedInjector()
+	if err != nil {
+		return fmtErrorf("get initialized injector: %w", err)
+	}
+
 	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
-		log.Fatal("app: get flamingo cobra.Command:", err)
+		return fmtErrorf("app: get flamingo cobra.Command: %w", err)
 	}
+
 	rootCmd := i.(*cobra.Command)
-	fs := flag.NewFlagSet("flamingo", flag.ContinueOnError)
-	rootCmd.SetArgs(fs.Args())
+	rootCmd.SetArgs(app.flagset.Args())
 
 	i, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
-		log.Fatal("app: get eventRouterProvider:", err)
+		return fmtErrorf("app: get eventRouterProvider: %w", err)
 	}
 	i.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println("app: rootcmd.Execute:", err)
-		os.Exit(-1)
-	}
+	return rootCmd.Execute()
 }
 
 func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {

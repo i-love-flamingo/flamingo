@@ -28,15 +28,13 @@ var tpl = template.Must(template.New("debug").Parse(
 <h2>Registered RequestIdentifier:</h2>
 <br/>
 {{ range .Identifier }}
-{{ .Broker }}: {{ . }} <a href="?__debug__action=authenticate&__debug__broker={{ .Broker }}">Authenticate</a> | <a href="?__debug__action=forceauthenticate&__debug__broker={{ .Broker }}">Force Authenticate</a>
-<br/>
+{{ .Broker }}: {{ . }} <a href="?__debug__action=authenticate&__debug__broker={{ .Broker }}">Authenticate</a> | <a href="?__debug__action=forceauthenticate&__debug__broker={{ .Broker }}">Force Authenticate</a><br />
 {{ end }}
 <hr/>
 <h2>Active Identities</h2>
 <a href="?__debug__action=logoutall">Logout All</a><br/>
 {{ range .Identities }}
-{{ .Broker}}/{{ .Subject }}: {{ printf "%s / %#v" . . }} <a href="?__debug__action=logout&__debug__broker={{ .Broker }}">Logout</a>
-<br/>
+{{ .Broker}}/{{ .Subject }}: {{ printf "%T: %s" . . }} <a href="?__debug__action=logout&__debug__broker={{ .Broker }}">Logout</a><br />
 {{ end }}
 <hr/>
 `))

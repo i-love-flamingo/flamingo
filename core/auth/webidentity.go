@@ -6,12 +6,13 @@ import (
 	"net/url"
 
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
 	// IdentifierFactory creates RequestIdentifier
-	IdentifierFactory func(config config.Map) RequestIdentifier
+	IdentifierFactory func(config config.Map) (RequestIdentifier, error)
 
 	// RequestIdentifier identifies an request and returns a matching identity
 	RequestIdentifier interface {
@@ -38,13 +39,32 @@ type (
 	WebIdentityService struct {
 		identityProviders []RequestIdentifier
 		reverseRouter     web.ReverseRouter
+		eventRouter       flamingo.EventRouter
+	}
+
+	// WebLoginEvent for the current request
+	WebLoginEvent struct {
+		Request  *web.Request
+		Broker   string
+		Identity Identity
+	}
+
+	// WebLogoutEvent for the current request
+	WebLogoutEvent struct {
+		Request *web.Request
+		Broker  string
 	}
 )
 
 // Inject dependencies
-func (s *WebIdentityService) Inject(identityProviders []RequestIdentifier, reverseRouter web.ReverseRouter) {
+func (s *WebIdentityService) Inject(
+	identityProviders []RequestIdentifier,
+	reverseRouter web.ReverseRouter,
+	eventRouter flamingo.EventRouter,
+) {
 	s.identityProviders = identityProviders
 	s.reverseRouter = reverseRouter
+	s.eventRouter = eventRouter
 }
 
 // Identify the user, if any identity is found
@@ -153,6 +173,7 @@ func (s *WebIdentityService) Logout(ctx context.Context, request *web.Request) {
 	for _, provider := range s.identityProviders {
 		if authenticator, ok := provider.(WebLogouter); ok {
 			authenticator.Logout(ctx, request)
+			s.eventRouter.Dispatch(ctx, &WebLogoutEvent{Request: request, Broker: provider.Broker()})
 		}
 	}
 }
@@ -163,7 +184,18 @@ func (s *WebIdentityService) LogoutFor(ctx context.Context, broker string, reque
 		if provider.Broker() == broker {
 			if authenticator, ok := provider.(WebLogouter); ok {
 				authenticator.Logout(ctx, request)
+				s.eventRouter.Dispatch(ctx, &WebLogoutEvent{Request: request, Broker: provider.Broker()})
 			}
 		}
 	}
+}
+
+// RequestIdentifier returns the given request identifier
+func (s *WebIdentityService) RequestIdentifier(broker string) RequestIdentifier {
+	for _, provider := range s.identityProviders {
+		if provider.Broker() == broker {
+			return provider
+		}
+	}
+	return nil
 }

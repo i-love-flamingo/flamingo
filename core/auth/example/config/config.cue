@@ -1,5 +1,4 @@
 core: auth: {
-	// web: broker: ["oidc1", "http1", "oidc2", "http2"]
 	web: broker: [
 		core.auth.oidc & {broker: "oidc1", clientID: "client1", clientSecret: "client1", "endpoint": "http://127.0.0.1:3351/dex"},
 		core.auth.http & {broker: "http1", realm: "http1 realm", users: {"user1": "pw1"}},

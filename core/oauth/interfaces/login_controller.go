@@ -60,7 +60,7 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Resul
 	l.authManager.StoreAuthState(request.Session(), state)
 	request.Session().Store("auth.redirect", redirecturl)
 
-	var parameters []oauth2.AuthCodeOption
+	parameters := append([]oauth2.AuthCodeOption{}, l.authManager.AuthCodeOptions...)
 	for _, hook := range l.parameterHooks {
 		keyValue := hook.Parameters(c, request)
 		for key, value := range keyValue {

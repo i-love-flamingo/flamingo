@@ -2,6 +2,7 @@ package auth
 
 import (
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/security/application/role"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -14,6 +15,7 @@ type WebModule struct{}
 func (m *WebModule) Configure(injector *dingo.Injector) {
 	injector.Bind(new([]RequestIdentifier)).ToProvider(buildAuthentifier)
 	injector.Bind(new(WebIdentityService)).In(dingo.ChildSingleton)
+	injector.BindMulti(new(role.Provider)).To(securityRoleProvider{})
 
 	web.BindRoutes(injector, new(routes))
 }
@@ -29,8 +31,13 @@ func buildAuthentifier(
 
 	res := make([]RequestIdentifier, len(broker))
 
+	var err error
 	for i, broker := range broker {
-		if res[i] = provider[broker["typ"].(string)](broker); res[i] == nil {
+		res[i], err = provider[broker["typ"].(string)](broker)
+		if err != nil {
+			panic(err)
+		}
+		if res[i] == nil {
 			panic("can not build broker " + broker["typ"].(string))
 		}
 	}

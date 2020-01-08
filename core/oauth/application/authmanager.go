@@ -9,6 +9,8 @@ import (
 	"os"
 	"runtime/debug"
 
+	"flamingo.me/flamingo/v3/core/auth/oauth"
+
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -51,6 +53,7 @@ type (
 		router              *web.Router
 		openIDProvider      *oidc.Provider
 		tokenExtras         config.Slice
+		AuthCodeOptions     []oauth2.AuthCodeOption
 	}
 
 	loggingRoundTripper struct {
@@ -190,6 +193,16 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
+	claimset := am.getClaimsRequestParameter()
+	if claimset.HasClaims() {
+		authCodeOption, err := am.getClaimsRequestParameter().AuthCodeOption()
+		if err != nil {
+			am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not map configuration", err)
+		} else {
+			am.AuthCodeOptions = append(am.AuthCodeOptions, authCodeOption)
+		}
+	}
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     am.clientID,
 		ClientSecret: am.secret,
@@ -197,8 +210,6 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
-
-		ClaimSet: am.getClaimsRequestParameter(),
 	}
 	if am.OpenIDProvider() != nil {
 		oauth2Config.Endpoint = am.OpenIDProvider().Endpoint()
@@ -297,16 +308,16 @@ func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *we
 	return nil
 }
 
-func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
-	var claimSet *oauth2.ClaimSet
+func (am *AuthManager) getClaimsRequestParameter() *oauth.ClaimSet {
+	var claimSet *oauth.ClaimSet
 
-	claimSet = am.createClaimSetFromMapping(oauth2.IdTokenClaim, am.idTokenMapping, claimSet)
-	claimSet = am.createClaimSetFromMapping(oauth2.UserInfoClaim, am.userInfoMapping, claimSet)
+	claimSet = am.createClaimSetFromMapping(oauth.TopLevelClaimIDToken, am.idTokenMapping, claimSet)
+	claimSet = am.createClaimSetFromMapping(oauth.TopLevelClaimUserInfo, am.userInfoMapping, claimSet)
 
 	return claimSet
 }
 
-func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth2.ClaimSet) *oauth2.ClaimSet {
+func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth.ClaimSet) *oauth.ClaimSet {
 	var mapping []string
 	err := configuration.MapInto(&mapping)
 	if err != nil {
@@ -318,7 +329,7 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 			continue
 		}
 		if claimSet == nil {
-			claimSet = &oauth2.ClaimSet{}
+			claimSet = &oauth.ClaimSet{}
 		}
 		claimSet.AddVoluntaryClaim(topLevelName, name)
 	}

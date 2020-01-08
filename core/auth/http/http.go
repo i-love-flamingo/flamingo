@@ -18,12 +18,12 @@ type basicAuthIdentifier struct {
 	broker string
 }
 
-func identifierFactory(cfg config.Map) auth.RequestIdentifier {
+func identifierFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	i := new(basicAuthIdentifier)
 	_ = config.Map(cfg["users"].(map[string]interface{})).MapInto(&i.users)
 	i.realm = cfg["realm"].(string)
 	i.broker = cfg["broker"].(string)
-	return i
+	return i, nil
 }
 
 // BasicAuthIdentity transports a user identity, currently just the username

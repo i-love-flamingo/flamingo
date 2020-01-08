@@ -22,6 +22,20 @@ core: auth: {
 		clientID: string
 		clientSecret: string
 		endpoint: string
+		scopes: [...string] | *["profile", "email"]
+		enabledOfflineToken: bool | *true
+		claimset: {
+			idToken: [...string]
+			userInfo: [...string]
+		}
+		claims: {
+			idToken: { [string]: string } & {
+				sub: string | *"sub"
+				email: string | *"email"
+				name: string | *"name"
+			}
+			accessToken: { [string]: string }
+		}
 	}
 
 	// oauth2 :: oauth2Config & { typ: "oauth2" }

@@ -75,3 +75,20 @@ func (c *ClaimSet) initializeTopLevelMember(topLevelName string) {
 		c.claims[topLevelName] = map[string]*claim{}
 	}
 }
+
+// HasClaims returns true if there are any configured claims
+func (c *ClaimSet) HasClaims() bool {
+	if c == nil {
+		return false
+	}
+	if c.claims == nil {
+		return false
+	}
+
+	for _, v := range c.claims {
+		if len(v) > 0 {
+			return true
+		}
+	}
+	return false
+}

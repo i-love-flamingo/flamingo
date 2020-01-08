@@ -3,16 +3,17 @@ package oauth
 import (
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 
-	uuid "github.com/satori/go.uuid"
-
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -22,28 +23,37 @@ type (
 		auth.Identity
 		TokenSourcer
 		IDToken() *oidc.IDToken
+		IDTokenClaims(into interface{}) error
+		AccessTokenClaims(into interface{}) error
 	}
 
 	oidcIdentity struct {
-		broker     string
-		subject    string
-		token      token
-		verifier   *oidc.IDTokenVerifier
-		rawIDToken string
+		broker            string
+		subject           string
+		token             token
+		verifier          *oidc.IDTokenVerifier
+		rawIDToken        string
+		idTokenClaims     []byte
+		accessTokenClaims []byte
 	}
 
 	openIDIdentifier struct {
-		broker        string
-		oauth2Config  *oauth2.Config
-		responder     *web.Responder
-		provider      *oidc.Provider
-		reverseRouter web.ReverseRouter
+		broker          string
+		oauth2Config    *oauth2.Config
+		responder       *web.Responder
+		provider        *oidc.Provider
+		reverseRouter   web.ReverseRouter
+		authcodeOptions []oauth2.AuthCodeOption
+		eventRouter     flamingo.EventRouter
+		oidcConfig      oidcConfig
 	}
 
 	sessionData struct {
-		Subject    string
-		Token      *oauth2.Token
-		RawIDToken string
+		Subject           string
+		Token             *oauth2.Token
+		RawIDToken        string
+		IDTokenClaims     []byte
+		AccessTokenClaims []byte
 	}
 )
 
@@ -53,24 +63,86 @@ func init() {
 
 var _ OpenIDIdentity = new(oidcIdentity)
 
-func oidcFactory(cfg config.Map) auth.RequestIdentifier {
-	provider, err := oidc.NewProvider(context.Background(), cfg["endpoint"].(string))
+type oidcConfig struct {
+	Broker              string   `json:"broker"`
+	Endpoint            string   `json:"endpoint"`
+	ClientID            string   `json:"clientID"`
+	ClientSecret        string   `json:"clientSecret"`
+	Scopes              []string `json:"scopes"`
+	EnabledOfflineToken bool     `json:"enabledOfflineToken"`
+	Claimset            struct {
+		IDToken  []string `json:"idToken"`
+		UserInfo []string `json:"userInfo"`
+	} `json:"claimset"`
+	Claims struct {
+		IDToken     map[string]string `json:"idToken"`
+		AccessToken map[string]string `json:"accessToken"`
+	} `json:"claims"`
+}
+
+func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
+	var oidcConfig oidcConfig
+
+	if err := cfg.MapInto(&oidcConfig); err != nil {
+		return nil, err
+	}
+
+	provider, err := oidc.NewProvider(context.Background(), oidcConfig.Endpoint)
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	var authCodeOptions []oauth2.AuthCodeOption
+
+	scopes := append([]string{oidc.ScopeOpenID}, oidcConfig.Scopes...)
+	if oidcConfig.EnabledOfflineToken {
+		scopes = append(scopes, oidc.ScopeOfflineAccess)
+	}
+
+	if claimset := getClaimset(oidcConfig); claimset.HasClaims() {
+		authCodeOption, err := claimset.AuthCodeOption()
+		if err != nil {
+			return nil, err
+		}
+		authCodeOptions = append(authCodeOptions, authCodeOption)
 	}
 
 	return &openIDIdentifier{
 		oauth2Config: &oauth2.Config{
-			ClientID:     cfg["clientID"].(string),
-			ClientSecret: cfg["clientSecret"].(string),
+			ClientID:     oidcConfig.ClientID,
+			ClientSecret: oidcConfig.ClientSecret,
 			Endpoint:     provider.Endpoint(),
-			RedirectURL:  "",
-			Scopes:       []string{oidc.ScopeOpenID, oidc.ScopeOfflineAccess},
-			ClaimSet:     nil,
+			RedirectURL:  "", // filled on request
+			Scopes:       scopes,
 		},
-		broker:   cfg["broker"].(string),
-		provider: provider,
+		broker:          oidcConfig.Broker,
+		provider:        provider,
+		authcodeOptions: authCodeOptions,
+		oidcConfig:      oidcConfig,
+	}, nil
+}
+
+func getClaimset(oidcConfig oidcConfig) *ClaimSet {
+	var claimSet *ClaimSet
+
+	claimSet = createClaimSetFromMapping(TopLevelClaimIDToken, oidcConfig.Claimset.IDToken, claimSet)
+	claimSet = createClaimSetFromMapping(TopLevelClaimUserInfo, oidcConfig.Claimset.UserInfo, claimSet)
+
+	return claimSet
+}
+
+func createClaimSetFromMapping(topLevelName string, mapping []string, claimSet *ClaimSet) *ClaimSet {
+	for _, name := range mapping {
+		if name == "" {
+			continue
+		}
+		if claimSet == nil {
+			claimSet = &ClaimSet{}
+		}
+		claimSet.AddVoluntaryClaim(topLevelName, name)
 	}
+
+	return claimSet
 }
 
 func (i *openIDIdentifier) sessionCode(s string) string {
@@ -78,9 +150,14 @@ func (i *openIDIdentifier) sessionCode(s string) string {
 }
 
 // Inject dependencies
-func (i *openIDIdentifier) Inject(responder *web.Responder, reverseRouter web.ReverseRouter) {
+func (i *openIDIdentifier) Inject(
+	responder *web.Responder,
+	reverseRouter web.ReverseRouter,
+	eventRouter flamingo.EventRouter,
+) {
 	i.responder = responder
 	i.reverseRouter = reverseRouter
+	i.eventRouter = eventRouter
 }
 
 // Identify an incoming request
@@ -99,11 +176,13 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 	}
 
 	identity := &oidcIdentity{
-		token:      token{tokenSource: i.config(request).TokenSource(ctx, sessiondata.Token)},
-		broker:     i.broker,
-		subject:    sessiondata.Subject,
-		verifier:   i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID}),
-		rawIDToken: sessiondata.RawIDToken,
+		token:             token{tokenSource: i.config(request).TokenSource(ctx, sessiondata.Token)},
+		broker:            i.broker,
+		subject:           sessiondata.Subject,
+		verifier:          i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID}),
+		rawIDToken:        sessiondata.RawIDToken,
+		idTokenClaims:     sessiondata.IDTokenClaims,
+		accessTokenClaims: sessiondata.AccessTokenClaims,
 	}
 
 	token, idtoken, err := identity.tokens(ctx)
@@ -112,9 +191,11 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 	}
 
 	request.Session().Store(sessionCode, sessionData{
-		Token:      token,
-		Subject:    idtoken.Subject,
-		RawIDToken: identity.rawIDToken,
+		Token:             token,
+		Subject:           idtoken.Subject,
+		RawIDToken:        identity.rawIDToken,
+		IDTokenClaims:     sessiondata.IDTokenClaims,
+		AccessTokenClaims: sessiondata.AccessTokenClaims,
 	})
 
 	return identity, nil
@@ -154,6 +235,16 @@ func (i *oidcIdentity) IDToken() *oidc.IDToken {
 	return idtoken
 }
 
+// IDTokenClaims mapper
+func (i *oidcIdentity) IDTokenClaims(into interface{}) error {
+	return json.Unmarshal(i.idTokenClaims, into)
+}
+
+// AccessTokenClaims mapper
+func (i *oidcIdentity) AccessTokenClaims(into interface{}) error {
+	return json.Unmarshal(i.accessTokenClaims, into)
+}
+
 // TokenSource getter
 func (i *oidcIdentity) TokenSource() oauth2.TokenSource {
 	return i.token.TokenSource()
@@ -161,7 +252,7 @@ func (i *oidcIdentity) TokenSource() oauth2.TokenSource {
 
 // String returns a readable token
 func (i *oidcIdentity) String() string {
-	return fmt.Sprintf("%s, expiry: %s", i.subject, i.IDToken().Expiry)
+	return fmt.Sprintf("%s, (%s) expiry: %s", i.subject, string(i.idTokenClaims), i.IDToken().Expiry)
 }
 
 // Broker getter
@@ -180,7 +271,7 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	state := uuid.NewV4().String()
 	request.Session().Store(i.sessionCode("state"), state)
-	u, err := url.Parse(i.config(request).AuthCodeURL(state, oauth2.AccessTypeOffline))
+	u, err := url.Parse(i.config(request).AuthCodeURL(state, i.authcodeOptions...))
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
@@ -229,22 +320,40 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(err)
 	}
 
-	// Extract custom claims
-	// TODO
-	var claims struct {
-		Email    string `json:"email"`
-		Verified bool   `json:"email_verified"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
+	var (
+		idTokenClaims     = make(map[string]interface{})
+		tempIdTokenClaims = make(map[string]interface{})
+		accessTokenClaims = make(map[string]interface{})
+	)
+
+	if err := idToken.Claims(&tempIdTokenClaims); err != nil {
 		return i.responder.ServerError(err)
 	}
+	for k, v := range i.oidcConfig.Claims.IDToken {
+		idTokenClaims[k] = tempIdTokenClaims[v]
+	}
+	for k, v := range i.oidcConfig.Claims.AccessToken {
+		accessTokenClaims[k] = oauth2Token.Extra(v)
+	}
+
+	itc, _ := json.Marshal(idTokenClaims)
+	atc, _ := json.Marshal(accessTokenClaims)
 
 	sessionCode := i.sessionCode("sessiondata")
 	request.Session().Store(sessionCode, sessionData{
-		Token:      oauth2Token,
-		Subject:    idToken.Subject,
-		RawIDToken: rawIDToken,
+		Token:             oauth2Token,
+		Subject:           idToken.Subject,
+		RawIDToken:        rawIDToken,
+		IDTokenClaims:     itc,
+		AccessTokenClaims: atc,
 	})
+
+	identity, err := i.Identify(ctx, request)
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	i.eventRouter.Dispatch(ctx, &auth.WebLoginEvent{Broker: i.broker, Request: request, Identity: identity})
 
 	return i.responder.URLRedirect(returnTo(request))
 }
@@ -252,4 +361,9 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 // Logout based on a request
 func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) {
 	request.Session().Delete(i.sessionCode("sessiondata"))
+}
+
+// OpenIDConnectProvder getter for openID Connect Provider
+func (i *openIDIdentifier) OpenIDConnectProvider() *oidc.Provider {
+	return i.provider
 }

@@ -2,6 +2,7 @@ package prefixrouter
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"path"
@@ -184,9 +185,13 @@ func (m *Module) listenAndServe() error {
 // Notify handles the app shutdown event
 func (m *Module) Notify(ctx context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ServerShutdownEvent); ok {
+		if m.server == nil {
+			m.logger.WithField("category", "prefixrouter").Info("Shutdown: server not started.. ")
+			return
+		}
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
-		m.logger.WithField("category", "prefixrouter").Info("Shutdown server on ", m.server.Addr)
+		m.logger.WithField("category", "prefixrouter").Info(fmt.Sprintf("Shutdown server on: %v ", m.server.Addr))
 
 		err := m.server.Shutdown(ctx)
 		if err != nil {

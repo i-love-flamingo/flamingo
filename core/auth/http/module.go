@@ -17,8 +17,9 @@ func (*Module) Configure(injector *dingo.Injector) {
 func (*Module) CueConfig() string {
 	return `
 core: auth: {
-	http :: core.auth.authBroker & {
+	http :: {
 		typ: "http"
+		broker: string
 		realm: string
 		users: [string]: string
 	}

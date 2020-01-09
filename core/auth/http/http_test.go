@@ -4,14 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTPBasicAuthIdentifier(t *testing.T) {
-	identifier := identifierFactory(config.Map{
+	identifier, err := identifierFactory(config.Map{
 		"realm":  "test",
 		"broker": "test",
 		"users": map[string]interface{}{
@@ -19,6 +18,8 @@ func TestHTTPBasicAuthIdentifier(t *testing.T) {
 			"bob":   "donothackmepls",
 		},
 	})
+
+	assert.NoError(t, err)
 
 	t.Run("alice/correct", func(t *testing.T) {
 		req := web.CreateRequest(nil, nil)

@@ -61,14 +61,19 @@ func (s *WebIdentityService) Inject(
 	identityProviders []RequestIdentifier,
 	reverseRouter web.ReverseRouter,
 	eventRouter flamingo.EventRouter,
-) {
+) *WebIdentityService {
 	s.identityProviders = identityProviders
 	s.reverseRouter = reverseRouter
 	s.eventRouter = eventRouter
+	return s
 }
 
 // Identify the user, if any identity is found
 func (s *WebIdentityService) Identify(ctx context.Context, request *web.Request) Identity {
+	if s == nil {
+		return nil
+	}
+
 	for _, provider := range s.identityProviders {
 		if identity, _ := provider.Identify(ctx, request); identity != nil {
 			return identity

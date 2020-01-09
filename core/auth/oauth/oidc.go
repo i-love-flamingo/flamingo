@@ -21,10 +21,9 @@ type (
 	// OpenIDIdentity is an extension of Identity which provides an IDToken on top of OAuth2
 	OpenIDIdentity interface {
 		auth.Identity
-		TokenSourcer
+		Identity
 		IDToken() *oidc.IDToken
 		IDTokenClaims(into interface{}) error
-		AccessTokenClaims(into interface{}) error
 	}
 
 	oidcIdentity struct {
@@ -332,15 +331,15 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 
 	var (
 		idTokenClaims     = make(map[string]interface{})
-		tempIdTokenClaims = make(map[string]interface{})
+		tempIDTokenClaims = make(map[string]interface{})
 		accessTokenClaims = make(map[string]interface{})
 	)
 
-	if err := idToken.Claims(&tempIdTokenClaims); err != nil {
+	if err := idToken.Claims(&tempIDTokenClaims); err != nil {
 		return i.responder.ServerError(err)
 	}
 	for k, v := range i.oidcConfig.Claims.IDToken {
-		idTokenClaims[k] = tempIdTokenClaims[v]
+		idTokenClaims[k] = tempIDTokenClaims[v]
 	}
 	for k, v := range i.oidcConfig.Claims.AccessToken {
 		accessTokenClaims[k] = oauth2Token.Extra(v)

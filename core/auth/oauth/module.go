@@ -18,28 +18,33 @@ func (*Module) Configure(injector *dingo.Injector) {
 func (*Module) CueConfig() string {
 	return `
 core: auth: {
-	oauth2Config :: core.auth.authBroker & {
+	oauth2Config :: {
+		broker: string
 		clientID: string
 		clientSecret: string
 		endpoint: string
 		scopes: [...string] | *["profile", "email"]
-		enabledOfflineToken: bool | *true
-		claimset: {
-			idToken: [...string]
-			userInfo: [...string]
+		claims: {
+			accessToken: { [string]: string }
 		}
+	}
+
+	oidc :: {
+		oauth2Config
+		typ: "oidc"
+		enableOfflineToken: bool | *true
 		claims: {
 			idToken: { [string]: string } & {
 				sub: string | *"sub"
 				email: string | *"email"
 				name: string | *"name"
 			}
-			accessToken: { [string]: string }
+		}
+		requestClaims: {
+			idToken: [...string]
+			userInfo: [...string]
 		}
 	}
-
-	// oauth2 :: oauth2Config & { typ: "oauth2" }
-	oidc :: oauth2Config & { typ: "oidc" }
 }
 `
 }

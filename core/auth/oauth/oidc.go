@@ -38,14 +38,15 @@ type (
 	}
 
 	openIDIdentifier struct {
-		broker          string
-		oauth2Config    *oauth2.Config
-		responder       *web.Responder
-		provider        *oidc.Provider
-		reverseRouter   web.ReverseRouter
-		authcodeOptions []oauth2.AuthCodeOption
-		eventRouter     flamingo.EventRouter
-		oidcConfig      oidcConfig
+		broker                   string
+		oauth2Config             *oauth2.Config
+		responder                *web.Responder
+		provider                 *oidc.Provider
+		reverseRouter            web.ReverseRouter
+		authcodeOptions          []AuthCodeOptioner
+		authCodeOptionerProvider authCodeOptionerProvider
+		eventRouter              flamingo.EventRouter
+		oidcConfig               oidcConfig
 	}
 
 	sessionData struct {
@@ -73,7 +74,7 @@ type oidcConfig struct {
 	Claimset            struct {
 		IDToken  []string `json:"idToken"`
 		UserInfo []string `json:"userInfo"`
-	} `json:"claimset"`
+	} `json:"requestClaims"`
 	Claims struct {
 		IDToken     map[string]string `json:"idToken"`
 		AccessToken map[string]string `json:"accessToken"`
@@ -92,7 +93,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		return nil, err
 	}
 
-	var authCodeOptions []oauth2.AuthCodeOption
+	var authCodeOptions []AuthCodeOptioner
 
 	scopes := append([]string{oidc.ScopeOpenID}, oidcConfig.Scopes...)
 	if oidcConfig.EnabledOfflineToken {
@@ -104,7 +105,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		if err != nil {
 			return nil, err
 		}
-		authCodeOptions = append(authCodeOptions, authCodeOption)
+		authCodeOptions = append(authCodeOptions, oauth2AuthCodeOption{authCodeOption: authCodeOption})
 	}
 
 	return &openIDIdentifier{
@@ -154,10 +155,12 @@ func (i *openIDIdentifier) Inject(
 	responder *web.Responder,
 	reverseRouter web.ReverseRouter,
 	eventRouter flamingo.EventRouter,
+	authCodeOptionerProvider authCodeOptionerProvider,
 ) {
 	i.responder = responder
 	i.reverseRouter = reverseRouter
 	i.eventRouter = eventRouter
+	i.authCodeOptionerProvider = authCodeOptionerProvider
 }
 
 // Identify an incoming request
@@ -271,7 +274,14 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	state := uuid.NewV4().String()
 	request.Session().Store(i.sessionCode("state"), state)
-	u, err := url.Parse(i.config(request).AuthCodeURL(state, i.authcodeOptions...))
+	options := make([]oauth2.AuthCodeOption, 0, len(i.authcodeOptions))
+	for _, o := range i.authcodeOptions {
+		options = append(options, o.Options(ctx, i.Broker(), request)...)
+	}
+	for _, o := range i.authCodeOptionerProvider() {
+		options = append(options, o.Options(ctx, i.Broker(), request)...)
+	}
+	u, err := url.Parse(i.config(request).AuthCodeURL(state, options...))
 	if err != nil {
 		return i.responder.ServerError(err)
 	}

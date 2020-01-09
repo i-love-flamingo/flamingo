@@ -88,13 +88,7 @@ func (*WebModule) CueConfig() string {
 	return `
 core: auth: {
 	web: {
-		broker: [...authBroker]
-	}
-
-	authBroker :: {
-		broker: string
-		typ: string
-		[string]: _
+		broker: [...{broker: string, typ: string}]
 	}
 }
 `

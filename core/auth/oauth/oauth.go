@@ -9,16 +9,17 @@ import (
 )
 
 type (
-	// TokenSourcer defines a TokenSource which is can be used to get an AccessToken vor OAuth2 flows
-	TokenSourcer interface {
+	// Identity defines a TokenSource which is can be used to get an AccessToken vor OAuth2 flows
+	Identity interface {
 		TokenSource() oauth2.TokenSource
+		AccessTokenClaims(into interface{}) error
 	}
 
 	token struct {
 		tokenSource oauth2.TokenSource
 	}
 
-	// AuthCodeOption returns an oauth2.AuthCodeOption for the broker
+	// AuthCodeOptioner returns an oauth2.AuthCodeOption for the broker
 	AuthCodeOptioner interface {
 		Options(ctx context.Context, broker string, request *web.Request) []oauth2.AuthCodeOption
 	}

@@ -11,8 +11,8 @@ import (
 )
 
 type (
-	// IdentifierFactory creates RequestIdentifier
-	IdentifierFactory func(config config.Map) (RequestIdentifier, error)
+	// RequestIdentifierFactory creates RequestIdentifier
+	RequestIdentifierFactory func(config config.Map) (RequestIdentifier, error)
 
 	// RequestIdentifier identifies an request and returns a matching identity
 	RequestIdentifier interface {

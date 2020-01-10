@@ -10,7 +10,7 @@ type Module struct{}
 
 // Configure dependency injection
 func (*Module) Configure(injector *dingo.Injector) {
-	injector.BindMap(new(auth.IdentifierFactory), "http").ToInstance(identifierFactory)
+	injector.BindMap(new(auth.RequestIdentifierFactory), "http").ToInstance(identifierFactory)
 }
 
 // CueConfig schema

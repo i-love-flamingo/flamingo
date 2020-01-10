@@ -63,6 +63,11 @@ func (m *Identifier) SetIdentity(identity auth.Identity) {
 	m.identity = identity
 }
 
+// SetBroker identity for the identifier
+func (m *Identifier) SetBroker(broker string) {
+	m.broker = broker
+}
+
 // Subject getter
 func (i *Identity) Subject() string {
 	return i.Sub

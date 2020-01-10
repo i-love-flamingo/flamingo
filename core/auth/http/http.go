@@ -20,9 +20,17 @@ type basicAuthIdentifier struct {
 
 func identifierFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	i := new(basicAuthIdentifier)
-	_ = config.Map(cfg["users"].(map[string]interface{})).MapInto(&i.users)
-	i.realm = cfg["realm"].(string)
-	i.broker = cfg["broker"].(string)
+	var conf struct {
+		Realm  string            `json:"realm"`
+		Broker string            `json:"broker"`
+		Users  map[string]string `json:"users"`
+	}
+	if err := cfg.MapInto(&conf); err != nil {
+		return nil, err
+	}
+	i.users = conf.Users
+	i.realm = conf.Realm
+	i.broker = conf.Broker
 	return i, nil
 }
 

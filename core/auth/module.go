@@ -21,7 +21,7 @@ func (m *WebModule) Configure(injector *dingo.Injector) {
 }
 
 func buildAuthentifier(
-	provider map[string]IdentifierFactory,
+	provider map[string]RequestIdentifierFactory,
 	cfg *struct {
 		Config config.Slice `inject:"config:core.auth.web.broker"`
 	},

@@ -55,6 +55,23 @@ type (
 		IDTokenClaims     []byte
 		AccessTokenClaims []byte
 	}
+
+	oidcConfig struct {
+		Broker              string   `json:"broker"`
+		Endpoint            string   `json:"endpoint"`
+		ClientID            string   `json:"clientID"`
+		ClientSecret        string   `json:"clientSecret"`
+		Scopes              []string `json:"scopes"`
+		EnabledOfflineToken bool     `json:"enabledOfflineToken"`
+		Claimset            struct {
+			IDToken  []string `json:"idToken"`
+			UserInfo []string `json:"userInfo"`
+		} `json:"requestClaims"`
+		Claims struct {
+			IDToken     map[string]string `json:"idToken"`
+			AccessToken map[string]string `json:"accessToken"`
+		} `json:"claims"`
+	}
 )
 
 func init() {
@@ -62,23 +79,6 @@ func init() {
 }
 
 var _ OpenIDIdentity = new(oidcIdentity)
-
-type oidcConfig struct {
-	Broker              string   `json:"broker"`
-	Endpoint            string   `json:"endpoint"`
-	ClientID            string   `json:"clientID"`
-	ClientSecret        string   `json:"clientSecret"`
-	Scopes              []string `json:"scopes"`
-	EnabledOfflineToken bool     `json:"enabledOfflineToken"`
-	Claimset            struct {
-		IDToken  []string `json:"idToken"`
-		UserInfo []string `json:"userInfo"`
-	} `json:"requestClaims"`
-	Claims struct {
-		IDToken     map[string]string `json:"idToken"`
-		AccessToken map[string]string `json:"accessToken"`
-	} `json:"claims"`
-}
 
 func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var oidcConfig oidcConfig
@@ -92,13 +92,12 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		return nil, err
 	}
 
-	var authCodeOptions []AuthCodeOptioner
-
 	scopes := append([]string{oidc.ScopeOpenID}, oidcConfig.Scopes...)
 	if oidcConfig.EnabledOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
+	var authCodeOptions []AuthCodeOptioner
 	if claimset := getClaimset(oidcConfig); claimset.HasClaims() {
 		authCodeOption, err := claimset.AuthCodeOption()
 		if err != nil {
@@ -174,7 +173,7 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 	sessiondata, ok := data.(sessionData)
 	if !ok {
 		request.Session().Delete(sessionCode)
-		return nil, errors.New("no sessiondata")
+		return nil, errors.New("broken sessiondata")
 	}
 
 	identity := &oidcIdentity{
@@ -233,7 +232,7 @@ func (i *oidcIdentity) Subject() string {
 
 // IDToken getter
 func (i *oidcIdentity) IDToken() *oidc.IDToken {
-	_, idtoken, _ := i.tokens(context.Background())
+	_, idtoken, _ := i.tokens(context.Background()) // TODO background ok?
 	return idtoken
 }
 
@@ -290,8 +289,7 @@ func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Reques
 
 // Callback for OIDC code exchange
 func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, returnTo func(request *web.Request) *url.URL) web.Result {
-	errString, err := request.Query1("error")
-	if err == nil {
+	if errString, err := request.Query1("error"); err == nil {
 		errDetails, _ := request.Query1("error_description")
 		return i.responder.ServerError(fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
 	}
@@ -300,10 +298,10 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	if !ok {
 		return i.responder.ServerError(errors.New("no state in session"))
 	}
+	request.Session().Delete(i.sessionCode("state"))
 	if queryState, err := request.Query1("state"); err != nil || queryState != state.(string) {
 		return i.responder.ServerError(errors.New("state mismatch"))
 	}
-	request.Session().Delete(i.sessionCode("state"))
 
 	code, err := request.Query1("code")
 	if err != nil {
@@ -359,6 +357,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 
 	identity, err := i.Identify(ctx, request)
 	if err != nil {
+		i.Logout(ctx, request)
 		return i.responder.ServerError(err)
 	}
 

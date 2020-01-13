@@ -75,7 +75,7 @@ func (r *routes) Routes(router *web.RouterRegistry) {
 	}
 	_, _ = router.Route("/core/auth/callback/:broker", "core.auth.callback(broker)")
 	router.HandleAny("core.auth.callback", r.controller.Callback)
-	_, _ = router.Route("/core/auth/login/:broker", "core.auth.login(broker)")
+	_, _ = router.Route("/core/auth/login/:broker", "core.auth.login(broker,redirecturl?)")
 	router.HandleAny("core.auth.login", r.controller.Login)
 	_, _ = router.Route("/core/auth/logout", "core.auth.logoutall")
 	router.HandleAny("core.auth.logoutall", r.controller.LogoutAll)

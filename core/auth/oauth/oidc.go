@@ -371,7 +371,7 @@ func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) {
 	request.Session().Delete(i.sessionCode("sessiondata"))
 }
 
-// OpenIDConnectProvder getter for openID Connect Provider
+// OpenIDConnectProvider getter for openID Connect Provider
 func (i *openIDIdentifier) OpenIDConnectProvider() *oidc.Provider {
 	return i.provider
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -20,12 +21,18 @@ func (c *controller) Inject(service *WebIdentityService, responder *web.Responde
 
 // Callback is called e.g. for OIDC
 func (c *controller) Callback(ctx context.Context, request *web.Request) web.Result {
-	return c.service.callback(ctx, request)
+	if resp := c.service.callback(ctx, request); resp != nil {
+		return resp
+	}
+	return c.responder.NotFound(errors.New("broker callback found"))
 }
 
 // Login starts an authenticate for flow
 func (c *controller) Login(ctx context.Context, request *web.Request) web.Result {
-	return c.service.AuthenticateFor(ctx, request.Params["broker"], request)
+	if resp := c.service.AuthenticateFor(ctx, request.Params["broker"], request); resp != nil {
+		return resp
+	}
+	return c.responder.NotFound(errors.New("broker login found"))
 }
 
 // LogoutAll removes all identities

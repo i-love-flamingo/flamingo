@@ -13,7 +13,7 @@ func TestLoad(t *testing.T) {
 	require.NoError(t, os.Setenv("TEST4", "injected"))
 
 	t.Run("valid config files", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		err := Load(root, "testdata/valid")
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
@@ -26,10 +26,13 @@ func TestLoad(t *testing.T) {
 		assert.Equal(t, Shim(nil, true), Shim(root.Configuration.Get("env.var.test2")))
 		assert.Equal(t, Shim("default", true), Shim(root.Configuration.Get("env.var.test3")))
 		assert.Equal(t, Shim("injected", true), Shim(root.Configuration.Get("env.var.test4")))
+
+		assert.Contains(t, root.Configuration.Flat(), "cue")
+		assert.Equal(t, Shim(float64(12), true), Shim(root.Configuration.Get("cue")))
 	})
 
 	t.Run("valid config files with dev context", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		require.NoError(t, os.Setenv("CONTEXT", "dev"))
 		defer func() {
 			require.NoError(t, os.Unsetenv("CONTEXT"))
@@ -44,7 +47,7 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("valid config files with files in context", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		require.NoError(t, os.Setenv("CONTEXTFILE", "testdata/contextfile/config_a.yml:testdata/contextfile/context.yaml::testdata/contextfile/cuetest.cue"))
 		defer func() {
 			require.NoError(t, os.Unsetenv("CONTEXTFILE"))
@@ -61,12 +64,10 @@ func TestLoad(t *testing.T) {
 		assert.Equal(t, Shim("new", true), Shim(root.Configuration.Get("foo.bar.new")))
 		assert.Equal(t, Shim("override", true), Shim(root.Configuration.Get("foo.bar.test")))
 		assert.Equal(t, Shim("test", true), Shim(root.Configuration.Get("new")))
-		assert.Equal(t, "testdata/contextfile/cuetest.cue", root.cueBuildInstance.Files[0].Filename)
-
 	})
 
 	t.Run("valid config files with additional config", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		err := Load(root, "testdata/valid", AdditionalConfig([]string{"baz: bam", "foo.bar.test: 'hello'"}))
 		assert.NoError(t, err)
 		assert.Contains(t, root.Configuration.Flat(), "area")
@@ -80,14 +81,14 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("invalid config file", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		assert.Panics(t, func() {
 			_ = Load(root, "testdata/invalid")
 		})
 	})
 
 	t.Run("valid config file with invalid additional config", func(t *testing.T) {
-		root := new(Area)
+		root := NewArea("test", nil)
 		assert.Panics(t, func() {
 			_ = Load(root, "testdata/valid", AdditionalConfig([]string{"baz"}))
 		})

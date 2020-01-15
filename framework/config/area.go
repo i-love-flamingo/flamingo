@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"cuelang.org/go/cue"
+	"cuelang.org/go/cue/ast"
 	"cuelang.org/go/cue/build"
+	"cuelang.org/go/cue/errors"
 	"flamingo.me/dingo"
-	"github.com/pkg/errors"
 )
 
 var fmtErrorf = fmt.Errorf
@@ -33,6 +34,7 @@ type (
 
 		cueBuildInstance *build.Instance
 		cueInstance      *cue.Instance
+		cueConfig        *ast.File
 		defaultConfig    Map
 		loadedConfig     Map
 	}
@@ -73,9 +75,6 @@ func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 		Childs:        childs,
 		Configuration: make(Map),
 	}
-
-	cueContext := build.NewContext()
-	ctx.cueBuildInstance = cueContext.NewInstance(ctx.Name, nil)
 
 	for _, c := range childs {
 		c.Parent = ctx
@@ -133,27 +132,37 @@ func moduleName(m dingo.Module) string {
 	return tm.PkgPath() + "." + tm.Name()
 }
 
+func cueError(err error) error {
+	if p, ok := err.(errors.Error); ok {
+		return fmtErrorf("%s: %w", p.Position(), err)
+	}
+	return err
+}
+
 func (area *Area) loadCueConfig() error {
 	area.Modules = resolveDependencies(area.Modules, nil)
 
-	if area.cueBuildInstance == nil {
-		cueContext := build.NewContext()
-		area.cueBuildInstance = cueContext.NewInstance(area.Name, nil)
-	}
-
-	if err := area.cueBuildInstance.AddFile("flamingo.os.env", "flamingo: os: env: [string]: string"); err != nil {
-		return err
-	}
 	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
-		return err
+		return cueError(err)
 	}
 
 	for _, module := range area.Modules {
 		if cuemodule, ok := module.(CueConfigModule); ok {
 			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
-				return errors.Wrapf(err, "loading config for %s failed", moduleName(module))
+				return fmtErrorf("loading config for %s failed: %w", moduleName(module), cueError(err))
 			}
 		}
+	}
+
+	envFile := "flamingo: { os: { env: { \n[string]: string\n"
+	for _, v := range os.Environ() {
+		v := strings.SplitN(v, "=", 2)
+		envFile += fmt.Sprintf("\"%s\": \"%s\"\n", esc(v[0]), esc(v[1]))
+	}
+	envFile += "} } }\n"
+
+	if err := area.cueBuildInstance.AddFile("flamingo-os-env-file", envFile); err != nil {
+		return fmtErrorf("%s: %w", area.Name, cueError(err))
 	}
 
 	return nil
@@ -203,7 +212,16 @@ func (area *Area) checkLegacyConfig(warn bool) {
 	}
 }
 
+func esc(s string) string {
+	s = strings.Replace(s, `\`, `\\`, -1)
+	s = strings.Replace(s, `"`, `\"`, -1)
+	s = strings.Replace(s, "\n", `\n`, -1)
+	return s
+}
+
 func (area *Area) loadConfig(legacy, logLegacy bool) error {
+	area.cueBuildInstance = build.NewContext().NewInstance(area.Name, nil)
+
 	if err := area.loadCueConfig(); err != nil {
 		return err
 	}
@@ -212,11 +230,7 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 		return err
 	}
 
-	area.Configuration = make(Map)
-
-	if err := area.Configuration.Add(Map{"area": area.Name}); err != nil {
-		return err
-	}
+	area.Configuration = Map{"area": area.Name}
 
 	if err := area.Configuration.Add(area.defaultConfig); err != nil {
 		return err
@@ -242,49 +256,33 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 	purgeNil := ""
 	for k, v := range area.Configuration.Flat() {
 		if v == nil {
-			purgeNil += strings.Replace(k, ".", ": ", -1) + ": *null | _\n"
+			purgeNil += `"` + strings.Replace(k, `.`, `": "`, -1) + `": *null | _` + "\n"
 		}
 	}
+
 	if err := area.cueBuildInstance.AddFile("flamingo.config.purgenil", purgeNil); err != nil {
-		return err
+		return cueError(err)
 	}
-	// end TODO
-
-	// TODO performance is really bad here, especially with tons of environment variables (e.g. in kubernetes)
-	envFile := "flamingo: { os: { env: { \n[string]: string\n"
-	esc := func(s string) string {
-		s = strings.Replace(s, `\`, `\\`, -1)
-		s = strings.Replace(s, `"`, `\"`, -1)
-		s = strings.Replace(s, "\n", `\n`, -1)
-		return s
+	if area.cueConfig != nil {
+		if err := area.cueBuildInstance.AddSyntax(area.cueConfig); err != nil {
+			return cueError(err)
+		}
 	}
-	for _, v := range os.Environ() {
-		v := strings.SplitN(v, "=", 2)
-		envFile += fmt.Sprintf("\"%s\": \"%s\"\n", esc(v[0]), esc(v[1]))
-	}
-	envFile += "} } }\n"
-
-	if err := area.cueBuildInstance.AddFile("flamingo-os-env-file", envFile); err != nil {
-		return fmtErrorf("%s: %w", area.Name, err)
-	}
-	// end TODO
 
 	var err error
-	// build a cue runtime to verify the config
-	cueRuntime := new(cue.Runtime)
-	area.cueInstance, err = cueRuntime.Build(area.cueBuildInstance)
+	area.cueInstance, err = new(cue.Runtime).Build(area.cueBuildInstance)
 	if err != nil {
-		return fmtErrorf("%s: %w", area.Name, err)
+		return cueError(err)
 	}
 
 	area.cueInstance, err = area.cueInstance.Fill(area.Configuration)
 	if err != nil {
-		return fmtErrorf("%s: %w", area.Name, err)
+		return fmtErrorf("%s: %w", area.Name, cueError(err))
 	}
 
 	m := make(Map)
 	if err := area.cueInstance.Value().Decode(&m); err != nil {
-		return fmtErrorf("%s: %w", area.Name, err)
+		return fmtErrorf("%s: %w", area.Name, cueError(err))
 	}
 	if err := area.Configuration.Add(m); err != nil {
 		return fmtErrorf("%s: %w", area.Name, err)

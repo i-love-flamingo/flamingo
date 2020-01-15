@@ -61,8 +61,8 @@ if flamingo.prefixrouter.rootRedirectHandler.enabled {
 // FlamingoLegacyConfigAlias legacy mapping
 func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	return map[string]string{
-		"prefixrouter.rootRedirectHandler.enabled":             "flamingo.prefixrouter.rootRedirectHandler.enabled",
-		"prefixrouter.rootRedirectHandler.rootRedirectHandler": "flamingo.prefixrouter.rootRedirectHandler.rootRedirectHandler",
+		"prefixrouter.rootRedirectHandler.enabled":        "flamingo.prefixrouter.rootRedirectHandler.enabled",
+		"prefixrouter.rootRedirectHandler.redirectTarget": "flamingo.prefixrouter.rootRedirectHandler.redirectTarget",
 	}
 }
 

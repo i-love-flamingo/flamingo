@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/auth/oauth"
@@ -12,10 +13,17 @@ import (
 )
 
 type (
+	authenticateMethod func(*Identifier, context.Context, *web.Request) web.Result
+	callbackMethod     func(*Identifier, context.Context, *web.Request, func(*web.Request) *url.URL) web.Result
+	logoutMethod       func(*Identifier, context.Context, *web.Request)
+
 	// Identifier mocks request identification
 	Identifier struct {
-		broker   string
-		identity auth.Identity
+		broker             string
+		identity           auth.Identity
+		authenticateMethod authenticateMethod
+		callbackMethod     callbackMethod
+		logoutMethod       logoutMethod
 	}
 
 	// Identity mocks auth.Identity
@@ -56,6 +64,44 @@ func (m *Identifier) Identify(context.Context, *web.Request) (auth.Identity, err
 		broker: m.broker,
 		Sub:    "mocked",
 	}, nil
+}
+
+// Identify an incoming request
+func (m *Identifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
+	if m.authenticateMethod != nil {
+		return m.authenticateMethod(m, ctx, request)
+	}
+	return nil
+}
+
+// Identify an incoming request
+func (m *Identifier) SetAuthenticateMethod(method authenticateMethod) {
+	m.authenticateMethod = method
+}
+
+// Identify an incoming request
+func (m *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
+	if m.callbackMethod != nil {
+		return m.callbackMethod(m, ctx, request, returnTo)
+	}
+	return nil
+}
+
+// Identify an incoming request
+func (m *Identifier) SetCallbackMethod(method callbackMethod) {
+	m.callbackMethod = method
+}
+
+// Identify an incoming request
+func (m *Identifier) Logout(ctx context.Context, request *web.Request) {
+	if m.logoutMethod != nil {
+		m.logoutMethod(m, ctx, request)
+	}
+}
+
+// Identify an incoming request
+func (m *Identifier) SetLogoutMethod(method logoutMethod) {
+	m.logoutMethod = method
 }
 
 // SetIdentity forces an identity to be returned

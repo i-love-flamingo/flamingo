@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"testing"
 
 	"cuelang.org/go/cue"
@@ -46,14 +45,17 @@ b: 2
 	assert.NoError(t, instance.Err)
 	assert.NoError(t, instance.Value().Decode(&testData))
 
-	log.Printf("%#v", instance.Value())
-
 	assert.Equal(t, 1, testData.A.B)
 	assert.Equal(t, 2, testData.A.C)
 	assert.Equal(t, 2, testData.B)
 }
 
 func Test_cueAstMerge(t *testing.T) {
+	predefined, err := parser.ParseFile("predefined", `
+predef :: {x: 1}
+`)
+	assert.NoError(t, err)
+
 	base, err := parser.ParseFile("base", `
 a: int
 b: 2
@@ -64,6 +66,9 @@ struct: d: e: {
 }
 list: [1,2,3]
 struct: x: 1
+def :: {a: 1, b: 2}
+defined: def
+predefined: predef
 `)
 	assert.NoError(t, err)
 
@@ -73,12 +78,14 @@ struct: d: e: f2: 223
 list: [3,2,1]
 struct: y: 2
 struct: z: {z1: 51, z2: 52}
+def :: {b: 3}
 `)
 	assert.NoError(t, err)
 
 	res := cueAstMergeFile(base, in)
 
 	buildInstance := build.NewContext().NewInstance("", nil)
+	assert.NoError(t, buildInstance.AddSyntax(predefined))
 	assert.NoError(t, buildInstance.AddSyntax(res))
 	instance, err := new(cue.Runtime).Build(buildInstance)
 	assert.NoError(t, err)
@@ -100,7 +107,14 @@ struct: z: {z1: 51, z2: 52}
 				Z2 int
 			}
 		}
-		List []int
+		List    []int
+		Defined struct {
+			A int
+			B int
+		}
+		Predefined struct {
+			X int
+		}
 	}
 	assert.NoError(t, instance.Value().Decode(&testData))
 
@@ -113,4 +127,7 @@ struct: z: {z1: 51, z2: 52}
 	assert.Equal(t, 51, testData.Struct.Z.Z1)
 	assert.Equal(t, 52, testData.Struct.Z.Z2)
 	assert.Equal(t, []int{3, 2, 1}, testData.List)
+	assert.Equal(t, 1, testData.Defined.A)
+	assert.Equal(t, 3, testData.Defined.B)
+	assert.Equal(t, 1, testData.Predefined.X)
 }

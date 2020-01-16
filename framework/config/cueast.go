@@ -104,6 +104,10 @@ func cueAstMergeDecls(base []ast.Decl, in []ast.Decl) []ast.Decl {
 			continue
 		}
 
+		if identField, ok := field.Value.(*ast.Ident); ok {
+			identField.Node = nil
+		}
+
 		// simply append if we didn't mark this field before
 		if inStruct, ok := known[ident.Name]; !ok {
 			result = append(result, field)

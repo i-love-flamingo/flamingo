@@ -298,6 +298,9 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 func (registry *RouterRegistry) Reverse(name string, params map[string]string) (string, error) {
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler
+		if params == nil {
+			params = make(map[string]string, len(alias.params))
+		}
 		for name, param := range alias.params {
 			params[name] = param.value
 		}

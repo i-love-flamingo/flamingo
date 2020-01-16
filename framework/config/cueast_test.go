@@ -66,7 +66,8 @@ struct: d: e: {
 }
 list: [1,2,3]
 struct: x: 1
-def :: {a: 1, b: 2}
+defbase :: { c: 3 }
+def :: { defbase, a: 1,	b: 2}
 defined: def
 predefined: predef
 `)
@@ -78,7 +79,7 @@ struct: d: e: f2: 223
 list: [3,2,1]
 struct: y: 2
 struct: z: {z1: 51, z2: 52}
-def :: {b: 3}
+def :: { b: 3 }
 `)
 	assert.NoError(t, err)
 
@@ -111,6 +112,7 @@ def :: {b: 3}
 		Defined struct {
 			A int
 			B int
+			C int
 		}
 		Predefined struct {
 			X int
@@ -129,5 +131,6 @@ def :: {b: 3}
 	assert.Equal(t, []int{3, 2, 1}, testData.List)
 	assert.Equal(t, 1, testData.Defined.A)
 	assert.Equal(t, 3, testData.Defined.B)
+	assert.Equal(t, 3, testData.Defined.C)
 	assert.Equal(t, 1, testData.Predefined.X)
 }

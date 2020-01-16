@@ -65,7 +65,7 @@ func cueAstMergeFile(base, in *ast.File) *ast.File {
 // cueAstMergeDecls merges two ast.Decl lists
 func cueAstMergeDecls(base []ast.Decl, in []ast.Decl) []ast.Decl {
 	result := make([]ast.Decl, 0, len(base))
-	known := make(map[string]*ast.StructLit, len(in)) // mark and hold reference to known structs
+	known := make(map[string]*ast.Field, len(in)) // mark and hold reference to known structs
 
 	// process in
 	for _, d := range in {
@@ -82,11 +82,13 @@ func cueAstMergeDecls(base []ast.Decl, in []ast.Decl) []ast.Decl {
 		}
 
 		// mark field identifier as known, and store a reference if available
-		value, _ := field.Value.(*ast.StructLit)
-		known[ident.Name] = value
-
-		result = append(result, field)
+		known[ident.Name] = field
+		if _, ok = field.Value.(*ast.StructLit); !ok {
+			result = append(result, field)
+		}
 	}
+
+	added := make(map[string]struct{}, len(known))
 
 	// walk base declarations
 	for _, d := range base {
@@ -104,23 +106,35 @@ func cueAstMergeDecls(base []ast.Decl, in []ast.Decl) []ast.Decl {
 			continue
 		}
 
-		if identField, ok := field.Value.(*ast.Ident); ok {
-			identField.Node = nil
-		}
-
 		// simply append if we didn't mark this field before
-		if inStruct, ok := known[ident.Name]; !ok {
+		if knownField, ok := known[ident.Name]; !ok {
 			result = append(result, field)
 			continue
 		} else {
-			// ignore non-structs, as they were already overridden
-			value, ok := field.Value.(*ast.StructLit)
-			if !ok {
+			switch value := field.Value.(type) {
+			case *ast.StructLit:
+				// merge incoming struct into base struct
+				// we preserve the original reference
+				value.Elts = cueAstMergeDecls(value.Elts, knownField.Value.(*ast.StructLit).Elts)
+				result = append(result, field)
+				added[ident.Name] = struct{}{}
+			default:
 				continue
 			}
-			// merge incoming struct into base struct
-			inStruct.Elts = cueAstMergeDecls(value.Elts, inStruct.Elts)
 		}
+	}
+
+	for k, v := range known {
+		// skip added fields
+		if _, ok := added[k]; ok {
+			continue
+		}
+		// skip non-structs
+		if _, ok := v.Value.(*ast.StructLit); !ok {
+			continue
+		}
+		// add missing structs
+		result = append(result, v)
 	}
 
 	return result

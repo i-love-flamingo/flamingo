@@ -14,11 +14,6 @@ type (
 		Broker() string
 	}
 
-	// hasRoles adds the ability to provide roles to an identity
-	hasRoles interface {
-		Roles() []string
-	}
-
 	securityRoleProvider struct {
 		service *WebIdentityService
 	}

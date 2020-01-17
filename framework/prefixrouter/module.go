@@ -107,7 +107,7 @@ func (m *Module) serve(
 			hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
 
 			if !pathSet && !hostSet {
-				m.logger.WithField("category", "prefixrouter").Warn("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
+				m.logger.WithField("category", "prefixrouter").Info("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
 				continue
 			}
 

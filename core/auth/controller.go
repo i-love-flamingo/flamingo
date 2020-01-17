@@ -29,6 +29,12 @@ func (c *controller) Callback(ctx context.Context, request *web.Request) web.Res
 
 // Login starts an authenticate for flow
 func (c *controller) Login(ctx context.Context, request *web.Request) web.Result {
+	redirecturl, ok := request.Params["redirecturl"]
+	if !ok || redirecturl == "" {
+		redirecturl = request.Request().Referer()
+	}
+	request.Params["redirecturl"] = redirecturl
+
 	if resp := c.service.AuthenticateFor(ctx, request.Params["broker"], request); resp != nil {
 		return resp
 	}

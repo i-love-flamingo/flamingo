@@ -102,7 +102,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 		am.userInfoMapping = config.UserInfoMapping
 		am.tokenExtras = config.TokenExtras
 		if !config.Enabled {
-			am.logger.Warn("OIDC is disabled. Modules depending on OAuth features cannot work properly")
+			am.logger.Info("OIDC is disabled. Modules depending on OAuth features cannot work properly")
 			return
 		}
 

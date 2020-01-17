@@ -11,10 +11,14 @@ import (
 )
 
 type (
-	IdentifyMethod     func(*Identifier, context.Context, *web.Request) (auth.Identity, error)
+	// IdentifyMethod callback for Mock Identifier
+	IdentifyMethod func(*Identifier, context.Context, *web.Request) (auth.Identity, error)
+	// AuthenticateMethod callback for Mock Identifier
 	AuthenticateMethod func(*Identifier, context.Context, *web.Request) web.Result
-	CallbackMethod     func(*Identifier, context.Context, *web.Request, func(*web.Request) *url.URL) web.Result
-	LogoutMethod       func(*Identifier, context.Context, *web.Request)
+	// CallbackMethod callback for Mock Identifier
+	CallbackMethod func(*Identifier, context.Context, *web.Request, func(*web.Request) *url.URL) web.Result
+	// LogoutMethod callback for Mock Identifier
+	LogoutMethod func(*Identifier, context.Context, *web.Request)
 
 	// Identifier mocks request identification
 	Identifier struct {
@@ -56,7 +60,7 @@ func (m *Identifier) SetIdentifyMethod(method IdentifyMethod) *Identifier {
 	return m
 }
 
-// Identify an incoming request
+// Authenticate an incoming request
 func (m *Identifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	if m.authenticateMethod != nil {
 		return m.authenticateMethod(m, ctx, request)
@@ -64,13 +68,13 @@ func (m *Identifier) Authenticate(ctx context.Context, request *web.Request) web
 	return nil
 }
 
-// Identify an incoming request
+// SetAuthenticateMethod for mock identifier
 func (m *Identifier) SetAuthenticateMethod(method AuthenticateMethod) *Identifier {
 	m.authenticateMethod = method
 	return m
 }
 
-// Identify an incoming request
+// Callback an incoming request
 func (m *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
 	if m.callbackMethod != nil {
 		return m.callbackMethod(m, ctx, request, returnTo)
@@ -78,20 +82,20 @@ func (m *Identifier) Callback(ctx context.Context, request *web.Request, returnT
 	return nil
 }
 
-// Identify an incoming request
+// SetCallbackMethod for mock identifier
 func (m *Identifier) SetCallbackMethod(method CallbackMethod) *Identifier {
 	m.callbackMethod = method
 	return m
 }
 
-// Identify an incoming request
+// Logout an incoming request
 func (m *Identifier) Logout(ctx context.Context, request *web.Request) {
 	if m.logoutMethod != nil {
 		m.logoutMethod(m, ctx, request)
 	}
 }
 
-// Identify an incoming request
+// SetLogoutMethod for mock identifier
 func (m *Identifier) SetLogoutMethod(method LogoutMethod) *Identifier {
 	m.logoutMethod = method
 	return m

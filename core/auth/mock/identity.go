@@ -34,7 +34,7 @@ func (i *Identity) Broker() string {
 	return i.broker
 }
 
-// Broker Setter
+// SetBroker Setter
 func (i *Identity) SetBroker(broker string) {
 	i.broker = broker
 }

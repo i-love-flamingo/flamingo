@@ -138,10 +138,10 @@ func (s *WebIdentityService) getRedirectURL(request *web.Request) *url.URL {
 
 // Authenticate finds the first available (enforced) authentication result
 func (s *WebIdentityService) Authenticate(ctx context.Context, request *web.Request) (string, web.Result) {
-	s.storeRedirectURL(request)
 	for _, provider := range s.identityProviders {
 		if authenticator, ok := provider.(WebAuthenticater); ok {
 			if result := authenticator.Authenticate(ctx, request); result != nil {
+				s.storeRedirectURL(request)
 				return provider.Broker(), result
 			}
 		}
@@ -151,11 +151,13 @@ func (s *WebIdentityService) Authenticate(ctx context.Context, request *web.Requ
 
 // AuthenticateFor starts the authentication for a given broker
 func (s *WebIdentityService) AuthenticateFor(ctx context.Context, broker string, request *web.Request) web.Result {
-	s.storeRedirectURL(request)
 	for _, provider := range s.identityProviders {
 		if provider.Broker() == broker {
 			if authenticator, ok := provider.(WebAuthenticater); ok {
-				return authenticator.Authenticate(ctx, request)
+				if result := authenticator.Authenticate(ctx, request); result != nil {
+					s.storeRedirectURL(request)
+					return result
+				}
 			}
 			return nil
 		}

@@ -110,7 +110,10 @@ func (s *WebIdentityService) IdentifyAll(ctx context.Context, request *web.Reque
 func (s *WebIdentityService) storeRedirectURL(request *web.Request) {
 	redirecturl, ok := request.Params["redirecturl"]
 	if !ok || redirecturl == "" {
-		redirecturl = request.Request().Referer()
+		u, err := s.reverseRouter.Absolute(request, request.Request().URL.Path, nil)
+		if err == nil {
+			redirecturl = u.String()
+		}
 	}
 
 	absolute, _ := s.reverseRouter.Absolute(request, "", nil)

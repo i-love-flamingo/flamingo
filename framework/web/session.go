@@ -23,6 +23,15 @@ func EmptySession() *Session {
 	return &Session{s: sessions.NewSession(nil, "")}
 }
 
+// EmptySessionWithID creates an empty session instance with a preset session ID for testing etc.
+func EmptySessionWithID(id string) *Session {
+	result := EmptySession()
+
+	result.s.ID = id
+
+	return result
+}
+
 // ContextWithSession returns a new Context with an attached session
 func ContextWithSession(ctx context.Context, session *Session) context.Context {
 	return context.WithValue(ctx, contextSession, session)

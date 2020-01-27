@@ -44,6 +44,7 @@ core: auth: {
 			idToken: [...string]
 			userInfo: [...string]
 		}
+		enableEndSessionEndpoint: bool | *true
 	}
 }
 `

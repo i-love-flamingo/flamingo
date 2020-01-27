@@ -53,12 +53,10 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 		}
 		return c.identityService.AuthenticateFor(ctx, broker, request)
 	case "logoutall":
-		c.identityService.Logout(ctx, request)
-		return c.responder.URLRedirect(&url.URL{ForceQuery: true})
+		return c.identityService.Logout(ctx, request, &url.URL{Path: request.Request().URL.Path, ForceQuery: true})
 	case "logout":
 		broker, _ := request.Query1("__debug__broker")
-		c.identityService.LogoutFor(ctx, broker, request)
-		return c.responder.URLRedirect(&url.URL{ForceQuery: true})
+		return c.identityService.LogoutFor(ctx, broker, request, &url.URL{Path: request.Request().URL.Path, ForceQuery: true})
 	}
 
 	buf := new(bytes.Buffer)

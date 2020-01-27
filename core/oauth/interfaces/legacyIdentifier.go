@@ -103,6 +103,10 @@ func (identifier *LegacyIdentifier) Callback(ctx context.Context, request *web.R
 }
 
 // Logout using the legacy logout controller
-func (identifier *LegacyIdentifier) Logout(ctx context.Context, request *web.Request) {
-	identifier.logoutController.Get(ctx, request)
+func (identifier *LegacyIdentifier) Logout(ctx context.Context, request *web.Request) *url.URL {
+	resp := identifier.logoutController.Get(ctx, request)
+	if ur, ok := resp.(*web.URLRedirectResponse); ok {
+		return ur.URL
+	}
+	return nil
 }

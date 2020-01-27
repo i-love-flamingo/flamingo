@@ -1,0 +1,92 @@
+{
+  "realm": "Realm1",
+  "displayName": "Realm 1",
+  "displayNameHtml": "Realm 1",
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 1,
+  "accessTokenLifespan": 20,
+  "ssoSessionMaxLifespan": 18000,
+  "offlineSessionIdleTimeout": 86400,
+  "accessCodeLifespanLogin": 180,
+  "enabled": true,
+  "sslRequired": "none",
+  "bruteForceProtected": true,
+  "loginTheme": "keycloak",
+  "accountTheme": "keycloak",
+  "adminTheme": "keycloak",
+  "emailTheme": "keycloak",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "en"
+  ],
+  "defaultLocale": "en",
+  "passwordPolicy": "lowerCase(1)",
+  "clients": [
+    {
+      "clientId": "client1",
+      "name": "client1",
+      "description": "client1",
+      "redirectUris": [
+        "*"
+      ],
+      "webOrigins": [],
+      "publicClient": true,
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "client1",
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "nodeReRegistrationTimeout": -1,
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": true,
+          "consentText": "${email}",
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "email",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "email",
+            "jsonType.label": "String"
+          }
+        }
+      ],
+      "useTemplateConfig": false,
+      "useTemplateScope": false,
+      "useTemplateMappers": false,
+      "access": {
+        "view": true,
+        "configure": true,
+        "manage": true
+      }
+    }
+  ],
+  "users": [
+    {
+      "enabled" : true,
+      "emailVerified" : true,
+      "username": "user",
+      "firstName" : "First",
+      "lastName" : "Last",
+      "email": "user@example.com",
+      "credentials": [
+        {
+          "type" : "password",
+          "value" : "password"
+        }
+      ]
+    }
+  ]
+}

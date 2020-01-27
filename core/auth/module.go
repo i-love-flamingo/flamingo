@@ -60,7 +60,7 @@ type routes struct {
 
 // Inject controller
 func (r *routes) Inject(debugController *debugController, controller *controller, cfg *struct {
-	Debug bool `inject:"config:flamingo.debug.mode"`
+	Debug bool `inject:"config:core.auth.web.debugController"`
 }) {
 	r.debugController = debugController
 	r.controller = controller
@@ -86,10 +86,9 @@ func (r *routes) Routes(router *web.RouterRegistry) {
 // CueConfig schema
 func (*WebModule) CueConfig() string {
 	return `
-core: auth: {
-	web: {
-		broker: [...{broker: string, typ: string}]
-	}
+core: auth: web: {
+	broker: [...{broker: string, typ: string}]
+	debugController: bool | *flamingo.debug.mode
 }
 `
 }

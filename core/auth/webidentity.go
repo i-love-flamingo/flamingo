@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/gob"
 	"fmt"
 	"net/url"
 
@@ -35,11 +36,17 @@ type (
 		Logout(ctx context.Context, request *web.Request)
 	}
 
+	// WebLogoutWithRedirect logs user out and redirects to an sso logout endpoint
+	WebLogoutWithRedirect interface {
+		Logout(ctx context.Context, request *web.Request) *url.URL
+	}
+
 	// WebIdentityService calls one or more identifier to get all possible identities of a user
 	WebIdentityService struct {
 		identityProviders []RequestIdentifier
 		reverseRouter     web.ReverseRouter
 		eventRouter       flamingo.EventRouter
+		responder         *web.Responder
 	}
 
 	// WebLoginEvent for the current request
@@ -61,10 +68,12 @@ func (s *WebIdentityService) Inject(
 	identityProviders []RequestIdentifier,
 	reverseRouter web.ReverseRouter,
 	eventRouter flamingo.EventRouter,
+	responder *web.Responder,
 ) *WebIdentityService {
 	s.identityProviders = identityProviders
 	s.reverseRouter = reverseRouter
 	s.eventRouter = eventRouter
+	s.responder = responder
 	return s
 }
 
@@ -178,26 +187,47 @@ func (s *WebIdentityService) callback(ctx context.Context, request *web.Request)
 	return nil
 }
 
-// Logout logs all user out
-func (s *WebIdentityService) Logout(ctx context.Context, request *web.Request) {
-	for _, provider := range s.identityProviders {
-		if authenticator, ok := provider.(WebLogouter); ok {
-			authenticator.Logout(ctx, request)
-			s.eventRouter.Dispatch(ctx, &WebLogoutEvent{Request: request, Broker: provider.Broker()})
+func (s *WebIdentityService) logoutRedirect(request *web.Request, postLogoutRedirect *url.URL) web.Result {
+	if len(s.getLogoutRedirects(request)) > 0 {
+		if postLogoutRedirect != nil {
+			request.Session().Store("core.auth.logoutredirect", postLogoutRedirect)
+		} else {
+			request.Session().Delete("core.auth.logoutredirect")
 		}
+		return s.responder.RouteRedirect("core.auth.logoutCallback", nil)
 	}
+	if postLogoutRedirect != nil {
+		return s.responder.URLRedirect(postLogoutRedirect)
+	}
+	return s.responder.RouteRedirect("", nil)
 }
 
-// LogoutFor logs a specific broker out
-func (s *WebIdentityService) LogoutFor(ctx context.Context, broker string, request *web.Request) {
+func (s *WebIdentityService) logout(ctx context.Context, request *web.Request, postLogoutRedirect *url.URL, broker string, all bool) web.Result {
+	s.storeLogoutRedirects(request, redirectURLlist{})
+
 	for _, provider := range s.identityProviders {
-		if provider.Broker() == broker {
+		if provider.Broker() == broker || all {
 			if authenticator, ok := provider.(WebLogouter); ok {
 				authenticator.Logout(ctx, request)
+				s.eventRouter.Dispatch(ctx, &WebLogoutEvent{Request: request, Broker: provider.Broker()})
+			} else if authenticator, ok := provider.(WebLogoutWithRedirect); ok {
+				s.addLogoutRedirect(request, authenticator.Logout(ctx, request))
 				s.eventRouter.Dispatch(ctx, &WebLogoutEvent{Request: request, Broker: provider.Broker()})
 			}
 		}
 	}
+
+	return s.logoutRedirect(request, postLogoutRedirect)
+}
+
+// Logout logs all user out
+func (s *WebIdentityService) Logout(ctx context.Context, request *web.Request, postLogoutRedirect *url.URL) web.Result {
+	return s.logout(ctx, request, postLogoutRedirect, "", true)
+}
+
+// LogoutFor logs a specific broker out
+func (s *WebIdentityService) LogoutFor(ctx context.Context, broker string, request *web.Request, postLogoutRedirect *url.URL) web.Result {
+	return s.logout(ctx, request, postLogoutRedirect, broker, false)
 }
 
 // RequestIdentifier returns the given request identifier
@@ -208,4 +238,30 @@ func (s *WebIdentityService) RequestIdentifier(broker string) RequestIdentifier 
 		}
 	}
 	return nil
+}
+
+type redirectURLlist []*url.URL
+
+func init() {
+	gob.Register(redirectURLlist{})
+	gob.Register(new(url.URL))
+}
+
+func (s *WebIdentityService) addLogoutRedirect(request *web.Request, u *url.URL) {
+	if u == nil {
+		return
+	}
+	redirects := s.getLogoutRedirects(request)
+	redirects = append(redirects, u)
+	s.storeLogoutRedirects(request, redirects)
+}
+
+func (s *WebIdentityService) getLogoutRedirects(request *web.Request) []*url.URL {
+	rawredirects, _ := request.Session().Load("core.auth.logoutredirects")
+	redirects, _ := rawredirects.(redirectURLlist)
+	return redirects
+}
+
+func (s *WebIdentityService) storeLogoutRedirects(request *web.Request, redirects []*url.URL) {
+	request.Session().Store("core.auth.logoutredirects", redirectURLlist(redirects))
 }

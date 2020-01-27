@@ -57,13 +57,13 @@ type (
 	}
 
 	oidcConfig struct {
-		Broker              string   `json:"broker"`
-		Endpoint            string   `json:"endpoint"`
-		ClientID            string   `json:"clientID"`
-		ClientSecret        string   `json:"clientSecret"`
-		Scopes              []string `json:"scopes"`
-		EnabledOfflineToken bool     `json:"enabledOfflineToken"`
-		Claimset            struct {
+		Broker             string   `json:"broker"`
+		Endpoint           string   `json:"endpoint"`
+		ClientID           string   `json:"clientID"`
+		ClientSecret       string   `json:"clientSecret"`
+		Scopes             []string `json:"scopes"`
+		EnableOfflineToken bool     `json:"enableOfflineToken"`
+		Claimset           struct {
 			IDToken  []string `json:"idToken"`
 			UserInfo []string `json:"userInfo"`
 		} `json:"requestClaims"`
@@ -71,6 +71,7 @@ type (
 			IDToken     map[string]string `json:"idToken"`
 			AccessToken map[string]string `json:"accessToken"`
 		} `json:"claims"`
+		EnableEndSessionEndpoint bool `json:"enableEndSessionEndpoint"`
 	}
 )
 
@@ -93,7 +94,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	}
 
 	scopes := append([]string{oidc.ScopeOpenID}, oidcConfig.Scopes...)
-	if oidcConfig.EnabledOfflineToken {
+	if oidcConfig.EnableOfflineToken {
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
@@ -367,8 +368,33 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 }
 
 // Logout based on a request
-func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) {
+func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) *url.URL {
+	identity, err := i.Identify(ctx, request)
 	request.Session().Delete(i.sessionCode("sessiondata"))
+
+	// return if we are not logged in
+	if identity == nil || err != nil || !i.oidcConfig.EnableEndSessionEndpoint {
+		return nil
+	}
+
+	var claims struct {
+		EndSessionEndpoint string `json:"end_session_endpoint"`
+	}
+	// we can ignore errors here as we are just fine handling default values
+	if err := i.OpenIDConnectProvider().Claims(&claims); err != nil {
+		return nil
+	}
+	if claims.EndSessionEndpoint == "" {
+		return nil
+	}
+	returnURL, err := url.Parse(claims.EndSessionEndpoint)
+	if err != nil {
+		return nil
+	}
+	query := returnURL.Query()
+	query.Set("id_token_hint", identity.(*oidcIdentity).rawIDToken)
+	returnURL.RawQuery = query.Encode()
+	return returnURL
 }
 
 // OpenIDConnectProvider getter for openID Connect Provider

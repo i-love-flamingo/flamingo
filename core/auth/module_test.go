@@ -7,7 +7,7 @@ import (
 )
 
 func TestModule(t *testing.T) {
-	if err := config.TryModules(nil, new(WebModule)); err != nil {
+	if err := config.TryModules(config.Map{"flamingo.debug.mode": true}, new(WebModule)); err != nil {
 		t.Error(err)
 	}
 }

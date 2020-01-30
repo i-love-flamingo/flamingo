@@ -10,11 +10,8 @@ import (
 
 type (
 	Identifier struct {
-		broker string
-	}
-
-	Authenticator struct {
 		responder *web.Responder
+		broker    string
 	}
 )
 
@@ -28,13 +25,13 @@ func (i *Identifier) Broker() string {
 	return i.broker
 }
 
-func (a *Authenticator) Authenticate(ctx context.Context, _ *web.Request) web.Result {
-	fakeAuthUrl, _ := url.Parse(fakeAuthURL)
-	return a.responder.URLRedirect(fakeAuthUrl)
+func (i *Identifier) Authenticate(ctx context.Context, _ *web.Request) web.Result {
+	authUrl, _ := url.Parse(fakeAuthURL)
+	authUrl.Query().Add("broker", i.Broker())
+	return i.responder.URLRedirect(authUrl)
 }
 
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
-
 	fakeSubject := "" // TODO
 
 	return &Identity{

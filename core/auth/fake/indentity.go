@@ -17,8 +17,3 @@ func (i *Identity) Subject() string {
 func (i *Identity) Broker() string {
 	return i.broker
 }
-
-// SetBroker Setter
-func (i *Identity) SetBroker(broker string) {
-	i.broker = broker
-}

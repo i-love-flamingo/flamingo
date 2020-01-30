@@ -8,9 +8,9 @@ import (
 
 type (
 	idpController struct {
-		template      string
 		responder     *web.Responder
 		reverseRouter web.ReverseRouter
+		template      string
 	}
 
 	viewData struct {
@@ -18,8 +18,24 @@ type (
 	}
 )
 
-// FakeAuth action to simulate OIDC / Oauth Login Page
-func (c *idpController) FakeAuth(_ context.Context, r *web.Request) web.Result {
+// Inject injects module dependencies
+func (c *idpController) Inject(
+	reverseRouter web.ReverseRouter,
+	cfg *struct {
+		Template string `inject:"config:auth.fake.loginTemplate"`
+	},
+) *idpController {
+	c.reverseRouter = reverseRouter
+
+	if cfg != nil {
+		c.template = cfg.Template
+	}
+
+	return c
+}
+
+// Auth action to simulate OIDC / Oauth Login Page
+func (c *idpController) Auth(_ context.Context, r *web.Request) web.Result {
 	broker, err := r.Query1("broker")
 	if err != nil || broker == "" {
 		return c.responder.ServerError(err)

@@ -20,11 +20,13 @@ type (
 
 // Inject injects module dependencies
 func (c *idpController) Inject(
+	responder *web.Responder,
 	reverseRouter web.ReverseRouter,
 	cfg *struct {
 		Template string `inject:"config:auth.fake.loginTemplate"`
 	},
 ) *idpController {
+	c.responder = responder
 	c.reverseRouter = reverseRouter
 
 	if cfg != nil {

@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 
 	"flamingo.me/flamingo/v3/framework/web"
-	"golang.org/x/oauth2"
+	xy
 )
 
 type (

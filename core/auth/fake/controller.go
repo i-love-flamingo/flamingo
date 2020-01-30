@@ -18,6 +18,7 @@ type (
 	}
 )
 
+// FakeAuth action to simulate OIDC / Oauth Login Page
 func (c *idpController) FakeAuth(_ context.Context, r *web.Request) web.Result {
 	broker, err := r.Query1("broker")
 	if err != nil || broker == "" {

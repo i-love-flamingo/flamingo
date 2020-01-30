@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// Identifier is the fake Identifier implementation
 	Identifier struct {
 		responder *web.Responder
 		broker    string
@@ -21,16 +22,20 @@ var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
 )
 
+// Broker returns the broker id from the config
 func (i *Identifier) Broker() string {
 	return i.broker
 }
 
+// Authenticate action, fake
 func (i *Identifier) Authenticate(ctx context.Context, _ *web.Request) web.Result {
-	authUrl, _ := url.Parse(fakeAuthURL)
-	authUrl.Query().Add("broker", i.Broker())
-	return i.responder.URLRedirect(authUrl)
+	authURL, _ := url.Parse(fakeAuthURL)
+	authURL.Query().Add("broker", i.Broker())
+
+	return i.responder.URLRedirect(authURL)
 }
 
+// Identify action, fake
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	fakeSubject := "" // TODO
 

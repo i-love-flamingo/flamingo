@@ -377,6 +377,7 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 			engine:   r.engine,
 			DataResponse: DataResponse{
 				Data: map[string]interface{}{
+					"base":  r.router.base.Path,
 					"code":  status,
 					"error": errstr,
 				},

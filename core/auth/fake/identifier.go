@@ -20,6 +20,7 @@ const fakeAuthURL string = "/fake/auth"
 
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
+	_ auth.WebCallbacker     = (*Identifier)(nil)
 )
 
 // Broker returns the broker id from the config
@@ -45,4 +46,8 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 		subject: fakeSubject,
 		broker:  i.broker,
 	}, nil
+}
+
+func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
+
 }

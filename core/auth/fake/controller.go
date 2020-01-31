@@ -18,6 +18,14 @@ type (
 	}
 )
 
+const defaultIDPContentHtml = `
+<body>
+  <h1>Login!</h1>
+  <form action="{{.FormURL}}">
+  </form>
+</body>
+`
+
 // Inject injects module dependencies
 func (c *idpController) Inject(
 	responder *web.Responder,

@@ -370,6 +370,12 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 	if r.debug {
 		errstr = fmt.Sprintf("%+v", err)
 	}
+
+	basePath := ""
+	if r.router != nil {
+		basePath = r.router.base.Path
+	}
+
 	return &ServerErrorResponse{
 		Error: err,
 		RenderResponse: RenderResponse{
@@ -377,7 +383,7 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 			engine:   r.engine,
 			DataResponse: DataResponse{
 				Data: map[string]interface{}{
-					"base":  r.router.base.Path,
+					"base":  basePath,
 					"code":  status,
 					"error": errstr,
 				},

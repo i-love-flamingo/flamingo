@@ -28,9 +28,11 @@ func (i *Identifier) Broker() string {
 }
 
 // Authenticate action, fake
-func (i *Identifier) Authenticate(ctx context.Context, _ *web.Request) web.Result {
+func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result {
 	authURL, _ := url.Parse(fakeAuthURL)
-	authURL.Query().Add("broker", i.Broker())
+	urlValues := url.Values{}
+	urlValues.Add("broker", i.Broker())
+	authURL.RawQuery = urlValues.Encode()
 
 	return i.responder.URLRedirect(authURL)
 }

@@ -4,6 +4,7 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3"
 	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/core/auth/example/custom"
 	"flamingo.me/flamingo/v3/core/auth/http"
 	"flamingo.me/flamingo/v3/core/auth/oauth"
 	"flamingo.me/flamingo/v3/core/requestlogger"
@@ -15,5 +16,7 @@ func main() {
 		new(auth.WebModule),
 		new(oauth.Module),
 		new(http.Module),
+		new(custom.OidcModule),
+		new(custom.StaticModule),
 	})
 }

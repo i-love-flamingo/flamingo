@@ -4,6 +4,7 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/auth/fake/interfaces"
+	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -16,6 +17,15 @@ type (
 	}
 )
 
+// Interface compliance compile type checks
+var (
+	_ (dingo.Module)           = (*Module)(nil)
+	_ (dingo.Depender)         = (*Module)(nil)
+	_ (config.CueConfigModule) = (*Module)(nil)
+
+	_ (web.RoutesModule) = (*routes)(nil)
+)
+
 // Configure dependency injection
 func (*Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
@@ -24,15 +34,22 @@ func (*Module) Configure(injector *dingo.Injector) {
 // CueConfig schema
 func (*Module) CueConfig() string {
 	return `
-core: auth:
-    fake::
-	  loginTemplate: string | *"" 
-      usernameFieldId: string | *""
-      passwordFieldId: string | *""
-      otpFieldId: string | *""
-      userConfig:
-        validatePassword: bool
-        validateOtp: bool
+core: auth: fake: {
+	UserConfig :: {
+		password: string
+		otp: string | *""
+	}
+
+	loginTemplate: string | *"" 
+	userConfig: {
+		[string]: UserConfig
+	}
+	validatePassword: bool | *true
+	validateOtp: bool | *false
+	usernameFieldId: string | *"username"
+	passwordFieldId: string | *"password"
+	otpFieldId: string | *"m2fa-otp"
+}
 `
 }
 

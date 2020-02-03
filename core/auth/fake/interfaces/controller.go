@@ -25,8 +25,11 @@ type (
 	}
 
 	viewData struct {
-		FormURL string
-		Message string
+		FormURL    string
+		Message    string
+		UsernameID string
+		PasswordID string
+		OtpID      string
 	}
 )
 
@@ -49,12 +52,12 @@ const defaultIDPTemplate = `
   <h1>Login!</h1>
   <form name="fake-idp-form" action="{{.FormURL}}" method="post">
 	<div>{{.Message}}</div>
-	<label for="username">Username</label>   
-	<input type="text" name="username" id="username">
-	<label for="password">Password</label>
-    <input type="password" name="password" id="password">
-	<label for="m2fa-otp">2 Factor OTP</label>    
-    <input type="text" name="m2fa-otp" id="m2fa-otp">
+	<label for="{{.UsernameID}}">Username</label>   
+	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
+	<label for="{{.PasswordID}}">Password</label>
+    <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
+	<label for="{{.OtpID}}">2 Factor OTP</label>    
+    <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
 	<button type="submit" id="submit">Fake Login</button> 
   </form>
 </body>
@@ -129,8 +132,11 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 
 	if c.template != "" {
 		return c.responder.Render(c.template, viewData{
-			FormURL: formURL.String(),
-			Message: formError.Error(),
+			FormURL:    formURL.String(),
+			Message:    formError.Error(),
+			UsernameID: c.usernameFieldID,
+			PasswordID: c.passwordFieldID,
+			OtpID:      c.otpFieldID,
 		})
 	}
 
@@ -148,8 +154,11 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	err = t.Execute(
 		body,
 		viewData{
-			FormURL: formURL.String(),
-			Message: formError.Error(),
+			FormURL:    formURL.String(),
+			Message:    formError.Error(),
+			UsernameID: c.usernameFieldID,
+			PasswordID: c.passwordFieldID,
+			OtpID:      c.otpFieldID,
 		})
 	if err != nil {
 		return c.responder.ServerError(err)

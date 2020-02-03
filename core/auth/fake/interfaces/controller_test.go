@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"flamingo.me/flamingo/v3/framework/config"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
+	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 type (

@@ -3,12 +3,12 @@ package interfaces
 import (
 	"context"
 	"errors"
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"fmt"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/auth/fake/domain"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 

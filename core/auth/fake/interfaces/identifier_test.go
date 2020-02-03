@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-
 	"flamingo.me/flamingo/v3/framework/web"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestIdentifier_Whitebox_Authenticate(t *testing.T) {

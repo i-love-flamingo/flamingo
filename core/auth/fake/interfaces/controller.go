@@ -45,6 +45,8 @@ const (
 	defaultUserNameFieldID = "username"
 	defaultPasswordFieldID = "password"
 	defaultOtpFieldID      = "m2fa-otp"
+
+	userNameSessionKey = "core.auth.fake.user"
 )
 
 const defaultIDPTemplate = `
@@ -172,9 +174,6 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 }
 
 func (c *IdpController) handlePostValues(ctx context.Context, values map[string][]string, broker string) error {
-	// TODO: make this configurable
-	// TODO: make sure password and otp are only verified when configured
-
 	usernameVal, ok := values[c.usernameFieldID]
 	if !ok {
 		return errors.New(errMissingUsername)
@@ -224,6 +223,9 @@ func (c *IdpController) handlePostValues(ctx context.Context, values map[string]
 			return errors.New(errOtpMismatch)
 		}
 	}
+
+	sess := web.SessionFromContext(ctx)
+	sess.Store(userNameSessionKey, user)
 
 	return nil
 }

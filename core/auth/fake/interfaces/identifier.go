@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"context"
+	"errors"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
@@ -22,6 +23,7 @@ const fakeAuthURL string = "/fake/auth"
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
 	_ auth.WebCallbacker     = (*Identifier)(nil)
+	_ auth.WebLogouter       = (*Identifier)(nil)
 )
 
 // Broker returns the broker id from the config
@@ -41,11 +43,22 @@ func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result 
 
 // Identify action, fake
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
-	fakeSubject := "" // TODO
+	sess := web.SessionFromContext(ctx)
+	userSubject, ok := sess.Load(userNameSessionKey)
+	if !ok {
+		return nil, errors.New("identity not saved in session")
+	}
 
-	return domain.NewIdentity(fakeSubject, i.broker), nil
+	return domain.NewIdentity(userSubject.(string), i.broker), nil
 }
 
+// Callback from fake idp
 func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
-	panic("not implemtddededdd")
+
+}
+
+// Logout logs out
+func (i *Identifier) Logout(ctx context.Context, request *web.Request) {
+	sess := web.SessionFromContext(ctx)
+	sess.Delete(userNameSessionKey)
 }

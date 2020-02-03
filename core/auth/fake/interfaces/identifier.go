@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"errors"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"fmt"
 	"net/url"
 
@@ -14,8 +15,9 @@ import (
 type (
 	// Identifier is the fake Identifier implementation
 	Identifier struct {
-		responder *web.Responder
-		broker    string
+		responder   *web.Responder
+		broker      string
+		eventRouter flamingo.EventRouter
 	}
 )
 
@@ -57,14 +59,16 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 
 // Callback from fake idp
 func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
-	_ = ctx
-	_ = request
-	_ = returnTo
+	identity, err := i.Identify(ctx, request)
+	if err != nil {
+		i.Logout(ctx, request)
 
-	return &web.ServerErrorResponse{
-		RenderResponse: web.RenderResponse{},
-		Error:          errors.New("not implemented"),
+		return i.responder.ServerError(err)
 	}
+
+	i.eventRouter.Dispatch(ctx, &auth.WebLoginEvent{Broker: i.broker, Request: request, Identity: identity})
+
+	return i.responder.URLRedirect(returnTo(request))
 }
 
 // Logout logs out

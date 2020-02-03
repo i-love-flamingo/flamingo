@@ -40,7 +40,7 @@ func TestModule_CueConfig(t *testing.T) {
 							},
 							"testUserB": config.Map{
 								"password": "testUserBPassword",
-								"otp":      "testUserBOtp",
+								"otp":      "testUserBotp",
 							},
 						},
 						"validatePassword": true,

@@ -2,13 +2,12 @@ package fake
 
 import (
 	"flamingo.me/dingo"
-
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/auth/fake/interfaces"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-// Module provides OpenID Connect support
+// Module provides Fake OpenID Connect support
 type (
 	Module struct{}
 
@@ -25,20 +24,15 @@ func (*Module) Configure(injector *dingo.Injector) {
 // CueConfig schema
 func (*Module) CueConfig() string {
 	return `
-auth:
-  fake:
-    userConfig:
-      validatePassword: true
-      validateOtp: true
-      userData:
-        -
-          username: "user_a"
-          password: "testa"
-          otp: "123"
-        -
-          username: "user_b"
-          password: "testb"
-          otp: "456"
+core: auth:
+    fake::
+	  loginTemplate: string | *"" 
+      usernameFieldId: string | *""
+      passwordFieldId: string | *""
+      otpFieldId: string | *""
+      userConfig:
+        validatePassword: bool
+        validateOtp: bool
 `
 }
 

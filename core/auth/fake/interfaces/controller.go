@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"flamingo.me/flamingo/v3/framework/config"
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -47,7 +48,7 @@ const (
 	defaultPasswordFieldID = "password"
 	defaultOtpFieldID      = "m2fa-otp"
 
-	userNameSessionKey = "core.auth.fake.user"
+	userNameSessionKey = "core.auth.fake.%s.user"
 )
 
 const defaultIDPTemplate = `
@@ -71,13 +72,13 @@ func (c *IdpController) Inject(
 	responder *web.Responder,
 	reverseRouter web.ReverseRouter,
 	cfg *struct {
-		Template         string     `inject:"config:auth.fake.loginTemplate,optional"`
-		UserConfig       config.Map `inject:"config:auth.fake.userConfig"`
-		ValidatePassword bool       `inject:"config:auth.fake.validatePassword,optional"`
-		ValidateOtp      bool       `inject:"config:auth.fake.validateOtp,optional"`
-		UsernameFieldID  string     `inject:"config:auth.fake.usernameFieldId,optional"`
-		PasswordFieldID  string     `inject:"config:auth.fake.passwordFieldId,optional"`
-		OtpFieldID       string     `inject:"config:auth.fake.otpFieldId,optional"`
+		Template         string     `inject:"config:core.auth.fake.loginTemplate,optional"`
+		UserConfig       config.Map `inject:"config:core.auth.fake.userConfig"`
+		ValidatePassword bool       `inject:"config:core.auth.fake.validatePassword,optional"`
+		ValidateOtp      bool       `inject:"config:core.auth.fake.validateOtp,optional"`
+		UsernameFieldID  string     `inject:"config:core.auth.fake.usernameFieldId,optional"`
+		PasswordFieldID  string     `inject:"config:core.auth.fake.passwordFieldId,optional"`
+		OtpFieldID       string     `inject:"config:core.auth.fake.otpFieldId,optional"`
 	},
 ) *IdpController {
 	c.responder = responder
@@ -226,7 +227,7 @@ func (c *IdpController) handlePostValues(ctx context.Context, values map[string]
 	}
 
 	sess := web.SessionFromContext(ctx)
-	sess.Store(userNameSessionKey, user)
+	sess.Store(fmt.Sprintf(userNameSessionKey, broker), user)
 
 	return nil
 }

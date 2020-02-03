@@ -2,7 +2,9 @@ package fake
 
 import (
 	"flamingo.me/dingo"
+
 	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/core/auth/fake/interfaces"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -11,7 +13,7 @@ type (
 	Module struct{}
 
 	routes struct {
-		fakeController *idpController
+		fakeController *interfaces.idpController
 	}
 )
 

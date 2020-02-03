@@ -1,4 +1,4 @@
-package fake
+package domain
 
 type (
 	// Identity mocks auth.Identity
@@ -7,6 +7,10 @@ type (
 		broker  string
 	}
 )
+
+func NewIdentity(subject string, broker string) *Identity {
+	return &Identity{subject: subject, broker: broker}
+}
 
 // Subject getter
 func (i *Identity) Subject() string {

@@ -1,10 +1,11 @@
-package fake
+package interfaces
 
 import (
 	"context"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -42,12 +43,9 @@ func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result 
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	fakeSubject := "" // TODO
 
-	return &Identity{
-		subject: fakeSubject,
-		broker:  i.broker,
-	}, nil
+	return domain.NewIdentity(fakeSubject, i.broker), nil
 }
 
 func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
-
+	panic("not implemtddededdd")
 }

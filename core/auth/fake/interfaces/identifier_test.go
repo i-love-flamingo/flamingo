@@ -1,4 +1,4 @@
-package fake
+package interfaces
 
 import (
 	"net/http"

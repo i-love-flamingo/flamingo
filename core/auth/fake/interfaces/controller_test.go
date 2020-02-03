@@ -36,6 +36,8 @@ func (m mockRouter) Absolute(r *web.Request, to string, params map[string]string
 }
 
 func Test_idpController_Auth(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		responder        *web.Responder
 		reverseRouter    web.ReverseRouter
@@ -79,6 +81,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -112,6 +115,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -147,6 +151,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", errMissingUsername, 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -192,6 +197,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", errInvalidUser, 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -280,6 +286,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", errPasswordMismatch, 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -372,6 +379,7 @@ func Test_idpController_Auth(t *testing.T) {
 				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", errOtpMismatch, 1)
+					result = replaceStandardFormIDs(result)
 
 					return bytes.NewBuffer([]byte(result))
 				}(),
@@ -469,4 +477,12 @@ func Test_idpController_Auth(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func replaceStandardFormIDs(content string) string {
+	result := strings.Replace(content, "{{.UsernameID}}", defaultUserNameFieldID, -1)
+	result = strings.Replace(result, "{{.PasswordID}}", defaultPasswordFieldID, -1)
+	result = strings.Replace(result, "{{.OtpID}}", defaultOtpFieldID, -1)
+
+	return result
 }

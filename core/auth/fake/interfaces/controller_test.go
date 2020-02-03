@@ -25,7 +25,7 @@ type (
 var _ web.ReverseRouter = (*mockRouter)(nil)
 
 // Relative mock action
-func (m mockRouter) Relative(to string, params map[string]string) (*url.URL, error) {
+func (m *mockRouter) Relative(to string, params map[string]string) (*url.URL, error) {
 	_ = to
 	_ = params
 
@@ -33,7 +33,7 @@ func (m mockRouter) Relative(to string, params map[string]string) (*url.URL, err
 }
 
 // Absolut mock action
-func (m mockRouter) Absolute(r *web.Request, to string, params map[string]string) (*url.URL, error) {
+func (m *mockRouter) Absolute(r *web.Request, to string, params map[string]string) (*url.URL, error) {
 	_ = r
 	_ = to
 	_ = params

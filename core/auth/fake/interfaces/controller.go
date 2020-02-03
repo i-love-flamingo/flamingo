@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"flamingo.me/flamingo/v3/framework/config"
 	"html/template"
 	"net/http"
 
@@ -11,10 +12,16 @@ import (
 )
 
 type (
-	idpController struct {
-		responder     *web.Responder
-		reverseRouter web.ReverseRouter
-		template      string
+	IdpController struct {
+		responder        *web.Responder
+		reverseRouter    web.ReverseRouter
+		template         string
+		userConfig       config.Map
+		validatePassword bool
+		validateOtp      bool
+		usernameFieldID  string
+		passwordFieldID  string
+		otpFieldID       string
 	}
 
 	viewData struct {
@@ -23,8 +30,19 @@ type (
 	}
 )
 
-const errMissingUsername = "missing username"
-const errInvalidUser = "invalid user"
+const (
+	errMissingUsername  = "missing username"
+	errInvalidUser      = "invalid user"
+	errMissingPassword  = "missing password"
+	errFakeConfigFaulty = "fake auth config error"
+	errPasswordMismatch = "password mismatch"
+	errOtpMismatch      = "otp mismatch"
+	errMissingOtp       = "otp missing"
+
+	defaultUserNameFieldID = "username"
+	defaultPasswordFieldID = "password"
+	defaultOtpFieldID      = "m2fa-otp"
+)
 
 const defaultIDPTemplate = `
 <body>
@@ -43,25 +61,47 @@ const defaultIDPTemplate = `
 `
 
 // Inject injects module dependencies
-func (c *idpController) Inject(
+func (c *IdpController) Inject(
 	responder *web.Responder,
 	reverseRouter web.ReverseRouter,
 	cfg *struct {
-		Template string `inject:"config:auth.fake.loginTemplate"`
+		Template         string     `inject:"config:auth.fake.loginTemplate,optional"`
+		UserConfig       config.Map `inject:"config:auth.fake.userConfig"`
+		ValidatePassword bool       `inject:"config:auth.fake.validatePassword,optional"`
+		ValidateOtp      bool       `inject:"config:auth.fake.validateOtp,optional"`
+		UsernameFieldID  string     `inject:"config:auth.fake.usernameFieldId,optional"`
+		PasswordFieldID  string     `inject:"config:auth.fake.passwordFieldId,optional"`
+		OtpFieldID       string     `inject:"config:auth.fake.otpFieldId,optional"`
 	},
-) *idpController {
+) *IdpController {
 	c.responder = responder
 	c.reverseRouter = reverseRouter
 
 	if cfg != nil {
 		c.template = cfg.Template
+		c.userConfig = cfg.UserConfig
+		c.validatePassword = cfg.ValidatePassword
+		c.validateOtp = cfg.ValidateOtp
+		c.usernameFieldID = cfg.UsernameFieldID
+		c.passwordFieldID = cfg.PasswordFieldID
+		c.otpFieldID = cfg.OtpFieldID
+	}
+
+	if c.usernameFieldID == "" {
+		c.usernameFieldID = defaultUserNameFieldID
+	}
+	if c.passwordFieldID == "" {
+		c.passwordFieldID = defaultPasswordFieldID
+	}
+	if c.otpFieldID == "" {
+		c.otpFieldID = defaultOtpFieldID
 	}
 
 	return c
 }
 
 // Auth action to simulate OIDC / Oauth Login Page
-func (c *idpController) Auth(ctx context.Context, r *web.Request) web.Result {
+func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	broker, err := r.Query1("broker")
 	if err != nil || broker == "" {
 		return c.responder.ServerError(err)
@@ -122,17 +162,58 @@ func (c *idpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	}
 }
 
-func (c *idpController) handlePostValues(ctx context.Context, values map[string][]string, broker string) error {
+func (c *IdpController) handlePostValues(ctx context.Context, values map[string][]string, broker string) error {
 	// TODO: make this configurable
+	// TODO: make sure password and otp are only verified when configured
 
-	if _, ok := values["username"]; !ok {
+	usernameVal, ok := values[c.usernameFieldID]
+	if !ok {
 		return errors.New(errMissingUsername)
 	}
 
-	user, _ := values["username"]
-	// TODO: check user against config and save in session
-	if user[0] != "test" {
+	user := usernameVal[0]
+
+	userCfgRaw, found := c.userConfig.Get(user)
+	if !found {
 		return errors.New(errInvalidUser)
+	}
+
+	userCfg := userCfgRaw.(config.Map)
+
+	if c.validatePassword {
+		passwordVal, ok := values[c.passwordFieldID]
+		if !ok {
+			return errors.New(errMissingPassword)
+		}
+
+		expectedPassword := passwordVal[0]
+		userPasswordRaw, found := userCfg.Get("password")
+		if !found {
+			return errors.New(errFakeConfigFaulty)
+		}
+
+		userPassword := userPasswordRaw.(string)
+		if expectedPassword != userPassword {
+			return errors.New(errPasswordMismatch)
+		}
+	}
+
+	if c.validateOtp {
+		otpVal, ok := values[c.otpFieldID]
+		if !ok {
+			return errors.New(errMissingOtp)
+		}
+
+		expectedOtp := otpVal[0]
+		userOtpRaw, found := userCfg.Get("otp")
+		if !found {
+			return errors.New(errFakeConfigFaulty)
+		}
+
+		userOtp := userOtpRaw.(string)
+		if expectedOtp != userOtp {
+			return errors.New(errOtpMismatch)
+		}
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package interfaces
 import (
 	"bytes"
 	"context"
+	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
@@ -36,9 +37,12 @@ func (m mockRouter) Absolute(r *web.Request, to string, params map[string]string
 
 func Test_idpController_Auth(t *testing.T) {
 	type fields struct {
-		responder     *web.Responder
-		reverseRouter web.ReverseRouter
-		template      string
+		responder        *web.Responder
+		reverseRouter    web.ReverseRouter
+		template         string
+		fakeUserData     config.Map
+		validatePassword bool
+		validateOtp      bool
 	}
 
 	type args struct {
@@ -72,7 +76,7 @@ func Test_idpController_Auth(t *testing.T) {
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
-				Body:   func() *bytes.Buffer {
+				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
 
@@ -105,7 +109,7 @@ func Test_idpController_Auth(t *testing.T) {
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
-				Body:   func() *bytes.Buffer {
+				Body: func() *bytes.Buffer {
 					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
 
@@ -157,6 +161,16 @@ func Test_idpController_Auth(t *testing.T) {
 				responder:     &web.Responder{},
 				reverseRouter: &mockRouter{},
 				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
 			},
 			args: args{
 				r: web.CreateRequest(
@@ -167,7 +181,7 @@ func Test_idpController_Auth(t *testing.T) {
 							Scheme:   "http",
 						},
 						PostForm: url.Values{
-							"username": []string{"invalid user"},
+							"username": []string{"nonexistent user"},
 						},
 					},
 					web.EmptySession(),
@@ -186,20 +200,272 @@ func Test_idpController_Auth(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "login for valid user without pwd/otp",
+			fields: fields{
+				responder:     &web.Responder{},
+				reverseRouter: &mockRouter{},
+				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
+			},
+			args: args{
+				r: web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							RawQuery: "broker=testBroker",
+							Scheme:   "http",
+						},
+						PostForm: url.Values{
+							"username": []string{"user_b"},
+						},
+					},
+					web.EmptySession(),
+				),
+			},
+			want: &web.RouteRedirectResponse{
+				Response: web.Response{
+					Status: http.StatusSeeOther,
+					Header: http.Header{},
+				},
+				To:   "core.auth.callback(broker)",
+				Data: map[string]string{"broker": "testBroker"},
+			},
+		},
+		{
+			name: "login for valid user with password mismatch but w/o otp",
+			fields: fields{
+				responder:     &web.Responder{},
+				reverseRouter: &mockRouter{},
+				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
+				validatePassword: true,
+			},
+			args: args{
+				r: web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							RawQuery: "broker=testBroker",
+							Scheme:   "http",
+						},
+						PostForm: url.Values{
+							"username": []string{"user_b"},
+							"password": []string{"invalid password"},
+						},
+					},
+					web.EmptySession(),
+				),
+			},
+			want: &web.Response{
+				Status: http.StatusOK,
+				Body: func() *bytes.Buffer {
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result = strings.Replace(result, "{{.Message}}", errPasswordMismatch, 1)
+
+					return bytes.NewBuffer([]byte(result))
+				}(),
+				Header: http.Header{
+					"ContentType": {"text/html; charset=utf-8"},
+				},
+			},
+		},
+		{
+			name: "login for valid user / valid password / w/o otp",
+			fields: fields{
+				responder:     &web.Responder{},
+				reverseRouter: &mockRouter{},
+				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
+				validatePassword: true,
+			},
+			args: args{
+				r: web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							RawQuery: "broker=testBroker",
+							Scheme:   "http",
+						},
+						PostForm: url.Values{
+							"username": []string{"user_b"},
+							"password": []string{"test_b"},
+						},
+					},
+					web.EmptySession(),
+				),
+			},
+			want: &web.RouteRedirectResponse{
+				Response: web.Response{
+					Status: http.StatusSeeOther,
+					Header: http.Header{},
+				},
+				To:   "core.auth.callback(broker)",
+				Data: map[string]string{"broker": "testBroker"},
+			},
+		},
+		{
+			name: "login for valid user with password, otp mismatch",
+			fields: fields{
+				responder:     &web.Responder{},
+				reverseRouter: &mockRouter{},
+				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
+				validatePassword: true,
+				validateOtp:      true,
+			},
+			args: args{
+				r: web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							RawQuery: "broker=testBroker",
+							Scheme:   "http",
+						},
+						PostForm: url.Values{
+							"username": []string{"user_b"},
+							"password": []string{"test_b"},
+							"m2fa-otp": []string{"invalid otp"},
+						},
+					},
+					web.EmptySession(),
+				),
+			},
+			want: &web.Response{
+				Status: http.StatusOK,
+				Body: func() *bytes.Buffer {
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result = strings.Replace(result, "{{.Message}}", errOtpMismatch, 1)
+
+					return bytes.NewBuffer([]byte(result))
+				}(),
+				Header: http.Header{
+					"ContentType": {"text/html; charset=utf-8"},
+				},
+			},
+		},
+		{
+			name: "login for valid user / valid password / valid otp",
+			fields: fields{
+				responder:     &web.Responder{},
+				reverseRouter: &mockRouter{},
+				template:      "",
+				fakeUserData: config.Map{
+					"user_a": config.Map{
+						"password": "test_a",
+						"otp":      "otp_a",
+					},
+					"user_b": config.Map{
+						"password": "test_b",
+						"otp":      "otp_b",
+					},
+				},
+				validatePassword: true,
+				validateOtp:      true,
+			},
+			args: args{
+				r: web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							RawQuery: "broker=testBroker",
+							Scheme:   "http",
+						},
+						PostForm: url.Values{
+							"username": []string{"user_b"},
+							"password": []string{"test_b"},
+							"m2fa-otp": []string{"otp_b"},
+						},
+					},
+					web.EmptySession(),
+				),
+			},
+			want: &web.RouteRedirectResponse{
+				Response: web.Response{
+					Status: http.StatusSeeOther,
+					Header: http.Header{},
+				},
+				To:   "core.auth.callback(broker)",
+				Data: map[string]string{"broker": "testBroker"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &idpController{
-				responder:     tt.fields.responder,
-				reverseRouter: tt.fields.reverseRouter,
-				template:      tt.fields.template,
+			c := new(IdpController)
+
+			testConfig := new(struct {
+				Template         string
+				UserConfig       config.Map
+				ValidatePassword bool
+				ValidateOtp      bool
+				UsernameFieldID  string
+				PasswordFieldID  string
+				OtpFieldID       string
+			})
+
+			testConfig.Template = tt.fields.template
+			testConfig.ValidatePassword = tt.fields.validatePassword
+			testConfig.ValidateOtp = tt.fields.validateOtp
+
+			if tt.fields.fakeUserData != nil {
+				testConfig.UserConfig = tt.fields.fakeUserData
 			}
+
+			c.Inject(
+				tt.fields.responder,
+				tt.fields.reverseRouter,
+				(*struct {
+					Template         string     `inject:"config:auth.fake.loginTemplate,optional"`
+					UserConfig       config.Map `inject:"config:auth.fake.userConfig"`
+					ValidatePassword bool       `inject:"config:auth.fake.validatePassword,optional"`
+					ValidateOtp      bool       `inject:"config:auth.fake.validateOtp,optional"`
+					UsernameFieldID  string     `inject:"config:auth.fake.usernameFieldId,optional"`
+					PasswordFieldID  string     `inject:"config:auth.fake.passwordFieldId,optional"`
+					OtpFieldID       string     `inject:"config:auth.fake.otpFieldId,optional"`
+				})(testConfig),
+			)
 
 			ctx := web.ContextWithSession(context.Background(), web.EmptySession())
 			got := c.Auth(ctx, tt.args.r)
 
-			// if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreUnexported(bytes.Buffer{}, web.RouteRedirectResponse{})); diff != "" {
 			assert.Equal(t, tt.want, got)
 		})
 	}

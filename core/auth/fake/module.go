@@ -13,7 +13,7 @@ type (
 	Module struct{}
 
 	routes struct {
-		fakeController *interfaces.idpController
+		fakeController *interfaces.IdpController
 	}
 )
 
@@ -25,6 +25,20 @@ func (*Module) Configure(injector *dingo.Injector) {
 // CueConfig schema
 func (*Module) CueConfig() string {
 	return `
+auth:
+  fake:
+    userConfig:
+      validatePassword: true
+      validateOtp: true
+      userData:
+        -
+          username: "user_a"
+          password: "testa"
+          otp: "123"
+        -
+          username: "user_b"
+          password: "testb"
+          otp: "456"
 `
 }
 

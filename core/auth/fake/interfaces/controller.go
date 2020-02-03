@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"flamingo.me/flamingo/v3/framework/config"
 	"fmt"
 	"html/template"
 	"net/http"
 
+	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 

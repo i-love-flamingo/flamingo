@@ -3,13 +3,12 @@ package interfaces
 import (
 	"bytes"
 	"context"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/stretchr/testify/mock"
 
 	"flamingo.me/flamingo/v3/framework/web"
@@ -73,7 +72,12 @@ func Test_idpController_Auth(t *testing.T) {
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
-				Body:   bytes.NewBuffer([]byte(strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1))),
+				Body:   func() *bytes.Buffer {
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result = strings.Replace(result, "{{.Message}}", "", 1)
+
+					return bytes.NewBuffer([]byte(result))
+				}(),
 				Header: http.Header{
 					"ContentType": {"text/html; charset=utf-8"},
 				},
@@ -101,7 +105,12 @@ func Test_idpController_Auth(t *testing.T) {
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
-				Body:   bytes.NewBuffer([]byte(strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1))),
+				Body:   func() *bytes.Buffer {
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result = strings.Replace(result, "{{.Message}}", "", 1)
+
+					return bytes.NewBuffer([]byte(result))
+				}(),
 				Header: http.Header{
 					"ContentType": {"text/html; charset=utf-8"},
 				},
@@ -190,9 +199,8 @@ func Test_idpController_Auth(t *testing.T) {
 			ctx := web.ContextWithSession(context.Background(), web.EmptySession())
 			got := c.Auth(ctx, tt.args.r)
 
-			if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreUnexported(bytes.Buffer{}, web.RouteRedirectResponse{})); diff != "" {
-				t.Errorf("Auth() = %v, -got +want", diff)
-			}
+			// if diff := cmp.Diff(got, tt.want, cmpopts.IgnoreUnexported(bytes.Buffer{}, web.RouteRedirectResponse{})); diff != "" {
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

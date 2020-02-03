@@ -69,7 +69,8 @@ func (c *idpController) Auth(ctx context.Context, r *web.Request) web.Result {
 
 	formError := errors.New("")
 
-	if postValues, err := r.FormAll(); len(postValues) > 0 && err != nil {
+	postValues, err := r.FormAll()
+	if err == nil && len(postValues) > 0 {
 		formError = c.handlePostValues(ctx, postValues, broker)
 
 		if formError == nil {
@@ -125,7 +126,11 @@ func (c *idpController) handlePostValues(ctx context.Context, values map[string]
 		return errors.New(errMissingUsername)
 	}
 
+	user, _ := values["username"]
 	// TODO: check user against config and save in session
+	if user[0] != "test" {
+		return errors.New(errInvalidUser)
+	}
 
 	return nil
 }

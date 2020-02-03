@@ -70,11 +70,14 @@ func (c *idpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	formError := errors.New("")
 
 	postValues, err := r.FormAll()
-	if err == nil && len(postValues) > 0 {
-		formError = c.handlePostValues(ctx, postValues, broker)
+	if err == nil {
+		delete(postValues, "broker")
+		if len(postValues) > 0 {
+			formError = c.handlePostValues(ctx, postValues, broker)
 
-		if formError == nil {
-			return c.responder.RouteRedirect("core.auth.callback(broker)", map[string]string{"broker": broker})
+			if formError == nil {
+				return c.responder.RouteRedirect("core.auth.callback(broker)", map[string]string{"broker": broker})
+			}
 		}
 	}
 

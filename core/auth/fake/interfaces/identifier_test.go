@@ -15,6 +15,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 		responder *web.Responder
 		broker    string
 	}
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -38,6 +39,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &Identifier{

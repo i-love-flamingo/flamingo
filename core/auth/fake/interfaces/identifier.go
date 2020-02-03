@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
@@ -43,8 +44,10 @@ func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result 
 
 // Identify action, fake
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
+	_ = request
+
 	sess := web.SessionFromContext(ctx)
-	userSubject, ok := sess.Load(userNameSessionKey)
+	userSubject, ok := sess.Load(fmt.Sprintf(userNameSessionKey, i.broker))
 	if !ok {
 		return nil, errors.New("identity not saved in session")
 	}
@@ -54,11 +57,20 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 
 // Callback from fake idp
 func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
+	_ = ctx
+	_ = request
+	_ = returnTo
 
+	return &web.ServerErrorResponse{
+		RenderResponse: web.RenderResponse{},
+		Error:          errors.New("not implemented"),
+	}
 }
 
 // Logout logs out
 func (i *Identifier) Logout(ctx context.Context, request *web.Request) {
+	_ = request
+
 	sess := web.SessionFromContext(ctx)
-	sess.Delete(userNameSessionKey)
+	sess.Delete(fmt.Sprintf(userNameSessionKey, i.broker))
 }

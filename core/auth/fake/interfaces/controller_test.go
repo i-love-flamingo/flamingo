@@ -3,6 +3,7 @@ package interfaces
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -23,13 +24,21 @@ type (
 
 var _ web.ReverseRouter = (*mockRouter)(nil)
 
+// Relative mock action
 func (m mockRouter) Relative(to string, params map[string]string) (*url.URL, error) {
-	panic("implement me")
+	_ = to
+	_ = params
+
+	return nil, errors.New("not implemented")
 }
 
+// Absolut mock action
 func (m mockRouter) Absolute(r *web.Request, to string, params map[string]string) (*url.URL, error) {
-	resultURL := &url.URL{}
+	_ = r
+	_ = to
+	_ = params
 
+	resultURL := &url.URL{}
 	result, _ := resultURL.Parse("test")
 
 	return result, nil
@@ -461,13 +470,13 @@ func Test_idpController_Auth(t *testing.T) {
 				tt.fields.responder,
 				tt.fields.reverseRouter,
 				(*struct {
-					Template         string     `inject:"config:auth.fake.loginTemplate,optional"`
-					UserConfig       config.Map `inject:"config:auth.fake.userConfig"`
-					ValidatePassword bool       `inject:"config:auth.fake.validatePassword,optional"`
-					ValidateOtp      bool       `inject:"config:auth.fake.validateOtp,optional"`
-					UsernameFieldID  string     `inject:"config:auth.fake.usernameFieldId,optional"`
-					PasswordFieldID  string     `inject:"config:auth.fake.passwordFieldId,optional"`
-					OtpFieldID       string     `inject:"config:auth.fake.otpFieldId,optional"`
+					Template         string     `inject:"config:core.auth.fake.loginTemplate,optional"`
+					UserConfig       config.Map `inject:"config:core.auth.fake.userConfig"`
+					ValidatePassword bool       `inject:"config:core.auth.fake.validatePassword,optional"`
+					ValidateOtp      bool       `inject:"config:core.auth.fake.validateOtp,optional"`
+					UsernameFieldID  string     `inject:"config:core.auth.fake.usernameFieldId,optional"`
+					PasswordFieldID  string     `inject:"config:core.auth.fake.passwordFieldId,optional"`
+					OtpFieldID       string     `inject:"config:core.auth.fake.otpFieldId,optional"`
 				})(testConfig),
 			)
 

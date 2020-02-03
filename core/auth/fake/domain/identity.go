@@ -8,6 +8,7 @@ type (
 	}
 )
 
+// NewIdentity provider
 func NewIdentity(subject string, broker string) *Identity {
 	return &Identity{subject: subject, broker: broker}
 }

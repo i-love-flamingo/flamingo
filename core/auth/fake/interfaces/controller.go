@@ -12,6 +12,7 @@ import (
 )
 
 type (
+	// IdpController is the fake identity provider controller
 	IdpController struct {
 		responder        *web.Responder
 		reverseRouter    web.ReverseRouter

@@ -34,7 +34,11 @@ var tpl = template.Must(template.New("debug").Parse(
 <h2>Active Identities</h2>
 <a href="?__debug__action=logoutall">Logout All</a><br/>
 {{ range .Identities }}
-{{ .Broker}}/{{ .Subject }}: {{ printf "%T: %s" . . }} <a href="?__debug__action=logout&__debug__broker={{ .Broker }}">Logout</a><br />
+{{ if .Identity }}
+{{ .Broker }}: {{ .Identity.Broker}}/{{ .Identity.Subject }}: {{ printf "%T: %s" .Identity .Identity }} <a href="?__debug__action=logout&__debug__broker={{ .Broker }}">Logout</a><br />
+{{ else }}
+{{ .Broker }}: {{ .Error }}<br/>
+{{ end }}
 {{ end }}
 <hr/>
 `))
@@ -59,13 +63,25 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 		return c.identityService.LogoutFor(ctx, broker, request, &url.URL{Path: request.Request().URL.Path, ForceQuery: true})
 	}
 
+	type identityInfo struct {
+		Broker   string
+		Identity Identity
+		Error    error
+	}
+	identities := make([]identityInfo, len(c.identityService.identityProviders))
+
+	for i, ip := range c.identityService.identityProviders {
+		identity, err := ip.Identify(ctx, request)
+		identities[i] = identityInfo{Broker: ip.Broker(), Identity: identity, Error: err}
+	}
+
 	buf := new(bytes.Buffer)
 	err := tpl.Execute(buf, struct {
 		Identifier []RequestIdentifier
-		Identities []Identity
+		Identities []identityInfo
 	}{
 		Identifier: c.identityService.identityProviders,
-		Identities: c.identityService.IdentifyAll(ctx, request),
+		Identities: identities,
 	})
 	if err != nil {
 		return c.responder.ServerError(err)

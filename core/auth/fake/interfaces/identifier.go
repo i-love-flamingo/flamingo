@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"errors"
+	"flamingo.me/flamingo/v3/framework/config"
 	"fmt"
 	"net/url"
 
@@ -19,6 +20,22 @@ type (
 		broker      string
 		eventRouter flamingo.EventRouter
 	}
+
+	fakeConfig struct {
+		Broker           string                `json:"broker"`
+		LoginTemplate    string                `json:"loginTemplate"`
+		ValidatePassword string                `json:"validatePassword"`
+		ValidateOtp      bool                  `json:"validatePassword"`
+		UsernameFieldID  string                `json:"usernameFieldId"`
+		PasswordFieldID  string                `json:"passwordFieldId"`
+		OtpFieldID       string                `json:"otpFieldId"`
+		UserConfig       map[string]userConfig `json:"userConfig"`
+	}
+
+	userConfig struct {
+		Password string `json:"password"`
+		Otp      string `json:"otp"`
+	}
 )
 
 // FakeAuthURL - URL to fake login page
@@ -29,6 +46,17 @@ var (
 	_ auth.WebCallbacker     = (*Identifier)(nil)
 	_ auth.WebLogouter       = (*Identifier)(nil)
 )
+
+// FakeIdentityProviderFactory -
+func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
+	var fakeConfig fakeConfig
+
+	if err := cfg.MapInto(&fakeConfig); err != nil {
+		return nil, err
+	}
+
+	return &Identifier{broker: fakeConfig.Broker}, nil
+}
 
 // Broker returns the broker id from the config
 func (i *Identifier) Broker() string {
@@ -50,12 +78,16 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 	_ = request
 
 	sess := web.SessionFromContext(ctx)
-	userSubject, ok := sess.Load(fmt.Sprintf(userNameSessionKey, i.broker))
+	userSessionData, ok := sess.Load(fmt.Sprintf(userDataSessionKey, i.broker))
 	if !ok {
 		return nil, errors.New("identity not saved in session")
 	}
 
-	return domain.NewIdentity(userSubject.(string), i.broker), nil
+	if usd, ok := userSessionData.(domain.UserSessionData); ok {
+		return domain.NewIdentity(usd.Subject, i.broker), nil
+	}
+
+	return nil, errors.New("session data not properly decoded")
 }
 
 // Callback from fake idp
@@ -77,5 +109,5 @@ func (i *Identifier) Logout(ctx context.Context, request *web.Request) {
 	_ = request
 
 	sess := web.SessionFromContext(ctx)
-	sess.Delete(fmt.Sprintf(userNameSessionKey, i.broker))
+	sess.Delete(fmt.Sprintf(userDataSessionKey, i.broker))
 }

@@ -29,6 +29,8 @@ var (
 // Configure dependency injection
 func (*Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
+
+	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(interfaces.FakeIdentityProviderFactory)
 }
 
 // CueConfig schema

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -48,7 +49,7 @@ const (
 	defaultPasswordFieldID = "password"
 	defaultOtpFieldID      = "m2fa-otp"
 
-	userNameSessionKey = "core.auth.fake.%s.user"
+	userDataSessionKey = "core.auth.fake.%s.data"
 )
 
 const defaultIDPTemplate = `
@@ -226,8 +227,9 @@ func (c *IdpController) handlePostValues(ctx context.Context, values map[string]
 		}
 	}
 
+	sessionData := domain.UserSessionData{Subject: user}
 	sess := web.SessionFromContext(ctx)
-	sess.Store(fmt.Sprintf(userNameSessionKey, broker), user)
+	sess.Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
 
 	return nil
 }

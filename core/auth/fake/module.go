@@ -19,11 +19,11 @@ type (
 
 // Interface compliance compile type checks
 var (
-	_ (dingo.Module)           = (*Module)(nil)
-	_ (dingo.Depender)         = (*Module)(nil)
-	_ (config.CueConfigModule) = (*Module)(nil)
+	_ dingo.Module           = (*Module)(nil)
+	_ dingo.Depender         = (*Module)(nil)
+	_ config.CueConfigModule = (*Module)(nil)
 
-	_ (web.RoutesModule) = (*routes)(nil)
+	_ web.RoutesModule = (*routes)(nil)
 )
 
 // Configure dependency injection

@@ -33,7 +33,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 					Header: http.Header{},
 				},
 				URL: &url.URL{
-					Path:     fakeAuthURL,
+					Path:     FakeAuthURL,
 					RawQuery: "broker=testBroker",
 				},
 			},

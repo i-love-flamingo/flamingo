@@ -21,7 +21,8 @@ type (
 	}
 )
 
-const fakeAuthURL string = "/fake/auth"
+// FakeAuthURL - URL to fake login page
+const FakeAuthURL string = "/fake/auth"
 
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
@@ -36,7 +37,7 @@ func (i *Identifier) Broker() string {
 
 // Authenticate action, fake
 func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result {
-	authURL, _ := url.Parse(fakeAuthURL)
+	authURL, _ := url.Parse(FakeAuthURL)
 	urlValues := url.Values{}
 	urlValues.Add("broker", i.Broker())
 	authURL.RawQuery = urlValues.Encode()

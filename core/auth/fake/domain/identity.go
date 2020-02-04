@@ -1,24 +1,26 @@
 package domain
 
+import "flamingo.me/flamingo/v3/core/auth/mock"
+
 type (
 	// Identity mocks auth.Identity
 	Identity struct {
-		subject string
-		broker  string
+		mock.Identity
+		mock.OIDCIdentity
+	}
+
+	// UserSessionData user session data stored upon successful authentication
+	UserSessionData struct {
+		Subject string
 	}
 )
 
 // NewIdentity provider
 func NewIdentity(subject string, broker string) *Identity {
-	return &Identity{subject: subject, broker: broker}
-}
+	id := Identity{
+		Identity: mock.Identity{Sub: subject},
+	}
+	id.SetBroker(broker)
 
-// Subject getter
-func (i *Identity) Subject() string {
-	return i.subject
-}
-
-// Broker getter
-func (i *Identity) Broker() string {
-	return i.broker
+	return &id
 }

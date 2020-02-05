@@ -50,6 +50,10 @@ var (
 	identifierConfig map[string]fakeConfig
 )
 
+func init() {
+	identifierConfig = make(map[string]fakeConfig)
+}
+
 // FakeIdentityProviderFactory -
 func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var fakeConfig fakeConfig

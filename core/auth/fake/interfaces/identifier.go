@@ -25,7 +25,7 @@ type (
 	fakeConfig struct {
 		Broker           string                `json:"broker"`
 		LoginTemplate    string                `json:"loginTemplate"`
-		ValidatePassword string                `json:"validatePassword"`
+		ValidatePassword bool                  `json:"validatePassword"`
 		ValidateOtp      bool                  `json:"validatePassword"`
 		UsernameFieldID  string                `json:"usernameFieldId"`
 		PasswordFieldID  string                `json:"passwordFieldId"`
@@ -46,6 +46,8 @@ var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
 	_ auth.WebCallbacker     = (*Identifier)(nil)
 	_ auth.WebLogouter       = (*Identifier)(nil)
+
+	identifierConfig map[string]fakeConfig
 )
 
 // FakeIdentityProviderFactory -
@@ -55,6 +57,8 @@ func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error)
 	if err := cfg.MapInto(&fakeConfig); err != nil {
 		return nil, err
 	}
+
+	identifierConfig[fakeConfig.Broker] = fakeConfig
 
 	return &Identifier{broker: fakeConfig.Broker}, nil
 }

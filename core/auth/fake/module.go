@@ -43,21 +43,25 @@ func (r *routes) Inject(fakeController *interfaces.IdpController) *routes {
 // CueConfig schema
 func (*Module) CueConfig() string {
 	return `
-core: auth: fake: {
+core: auth: {
 	UserConfig :: {
 		password: string
 		otp: string | *""
 	}
 
-	loginTemplate: string | *"" 
-	userConfig: {
-		[string]: UserConfig
+	fake :: {
+		typ: "fake"
+		broker: string
+		loginTemplate: string | *"" 
+		userConfig: {
+			[string]: UserConfig
+		}
+		validatePassword: bool | *true
+		validateOtp: bool | *false
+		usernameFieldId: string | *"username"
+		passwordFieldId: string | *"password"
+		otpFieldId: string | *"m2fa-otp"
 	}
-	validatePassword: bool | *true
-	validateOtp: bool | *false
-	usernameFieldId: string | *"username"
-	passwordFieldId: string | *"password"
-	otpFieldId: string | *"m2fa-otp"
 }
 `
 }

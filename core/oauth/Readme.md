@@ -1,5 +1,11 @@
 # OAuth module
 
+## Deprecation Notice
+
+This module is deprecated, flamingo.me/flamingo/v3/core/auth should be used instead.
+
+---
+
 OpenId connect implementation to login against a configured SSO
 
 ## Configuration example

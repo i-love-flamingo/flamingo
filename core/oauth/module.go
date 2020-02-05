@@ -14,6 +14,7 @@ import (
 )
 
 // Module for core.auth
+// Deprecated: use core/auth instead
 type Module struct {
 	UseFake                     bool   `inject:"config:core.oauth.useFake"`
 	PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`

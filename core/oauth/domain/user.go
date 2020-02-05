@@ -14,6 +14,7 @@ type (
 	UserType string
 
 	// User is a basic authenticated user
+	// Deprecated: use core/auth Identities instead
 	User struct {
 		Sub          string
 		Name         string

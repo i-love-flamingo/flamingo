@@ -41,6 +41,7 @@ func init() {
 
 type (
 	// AuthManager handles authentication related operations
+	// Deprecated: use core/auth instead
 	AuthManager struct {
 		server              string
 		secret              string

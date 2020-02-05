@@ -9,12 +9,14 @@ import (
 
 type (
 	// UserService helps to use the authenticated user information
+	// Deprecated: use core/auth instead
 	UserService struct {
 		authManager    *AuthManager
 		mappingService *domain.UserMappingService
 	}
 
 	// UserServiceInterface to mock in tests
+	// Deprecated: use core/auth instead
 	UserServiceInterface interface {
 		GetUser(ctx context.Context, session *web.Session) *domain.User
 		IsLoggedIn(ctx context.Context, session *web.Session) bool

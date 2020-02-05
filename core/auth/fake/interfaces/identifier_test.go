@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-
 	"flamingo.me/flamingo/v3/framework/web"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,10 +27,10 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 		{
 			name: "redirects to fake auth with broker parameter",
 			fields: fields{
-				responder:   &web.Responder{},
-				broker:      "testBroker",
-				reverseRouter: web.ReverseRouter()
-				eventRouter: &flamingo.DefaultEventRouter{},
+				responder:     &web.Responder{},
+				broker:        "testBroker",
+				reverseRouter: &mockRouter{},
+				eventRouter:   &flamingo.DefaultEventRouter{},
 			},
 			want: &web.URLRedirectResponse{
 				Response: web.Response{
@@ -39,8 +38,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 					Header: http.Header{},
 				},
 				URL: &url.URL{
-					Path:     FakeAuthURL,
-					RawQuery: "broker=testBroker",
+					Path: FakeAuthURL,
 				},
 			},
 		},
@@ -49,8 +47,9 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &Identifier{
-				responder: tt.fields.responder,
-				broker:    tt.fields.broker,
+				responder:     tt.fields.responder,
+				broker:        tt.fields.broker,
+				reverseRouter: tt.fields.reverseRouter,
 			}
 
 			got := i.Authenticate(nil, nil)

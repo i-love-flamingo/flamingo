@@ -3,12 +3,12 @@ package interfaces
 import (
 	"context"
 	"errors"
-	"flamingo.me/flamingo/v3/framework/config"
 	"fmt"
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/auth/fake/domain"
+	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -39,7 +39,7 @@ type (
 )
 
 // FakeAuthURL - URL to fake login page
-const FakeAuthURL string = "/fake/auth"
+const FakeAuthURL string = "/core/auth/fake"
 
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)

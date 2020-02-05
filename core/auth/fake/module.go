@@ -33,6 +33,13 @@ func (*Module) Configure(injector *dingo.Injector) {
 	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(interfaces.FakeIdentityProviderFactory)
 }
 
+// Inject injects routed dependencies
+func (r *routes) Inject(fakeController *interfaces.IdpController) *routes {
+	r.fakeController = fakeController
+
+	return r
+}
+
 // CueConfig schema
 func (*Module) CueConfig() string {
 	return `

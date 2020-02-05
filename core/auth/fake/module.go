@@ -71,6 +71,6 @@ func (*Module) Depends() []dingo.Module {
 
 // Routes configuration
 func (r *routes) Routes(router *web.RouterRegistry) {
-	_, _ = router.Route(interfaces.FakeAuthURL, "core.auth.fake.auth")
+	_, _ = router.Route(interfaces.FakeAuthURL, "core.auth.fake.auth(broker)")
 	router.HandleAny("core.auth.fake.auth", r.fakeController.Auth)
 }

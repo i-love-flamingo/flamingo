@@ -19,6 +19,7 @@ import (
 type (
 	mockRouter struct {
 		mock.Mock
+		broker string
 	}
 )
 
@@ -39,7 +40,7 @@ func (m *mockRouter) Absolute(r *web.Request, to string, params map[string]strin
 	_ = params
 
 	resultURL := &url.URL{}
-	result, _ := resultURL.Parse("test")
+	result, _ := resultURL.Parse(strings.Replace(FakeAuthURL, ":broker", m.broker, 1))
 
 	return result, nil
 }
@@ -69,26 +70,31 @@ func Test_idpController_Auth(t *testing.T) {
 		{
 			name: "simple controller call with empty template to test fallback template",
 			fields: fields{
-				responder:     &web.Responder{},
-				reverseRouter: &mockRouter{},
-				template:      "",
+				responder: &web.Responder{},
+				reverseRouter: &mockRouter{
+					broker: "testBroker",
+				},
+				template: "",
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodGet,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: func() *web.Request {
+					res := web.CreateRequest(
+						&http.Request{
+							Method: http.MethodGet,
+							URL: &url.URL{
+								Scheme: "http",
+							},
 						},
-					},
-					web.EmptySession(),
-				),
+						web.EmptySession(),
+					)
+					res.Params = web.RequestParams{"broker": "testBroker"}
+					return res
+				}(),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/testBroker", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
 					result = replaceStandardFormIDs(result)
 
@@ -107,17 +113,20 @@ func Test_idpController_Auth(t *testing.T) {
 				template:      "",
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: func() *web.Request {
+					res := web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{},
 						},
-						PostForm: url.Values{},
-					},
-					web.EmptySession(),
-				),
+						web.EmptySession(),
+					)
+					res.Params = web.RequestParams{"broker": "testBroker"}
+					return res
+				}(),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
@@ -141,19 +150,22 @@ func Test_idpController_Auth(t *testing.T) {
 				template:      "",
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: func() *web.Request {
+					res := web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"invalid-field": []string{"just to get into the form handling"},
+							},
 						},
-						PostForm: url.Values{
-							"invalid-field": []string{"just to get into the form handling"},
-						},
-					},
-					web.EmptySession(),
-				),
+						web.EmptySession(),
+					)
+					res.Params = web.RequestParams{"broker": "testBroker"}
+					return res
+				}(),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,

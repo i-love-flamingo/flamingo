@@ -112,7 +112,7 @@ func (c *IdpController) Inject(
 func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	broker, ok := r.Params["broker"]
 	if !ok || broker == "" {
-		return c.responder.ServerError(errors.New("broker nor known"))
+		return c.responder.ServerError(errors.New("broker not known"))
 	}
 
 	formError := errors.New("")

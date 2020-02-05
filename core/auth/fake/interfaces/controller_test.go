@@ -113,8 +113,8 @@ func Test_idpController_Auth(t *testing.T) {
 				template:      "",
 			},
 			args: args{
-				r: func() *web.Request {
-					res := web.CreateRequest(
+				r: addRequestParameters(
+					web.CreateRequest(
 						&http.Request{
 							Method: http.MethodPost,
 							URL: &url.URL{
@@ -123,15 +123,13 @@ func Test_idpController_Auth(t *testing.T) {
 							PostForm: url.Values{},
 						},
 						web.EmptySession(),
-					)
-					res.Params = web.RequestParams{"broker": "testBroker"}
-					return res
-				}(),
+					),
+				),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/", 1)
 					result = strings.Replace(result, "{{.Message}}", "", 1)
 					result = replaceStandardFormIDs(result)
 
@@ -150,27 +148,24 @@ func Test_idpController_Auth(t *testing.T) {
 				template:      "",
 			},
 			args: args{
-				r: func() *web.Request {
-					res := web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"invalid-field": []string{"just to get into the form handling"},
-							},
+				r: addRequestParameters(web.CreateRequest(
+					&http.Request{
+						Method: http.MethodPost,
+						URL: &url.URL{
+							Scheme: "http",
 						},
-						web.EmptySession(),
-					)
-					res.Params = web.RequestParams{"broker": "testBroker"}
-					return res
-				}(),
+						PostForm: url.Values{
+							"invalid-field": []string{"just to get into the form handling"},
+						},
+					},
+					web.EmptySession(),
+				),
+				),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/", 1)
 					result = strings.Replace(result, "{{.Message}}", errMissingUsername, 1)
 					result = replaceStandardFormIDs(result)
 
@@ -199,24 +194,25 @@ func Test_idpController_Auth(t *testing.T) {
 				},
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"nonexistent user"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"nonexistent user"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/", 1)
 					result = strings.Replace(result, "{{.Message}}", errInvalidUser, 1)
 					result = replaceStandardFormIDs(result)
 
@@ -245,18 +241,19 @@ func Test_idpController_Auth(t *testing.T) {
 				},
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"user_b"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"user_b"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.RouteRedirectResponse{
@@ -264,7 +261,7 @@ func Test_idpController_Auth(t *testing.T) {
 					Status: http.StatusSeeOther,
 					Header: http.Header{},
 				},
-				To:   "core.auth.callback(broker)",
+				To:   "core.auth.callback",
 				Data: map[string]string{"broker": "testBroker"},
 			},
 		},
@@ -287,28 +284,28 @@ func Test_idpController_Auth(t *testing.T) {
 				validatePassword: true,
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"user_b"},
+								"password": []string{"invalid password"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"user_b"},
-							"password": []string{"invalid password"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/", 1)
 					result = strings.Replace(result, "{{.Message}}", errPasswordMismatch, 1)
 					result = replaceStandardFormIDs(result)
-
 					return bytes.NewBuffer([]byte(result))
 				}(),
 				Header: http.Header{
@@ -335,19 +332,20 @@ func Test_idpController_Auth(t *testing.T) {
 				validatePassword: true,
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"user_b"},
+								"password": []string{"test_b"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"user_b"},
-							"password": []string{"test_b"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.RouteRedirectResponse{
@@ -355,7 +353,7 @@ func Test_idpController_Auth(t *testing.T) {
 					Status: http.StatusSeeOther,
 					Header: http.Header{},
 				},
-				To:   "core.auth.callback(broker)",
+				To:   "core.auth.callback",
 				Data: map[string]string{"broker": "testBroker"},
 			},
 		},
@@ -379,26 +377,27 @@ func Test_idpController_Auth(t *testing.T) {
 				validateOtp:      true,
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"user_b"},
+								"password": []string{"test_b"},
+								"m2fa-otp": []string{"invalid otp"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"user_b"},
-							"password": []string{"test_b"},
-							"m2fa-otp": []string{"invalid otp"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.Response{
 				Status: http.StatusOK,
 				Body: func() *bytes.Buffer {
-					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/test", 1)
+					result := strings.Replace(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/", 1)
 					result = strings.Replace(result, "{{.Message}}", errOtpMismatch, 1)
 					result = replaceStandardFormIDs(result)
 
@@ -429,20 +428,21 @@ func Test_idpController_Auth(t *testing.T) {
 				validateOtp:      true,
 			},
 			args: args{
-				r: web.CreateRequest(
-					&http.Request{
-						Method: http.MethodPost,
-						URL: &url.URL{
-							RawQuery: "broker=testBroker",
-							Scheme:   "http",
+				r: addRequestParameters(
+					web.CreateRequest(
+						&http.Request{
+							Method: http.MethodPost,
+							URL: &url.URL{
+								Scheme: "http",
+							},
+							PostForm: url.Values{
+								"username": []string{"user_b"},
+								"password": []string{"test_b"},
+								"m2fa-otp": []string{"otp_b"},
+							},
 						},
-						PostForm: url.Values{
-							"username": []string{"user_b"},
-							"password": []string{"test_b"},
-							"m2fa-otp": []string{"otp_b"},
-						},
-					},
-					web.EmptySession(),
+						web.EmptySession(),
+					),
 				),
 			},
 			want: &web.RouteRedirectResponse{
@@ -450,7 +450,7 @@ func Test_idpController_Auth(t *testing.T) {
 					Status: http.StatusSeeOther,
 					Header: http.Header{},
 				},
-				To:   "core.auth.callback(broker)",
+				To:   "core.auth.callback",
 				Data: map[string]string{"broker": "testBroker"},
 			},
 		},
@@ -506,4 +506,10 @@ func replaceStandardFormIDs(content string) string {
 	result = strings.Replace(result, "{{.OtpID}}", defaultOtpFieldID, -1)
 
 	return result
+}
+
+func addRequestParameters(request *web.Request) *web.Request {
+
+	request.Params = web.RequestParams{"broker": "testBroker"}
+	return request
 }

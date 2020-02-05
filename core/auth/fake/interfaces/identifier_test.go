@@ -29,7 +29,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 			fields: fields{
 				responder:     &web.Responder{},
 				broker:        "testBroker",
-				reverseRouter: &mockRouter{},
+				reverseRouter: &mockRouter{broker: "testBroker"},
 				eventRouter:   &flamingo.DefaultEventRouter{},
 			},
 			want: &web.URLRedirectResponse{
@@ -38,7 +38,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 					Header: http.Header{},
 				},
 				URL: &url.URL{
-					Path: FakeAuthURL,
+					Path: "/core/auth/fake/testBroker",
 				},
 			},
 		},

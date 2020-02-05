@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"fmt"
 	"html/template"
 	"net/http"
 
+	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -130,7 +130,7 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	}
 
 	// get formURL to callback with broker filled in
-	formURL, err := c.reverseRouter.Absolute(r, "core.auth.callback(broker)", map[string]string{"broker": broker})
+	formURL, err := c.reverseRouter.Absolute(r, "core.auth.callback", map[string]string{"broker": broker})
 	if err != nil {
 		return c.responder.ServerError(err)
 	}

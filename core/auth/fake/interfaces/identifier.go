@@ -16,9 +16,10 @@ import (
 type (
 	// Identifier is the fake Identifier implementation
 	Identifier struct {
-		responder   *web.Responder
-		broker      string
-		eventRouter flamingo.EventRouter
+		responder     *web.Responder
+		broker        string
+		reverseRouter web.ReverseRouter
+		eventRouter   flamingo.EventRouter
 	}
 
 	fakeConfig struct {
@@ -39,7 +40,7 @@ type (
 )
 
 // FakeAuthURL - URL to fake login page
-const FakeAuthURL string = "/core/auth/fake"
+const FakeAuthURL string = "/core/auth/fake/:broker"
 
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
@@ -58,27 +59,31 @@ func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error)
 	return &Identifier{broker: fakeConfig.Broker}, nil
 }
 
+// Inject injects module dependencies
+func (i *Identifier) Inject(reverseRouter web.ReverseRouter) *Identifier {
+	i.reverseRouter = reverseRouter
+
+	return i
+}
+
 // Broker returns the broker id from the config
 func (i *Identifier) Broker() string {
 	return i.broker
 }
 
 // Authenticate action, fake
-func (i *Identifier) Authenticate(_ context.Context, _ *web.Request) web.Result {
-	authURL, _ := url.Parse(FakeAuthURL)
-	urlValues := url.Values{}
-	urlValues.Add("broker", i.Broker())
-	authURL.RawQuery = urlValues.Encode()
+func (i *Identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
+	authURL, err := i.reverseRouter.Absolute(r, "core.auth.fake.auth", map[string]string{"broker": i.broker})
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
 
 	return i.responder.URLRedirect(authURL)
 }
 
 // Identify action, fake
 func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
-	_ = request
-
-	sess := web.SessionFromContext(ctx)
-	userSessionData, ok := sess.Load(fmt.Sprintf(userDataSessionKey, i.broker))
+	userSessionData, ok := request.Session().Load(fmt.Sprintf(userDataSessionKey, i.broker))
 	if !ok {
 		return nil, errors.New("identity not saved in session")
 	}
@@ -105,9 +110,6 @@ func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnT
 }
 
 // Logout logs out
-func (i *Identifier) Logout(ctx context.Context, request *web.Request) {
-	_ = request
-
-	sess := web.SessionFromContext(ctx)
-	sess.Delete(fmt.Sprintf(userDataSessionKey, i.broker))
+func (i *Identifier) Logout(_ context.Context, request *web.Request) {
+	request.Session().Delete(fmt.Sprintf(userDataSessionKey, i.broker))
 }

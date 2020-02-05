@@ -110,9 +110,9 @@ func (c *IdpController) Inject(
 
 // Auth action to simulate OIDC / Oauth Login Page
 func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
-	broker, err := r.Query1("broker")
-	if err != nil || broker == "" {
-		return c.responder.ServerError(err)
+	broker, ok := r.Params["broker"]
+	if !ok || broker == "" {
+		return c.responder.ServerError(errors.New("broker nor known"))
 	}
 
 	formError := errors.New("")
@@ -121,16 +121,16 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	if err == nil {
 		delete(postValues, "broker")
 		if len(postValues) > 0 {
-			formError = c.handlePostValues(ctx, postValues, broker)
+			formError = c.handlePostValues(r, postValues, broker)
 
 			if formError == nil {
-				return c.responder.RouteRedirect("core.auth.callback(broker)", map[string]string{"broker": broker})
+				return c.responder.RouteRedirect("core.auth.callback", map[string]string{"broker": broker})
 			}
 		}
 	}
 
 	// get formURL to callback with broker filled in
-	formURL, err := c.reverseRouter.Absolute(r, "core.auth.callback", map[string]string{"broker": broker})
+	formURL, err := c.reverseRouter.Absolute(r, "core.auth.fake.auth", map[string]string{"broker": broker})
 	if err != nil {
 		return c.responder.ServerError(err)
 	}
@@ -176,7 +176,7 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	}
 }
 
-func (c *IdpController) handlePostValues(ctx context.Context, values map[string][]string, broker string) error {
+func (c *IdpController) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
 	usernameVal, ok := values[c.usernameFieldID]
 	if !ok {
 		return errors.New(errMissingUsername)
@@ -228,8 +228,7 @@ func (c *IdpController) handlePostValues(ctx context.Context, values map[string]
 	}
 
 	sessionData := domain.UserSessionData{Subject: user}
-	sess := web.SessionFromContext(ctx)
-	sess.Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
+	r.Session().Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
 
 	return nil
 }

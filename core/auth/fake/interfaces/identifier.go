@@ -60,8 +60,12 @@ func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error)
 }
 
 // Inject injects module dependencies
-func (i *Identifier) Inject(reverseRouter web.ReverseRouter) *Identifier {
+func (i *Identifier) Inject(
+	reverseRouter web.ReverseRouter,
+	eventRouter flamingo.EventRouter,
+) *Identifier {
 	i.reverseRouter = reverseRouter
+	i.eventRouter = eventRouter
 
 	return i
 }

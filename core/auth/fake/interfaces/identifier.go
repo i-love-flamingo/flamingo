@@ -26,7 +26,7 @@ type (
 		Broker           string                `json:"broker"`
 		LoginTemplate    string                `json:"loginTemplate"`
 		ValidatePassword bool                  `json:"validatePassword"`
-		ValidateOtp      bool                  `json:"validatePassword"`
+		ValidateOtp      bool                  `json:"validateOtp"`
 		UsernameFieldID  string                `json:"usernameFieldId"`
 		PasswordFieldID  string                `json:"passwordFieldId"`
 		OtpFieldID       string                `json:"otpFieldId"`

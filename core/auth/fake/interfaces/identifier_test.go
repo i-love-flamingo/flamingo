@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"testing"
 
+	"flamingo.me/flamingo/v3/framework/flamingo"
+
 	"flamingo.me/flamingo/v3/framework/web"
 
 	"github.com/google/go-cmp/cmp"
@@ -12,8 +14,10 @@ import (
 
 func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 	type fields struct {
-		responder *web.Responder
-		broker    string
+		responder     *web.Responder
+		broker        string
+		reverseRouter web.ReverseRouter
+		eventRouter   flamingo.EventRouter
 	}
 
 	tests := []struct {
@@ -24,8 +28,10 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 		{
 			name: "redirects to fake auth with broker parameter",
 			fields: fields{
-				responder: &web.Responder{},
-				broker:    "testBroker",
+				responder:   &web.Responder{},
+				broker:      "testBroker",
+				reverseRouter: web.ReverseRouter()
+				eventRouter: &flamingo.DefaultEventRouter{},
 			},
 			want: &web.URLRedirectResponse{
 				Response: web.Response{

@@ -298,7 +298,7 @@ func Test_idpController_Auth(t *testing.T) {
 							PostForm: url.Values{
 								"username": []string{"user_b"},
 								"password": []string{"test_b"},
-								"m2fa-otp": []string{"invalid otp"},
+								"otp":      []string{"invalid otp"},
 							},
 						},
 						web.EmptySession(),
@@ -336,7 +336,7 @@ func Test_idpController_Auth(t *testing.T) {
 							PostForm: url.Values{
 								"username": []string{"user_b"},
 								"password": []string{"test_b"},
-								"m2fa-otp": []string{"otp_b"},
+								"otp":      []string{"otp_b"},
 							},
 						},
 						web.EmptySession(),
@@ -364,7 +364,7 @@ func Test_idpController_Auth(t *testing.T) {
 			tt.fields.config.Broker = "testBroker"
 			tt.fields.config.UsernameFieldID = "username"
 			tt.fields.config.PasswordFieldID = "password"
-			tt.fields.config.OtpFieldID = "m2fa-otp"
+			tt.fields.config.OtpFieldID = "otp"
 			identifierConfig[tt.fields.config.Broker] = tt.fields.config
 
 			got := c.Auth(web.ContextWithSession(context.Background(), web.EmptySession()), tt.args.r)

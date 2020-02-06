@@ -10,6 +10,24 @@ core: auth: web: broker: [
 	core.auth.oidc & {broker: "kc2", clientID: "client2", clientSecret: "", "endpoint": "http://127.0.0.1:3354/auth/realms/Realm2", enableOfflineToken: false},
 	customOidcBroker,
 	StaticAuthBroker & {broker: "static1", users: ["user1", "user2"]},
+		core.auth.fake & {broker: "fake1", userConfig: {jondoe: {password: "password"}}},
+		core.auth.fake & {broker: "fake1WithoutPasswords", validatePassword: false, userConfig: {jondoe: {}}},
+		core.auth.fake & {broker: "fake1WithDefaultTemplate", validatePassword: true, validateOtp: true, userConfig: {jondoe: {password: "password", otp: "otp"}}},
+		core.auth.fake & {broker: "fake1WithCustomTemplate", validatePassword: true, validateOtp: true, usernameFieldId: "customUsernameField", passwordFieldId: "customPasswordField", otpFieldId: "customOtpField", userConfig: {jondoe: {password: "password", otp: "otp"}}, loginTemplate: """
+<body>
+  <h1>Custom Login Template!</h1>
+  <form name="fake-idp-form" action="{{.FormURL}}" method="post">
+	<div>{{.Message}}</div>
+	<label for="{{.UsernameID}}">Username</label>
+	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
+	<label for="{{.PasswordID}}">Password</label>
+  <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
+	<label for="{{.OtpID}}">2 Factor OTP</label>
+  <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
+	<button type="submit" id="submit">Fake Login</button>
+  </form>
+</body>
+"""},
 ]
 
 flamingo: session: cookie: secure: false

@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"testing"
@@ -52,7 +53,7 @@ func TestIdentifier_Whitebox_Authenticate(t *testing.T) {
 				reverseRouter: tt.fields.reverseRouter,
 			}
 
-			got := i.Authenticate(nil, nil)
+			got := i.Authenticate(context.TODO(), nil)
 			if diff := cmp.Diff(got, tt.want); diff != "" {
 				t.Errorf("Authenticate() -got +want: %v", diff)
 			}

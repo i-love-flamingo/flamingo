@@ -20,4 +20,5 @@ func main() {
 		new(custom.OidcModule),
 		new(custom.StaticModule),
 		new(fake.Module),
+	})
 }

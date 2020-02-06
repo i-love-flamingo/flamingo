@@ -33,7 +33,6 @@ const (
 	errMissingUsername  = "missing username"
 	errInvalidUser      = "invalid user"
 	errMissingPassword  = "missing password"
-	errFakeConfigFaulty = "fake auth config error"
 	errPasswordMismatch = "password mismatch"
 	errOtpMismatch      = "otp mismatch"
 	errMissingOtp       = "otp missing"

@@ -40,7 +40,7 @@ const (
 
 	defaultUserNameFieldID = "username"
 	defaultPasswordFieldID = "password"
-	defaultOtpFieldID      = "m2fa-otp"
+	defaultOtpFieldID      = "otp"
 
 	userDataSessionKey = "core.auth.fake.%s.data"
 )
@@ -50,13 +50,13 @@ const defaultIDPTemplate = `
   <h1>Login!</h1>
   <form name="fake-idp-form" action="{{.FormURL}}" method="post">
 	<div>{{.Message}}</div>
-	<label for="{{.UsernameID}}">Username</label>   
+	<label for="{{.UsernameID}}">Username</label>
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
 	<label for="{{.PasswordID}}">Password</label>
     <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
-	<label for="{{.OtpID}}">2 Factor OTP</label>    
+	<label for="{{.OtpID}}">2 Factor OTP</label>
     <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
-	<button type="submit" id="submit">Fake Login</button> 
+	<button type="submit" id="submit">Fake Login</button>
   </form>
 </body>
 `
@@ -106,21 +106,15 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 		return c.responder.ServerError(err)
 	}
 
+	var idpTemplate string
 	if c.config.LoginTemplate != "" {
-		return c.responder.Render(c.config.LoginTemplate, viewData{
-			FormURL:    formURL.String(),
-			Message:    formError.Error(),
-			UsernameID: c.config.UsernameFieldID,
-			PasswordID: c.config.PasswordFieldID,
-			OtpID:      c.config.OtpFieldID,
-		})
+		idpTemplate = c.config.LoginTemplate
+	} else {
+		idpTemplate = defaultIDPTemplate
 	}
 
-	// no custom template specified, use fallback template
-
 	t := template.New("fake")
-
-	t, err = t.Parse(defaultIDPTemplate)
+	t, err = t.Parse(idpTemplate)
 	if err != nil {
 		return c.responder.ServerError(err)
 	}

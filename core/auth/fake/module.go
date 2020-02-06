@@ -45,7 +45,7 @@ func (*Module) CueConfig() string {
 	return `
 core: auth: {
 	UserConfig :: {
-		password: string
+		password: string | *""
 		otp: string | *""
 	}
 
@@ -60,7 +60,7 @@ core: auth: {
 		validateOtp: bool | *false
 		usernameFieldId: string | *"username"
 		passwordFieldId: string | *"password"
-		otpFieldId: string | *"m2fa-otp"
+		otpFieldId: string | *"otp"
 	}
 }
 `

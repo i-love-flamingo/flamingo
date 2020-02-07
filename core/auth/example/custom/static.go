@@ -79,13 +79,10 @@ func (b *staticAuthBroker) Identify(ctx context.Context, request *web.Request) (
 func (b *staticAuthBroker) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	body := `<h1>Login</h1><hr/>`
 	for _, user := range b.users {
-		href, err := b.reverseRouter.Relative("core.auth.callback", map[string]string{"broker": b.broker})
+		href, err := b.reverseRouter.Relative("core.auth.callback", map[string]string{"broker": b.broker, "user": user})
 		if err != nil {
 			return b.responder.ServerError(err)
 		}
-		query := href.Query()
-		query.Set("user", user)
-		href.RawQuery = query.Encode()
 		body += fmt.Sprintf(`<a href="%s">%s</a><br/>`, href.String(), user)
 	}
 	return b.responder.HTTP(http.StatusOK, strings.NewReader(body))

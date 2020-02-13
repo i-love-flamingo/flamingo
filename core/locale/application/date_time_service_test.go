@@ -27,7 +27,7 @@ func TestDateTimeService_GetDateTimeFormatterFromIsoString(t *testing.T) {
 		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
 		Location       string `inject:"config:core.locale.date.location"`
 	}{
-		Location:       "invalid location",
+		Location: "invalid location",
 	})
 
 	formatter, err = dateTimeService.GetDateTimeFormatterFromIsoString(now.Format(time.RFC3339))
@@ -85,7 +85,7 @@ func TestDateTimeService_GetTimeFormatter(t *testing.T) {
 		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
 		Location       string `inject:"config:core.locale.date.location"`
 	}{
-		Location:       "invalid location",
+		Location: "invalid location",
 	})
 
 	formatter, err := dateTimeService.GetDateTimeFormatter(now)

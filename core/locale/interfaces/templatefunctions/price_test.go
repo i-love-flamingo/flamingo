@@ -218,7 +218,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			priceService := application.PriceService{}
-			priceService.Inject(tt.fields.labelService, nil,  &struct {
+			priceService.Inject(tt.fields.labelService, nil, &struct {
 				Config config.Map `inject:"config:core.locale.accounting"`
 			}{tt.fields.config})
 

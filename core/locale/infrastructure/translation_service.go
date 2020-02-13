@@ -30,10 +30,10 @@ var _ domain.TranslationService = (*TranslationService)(nil)
 func (ts *TranslationService) Inject(
 	logger flamingo.Logger,
 	config *struct {
-	DevMode          bool         `inject:"config:flamingo.debug.mode"`
-	TranslationFile  string       `inject:"config:core.locale.translationFile,optional"`
-	TranslationFiles config.Slice `inject:"config:core.locale.translationFiles,optional"`
-},
+		DevMode          bool         `inject:"config:flamingo.debug.mode"`
+		TranslationFile  string       `inject:"config:core.locale.translationFile,optional"`
+		TranslationFiles config.Slice `inject:"config:core.locale.translationFiles,optional"`
+	},
 ) {
 	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField("category", "locale.translationService")
 	if config != nil {

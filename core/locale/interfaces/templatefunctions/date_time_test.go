@@ -21,10 +21,10 @@ func TestDateTimeFormatFromIso_Func(t *testing.T) {
 		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
 		Location       string `inject:"config:core.locale.date.location"`
 	}{
-		DateFormat: "2006-01-02",
-		TimeFormat: "15:04:05Z07:00",
+		DateFormat:     "2006-01-02",
+		TimeFormat:     "15:04:05Z07:00",
 		DateTimeFormat: "2006-01-02T15:04:05Z07:00",
-		Location: loc.String(),
+		Location:       loc.String(),
 	})
 
 	tFuncProvider := &DateTimeFormatFromIso{}
@@ -44,8 +44,8 @@ func TestDateTimeFormatFromIso_Func(t *testing.T) {
 
 	formatter = tFunc(now.Format(time.RFC3339))
 	expected := &domain.DateTimeFormatter{
-		DateFormat: "2006-01-02",
-		TimeFormat: "15:04:05Z07:00",
+		DateFormat:     "2006-01-02",
+		TimeFormat:     "15:04:05Z07:00",
 		DateTimeFormat: "2006-01-02T15:04:05Z07:00",
 	}
 	assert.NoError(t, expected.SetLocation(loc.String()))
@@ -67,10 +67,10 @@ func TestDateTimeFormatFromTime_Func(t *testing.T) {
 		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
 		Location       string `inject:"config:core.locale.date.location"`
 	}{
-		DateFormat: "2006-01-02",
-		TimeFormat: "15:04:05Z07:00",
+		DateFormat:     "2006-01-02",
+		TimeFormat:     "15:04:05Z07:00",
 		DateTimeFormat: "2006-01-02T15:04:05Z07:00",
-		Location: "wrong",
+		Location:       "wrong",
 	})
 
 	tFuncProvider := &DateTimeFormatFromTime{}
@@ -93,10 +93,10 @@ func TestDateTimeFormatFromTime_Func(t *testing.T) {
 		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
 		Location       string `inject:"config:core.locale.date.location"`
 	}{
-		DateFormat: "2006-01-02",
-		TimeFormat: "15:04:05Z07:00",
+		DateFormat:     "2006-01-02",
+		TimeFormat:     "15:04:05Z07:00",
 		DateTimeFormat: "2006-01-02T15:04:05Z07:00",
-		Location: loc.String(),
+		Location:       loc.String(),
 	})
 
 	tFuncProvider = &DateTimeFormatFromTime{}
@@ -107,8 +107,8 @@ func TestDateTimeFormatFromTime_Func(t *testing.T) {
 
 	formatter = tFunc(now)
 	expected := &domain.DateTimeFormatter{
-		DateFormat: "2006-01-02",
-		TimeFormat: "15:04:05Z07:00",
+		DateFormat:     "2006-01-02",
+		TimeFormat:     "15:04:05Z07:00",
 		DateTimeFormat: "2006-01-02T15:04:05Z07:00",
 	}
 	assert.NoError(t, expected.SetLocation(loc.String()))

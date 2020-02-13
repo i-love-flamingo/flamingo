@@ -18,7 +18,6 @@ func TestLabelService_NewLabel(t *testing.T) {
 		return label
 	}
 
-
 	service := &LabelService{}
 	service.Inject(provider, &fake.TranslationService{}, flamingo.NullLogger{}, &struct {
 		DefaultLocaleCode string       `inject:"config:core.locale.locale"`
@@ -52,7 +51,6 @@ func TestLabelService_AllLabels(t *testing.T) {
 		return label
 	}
 
-
 	service := &LabelService{}
 	service.Inject(provider, &fake.TranslationService{}, flamingo.NullLogger{}, &struct {
 		DefaultLocaleCode string       `inject:"config:core.locale.locale"`
@@ -79,8 +77,6 @@ func TestLabelService_AllLabels(t *testing.T) {
 
 		expected = append(expected, item)
 	}
-
-
 
 	assert.Equal(t, expected, result)
 }

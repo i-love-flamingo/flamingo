@@ -79,9 +79,7 @@ func TestPriceService_GetConfigForCurrency(t *testing.T) {
 func TestPriceService_FormatPrice(t *testing.T) {
 	labelService := &LabelService{}
 	labelService.Inject(func() *domain.Label {
-		label := &domain.Label{
-
-		}
+		label := &domain.Label{}
 		label.Inject(&fake.TranslationService{})
 		return label
 	}, nil, nil, nil)
@@ -91,7 +89,7 @@ func TestPriceService_FormatPrice(t *testing.T) {
 	service.Inject(labelService, nil, nil)
 	acc := &accounting.Accounting{
 		Symbol:    "currency",
-		Precision:   2,
+		Precision: 2,
 	}
 	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency"))
 
@@ -112,8 +110,8 @@ func TestPriceService_FormatPrice(t *testing.T) {
 	})
 
 	acc = &accounting.Accounting{
-		Symbol:    "currency",
-		Precision:   2,
+		Symbol:     "currency",
+		Precision:  2,
 		Decimal:    ".",
 		Thousand:   ",",
 		FormatZero: "%s 0.00",
@@ -145,17 +143,17 @@ func TestPriceService_FormatPrice(t *testing.T) {
 	})
 
 	acc = &accounting.Accounting{
-		Symbol:    "currency1",
-		Precision:   2,
+		Symbol:     "currency1",
+		Precision:  2,
 		Decimal:    ",",
 		Thousand:   ".",
 		FormatZero: "%s 0.00",
 		Format:     "%s %v",
 	}
-	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5,"currency1"))
+	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency1"))
 	acc = &accounting.Accounting{
-		Symbol:    "currency2",
-		Precision:   2,
+		Symbol:     "currency2",
+		Precision:  2,
 		Decimal:    ".",
 		Thousand:   ",",
 		FormatZero: "%s 0.00",

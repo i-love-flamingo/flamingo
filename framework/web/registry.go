@@ -175,6 +175,19 @@ func (registry *RouterRegistry) HasData(name string) bool {
 	return ok && la.data != nil
 }
 
+// MustRoute checks the result of a `Route` call
+func MustRoute(handler *Handler, err error) *Handler {
+	if err != nil {
+		panic(err)
+	}
+	return handler
+}
+
+// MustRoute makes a checked Route call
+func (registry *RouterRegistry) MustRoute(path, handler string) *Handler {
+	return MustRoute(registry.Route(path, handler))
+}
+
 // Route assigns a route to a Handler
 func (registry *RouterRegistry) Route(path, handler string) (*Handler, error) {
 	var h = parseHandler(handler)

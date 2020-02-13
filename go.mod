@@ -16,6 +16,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/go-cmp v0.3.1
 	github.com/gorilla/mux v1.7.3 // indirect
+	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.1.3
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3 // indirect

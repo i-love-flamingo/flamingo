@@ -11,7 +11,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/gorilla/sessions"
 	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
@@ -41,7 +40,7 @@ type (
 		logger         flamingo.Logger
 		routerRegistry *RouterRegistry
 		configArea     *config.Area
-		sessionStore   sessions.Store
+		sessionStore   *SessionStore
 		sessionName    string
 	}
 )
@@ -57,12 +56,12 @@ const (
 func (r *Router) Inject(
 	cfg *struct {
 		// base url configuration
-		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
-		Host         string         `inject:"config:flamingo.router.host,optional"`
-		Path         string         `inject:"config:flamingo.router.path,optional"`
-		External     string         `inject:"config:flamingo.router.external,optional"`
-		SessionStore sessions.Store `inject:",optional"`
-		SessionName  string         `inject:"config:flamingo.session.name,optional"`
+		Scheme       string        `inject:"config:flamingo.router.scheme,optional"`
+		Host         string        `inject:"config:flamingo.router.host,optional"`
+		Path         string        `inject:"config:flamingo.router.path,optional"`
+		External     string        `inject:"config:flamingo.router.external,optional"`
+		SessionStore *SessionStore `inject:""`
+		SessionName  string        `inject:"config:flamingo.session.name,optional"`
 	},
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
@@ -79,7 +78,7 @@ func (r *Router) Inject(
 	if e, err := url.Parse(cfg.External); cfg.External != "" && err == nil {
 		r.external = e
 	} else if cfg.External != "" {
-		r.logger.Warn("External URL Error: " + err.Error())
+		r.logger.Warn("External URL Error: ", err)
 	}
 
 	r.eventRouter = eventRouter
@@ -104,7 +103,7 @@ func (r *Router) Handler() http.Handler {
 
 	if r.configArea != nil {
 		for _, route := range r.configArea.Routes {
-			r.routerRegistry.Route(route.Path, route.Controller)
+			r.routerRegistry.MustRoute(route.Path, route.Controller)
 			if route.Name != "" {
 				r.routerRegistry.Alias(route.Name, route.Controller)
 			}

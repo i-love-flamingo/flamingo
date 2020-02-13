@@ -106,7 +106,10 @@ flamingo: {
 		errWithCode: string | *"error/withCode"
 		err503: string | *"error/503"
 	}
-	session: name: string | *"flamingo"
+	session: {
+		name: string | *"flamingo"
+		saveMode: *"Always" | "OnRead" | "OnWrite" 
+	}
 }
 `
 }

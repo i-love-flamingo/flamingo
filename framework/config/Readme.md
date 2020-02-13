@@ -124,7 +124,7 @@ func (m *Module) Inject(
 	cfg *struct {
 	CompleteConfig config.Map `inject:"config:mymodule"`
 	Title          string     `inject:"config:mymodule.title"`
-	Amount         float64    `inject:"config:mymodule.amount"`
+	Amount         int        `inject:"config:mymodule.amount"`
 	Flag           bool       `inject:"config:mymodule.flag"`
 },
 ) *Module {
@@ -138,9 +138,6 @@ func (m *Module) Inject(
 	return m
 }
 ```
-
-**Note, that a number injection will always be delivered as `float64` type.**
-This is the default behaviour of the underlying yaml unmarshaller [github.com/ghodss/yaml](https://github.com/ghodss/yaml).
 
 Deeply nested config maps can be marshaled into structs for convenience.
 

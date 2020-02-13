@@ -11,16 +11,14 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type (
-	// Module registers our profiler
-	Module struct {
-		EnableTranslationAPI bool `inject:"config:core.locale.enableTranslationApi,optional"`
-	}
+// Module registers our profiler
+type Module struct {
+	EnableTranslationAPI bool `inject:"config:core.locale.enableTranslationApi,optional"`
+}
 
-	routes struct {
-		translationController *controllers.TranslationController
-	}
-)
+type routes struct {
+	translationController *controllers.TranslationController
+}
 
 // Configure the product URL
 func (m *Module) Configure(injector *dingo.Injector) {
@@ -31,7 +29,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		web.BindRoutes(injector, new(routes))
 	}
 
-	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.Label))
+	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.LabelFormat))
 	flamingo.BindTemplateFunc(injector, "priceFormat", new(templatefunctions.PriceFormatFunc))
 	flamingo.BindTemplateFunc(injector, "priceFormatLong", new(templatefunctions.PriceFormatLongFunc))
 	flamingo.BindTemplateFunc(injector, "numberFormat", new(templatefunctions.NumberFormatFunc))

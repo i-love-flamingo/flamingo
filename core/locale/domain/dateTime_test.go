@@ -1,85 +1,155 @@
 package domain
 
 import (
-	"fmt"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type formatTest struct {
-	timeStamp         string
-	location          string
-	expectedDate      string
-	expectedLocalDate string
-	expectedTime      string
-	expectedLocalTime string
+func TestDateTimeFormatter_SetDateTime(t *testing.T) {
+	formatter := &DateTimeFormatter{}
+	assert.Equal(t, &DateTimeFormatter{}, formatter)
+
+	now := getUTCNow()
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+
+	formatter.SetDateTime(now, now.In(loc))
+	assert.Equal(t, &DateTimeFormatter{
+		dateTime:      now,
+		localDateTime: now.In(loc),
+	}, formatter)
 }
 
-var formatTestData = []formatTest{
-	// dst winter
-	{"2018-01-01T01:00:00Z", "UTC", "01 Jan 2018", "01 Jan 2018", "01:00", "01:00"},
-	{"2018-01-01T01:00:00Z", "America/New_York", "01 Jan 2018", "31 Dec 2017", "01:00", "20:00"},
-	{"2018-01-01T01:00:00Z", "Europe/Berlin", "01 Jan 2018", "01 Jan 2018", "01:00", "02:00"},
-	{"2018-01-01T01:00:00Z", "Europe/London", "01 Jan 2018", "01 Jan 2018", "01:00", "01:00"},
+func TestDateTimeFormatter_SetLocation(t *testing.T) {
+	now := getUTCNow()
 
-	// dst summer
-	{"2018-06-01T01:00:00Z", "UTC", "01 Jun 2018", "01 Jun 2018", "01:00", "01:00"},
-	{"2018-06-01T01:00:00Z", "America/New_York", "01 Jun 2018", "31 May 2018", "01:00", "21:00"},
-	{"2018-06-01T01:00:00Z", "Europe/Berlin", "01 Jun 2018", "01 Jun 2018", "01:00", "03:00"},
-	{"2018-06-01T01:00:00Z", "Europe/London", "01 Jun 2018", "01 Jun 2018", "01:00", "02:00"},
+	formatter := &DateTimeFormatter{
+		logger:   flamingo.NullLogger{},
+		dateTime: now,
+	}
+
+	assert.Errorf(t, formatter.SetLocation("wrong"), ErrInvalidLocation)
+
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+	assert.NoError(t, formatter.SetLocation(loc.String()))
+	assert.Equal(t, &DateTimeFormatter{
+		logger:        flamingo.NullLogger{},
+		dateTime:      now,
+		localDateTime: now.In(loc),
+	}, formatter)
 }
 
-func TestFormat(t *testing.T) {
-	for _, testData := range formatTestData {
-		f := testGetFormatter(t, testData.timeStamp, testData.location)
+func TestDateTimeFormatter_SetLogger(t *testing.T) {
+	formatter := &DateTimeFormatter{}
+	assert.Nil(t, formatter.logger)
 
-		assert.Equal(
-			t,
-			testData.expectedDate,
-			f.FormatDate(),
-			fmt.Sprintf("Date of %v in %v", testData.timeStamp, testData.location),
-		)
-		assert.Equal(
-			t,
-			testData.expectedLocalDate,
-			f.FormatToLocalDate(),
-			fmt.Sprintf("Local date of %v in %v", testData.timeStamp, testData.location),
-		)
-		assert.Equal(
-			t,
-			testData.expectedTime,
-			f.FormatTime(),
-			fmt.Sprintf("Time of %v in %v", testData.timeStamp, testData.location),
-		)
-		assert.Equal(
-			t,
-			testData.expectedLocalTime,
-			f.FormatToLocalTime(),
-			fmt.Sprintf("Local time of %v in %v", testData.timeStamp, testData.location),
-		)
-
-	}
+	formatter.SetLogger(flamingo.NullLogger{})
+	assert.Equal(t, flamingo.NullLogger{}, formatter.logger)
 }
 
-func testGetFormatter(t *testing.T, timeString string, locationString string) *DateTimeFormatter {
-	f := DateTimeFormatter{
-		DateFormat:     "02 Jan 2006",
-		TimeFormat:     "15:04",
-		DateTimeFormat: "02 Jan 2006 15:04:05",
+func TestDateTimeFormatter_Format(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime: now,
+	}
+	assert.Equal(t, now.Format(time.RFC1123), formatter.Format(time.RFC1123))
+}
+
+func TestDateTimeFormatter_FormatLocale(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime: now,
 	}
 
-	dateTime, e := time.Parse(time.RFC3339, timeString)
-	if e != nil {
-		// just panic here - that is enough for the moment
-		panic(e)
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+	assert.NoError(t, formatter.SetLocation(loc.String()))
+
+	assert.Equal(t, now.In(loc).Format(time.RFC1123), formatter.FormatLocale(time.RFC1123))
+}
+
+func TestDateTimeFormatter_FormatDate(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime:   now,
+		DateFormat: "02 Jan 06",
 	}
-	location, e := time.LoadLocation(locationString)
-	assert.NoError(t, e)
-	localTime := dateTime.In(location)
+	assert.Equal(t, now.Format("02 Jan 06"), formatter.FormatDate())
+}
 
-	f.SetDateTime(dateTime, localTime)
+func TestDateTimeFormatter_FormatTime(t *testing.T) {
+	now := getUTCNow()
 
-	return &f
+	formatter := &DateTimeFormatter{
+		dateTime:   now,
+		TimeFormat: "15:04:05",
+	}
+	assert.Equal(t, now.Format("15:04:05"), formatter.FormatTime())
+}
+
+func TestDateTimeFormatter_FormatDateTime(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime:       now,
+		DateTimeFormat: time.RFC3339Nano,
+	}
+	assert.Equal(t, now.Format(time.RFC3339Nano), formatter.FormatDateTime())
+}
+
+func TestDateTimeFormatter_FormatToLocalDate(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime:   now,
+		DateFormat: "02 Jan 06",
+	}
+
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+	assert.NoError(t, formatter.SetLocation(loc.String()))
+
+	assert.Equal(t, now.In(loc).Format("02 Jan 06"), formatter.FormatToLocalDate())
+}
+
+func TestDateTimeFormatter_FormatToLocalTime(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime:   now,
+		TimeFormat: "15:04:05",
+	}
+
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+	assert.NoError(t, formatter.SetLocation(loc.String()))
+
+	assert.Equal(t, now.In(loc).Format("15:04:05"), formatter.FormatToLocalTime())
+}
+
+func TestDateTimeFormatter_FormatToLocalDateTime(t *testing.T) {
+	now := getUTCNow()
+
+	formatter := &DateTimeFormatter{
+		dateTime:       now,
+		DateTimeFormat: time.RFC3339Nano,
+	}
+
+	loc, err := time.LoadLocation("Europe/Berlin")
+	assert.NoError(t, err)
+	assert.NoError(t, formatter.SetLocation(loc.String()))
+
+	assert.Equal(t, now.In(loc).Format(time.RFC3339Nano), formatter.FormatToLocalDateTime())
+}
+
+func getUTCNow() time.Time {
+	start := time.Now()
+	return time.Date(start.Year(), start.Month(), start.Day(), start.Hour(), start.Minute(), start.Second(), start.Nanosecond(), time.UTC)
 }

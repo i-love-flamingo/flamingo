@@ -2,34 +2,48 @@ package application
 
 import (
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/leekchan/accounting"
 )
 
 // PriceService for formatting prices
 type PriceService struct {
-	config       config.Map
+	configs      map[string]PriceFormatConfig
 	labelService *LabelService
 }
 
+// PriceFormatConfig represents price formatting configuration which is possible to specify.
+type PriceFormatConfig struct {
+	Decimal    string `json:"decimal"`
+	Thousand   string `json:"thousand"`
+	FormatZero string `json:"formatZero"`
+	FormatLong string `json:"formatLong"`
+	Format     string `json:"format"`
+}
+
 // Inject dependencies
-func (s *PriceService) Inject(labelService *LabelService, config *struct {
+func (s *PriceService) Inject(labelService *LabelService, logger flamingo.Logger, config *struct {
 	Config config.Map `inject:"config:core.locale.accounting"`
 }) {
 	s.labelService = labelService
-	s.config = config.Config
+
+	if config == nil {
+		return
+	}
+
+	err := config.Config.MapInto(&s.configs)
+	if err != nil {
+		logger.WithField("category", "PriceService").Error(err)
+	}
 }
 
 // GetConfigForCurrency get configuration for currency
-func (s *PriceService) GetConfigForCurrency(currency string) config.Map {
-	if configForCurrency, ok := s.config[currency]; ok {
-		return configForCurrency.(config.Map)
+func (s *PriceService) GetConfigForCurrency(currency string) PriceFormatConfig {
+	if configForCurrency, ok := s.configs[currency]; ok {
+		return configForCurrency
 	}
 
-	if defaultConfig, ok := s.config["default"].(config.Map); ok {
-		return defaultConfig
-	}
-
-	return s.config
+	return s.configs["default"]
 }
 
 // FormatPrice by price
@@ -42,21 +56,21 @@ func (s *PriceService) FormatPrice(value float64, currency string) string {
 		Symbol:    currency,
 		Precision: 2,
 	}
-	decimal, ok := configForCurrency["decimal"].(string)
-	if ok {
-		ac.Decimal = decimal
+
+	if configForCurrency.Decimal != "" {
+		ac.Decimal = configForCurrency.Decimal
 	}
-	thousand, ok := configForCurrency["thousand"].(string)
-	if ok {
-		ac.Thousand = thousand
+
+	if configForCurrency.Thousand != "" {
+		ac.Thousand = configForCurrency.Thousand
 	}
-	formatZero, ok := configForCurrency["formatZero"].(string)
-	if ok {
-		ac.FormatZero = formatZero
+
+	if configForCurrency.FormatZero != "" {
+		ac.FormatZero = configForCurrency.FormatZero
 	}
-	format, ok := configForCurrency["format"].(string)
-	if ok {
-		ac.Format = format
+
+	if configForCurrency.Format != "" {
+		ac.Format = configForCurrency.Format
 	}
 
 	return ac.FormatMoney(value)

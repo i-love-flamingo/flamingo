@@ -9,22 +9,20 @@ import (
 	"flamingo.me/flamingo/v3/core/locale/application"
 )
 
-// Label is exported as a template function
-type (
-	Label struct {
-		labelService *application.LabelService
-		logger       flamingo.Logger
-	}
-)
+// LabelFormat is exported as a template function
+type LabelFormat struct {
+	labelService *application.LabelService
+	logger       flamingo.Logger
+}
 
 // Inject dependencies
-func (tf *Label) Inject(labelService *application.LabelService, logger flamingo.Logger) {
+func (tf *LabelFormat) Inject(labelService *application.LabelService, logger flamingo.Logger) {
 	tf.labelService = labelService
 	tf.logger = logger.WithField("module", "locale").WithField("category", "templatefunctions.label")
 }
 
 // Func template function factory
-func (tf *Label) Func(context.Context) interface{} {
+func (tf *LabelFormat) Func(context.Context) interface{} {
 
 	return func(key string, params ...interface{}) *domain.Label {
 

@@ -6,19 +6,17 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-type (
-	// TranslationController to be used to return translations for all labels as array
-	TranslationController struct {
-		responder    *web.Responder
-		labelService *application.LabelService
-	}
+// TranslationController to be used to return translations for all labels as array
+type TranslationController struct {
+	responder    *web.Responder
+	labelService *application.LabelService
+}
 
-	// TranslationJSON helper struct to map the result
-	TranslationJSON struct {
-		Key         string `json:"key"`
-		Translation string `json:"translation"`
-	}
-)
+// TranslationJSON helper struct to map the result
+type TranslationJSON struct {
+	Key         string `json:"key"`
+	Translation string `json:"translation"`
+}
 
 // Inject dependencies
 func (c *TranslationController) Inject(
@@ -31,7 +29,7 @@ func (c *TranslationController) Inject(
 
 // GetAllTranslations controller for TranslationController
 func (c *TranslationController) GetAllTranslations(ctx context.Context, r *web.Request) web.Result {
-	translations := []TranslationJSON{}
+	var translations []TranslationJSON
 	l := c.labelService.AllLabels()
 
 	for _, la := range l {

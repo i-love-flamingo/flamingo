@@ -28,14 +28,16 @@ type (
 	}
 )
 
-const (
-	errMissingUsername  = "missing username"
-	errInvalidUser      = "invalid user"
-	errMissingPassword  = "missing password"
-	errPasswordMismatch = "password mismatch"
-	errOtpMismatch      = "otp mismatch"
-	errMissingOtp       = "otp missing"
+var (
+	errMissingUsername  = errors.New("missing username")
+	errInvalidUser      = errors.New("invalid user")
+	errMissingPassword  = errors.New("missing password")
+	errPasswordMismatch = errors.New("password mismatch")
+	errOtpMismatch      = errors.New("otp mismatch")
+	errMissingOtp       = errors.New("otp missing")
+)
 
+const (
 	defaultUserNameFieldID = "username"
 	defaultPasswordFieldID = "password"
 	defaultOtpFieldID      = "otp"
@@ -142,39 +144,39 @@ func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 func (c *controller) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
 	usernameVal, ok := values[c.config.UsernameFieldID]
 	if !ok {
-		return errors.New(errMissingUsername)
+		return errMissingUsername
 	}
 
 	user := usernameVal[0]
 
 	userCfg, found := c.config.UserConfig[user]
 	if !found {
-		return errors.New(errInvalidUser)
+		return errInvalidUser
 	}
 
 	if c.config.ValidatePassword {
 		passwordVal, ok := values[c.config.PasswordFieldID]
 		if !ok {
-			return errors.New(errMissingPassword)
+			return errMissingPassword
 		}
 
 		expectedPassword := passwordVal[0]
 		userPassword := userCfg.Password
 		if expectedPassword != userPassword {
-			return errors.New(errPasswordMismatch)
+			return errPasswordMismatch
 		}
 	}
 
 	if c.config.ValidateOtp {
 		otpVal, ok := values[c.config.OtpFieldID]
 		if !ok {
-			return errors.New(errMissingOtp)
+			return errMissingOtp
 		}
 
 		expectedOtp := otpVal[0]
 		userOtp := userCfg.Otp
 		if expectedOtp != userOtp {
-			return errors.New(errOtpMismatch)
+			return errOtpMismatch
 		}
 	}
 

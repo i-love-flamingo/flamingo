@@ -375,7 +375,7 @@ func Test_idpController_Auth(t *testing.T) {
 }
 
 func wantFormResponseWithMessage(message string) *web.Response {
-	result := strings.ReplaceAll(defaultIDPTemplate, "{{.FormURL}}", "/core/auth/fake/testBroker")
+	result := strings.ReplaceAll(defaultLoginTemplate, "{{.FormURL}}", "/core/auth/fake/testBroker")
 	result = strings.ReplaceAll(result, "{{.Message}}", message)
 	result = strings.ReplaceAll(result, "{{.UsernameID}}", defaultUserNameFieldID)
 	result = strings.ReplaceAll(result, "{{.PasswordID}}", defaultPasswordFieldID)

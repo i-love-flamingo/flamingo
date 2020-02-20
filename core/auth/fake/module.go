@@ -2,8 +2,8 @@ package fake
 
 import (
 	"flamingo.me/dingo"
+
 	"flamingo.me/flamingo/v3/core/auth"
-	"flamingo.me/flamingo/v3/core/auth/fake/interfaces"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -13,7 +13,7 @@ type (
 	Module struct{}
 
 	routes struct {
-		fakeController *interfaces.IdpController
+		fakeController *controller
 	}
 )
 
@@ -30,11 +30,11 @@ var (
 func (*Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
 
-	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(interfaces.FakeIdentityProviderFactory)
+	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(FakeIdentityProviderFactory)
 }
 
 // Inject injects routed dependencies
-func (r *routes) Inject(fakeController *interfaces.IdpController) *routes {
+func (r *routes) Inject(fakeController *controller) *routes {
 	r.fakeController = fakeController
 
 	return r
@@ -75,6 +75,6 @@ func (*Module) Depends() []dingo.Module {
 
 // Routes configuration
 func (r *routes) Routes(router *web.RouterRegistry) {
-	_, _ = router.Route(interfaces.FakeAuthURL, "core.auth.fake.auth(broker)")
+	_, _ = router.Route(FakeAuthURL, "core.auth.fake.auth(broker)")
 	router.HandleAny("core.auth.fake.auth", r.fakeController.Auth)
 }

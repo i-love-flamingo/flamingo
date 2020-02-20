@@ -1,4 +1,4 @@
-package interfaces
+package fake
 
 import (
 	"bytes"
@@ -356,7 +356,7 @@ func Test_idpController_Auth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := new(IdpController)
+			c := new(controller)
 
 			c.Inject(&web.Responder{}, &mockRouter{broker: "testBroker"})
 

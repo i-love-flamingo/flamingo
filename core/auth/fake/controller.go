@@ -1,4 +1,4 @@
-package interfaces
+package fake
 
 import (
 	"bytes"
@@ -8,13 +8,12 @@ import (
 	"html/template"
 	"net/http"
 
-	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
-	// IdpController is the fake identity provider controller
-	IdpController struct {
+	// controller is the fake identity provider controller
+	controller struct {
 		responder     *web.Responder
 		reverseRouter web.ReverseRouter
 		config        *fakeConfig
@@ -61,10 +60,10 @@ const defaultIDPTemplate = `
 `
 
 // Inject injects module dependencies
-func (c *IdpController) Inject(
+func (c *controller) Inject(
 	responder *web.Responder,
 	reverseRouter web.ReverseRouter,
-) *IdpController {
+) *controller {
 	c.responder = responder
 	c.reverseRouter = reverseRouter
 
@@ -72,7 +71,7 @@ func (c *IdpController) Inject(
 }
 
 // Auth action to simulate OIDC / Oauth Login Page
-func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
+func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 	broker, ok := r.Params["broker"]
 	if !ok || broker == "" {
 		return c.responder.ServerError(errors.New("broker not known"))
@@ -140,7 +139,7 @@ func (c *IdpController) Auth(ctx context.Context, r *web.Request) web.Result {
 	}
 }
 
-func (c *IdpController) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
+func (c *controller) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
 	usernameVal, ok := values[c.config.UsernameFieldID]
 	if !ok {
 		return errors.New(errMissingUsername)
@@ -179,7 +178,7 @@ func (c *IdpController) handlePostValues(r *web.Request, values map[string][]str
 		}
 	}
 
-	sessionData := domain.UserSessionData{Subject: user}
+	sessionData := UserSessionData{Subject: user}
 	r.Session().Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
 
 	return nil

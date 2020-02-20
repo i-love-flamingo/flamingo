@@ -1,4 +1,4 @@
-package interfaces
+package fake
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"flamingo.me/flamingo/v3/core/auth"
-	"flamingo.me/flamingo/v3/core/auth/fake/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -100,8 +99,11 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 		return nil, errors.New("identity not saved in session")
 	}
 
-	if usd, ok := userSessionData.(domain.UserSessionData); ok {
-		return domain.NewIdentity(usd.Subject, i.broker), nil
+	if usd, ok := userSessionData.(UserSessionData); ok {
+		return &identity{
+			subject: usd.Subject,
+			broker:  i.broker,
+		}, nil
 	}
 
 	return nil, errors.New("session data not properly decoded")

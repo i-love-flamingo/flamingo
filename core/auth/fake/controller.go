@@ -21,7 +21,7 @@ type (
 
 	viewData struct {
 		FormURL    string
-		Message    string
+		Message    error
 		UsernameID string
 		PasswordID string
 		OtpID      string
@@ -45,10 +45,10 @@ const (
 	userDataSessionKey = "core.auth.fake.%s.data"
 )
 
-const defaultIDPTemplate = `
+const defaultLoginTemplate = `
 <body>
   <h1>Login!</h1>
-  <form name="fake-idp-form" action="{{.FormURL}}" method="post">
+  <form name="fake-login-form" action="{{.FormURL}}" method="post">
 	<div>{{.Message}}</div>
 	<label for="{{.UsernameID}}">Username</label>
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
@@ -86,7 +86,7 @@ func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 
 	c.config = &config
 
-	formError := errors.New("")
+	var formError error
 
 	postValues, err := r.FormAll()
 	if err == nil {
@@ -106,15 +106,15 @@ func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 		return c.responder.ServerError(err)
 	}
 
-	var idpTemplate string
+	var loginTemplate string
 	if c.config.LoginTemplate != "" {
-		idpTemplate = c.config.LoginTemplate
+		loginTemplate = c.config.LoginTemplate
 	} else {
-		idpTemplate = defaultIDPTemplate
+		loginTemplate = defaultLoginTemplate
 	}
 
 	t := template.New("fake")
-	t, err = t.Parse(idpTemplate)
+	t, err = t.Parse(loginTemplate)
 	if err != nil {
 		return c.responder.ServerError(err)
 	}
@@ -125,7 +125,7 @@ func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 		body,
 		viewData{
 			FormURL:    formURL.String(),
-			Message:    formError.Error(),
+			Message:    formError,
 			UsernameID: c.config.UsernameFieldID,
 			PasswordID: c.config.PasswordFieldID,
 			OtpID:      c.config.OtpFieldID,

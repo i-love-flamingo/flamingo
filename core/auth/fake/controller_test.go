@@ -113,7 +113,7 @@ func Test_idpController_Auth(t *testing.T) {
 					),
 				),
 			},
-			want: wantFormResponseWithMessage(errMissingUsername),
+			want: wantFormResponseWithMessage(errMissingUsername.Error()),
 		},
 		{
 			name: "show error message on invalid user",
@@ -147,7 +147,7 @@ func Test_idpController_Auth(t *testing.T) {
 					),
 				),
 			},
-			want: wantFormResponseWithMessage(errInvalidUser),
+			want: wantFormResponseWithMessage(errInvalidUser.Error()),
 		},
 		{
 			name: "login for valid user without pwd/otp",
@@ -224,7 +224,7 @@ func Test_idpController_Auth(t *testing.T) {
 					),
 				),
 			},
-			want: wantFormResponseWithMessage(errPasswordMismatch),
+			want: wantFormResponseWithMessage(errPasswordMismatch.Error()),
 		},
 		{
 			name: "login for valid user / valid password / w/o otp",
@@ -305,7 +305,7 @@ func Test_idpController_Auth(t *testing.T) {
 					),
 				),
 			},
-			want: wantFormResponseWithMessage(errOtpMismatch),
+			want: wantFormResponseWithMessage(errOtpMismatch.Error()),
 		},
 		{
 			name: "login for valid user / valid password / valid otp",

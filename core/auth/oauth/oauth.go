@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/gob"
 
-	"golang.org/x/oauth2"
-
 	"flamingo.me/flamingo/v3/framework/web"
+	"golang.org/x/oauth2"
 )
 
 type (

@@ -27,7 +27,7 @@ const (
 	sessionSaveOnWrite
 
 	contextSession contextKeyType = "session"
-	flashesKey                    = "_flash"
+	flashesKey     string         = "_flash"
 )
 
 // EmptySession creates an empty session instance for testing etc.

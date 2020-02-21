@@ -52,7 +52,6 @@ func (s *SessionStore) LoadByRequest(ctx context.Context, req *http.Request) (*S
 	}
 
 	var span *trace.Span
-	var err error
 
 	_, span = trace.StartSpan(ctx, "flamingo/web/session/load")
 	defer span.End()
@@ -100,8 +99,8 @@ type headerResponseWriter http.Header
 func (w headerResponseWriter) Header() http.Header {
 	return http.Header(w)
 }
-func (headerResponseWriter) Write([]byte) (int, error)  { return 0, io.ErrUnexpectedEOF }
-func (headerResponseWriter) WriteHeader(statusCode int) {}
+func (headerResponseWriter) Write([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
+func (headerResponseWriter) WriteHeader(_ int)         {}
 
 // Save stores a session back in the session storage.
 // The returned headers should be applied, they usually contain SetCookie headers.

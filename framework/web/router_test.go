@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -166,9 +167,9 @@ func TestRouterTestify(t *testing.T) {
 	defer server.Close()
 
 	request, err := http.NewRequest("GET", "/test", nil)
-	assert.True(t, err == nil)
+	require.NoError(t, err)
 	request.URL, err = url.Parse(server.URL + "/test")
-	assert.True(t, err == nil)
+	require.NoError(t, err)
 
 	defaultClient := &http.Client{}
 	res, err := defaultClient.Do(request)

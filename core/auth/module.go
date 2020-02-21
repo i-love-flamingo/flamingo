@@ -33,12 +33,19 @@ func buildAuthentifier(
 
 	var err error
 	for i, broker := range broker {
-		res[i], err = provider[broker["typ"].(string)](broker)
+		brokerType := broker["typ"].(string)
+		factory, hasIt := provider[brokerType]
+		if !hasIt {
+			panic("unknown broker " + brokerType)
+		}
+
+		res[i], err = factory(broker)
 		if err != nil {
 			panic(err)
 		}
+
 		if res[i] == nil {
-			panic("can not build broker " + broker["typ"].(string))
+			panic("can not build broker " + brokerType)
 		}
 	}
 

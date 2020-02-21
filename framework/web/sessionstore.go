@@ -28,7 +28,7 @@ func (s *SessionStore) Inject(logger flamingo.Logger, cfg *struct {
 	SessionStore sessions.Store `inject:",optional"`
 	SessionName  string         `inject:"config:flamingo.session.name,optional"`
 	SaveMode     string         `inject:"config:flamingo.session.saveMode"`
-}) {
+}) *SessionStore {
 	s.sessionStore = cfg.SessionStore
 	s.sessionName = cfg.SessionName
 	s.logger = logger
@@ -40,6 +40,8 @@ func (s *SessionStore) Inject(logger flamingo.Logger, cfg *struct {
 	default:
 		s.sessionSaveMode = sessionSaveAlways
 	}
+
+	return s
 }
 
 // LoadByRequest loads a Session from an http.Request (it is expected to find the session cookie there)
@@ -146,7 +148,7 @@ func (s *SessionStore) Save(ctx context.Context, session *Session) (http.Header,
 	return rw.Header(), nil
 }
 
-// AddHTTPHeader adds the sources httpl.Header to the target.
+// AddHTTPHeader adds the sources http.Header to the target.
 func AddHTTPHeader(target, source http.Header) {
 	for k, v := range source {
 		for _, v := range v {

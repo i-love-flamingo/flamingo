@@ -56,13 +56,13 @@ const (
 func (r *Router) Inject(
 	cfg *struct {
 		// base url configuration
-		Scheme       string        `inject:"config:flamingo.router.scheme,optional"`
-		Host         string        `inject:"config:flamingo.router.host,optional"`
-		Path         string        `inject:"config:flamingo.router.path,optional"`
-		External     string        `inject:"config:flamingo.router.external,optional"`
-		SessionStore *SessionStore `inject:""`
-		SessionName  string        `inject:"config:flamingo.session.name,optional"`
+		Scheme      string `inject:"config:flamingo.router.scheme,optional"`
+		Host        string `inject:"config:flamingo.router.host,optional"`
+		Path        string `inject:"config:flamingo.router.path,optional"`
+		External    string `inject:"config:flamingo.router.external,optional"`
+		SessionName string `inject:"config:flamingo.session.name,optional"`
 	},
+	sessionStore *SessionStore,
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
 	routesProvider routesProvider,
@@ -86,7 +86,7 @@ func (r *Router) Inject(
 	r.routesProvider = routesProvider
 	r.logger = logger
 	r.configArea = configArea
-	r.sessionStore = cfg.SessionStore
+	r.sessionStore = sessionStore
 	r.sessionName = "flamingo"
 	if cfg.SessionName != "" {
 		r.sessionName = cfg.SessionName

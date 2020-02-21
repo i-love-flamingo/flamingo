@@ -22,11 +22,12 @@ type Session struct {
 type sessionPersistLevel uint
 
 const (
-	contextSession contextKeyType = "session"
+	sessionSaveAlways sessionPersistLevel = iota
+	sessionSaveOnRead
+	sessionSaveOnWrite
 
-	sessionSaveAlways  sessionPersistLevel = 0
-	sessionSaveOnRead  sessionPersistLevel = 1
-	sessionSaveOnWrite sessionPersistLevel = 2
+	contextSession contextKeyType = "session"
+	flashesKey                    = "_flash"
 )
 
 // EmptySession creates an empty session instance for testing etc.
@@ -143,7 +144,7 @@ func (s *Session) Flashes(vars ...string) []interface{} {
 
 	// the call to Flashes actually writes to the session
 	if s.sessionSaveMode <= sessionSaveOnWrite {
-		key := "_flash"
+		key := flashesKey
 		if len(vars) > 0 {
 			key = vars[0]
 		}
@@ -160,7 +161,7 @@ func (s *Session) AddFlash(value interface{}, vars ...string) {
 	defer s.mu.Unlock()
 
 	if s.sessionSaveMode <= sessionSaveOnWrite {
-		key := "_flash"
+		key := flashesKey
 		if len(vars) > 0 {
 			key = vars[0]
 		}

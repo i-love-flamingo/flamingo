@@ -190,19 +190,18 @@ func TestRouterRelativeAndAbsolute(t *testing.T) {
 		router := &Router{}
 
 		router.Inject(&struct {
-			Scheme       string        `inject:"config:flamingo.router.scheme,optional"`
-			Host         string        `inject:"config:flamingo.router.host,optional"`
-			Path         string        `inject:"config:flamingo.router.path,optional"`
-			External     string        `inject:"config:flamingo.router.external,optional"`
-			SessionStore *SessionStore `inject:""`
-			SessionName  string        `inject:"config:flamingo.session.name,optional"`
+			Scheme      string `inject:"config:flamingo.router.scheme,optional"`
+			Host        string `inject:"config:flamingo.router.host,optional"`
+			Path        string `inject:"config:flamingo.router.path,optional"`
+			External    string `inject:"config:flamingo.router.external,optional"`
+			SessionName string `inject:"config:flamingo.session.name,optional"`
 		}{
 			Scheme:      scheme,
 			Host:        host,
 			Path:        path,
 			External:    external,
 			SessionName: "test",
-		}, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil)
+		}, nil, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil)
 
 		registry.HandleGet("test", func(context.Context, *Request) Result {
 			return &Response{}

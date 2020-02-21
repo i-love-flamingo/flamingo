@@ -28,15 +28,18 @@ func TestSessionSaveAlways(t *testing.T) {
 	session.Store("key1", "val0")
 	session.Store("key2", "val0")
 	session.Store("key3", "val0")
+	session.AddFlash("flash0")
 	saveSession()
 
 	session1, saveSession1 := testsession(t, sessionStore)
 	session1.Store("key1", "val1")
 	session1.Store("key2", "val1")
 	session1.Delete("key3")
+	session1.AddFlash("flash1")
 
 	session2, saveSession2 := testsession(t, sessionStore)
 	session2.Store("key1", "val2")
+	session2.AddFlash("flash2")
 
 	saveSession1()
 	saveSession2()
@@ -46,6 +49,11 @@ func TestSessionSaveAlways(t *testing.T) {
 		"key1": "val2", // from session2
 		"key2": "val0", // not stored from 1 because 2 overwrote it
 		"key3": "val0", // untouched
+		flashesKey: []interface{}{
+			"flash0",
+			// "flash1", // not stored from 1 because 2 overwrote it
+			"flash2",
+		},
 	}, session.s.Values)
 }
 
@@ -59,6 +67,8 @@ func TestSessionSaveOnRead(t *testing.T) {
 	session.Store("key2", "val0")
 	session.Store("key3", "val0")
 	session.Store("key4", "val0")
+	session.Store("key5", "val0")
+	session.AddFlash("flash0")
 	saveSession()
 
 	session1, saveSession1 := testsession(t, sessionStore)
@@ -66,10 +76,13 @@ func TestSessionSaveOnRead(t *testing.T) {
 	session1.Store("key2", "val1")
 	session1.Delete("key3")
 	session1.Store("key4", "val1")
+	session1.Store("key5", "val1")
+	session1.Flashes()
 
 	session2, saveSession2 := testsession(t, sessionStore)
 	session2.Load("key1")
-	session1.Store("key4", "val2")
+	session2.Store("key4", "val2")
+	session2.Try("key5")
 
 	saveSession1()
 	saveSession2()
@@ -80,6 +93,8 @@ func TestSessionSaveOnRead(t *testing.T) {
 		"key2": "val1", // from session1
 		//"key3": nil,    // deleted
 		"key4": "val2", // from session2
+		"key5": "val0", // from session2 read
+		// no flashes because session2 did not touch it, the deletion from session1 wins
 	}, session.s.Values)
 }
 
@@ -92,12 +107,14 @@ func TestSessionSaveOnWrite(t *testing.T) {
 	session.Store("key1", "val0")
 	session.Store("key2", "val0")
 	session.Store("key3", "val0")
+	session.AddFlash("flash0")
 	saveSession()
 
 	session1, saveSession1 := testsession(t, sessionStore)
 	session1.Store("key1", "val1")
 	session1.Store("key2", "val1")
 	session1.Delete("key3")
+	session1.Flashes()
 
 	session2, saveSession2 := testsession(t, sessionStore)
 	session2.Store("key1", "val2")
@@ -111,6 +128,7 @@ func TestSessionSaveOnWrite(t *testing.T) {
 		"key1": "val2", // from session2
 		"key2": "val1", // from session1
 		//"key3": nil,    // deleted
+		// no flashes because session2 did not touch it, the deletion from session1 wins
 	}, session.s.Values)
 }
 

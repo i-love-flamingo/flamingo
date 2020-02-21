@@ -28,7 +28,7 @@ func (*Module) Configure(injector *dingo.Injector) {
 func (*Module) CueConfig() string {
 	return `
 core: auth: {
-	Fake :: {
+	fake :: {
 		UserConfig :: {
 			password?: string
 		}
@@ -44,8 +44,6 @@ core: auth: {
 		usernameFieldId: string | *"username"
 		passwordFieldId: string | *"password"
 	}
-
-	fake?: Fake
 }
 `
 }

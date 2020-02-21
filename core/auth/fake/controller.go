@@ -24,7 +24,6 @@ type (
 		Message    error
 		UsernameID string
 		PasswordID string
-		OtpID      string
 	}
 )
 
@@ -33,14 +32,11 @@ var (
 	errInvalidUser      = errors.New("invalid user")
 	errMissingPassword  = errors.New("missing password")
 	errPasswordMismatch = errors.New("password mismatch")
-	errOtpMismatch      = errors.New("otp mismatch")
-	errMissingOtp       = errors.New("otp missing")
 )
 
 const (
 	defaultUserNameFieldID = "username"
 	defaultPasswordFieldID = "password"
-	defaultOtpFieldID      = "otp"
 
 	userDataSessionKey = "core.auth.fake.%s.data"
 )
@@ -54,8 +50,6 @@ const defaultLoginTemplate = `
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
 	<label for="{{.PasswordID}}">Password</label>
     <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
-	<label for="{{.OtpID}}">2 Factor OTP</label>
-    <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
 	<button type="submit" id="submit">Fake Login</button>
   </form>
 </body>
@@ -128,7 +122,6 @@ func (c *controller) Auth(ctx context.Context, r *web.Request) web.Result {
 			Message:    formError,
 			UsernameID: c.config.UsernameFieldID,
 			PasswordID: c.config.PasswordFieldID,
-			OtpID:      c.config.OtpFieldID,
 		})
 	if err != nil {
 		return c.responder.ServerError(err)
@@ -164,19 +157,6 @@ func (c *controller) handlePostValues(r *web.Request, values map[string][]string
 		userPassword := userCfg.Password
 		if expectedPassword != userPassword {
 			return errPasswordMismatch
-		}
-	}
-
-	if c.config.ValidateOtp {
-		otpVal, ok := values[c.config.OtpFieldID]
-		if !ok {
-			return errMissingOtp
-		}
-
-		expectedOtp := otpVal[0]
-		userOtp := userCfg.Otp
-		if expectedOtp != userOtp {
-			return errOtpMismatch
 		}
 	}
 

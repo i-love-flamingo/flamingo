@@ -10,7 +10,8 @@ func TestModule(t *testing.T) {
 	t.Parallel()
 	c := config.Map{
 		"flamingo.debug.mode": true,
-		"fake": config.Map{
+		"core.auth.fake": config.Map{
+			"broker":        "fakeBroker",
 			"loginTemplate": "testTemplateName",
 			"userConfig": config.Map{
 				"testUserA": config.Map{
@@ -18,14 +19,11 @@ func TestModule(t *testing.T) {
 				},
 				"testUserB": config.Map{
 					"password": "testUserBPassword",
-					"otp":      "testUserBotp",
 				},
 			},
 			"validatePassword": true,
-			"validateOtp":      true,
 			"usernameFieldId":  "username",
 			"passwordFieldId":  "password",
-			"otpFieldId":       "otp",
 		},
 	}
 	if err := config.TryModules(c, new(Module)); err != nil {

@@ -44,24 +44,24 @@ func (r *routes) Inject(fakeController *controller) *routes {
 func (*Module) CueConfig() string {
 	return `
 core: auth: {
-	UserConfig :: {
-		password: string | *""
-		otp: string | *""
-	}
+	Fake :: {
+		UserConfig :: {
+			password?: string
+		}
 
-	fake :: {
 		typ: "fake"
 		broker: string
-		loginTemplate: string | *"" 
+		loginTemplate?: string
 		userConfig: {
 			[string]: UserConfig
 		}
+
 		validatePassword: bool | *true
-		validateOtp: bool | *false
 		usernameFieldId: string | *"username"
 		passwordFieldId: string | *"password"
-		otpFieldId: string | *"otp"
 	}
+
+	fake: Fake
 }
 `
 }

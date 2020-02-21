@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
 
 	"flamingo.me/flamingo/v3/framework/web"
@@ -18,7 +16,6 @@ import (
 
 type (
 	mockRouter struct {
-		mock.Mock
 		broker string
 	}
 )

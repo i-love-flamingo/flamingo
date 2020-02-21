@@ -1,5 +1,6 @@
 package fake
 
+/*
 import (
 	"bytes"
 	"context"
@@ -11,29 +12,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
-
-type (
-	mockRouter struct {
-		mock.Mock
-		broker string
-	}
-)
-
-var _ web.ReverseRouter = (*mockRouter)(nil)
-
-// Relative mock action
-func (m *mockRouter) Relative(to string, params map[string]string) (*url.URL, error) {
-	panic("not implemented")
-}
-
-// Absolute mock action
-func (m *mockRouter) Absolute(r *web.Request, to string, params map[string]string) (*url.URL, error) {
-	resultURL := &url.URL{}
-
-	return resultURL.Parse(strings.ReplaceAll(FakeAuthURL, ":broker", m.broker))
-}
 
 func Test_Controller_Auth(t *testing.T) {
 	t.Parallel()
@@ -302,3 +281,4 @@ func addRequestParameters(request *web.Request) *web.Request {
 
 	return request
 }
+*/

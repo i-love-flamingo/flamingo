@@ -1,10 +1,13 @@
 package fake
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
+	"text/template"
 
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -19,6 +22,7 @@ type (
 		broker        string
 		reverseRouter web.ReverseRouter
 		eventRouter   flamingo.EventRouter
+		config        fakeConfig
 	}
 
 	fakeConfig struct {
@@ -32,44 +36,66 @@ type (
 
 	userConfig struct {
 		Password string `json:"password"`
-		Otp      string `json:"otp"`
+	}
+
+	viewData struct {
+		FormURL    string
+		Message    string
+		UsernameID string
+		PasswordID string
 	}
 )
 
-// FakeAuthURL - URL to fake login page
-const FakeAuthURL string = "/core/auth/fake/:broker"
+const (
+	defaultLoginTemplate = `
+<body>
+  <h1>Login!</h1>
+  <form name="fake-login-form" action="{{.FormURL}}" method="post">
+	<div>{{.Message}}</div>
+	<label for="{{.UsernameID}}">Username</label>
+	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
+	<label for="{{.PasswordID}}">Password</label>
+    <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
+	<button type="submit" id="submit">Fake Login</button>
+  </form>
+</body>
+`
+
+	defaultUserNameFieldID = "username"
+	defaultPasswordFieldID = "password"
+
+	userDataSessionKey = "core.auth.fake.%s.data"
+)
 
 var (
 	_ auth.RequestIdentifier = (*Identifier)(nil)
 	_ auth.WebCallbacker     = (*Identifier)(nil)
 	_ auth.WebLogouter       = (*Identifier)(nil)
 
-	identifierConfig map[string]fakeConfig
+	errMissingUsername  = errors.New("missing username")
+	errInvalidUser      = errors.New("invalid user")
+	errMissingPassword  = errors.New("missing password")
+	errPasswordMismatch = errors.New("password mismatch")
 )
-
-func init() {
-	identifierConfig = make(map[string]fakeConfig)
-}
 
 // FakeIdentityProviderFactory -
 func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var fakeConfig fakeConfig
-
 	if err := cfg.MapInto(&fakeConfig); err != nil {
 		return nil, err
 	}
 
-	identifierConfig[fakeConfig.Broker] = fakeConfig
-
-	return &Identifier{broker: fakeConfig.Broker}, nil
+	return &Identifier{broker: fakeConfig.Broker, config: fakeConfig}, nil
 }
 
 // Inject injects module dependencies
 func (i *Identifier) Inject(
 	reverseRouter web.ReverseRouter,
+	responder *web.Responder,
 	eventRouter flamingo.EventRouter,
 ) *Identifier {
 	i.reverseRouter = reverseRouter
+	i.responder = responder
 	i.eventRouter = eventRouter
 
 	return i
@@ -82,12 +108,95 @@ func (i *Identifier) Broker() string {
 
 // Authenticate action, fake
 func (i *Identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
-	authURL, err := i.reverseRouter.Absolute(r, "core.auth.fake.auth", map[string]string{"broker": i.broker})
+	var formError error
+
+	postValues, err := r.FormAll()
+	if err == nil {
+		delete(postValues, "broker")
+		if len(postValues) > 0 {
+			formError = i.handlePostValues(r, postValues, i.broker)
+
+			if formError == nil {
+				return i.responder.RouteRedirect("core.auth.callback", map[string]string{"broker": i.broker})
+			}
+		}
+	}
+
+	// get formURL to callback with broker filled in
+	formURL, err := i.reverseRouter.Absolute(r, "core.auth.login", map[string]string{"broker": i.broker})
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
 
-	return i.responder.URLRedirect(authURL)
+	var loginTemplate string
+	if i.config.LoginTemplate != "" {
+		loginTemplate = i.config.LoginTemplate
+	} else {
+		loginTemplate = defaultLoginTemplate
+	}
+
+	t := template.New("fake")
+	t, err = t.Parse(loginTemplate)
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	var body = new(bytes.Buffer)
+	var errMsg string
+
+	if formError != nil {
+		errMsg = formError.Error()
+	}
+
+	err = t.Execute(
+		body,
+		viewData{
+			FormURL:    formURL.String(),
+			Message:    errMsg,
+			UsernameID: i.config.UsernameFieldID,
+			PasswordID: i.config.PasswordFieldID,
+		})
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	return &web.Response{
+		Header: http.Header{"ContentType": []string{"text/html; charset=utf-8"}},
+		Status: http.StatusOK,
+		Body:   body,
+	}
+}
+
+func (i *Identifier) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
+	usernameVal, ok := values[i.config.UsernameFieldID]
+	if !ok {
+		return errMissingUsername
+	}
+
+	user := usernameVal[0]
+
+	userCfg, found := i.config.UserConfig[user]
+	if !found {
+		return errInvalidUser
+	}
+
+	if i.config.ValidatePassword {
+		passwordVal, ok := values[i.config.PasswordFieldID]
+		if !ok {
+			return errMissingPassword
+		}
+
+		expectedPassword := passwordVal[0]
+		userPassword := userCfg.Password
+		if expectedPassword != userPassword {
+			return errPasswordMismatch
+		}
+	}
+
+	sessionData := UserSessionData{Subject: user}
+	r.Session().Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
+
+	return nil
 }
 
 // Identify action, fake

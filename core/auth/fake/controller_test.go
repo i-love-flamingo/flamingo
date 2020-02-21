@@ -28,14 +28,14 @@ func (m *mockRouter) Relative(to string, params map[string]string) (*url.URL, er
 	panic("not implemented")
 }
 
-// Absolut mock action
+// Absolute mock action
 func (m *mockRouter) Absolute(r *web.Request, to string, params map[string]string) (*url.URL, error) {
 	resultURL := &url.URL{}
 
 	return resultURL.Parse(strings.ReplaceAll(FakeAuthURL, ":broker", m.broker))
 }
 
-func Test_idpController_Auth(t *testing.T) {
+func Test_Controller_Auth(t *testing.T) {
 	t.Parallel()
 
 	type fields struct {
@@ -122,11 +122,9 @@ func Test_idpController_Auth(t *testing.T) {
 					UserConfig: map[string]userConfig{
 						"user_a": userConfig{
 							Password: "test_a",
-							Otp:      "otp_a",
 						},
 						"user_b": userConfig{
 							Password: "test_b",
-							Otp:      "otp_b",
 						},
 					},
 				},
@@ -150,17 +148,15 @@ func Test_idpController_Auth(t *testing.T) {
 			want: wantFormResponseWithMessage(errInvalidUser.Error()),
 		},
 		{
-			name: "login for valid user without pwd/otp",
+			name: "login for valid user without pwd",
 			fields: fields{
 				config: fakeConfig{
 					UserConfig: map[string]userConfig{
 						"user_a": userConfig{
 							Password: "test_a",
-							Otp:      "otp_a",
 						},
 						"user_b": userConfig{
 							Password: "test_b",
-							Otp:      "otp_b",
 						},
 					},
 				},
@@ -191,17 +187,15 @@ func Test_idpController_Auth(t *testing.T) {
 			},
 		},
 		{
-			name: "login for valid user with password mismatch but w/o otp",
+			name: "login for valid user with password mismatch",
 			fields: fields{
 				config: fakeConfig{
 					UserConfig: map[string]userConfig{
 						"user_a": userConfig{
 							Password: "test_a",
-							Otp:      "otp_a",
 						},
 						"user_b": userConfig{
 							Password: "test_b",
-							Otp:      "otp_b",
 						},
 					},
 					ValidatePassword: true,
@@ -227,17 +221,15 @@ func Test_idpController_Auth(t *testing.T) {
 			want: wantFormResponseWithMessage(errPasswordMismatch.Error()),
 		},
 		{
-			name: "login for valid user / valid password / w/o otp",
+			name: "login for valid user / valid password",
 			fields: fields{
 				config: fakeConfig{
 					UserConfig: map[string]userConfig{
 						"user_a": userConfig{
 							Password: "test_a",
-							Otp:      "otp_a",
 						},
 						"user_b": userConfig{
 							Password: "test_b",
-							Otp:      "otp_b",
 						},
 					},
 					ValidatePassword: true,
@@ -254,89 +246,6 @@ func Test_idpController_Auth(t *testing.T) {
 							PostForm: url.Values{
 								"username": []string{"user_b"},
 								"password": []string{"test_b"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
-			},
-			want: &web.RouteRedirectResponse{
-				Response: web.Response{
-					Status: http.StatusSeeOther,
-					Header: http.Header{},
-				},
-				To:   "core.auth.callback",
-				Data: map[string]string{"broker": "testBroker"},
-			},
-		},
-		{
-			name: "login for valid user with password, otp mismatch",
-			fields: fields{
-				config: fakeConfig{
-					UserConfig: map[string]userConfig{
-						"user_a": userConfig{
-							Password: "test_a",
-							Otp:      "otp_a",
-						},
-						"user_b": userConfig{
-							Password: "test_b",
-							Otp:      "otp_b",
-						},
-					},
-					ValidatePassword: true,
-					ValidateOtp:      true,
-				},
-			},
-			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"user_b"},
-								"password": []string{"test_b"},
-								"otp":      []string{"invalid otp"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
-			},
-			want: wantFormResponseWithMessage(errOtpMismatch.Error()),
-		},
-		{
-			name: "login for valid user / valid password / valid otp",
-			fields: fields{
-				config: fakeConfig{
-					UserConfig: map[string]userConfig{
-						"user_a": userConfig{
-							Password: "test_a",
-							Otp:      "otp_a",
-						},
-						"user_b": userConfig{
-							Password: "test_b",
-							Otp:      "otp_b",
-						},
-					},
-					ValidatePassword: true,
-					ValidateOtp:      true,
-				},
-			},
-			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"user_b"},
-								"password": []string{"test_b"},
-								"otp":      []string{"otp_b"},
 							},
 						},
 						web.EmptySession(),
@@ -364,7 +273,6 @@ func Test_idpController_Auth(t *testing.T) {
 			tt.fields.config.Broker = "testBroker"
 			tt.fields.config.UsernameFieldID = "username"
 			tt.fields.config.PasswordFieldID = "password"
-			tt.fields.config.OtpFieldID = "otp"
 			identifierConfig[tt.fields.config.Broker] = tt.fields.config
 
 			got := c.Auth(web.ContextWithSession(context.Background(), web.EmptySession()), tt.args.r)
@@ -379,7 +287,6 @@ func wantFormResponseWithMessage(message string) *web.Response {
 	result = strings.ReplaceAll(result, "{{.Message}}", message)
 	result = strings.ReplaceAll(result, "{{.UsernameID}}", defaultUserNameFieldID)
 	result = strings.ReplaceAll(result, "{{.PasswordID}}", defaultPasswordFieldID)
-	result = strings.ReplaceAll(result, "{{.OtpID}}", defaultOtpFieldID)
 
 	return &web.Response{
 		Status: http.StatusOK,

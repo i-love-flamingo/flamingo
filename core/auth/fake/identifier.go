@@ -78,8 +78,8 @@ var (
 	errPasswordMismatch = errors.New("password mismatch")
 )
 
-// FakeIdentityProviderFactory -
-func FakeIdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
+// IdentityProviderFactory -
+func IdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var fakeConfig fakeConfig
 	if err := cfg.MapInto(&fakeConfig); err != nil {
 		return nil, err

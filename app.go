@@ -34,6 +34,7 @@ type (
 		childAreas      []*config.Area
 		area            *config.Area
 		args            []string
+		routesModules   []web.RoutesModule
 		defaultContext  string
 		eagerSingletons bool
 		flagset         *flag.FlagSet
@@ -75,6 +76,13 @@ func SetEagerSingletons(enabled bool) ApplicationOption {
 func WithArgs(args ...string) ApplicationOption {
 	return func(config *Application) {
 		config.args = args
+	}
+}
+
+// WithRoutes configures a given RoutesModule for usage in the flamingo app
+func WithRoutes(routesModule web.RoutesModule) ApplicationOption {
+	return func(config *Application) {
+		config.routesModules = append(config.routesModules, routesModule)
 	}
 }
 
@@ -127,6 +135,11 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		new(cmd.Module),
 	}, modules...)
 	modules = append(modules, new(servemodule))
+	for _, routesModule := range app.routesModules {
+		modules = append(modules, dingo.ModuleFunc(func(injector *dingo.Injector) {
+			web.BindRoutes(injector, routesModule)
+		}))
+	}
 
 	root := config.NewArea("root", modules, app.childAreas...)
 

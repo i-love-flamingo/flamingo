@@ -101,20 +101,26 @@ func (area *Area) GetFlatContexts() ([]*Area, error) {
 	return result, nil
 }
 
+var typeOfModuleFunc = reflect.TypeOf(dingo.ModuleFunc(nil))
+
 // resolveDependencies tries to get a complete list of all modules, including all dependencies
 // known can be empty initially, and will then be used for subsequent recursive calls
-func resolveDependencies(modules []dingo.Module, known map[reflect.Type]struct{}) []dingo.Module {
+func resolveDependencies(modules []dingo.Module, known map[interface{}]struct{}) []dingo.Module {
 	final := make([]dingo.Module, 0, len(modules))
 
 	if known == nil {
-		known = make(map[reflect.Type]struct{})
+		known = make(map[interface{}]struct{})
 	}
 
 	for _, module := range modules {
-		if _, ok := known[reflect.TypeOf(module)]; ok {
+		var identity interface{} = reflect.TypeOf(module)
+		if identity == typeOfModuleFunc {
+			identity = reflect.ValueOf(module)
+		}
+		if _, ok := known[identity]; ok {
 			continue
 		}
-		known[reflect.TypeOf(module)] = struct{}{}
+		known[identity] = struct{}{}
 		if depender, ok := module.(dingo.Depender); ok {
 			final = append(final, resolveDependencies(depender.Depends(), known)...)
 		}

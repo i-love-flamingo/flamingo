@@ -1,45 +1,19 @@
 
-# Flamingo
+# Flamingo Framework
+
+<img align="right" width="159px" src="https://raw.githubusercontent.com/i-love-flamingo/flamingo/master/docs/assets/flamingo-logo-only-pink-on-white.png">
+
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/i-love-flamingo/flamingo)](https://goreportcard.com/report/github.com/i-love-flamingo/flamingo) [![GoDoc](https://godoc.org/github.com/i-love-flamingo/flamingo?status.svg)](https://godoc.org/github.com/i-love-flamingo/flamingo) [![Build Status](https://travis-ci.org/i-love-flamingo/flamingo.svg)](https://travis-ci.org/i-love-flamingo/flamingo)
 
-## What is Flamingo
 
-Flamingo is a high productivity go based framework for rapidly building fast and pluggable web projects.
-It is used to build scalable and maintainable (web)applications.
+Flamingo is a web framework based on Go. It is designed to build pluggable and maintainable web projects.
+It is production ready, field tested and has a growing ecosystem.
 
-Flamingo is:
 
-* open source
-* written in go
-* easy to learn
-* fast and flexible
+# Quick start
 
-Go as simple, powerful and typesafe language is great to implement and scale serverside logic.
-Flamingo has a clean architecture with clear dependencies in mind and offers a typical features and support for nowadays web applications:
-
-* Powerful Templating Engines. E.g. support for Pug templates with reusable mixins and lightweight scripting.
-* Configuration concepts using yml and support for multiple areas and contexts
-* Powerful Dependency Injection
-* A Module concept for building modular and pluggable applications
-* Authentication concepts and security middleware
-* Flexible routing with support for prefix routes and reverse routing
-* Web Controller Support with: Request / Response / Form Handling etc
-* Operational Readyness: Logging, (distributed) Tracing, Metrics and Healthchecks with seperate endpoint
-* Localisation
-* Commands
-* Sessionhandling and Management
-* GraphQL support and therefore support to build nice SPA and PWAs on top of it
-* Resilience and Caching for external APIs calls.
-
-Flamingo itself does not contain ORM Mapper or libraries - instead it emphasizes "ports and adapters" architecture - so that you have a technology free (domain) model and any possible (and replaceable) persitence behind it.
-That makes Flamingo useful to build microservices and applications - especially to build "frontends" or portals that require interaction with other (micro) services in a distributed architecture. 
-When sticking to the architectural recommendation you can build modular applications with replaceable adapters that gives you independed testability.
-
-With **"Flamingo Commerce"** there is an additional active projects that offer rich and flexible features to build modern e-commerce applications.
-
-# Getting Started / Hello World
-
-Initialize your Project
+Initialize an empty project:
 
 ```bash
 mkdir helloworld
@@ -47,31 +21,89 @@ cd helloworld
 go mod init helloworld
 ```
 
-Create `main.go`:
+Create your project main file:
+
+```bash
+cat main.go
+``` 
+
 ```go
 package main
 
 import (
-	"context"
-	"net/http"
-	"strings"
-
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3"
-	"flamingo.me/flamingo/v3/core/requestlogger"
-	"flamingo.me/flamingo/v3/framework/web"
 )
 
 func main() {
 	flamingo.App([]dingo.Module{
-		new(requestlogger.Module),
-		new(module),
 	})
 }
+```
 
-type module struct{}
+If you then start your project you will see a list of registered commands:
+```bash
+go run main.go
+``` 
 
-func (*module) Configure(injector *dingo.Injector) {
+It will print something like:
+```
+Flamingo main
+
+Usage:
+  main [command]
+
+Examples:
+Run with -h or -help to see global debug flags
+
+Available Commands:
+  config      Config dump
+  handler     Dump the Handlers and its registered methods
+  help        Help about any command
+  routes      Routes dump
+  serve       Default serve command - starts on Port 3322
+
+Flags:
+  -h, --help   help for main
+
+Use "main [command] --help" for more information about a command.
+```
+
+To start the server use the following sub command:
+
+```bash
+go run main.go serve
+``` 
+
+And open http://localhost:3322
+
+## Hello World Example
+
+Create a new module "helloworld":
+
+
+```bash
+mkdir helloworld
+cat helloworld/module.go
+``` 
+
+With the following code for "module.go":
+
+```go
+package helloworld
+
+import (
+    	"context"
+    	"net/http"
+    	"strings"
+    
+    	"flamingo.me/dingo"
+    	"flamingo.me/flamingo/v3/framework/web"
+)
+
+type Module struct{}
+
+func (*Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
 }
 
@@ -90,31 +122,61 @@ func indexHandler(ctx context.Context, req *web.Request) web.Result {
 }
 ```
 
-Start server
+This file now includes a very simple Module that can be used in the Flamingo bootstrap and binds new routes to the Flamingo router.
+Now include this new module in your main.go file:
+
+```go
+package main
+
+import (
+	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3"
+	"helloworld/helloworld"
+)
+
+func main() {
+	flamingo.App([]dingo.Module{
+        new(helloworld.Module),
+	})
+}
+```
+
+If you now run the server again 
+
 ```bash
 go run main.go serve
 ``` 
 
-Open http://localhost:3322
+And open http://localhost:3322 you will see your "hello world" string.
 
-# The Flamingo Ecosystem 
-With "Flamingo Commerce" and "Flamingo Carotene" you get your toolkit for building **Blazing fast commerce experience layers**
 
-## Flamingo Commerce
-
-* Contains flamingo modules that provide „domain“, „application“ and „interface“ logic around commerce features
-* According to „ports and adapters“ these modules can be used with your own „Adapters“ to interact with any API or microservice you want.
-
-## Flamingo Carotene
-Is the frontend build pipeline featuring pug and atomic design pattern
-
-It can be used to implement modern and blazing fast commerce web applications.
 
 # Getting started
 
-Check out the hello-world example
-and read the rendered documentation under http://docs.flamingo.me
+Check out the full [hello-world example](https://github.com/i-love-flamingo/example-helloworld)
+and read the rendered documentation under [docs.flamingo.me](https://docs.flamingo.me/)
 
-# External Links:
-* http://www.flamingo.me
-* http://docs.flamingo.me
+# Framework Details
+
+## Feature List
+
+* Flexible templating engines. (gotemplates and [pugtemplates](https://github.com/i-love-flamingo/pugtemplate))
+* configuration concepts using [cue](https://cuelang.org/) with support for multiple config areas and additional config contexts
+* dependency injection  [Dingo](https://github.com/i-love-flamingo/dingo) 
+* A Module concept for building modular and pluggable applications based on Dingo
+* Authentication concepts and security middleware
+* Flexible routing with support for prefix routes and reverse routing
+* Web Controller Support with: Request / Response / Form Handling etc
+* Operational readiness: logging, (distributed) tracing, metrics and healthchecks with seperate endpoint
+* Localisation support
+* Commands
+* Event handling
+* Sessionhandling and Management (By default uses [Gorilla](https://github.com/gorilla/sessions))
+
+## Ecosystem
+
+* GraphQL Module (and therefore support to build SPA and PWAs on top of it)
+* Caching modules providing resilience and caching for external APIs calls.
+* pugtemplate template engine for server side rendering with the related frontend tooling **[Flamingo Carotene](https://github.com/i-love-flamingo/flamingo-carotene)**
+* **[Flamingo Commerce](https://github.com/i-love-flamingo/flamingo-commerce)**  active projects that offer rich and flexible features to build modern e-commerce applications.
+

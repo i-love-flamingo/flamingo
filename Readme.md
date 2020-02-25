@@ -92,7 +92,7 @@ mkdir helloworld
 cat helloworld/module.go
 ``` 
 
-With the following code for "module.go":
+With the following code for `module.go`:
 
 ```go
 package helloworld
@@ -127,8 +127,8 @@ func indexHandler(ctx context.Context, req *web.Request) web.Result {
 }
 ```
 
-This file now includes a very simple Module that can be used in the Flamingo bootstrap and binds new routes to the Flamingo router.
-Now include this new module in your main.go file:
+This file now includes a very simple Module, that can be used in the Flamingo bootstrap. In this case it binds new routes to the Flamingo router.
+Now please include this new module in your existing `main.go` file:
 
 ```go
 package main

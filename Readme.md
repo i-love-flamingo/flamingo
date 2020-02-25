@@ -83,10 +83,9 @@ go run main.go serve
 
 And open http://localhost:3322
 
-## Hello World Example
+**Hello World Example:**
 
-Create a new module "helloworld":
-
+To extend the plain flamingo project with a "Hello World" output please create a new module "helloworld" like this:
 
 ```bash
 mkdir helloworld

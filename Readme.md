@@ -12,7 +12,8 @@
 [![Join the chat at https://gitter.im/i-love-flamingo/community](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/i-love-flamingo/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 
-Flamingo is a web framework based on Go. It is designed to build pluggable and maintainable web projects.
+Flamingo is a web framework based on Go.  
+It is designed to build pluggable and maintainable web projects.
 It is production ready, field tested and has a growing ecosystem.
 
 

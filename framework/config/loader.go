@@ -8,9 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"cuelang.org/go/cue/parser"
-
 	"cuelang.org/go/cue/format"
+	"cuelang.org/go/cue/parser"
 	"github.com/ghodss/yaml"
 )
 
@@ -215,8 +214,14 @@ func loadYamlConfig(area *Area, config []byte) error {
 
 func loadYamlRoutesFile(area *Area, filename string) error {
 	routes, err := ioutil.ReadFile(filename + ".yml")
-	if err != nil {
-		return err
+	if err == nil {
+		return yaml.Unmarshal(routes, &area.Routes)
 	}
-	return yaml.Unmarshal(routes, &area.Routes)
+
+	routes, err = ioutil.ReadFile(filename + ".yaml")
+	if err == nil {
+		return yaml.Unmarshal(routes, &area.Routes)
+	}
+
+	return err
 }

@@ -384,10 +384,16 @@ func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) er
 
 // ServerErrorWithCodeAndTemplate error response with template and http status code
 func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status uint) *ServerErrorResponse {
-	errstr := err.Error()
-	if r.debug {
-		errstr = fmt.Sprintf("%+v", err)
+	var errstr string
+
+	if err != nil {
+		if r.debug {
+			errstr = fmt.Sprintf("%+v", err)
+		} else {
+			errstr = err.Error()
+		}
 	}
+
 	return &ServerErrorResponse{
 		Error: err,
 		RenderResponse: RenderResponse{

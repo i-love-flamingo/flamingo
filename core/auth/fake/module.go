@@ -32,14 +32,14 @@ core: auth: {
 		UserConfig :: {
 			password?: string
 		}
-
+	
 		typ: "fake"
 		broker: string
 		loginTemplate?: string
 		userConfig: {
 			[string]: UserConfig
 		}
-
+	
 		validatePassword: bool | *true
 		usernameFieldId: string | *"username"
 		passwordFieldId: string | *"password"

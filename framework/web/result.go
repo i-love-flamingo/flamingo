@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -163,6 +164,9 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 			w.Header().Add(name, val)
 		}
 	}
+	if r.Status == 0 {
+		r.Status = http.StatusOK
+	}
 	w.WriteHeader(int(r.Status))
 	if r.Body == nil {
 		return nil
@@ -194,6 +198,10 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 
 // Apply response
 func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	if r.router == nil {
+		return errors.New("no reverserouter available")
+	}
+
 	to, err := r.router.Relative(r.To, r.Data)
 	if err != nil {
 		return err
@@ -234,6 +242,10 @@ func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 
 // Apply response
 func (r *URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	if r.URL == nil {
+		return errors.New("URL is nil")
+	}
+
 	w.Header().Set("Location", r.URL.String())
 	return r.Response.Apply(c, w)
 }
@@ -269,6 +281,9 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		return err
 	}
 	r.Body = buf
+	if r.Response.Header == nil {
+		r.Response.Header = make(http.Header)
+	}
 	r.Response.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return r.Response.Apply(c, w)
 }
@@ -361,6 +376,9 @@ func (r *RenderResponse) SetNoCache() *RenderResponse {
 
 // Apply response
 func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	if r.RenderResponse.DataResponse.Response.Status == 0 {
+		r.RenderResponse.DataResponse.Response.Status = http.StatusInternalServerError
+	}
 	return r.RenderResponse.Apply(c, w)
 }
 

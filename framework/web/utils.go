@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -15,3 +16,6 @@ func URLTitle(title string) string {
 
 	return url
 }
+
+// fmtErrorf shim to allow go 1.12 backwards compatibility
+var fmtErrorf = fmt.Errorf

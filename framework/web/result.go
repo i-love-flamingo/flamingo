@@ -77,7 +77,8 @@ type (
 	// ServerErrorResponse returns a server error, by default http 500
 	ServerErrorResponse struct {
 		RenderResponse
-		Error error
+		Error     error
+		ErrString string
 	}
 
 	// CacheDirectiveBuilder constructs a CacheDirective with the most commonly used options
@@ -379,7 +380,12 @@ func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) er
 	if r.RenderResponse.DataResponse.Response.Status == 0 {
 		r.RenderResponse.DataResponse.Response.Status = http.StatusInternalServerError
 	}
-	return r.RenderResponse.Apply(c, w)
+
+	if err := r.RenderResponse.Apply(c, w); err != nil {
+		http.Error(w, r.ErrString, int(r.RenderResponse.DataResponse.Response.Status))
+	}
+
+	return nil
 }
 
 // ServerErrorWithCodeAndTemplate error response with template and http status code
@@ -395,7 +401,8 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 	}
 
 	return &ServerErrorResponse{
-		Error: err,
+		Error:     err,
+		ErrString: errstr,
 		RenderResponse: RenderResponse{
 			Template: tpl,
 			engine:   r.engine,
@@ -417,28 +424,28 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
+	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("500 Internal Server Error: %w", err), r.templateErrorWithCode, http.StatusInternalServerError)
 }
 
 // Unavailable creates a 503 error response
 func (r *Responder) Unavailable(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(err, r.templateUnavailable, http.StatusServiceUnavailable)
+	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("503 Service Unavailable: %w", err), r.templateUnavailable, http.StatusServiceUnavailable)
 }
 
 // NotFound creates a 404 error response
 func (r *Responder) NotFound(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(err, r.templateNotFound, http.StatusNotFound)
+	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("404 Not Found: %w", err), r.templateNotFound, http.StatusNotFound)
 }
 
 // Forbidden creates a 403 error response
 func (r *Responder) Forbidden(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
+	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("403 Forbidden: %w", err), r.templateForbidden, http.StatusForbidden)
 }
 
 // SetNoCache helper

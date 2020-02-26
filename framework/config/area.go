@@ -15,8 +15,6 @@ import (
 	"flamingo.me/dingo"
 )
 
-var fmtErrorf = fmt.Errorf
-
 type (
 	// Area defines a configuration area for multi-site setups
 	// it is initialized by project main package and partly loaded by config files
@@ -140,7 +138,7 @@ func moduleName(m dingo.Module) string {
 
 func cueError(err error) error {
 	if p, ok := err.(errors.Error); ok {
-		return fmtErrorf("%s: %w", p.Position(), err)
+		return fmt.Errorf("%s: %w", p.Position(), err)
 	}
 	return err
 }
@@ -155,7 +153,7 @@ func (area *Area) loadCueConfig() error {
 	for _, module := range area.Modules {
 		if cuemodule, ok := module.(CueConfigModule); ok {
 			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
-				return fmtErrorf("loading config for %s failed: %w", moduleName(module), cueError(err))
+				return fmt.Errorf("loading config for %s failed: %w", moduleName(module), cueError(err))
 			}
 		}
 	}
@@ -168,7 +166,7 @@ func (area *Area) loadCueConfig() error {
 	envFile += "} } }\n"
 
 	if err := area.cueBuildInstance.AddFile("flamingo-os-env-file", envFile); err != nil {
-		return fmtErrorf("%s: %w", area.Name, cueError(err))
+		return fmt.Errorf("%s: %w", area.Name, cueError(err))
 	}
 
 	return nil
@@ -284,15 +282,15 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 
 	area.cueInstance, err = area.cueInstance.Fill(area.Configuration)
 	if err != nil {
-		return fmtErrorf("%s: %w", area.Name, cueError(err))
+		return fmt.Errorf("%s: %w", area.Name, cueError(err))
 	}
 
 	m := make(Map)
 	if err := area.cueInstance.Value().Decode(&m); err != nil {
-		return fmtErrorf("%s: %w", area.Name, cueError(err))
+		return fmt.Errorf("%s: %w", area.Name, cueError(err))
 	}
 	if err := area.Configuration.Add(m); err != nil {
-		return fmtErrorf("%s: %w", area.Name, err)
+		return fmt.Errorf("%s: %w", area.Name, err)
 	}
 
 	if legacy {

@@ -2,9 +2,9 @@ package controller
 
 import (
 	"context"
+	"errors"
 
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/pkg/errors"
 )
 
 // Error controller

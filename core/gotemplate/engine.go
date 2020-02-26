@@ -3,6 +3,7 @@ package gotemplate
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 

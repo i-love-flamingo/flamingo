@@ -24,9 +24,6 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 )
 
-// fmtErrorf shim to allow go 1.12 backwards compatibility
-var fmtErrorf = fmt.Errorf
-
 type (
 	// Application contains a main flamingo application
 	Application struct {
@@ -121,7 +118,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	dingoInspect := app.flagset.Bool("dingo-inspect", false, "inspect dingo")
 
 	if err := app.flagset.Parse(app.args); err != nil && err != flag.ErrHelp {
-		return nil, fmtErrorf("app: parsing arguments: %w", err)
+		return nil, fmt.Errorf("app: parsing arguments: %w", err)
 	}
 
 	if dingoTraceCircular != nil && *dingoTraceCircular {
@@ -165,23 +162,23 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	}
 
 	if err := config.Load(root, app.configDir, configLoadOptions...); err != nil {
-		return nil, fmtErrorf("app: config load: %w", err)
+		return nil, fmt.Errorf("app: config load: %w", err)
 	}
 
 	areas, err := root.Flat()
 	if err != nil {
-		return nil, fmtErrorf("app: flat areas: %w", err)
+		return nil, fmt.Errorf("app: flat areas: %w", err)
 	}
 
 	var ok bool
 	app.area, ok = areas[*flamingoContext]
 	if !ok {
-		return nil, fmtErrorf("app: context %q not found", *flamingoContext)
+		return nil, fmt.Errorf("app: context %q not found", *flamingoContext)
 	}
 
 	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		return nil, fmtErrorf("app: get initialized injector: %w", err)
+		return nil, fmt.Errorf("app: get initialized injector: %w", err)
 	}
 
 	if *dingoInspect {
@@ -190,7 +187,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	if app.eagerSingletons {
 		if err := injector.BuildEagerSingletons(false); err != nil {
-			return nil, fmtErrorf("app: build eager singletons: %w", err)
+			return nil, fmt.Errorf("app: build eager singletons: %w", err)
 		}
 	}
 
@@ -217,12 +214,12 @@ func App(modules []dingo.Module, options ...ApplicationOption) {
 func (app *Application) Run() error {
 	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		return fmtErrorf("get initialized injector: %w", err)
+		return fmt.Errorf("get initialized injector: %w", err)
 	}
 
 	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
-		return fmtErrorf("app: get flamingo cobra.Command: %w", err)
+		return fmt.Errorf("app: get flamingo cobra.Command: %w", err)
 	}
 
 	rootCmd := i.(*cobra.Command)
@@ -230,7 +227,7 @@ func (app *Application) Run() error {
 
 	i, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
-		return fmtErrorf("app: get eventRouterProvider: %w", err)
+		return fmt.Errorf("app: get eventRouterProvider: %w", err)
 	}
 	i.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 

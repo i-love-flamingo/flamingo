@@ -1,12 +1,12 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 
 	"flamingo.me/dingo"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -409,7 +409,7 @@ catchallrouteloop:
 		return handler.path.Render(renderparams, usedValues)
 	}
 
-	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)
+	return "", fmt.Errorf("reverse for %q not found, parameters: %v", name, params)
 }
 
 // Match a request path

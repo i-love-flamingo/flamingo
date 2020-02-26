@@ -1,12 +1,12 @@
 package web
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"regexp"
 	"sort"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type (
@@ -202,7 +202,7 @@ func NewPath(path string) (*Path, error) {
 
 	for len(path) > 1 {
 		if path[0] != '/' {
-			return nil, errors.Errorf("path %q corrupted", path)
+			return nil, fmt.Errorf("path %q corrupted", path)
 		}
 		path = path[1:]
 

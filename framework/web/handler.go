@@ -9,7 +9,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
-	"github.com/pkg/errors"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -53,11 +52,11 @@ func panicToError(p interface{}) error {
 	var err error
 	switch errIface := p.(type) {
 	case error:
-		err = errors.WithStack(errIface)
+		err = fmt.Errorf("controller panic: %w", errIface)
 	case string:
-		err = errors.New(errIface)
+		err = fmt.Errorf("controller panic: %s", errIface)
 	default:
-		err = errors.Errorf("router/controller: %+v", errIface)
+		err = fmt.Errorf("controller panic: %+v", errIface)
 	}
 	return err
 }
@@ -126,7 +125,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 			} else if controller.any != nil {
 				response = controller.any(ctx, r)
 			} else {
-				err := errors.Errorf("action for method %q not found and no any fallback", req.Request().Method)
+				err := fmt.Errorf("action for method %q not found and no \"any\" fallback", req.Request().Method)
 				h.logger.WithContext(ctx).Warn(err)
 				response = h.routerRegistry.handler[FlamingoNotfound].any(context.WithValue(ctx, RouterError, err), r)
 				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})

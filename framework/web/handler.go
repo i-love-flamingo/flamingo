@@ -112,7 +112,6 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 			defer func() {
 				if err := panicToError(recover()); err != nil {
-					h.logger.WithContext(ctx).Error(err)
 					response = h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, err), r)
 					span.SetStatus(trace.Status{Code: trace.StatusCodeAborted, Message: "controller panic"})
 				}
@@ -126,7 +125,6 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 				response = controller.any(ctx, r)
 			} else {
 				err := fmt.Errorf("action for method %q not found and no \"any\" fallback", req.Request().Method)
-				h.logger.WithContext(ctx).Warn(err)
 				response = h.routerRegistry.handler[FlamingoNotfound].any(context.WithValue(ctx, RouterError, err), r)
 				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
 			}

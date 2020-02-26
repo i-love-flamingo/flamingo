@@ -85,49 +85,50 @@ And open http://localhost:3322
 
 **Hello World Example:**
 
-To extend the plain flamingo project with a "Hello World" output please create a new module "helloworld" like this:
+To extend this empty flamingo project with a "Hello World" output please create a new module "helloworld" like this:
 
 ```bash
 mkdir helloworld
 cat helloworld/module.go
 ``` 
 
-With the following code for `module.go`:
+With the following code in `module.go`:
 
 ```go
 package helloworld
 
 import (
-    	"context"
-    	"net/http"
-    	"strings"
-    
-    	"flamingo.me/dingo"
-    	"flamingo.me/flamingo/v3/framework/web"
+        "context"
+        "net/http"
+        "strings"
+        
+        "flamingo.me/dingo"
+        "flamingo.me/flamingo/v3/framework/web"
 )
 
 type Module struct{}
 
 func (*Module) Configure(injector *dingo.Injector) {
-	web.BindRoutes(injector, new(routes))
+        web.BindRoutes(injector, new(routes))
 }
 
 type routes struct{}
 
 func (*routes) Routes(registry *web.RouterRegistry) {
-	registry.Route("/", "home")
-	registry.HandleAny("home", indexHandler)
+        registry.Route("/", "home")
+        registry.HandleAny("home", indexHandler)
 }
 
 func indexHandler(ctx context.Context, req *web.Request) web.Result {
-	return &web.Response{
-		Status: http.StatusOK,
-		Body:   strings.NewReader("Hello World!"),
-	}
+        return &web.Response{
+            Status: http.StatusOK,
+            Body:   strings.NewReader("Hello World!"),
+        }
 }
 ```
 
-This file now includes a very simple Module, that can be used in the Flamingo bootstrap. In this case it binds new routes to the Flamingo router.
+This file now defines a very simple module, that can be used in the Flamingo bootstrap. 
+In this case it registeres a new handler that renders a simple "Hello World" message and binds the route "/" to this handler.
 Now please include this new module in your existing `main.go` file:
 
 ```go
@@ -152,29 +153,28 @@ If you now run the server again
 go run main.go serve
 ``` 
 
-And open http://localhost:3322 you will see your "hello world" string.
+And open http://localhost:3322 you will see your "Hello World!" output.
 
 
 
 # Getting started
-
-Check out the full [hello-world example](https://github.com/i-love-flamingo/example-helloworld)
-and read the rendered documentation under [docs.flamingo.me](https://docs.flamingo.me/)
+To learn more about Flamingo you can check out the full [hello-world example tutorial](https://github.com/i-love-flamingo/example-helloworld)
+and read the documentation under [docs.flamingo.me](https://docs.flamingo.me/)
 
 # Framework Details
 
 ## Feature List
 
+* dependency injection with [Dingo](https://github.com/i-love-flamingo/dingo) 
 * Flexible templating engines. (gotemplates and [pugtemplates](https://github.com/i-love-flamingo/pugtemplate))
 * configuration concepts using [cue](https://cuelang.org/) with support for multiple config areas and additional config contexts
-* dependency injection  [Dingo](https://github.com/i-love-flamingo/dingo) 
-* A Module concept for building modular and pluggable applications based on Dingo
+* A module concept for building modular and pluggable applications based on Dingo
 * Authentication concepts and security middleware
 * Flexible routing with support for prefix routes and reverse routing
-* Web Controller Support with: Request / Response / Form Handling etc
+* Web controller concept with request/response abstraction; form handling etc
 * Operational readiness: logging, (distributed) tracing, metrics and healthchecks with seperate endpoint
 * Localisation support
-* Commands
+* Commands using [Cobra](https://github.com/spf13/cobra)
 * Event handling
 * Sessionhandling and Management (By default uses [Gorilla](https://github.com/gorilla/sessions))
 
@@ -183,5 +183,5 @@ and read the rendered documentation under [docs.flamingo.me](https://docs.flamin
 * GraphQL Module (and therefore support to build SPA and PWAs on top of it)
 * Caching modules providing resilience and caching for external APIs calls.
 * pugtemplate template engine for server side rendering with the related frontend tooling **[Flamingo Carotene](https://github.com/i-love-flamingo/flamingo-carotene)**
-* **[Flamingo Commerce](https://github.com/i-love-flamingo/flamingo-commerce)**  active projects that offer rich and flexible features to build modern e-commerce applications.
+* **[Flamingo Commerce](https://github.com/i-love-flamingo/flamingo-commerce)**  is an active projects that offer rich and flexible features to build modern e-commerce applications.
 

@@ -11,9 +11,7 @@ AuthFake1WithCustomTemplate :: core.auth.fake & {broker: "fake1WithCustomTemplat
 	<label for="{{.UsernameID}}">Username</label>
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
 	<label for="{{.PasswordID}}">Password</label>
-  <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
-	<label for="{{.OtpID}}">2 Factor OTP</label>
-  <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
+	<input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
 	<button type="submit" id="submit">Fake Login</button>
   </form>
 </body>

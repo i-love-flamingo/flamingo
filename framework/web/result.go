@@ -395,12 +395,14 @@ func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) er
 func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status uint) *ServerErrorResponse {
 	var errstr string
 
-	if err != nil {
-		if r.debug {
-			errstr = fmt.Sprintf("%+v", err)
-		} else {
-			errstr = err.Error()
-		}
+	if err == nil {
+		err = errors.New("")
+	}
+
+	if r.debug {
+		errstr = fmt.Sprintf("%+v", err)
+	} else {
+		errstr = err.Error()
 	}
 
 	return &ServerErrorResponse{
@@ -427,28 +429,28 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("500 Internal Server Error: %w", err), r.templateErrorWithCode, http.StatusInternalServerError)
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
 }
 
 // Unavailable creates a 503 error response
 func (r *Responder) Unavailable(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("503 Service Unavailable: %w", err), r.templateUnavailable, http.StatusServiceUnavailable)
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateUnavailable, http.StatusServiceUnavailable)
 }
 
 // NotFound creates a 404 error response
 func (r *Responder) NotFound(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("404 Not Found: %w", err), r.templateNotFound, http.StatusNotFound)
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateNotFound, http.StatusNotFound)
 }
 
 // Forbidden creates a 403 error response
 func (r *Responder) Forbidden(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("403 Forbidden: %w", err), r.templateForbidden, http.StatusForbidden)
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
 }
 
 // SetNoCache helper

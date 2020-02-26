@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -185,7 +186,7 @@ func loadYamlFile(area *Area, filename string) error {
 		return loadYamlConfig(area, config)
 	}
 
-	return err
+	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
 }
 
 func loadYamlConfig(area *Area, config []byte) error {
@@ -223,5 +224,5 @@ func loadYamlRoutesFile(area *Area, filename string) error {
 		return yaml.Unmarshal(routes, &area.Routes)
 	}
 
-	return err
+	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
 }

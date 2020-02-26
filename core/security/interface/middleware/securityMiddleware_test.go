@@ -206,7 +206,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Forbidden() {
 
 	t.True(ok)
 	t.Equal(uint(http.StatusForbidden), response.Response.Status)
-	t.Equal("403 Forbidden: permission SomePermission for path /referrer", response.Error.Error())
+	t.Equal("permission SomePermission for path /referrer", response.Error.Error())
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfGranted_Allowed() {
@@ -226,7 +226,7 @@ func (t *SecurityMiddlewareTestSuite) TestHandleIfNotGranted_Forbidden() {
 
 	t.True(ok)
 	t.Equal(uint(http.StatusForbidden), response.Response.Status)
-	t.Equal("403 Forbidden: permission SomePermission for path /referrer", response.Error.Error())
+	t.Equal("permission SomePermission for path /referrer", response.Error.Error())
 }
 
 func (t *SecurityMiddlewareTestSuite) TestHandleIfNotGranted_Allowed() {

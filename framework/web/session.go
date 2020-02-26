@@ -50,6 +50,10 @@ func SessionFromContext(ctx context.Context) *Session {
 }
 
 func (s *Session) markDirty(key interface{}) {
+	// do not mark dirty sessions when session save mode is set to always
+	if s.sessionSaveMode == sessionSaveAlways {
+		return
+	}
 	if s.dirty == nil {
 		s.dirty = make(map[interface{}]struct{})
 	}

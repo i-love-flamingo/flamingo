@@ -2,9 +2,9 @@
 
 ## Description
 
-The module allows to use a (2fa) openID login service without "real" IDP providers with flexible configurable user credentials.
+The module allows to use a fake login service without "real" IDP providers with flexible configurable user credentials.
 
-The module also provides a customizable login form template and also allows you to provide your own IDP login form. The form input is validation is also configurable, e.g. to enforce OTP data.
+The module also provides a customizable login form template and also allows you to provide your own IDP login form. The form input is validation is also configurable.
 
 ## Configuration
 
@@ -16,9 +16,9 @@ core: auth: {
 		...
 		core.auth.fake & {broker: "fake1WithoutPasswords", validatePassword: false, userConfig: {jondoe: {}}},
 		...
-		core.auth.fake & {broker: "fake1WithDefaultTemplate", validatePassword: true, validateOtp: true, userConfig: {jondoe: {password: "password", otp: "otp"}}},
+		core.auth.fake & {broker: "fake1WithDefaultTemplate", validatePassword: true, userConfig: {jondoe: {password: "password"}}},
 		...
-		core.auth.fake & {broker: "fake1WithCustomTemplate", validatePassword: true, validateOtp: true, usernameFieldId: "customUsernameField", passwordFieldId: "customPasswordField", otpFieldId: "customOtpField", userConfig: {jondoe: {password: "password", otp: "otp"}}, loginTemplate: """
+		core.auth.fake & {broker: "fake1WithCustomTemplate", validatePassword: true, usernameFieldId: "customUsernameField", passwordFieldId: "customPasswordField", userConfig: {jondoe: {password: "password"}}, loginTemplate: """
 <body>
   <h1>Custom Login Template!</h1>
   <form name="fake-idp-form" action="{{.FormURL}}" method="post">
@@ -26,9 +26,7 @@ core: auth: {
 	<label for="{{.UsernameID}}">Username</label>
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
 	<label for="{{.PasswordID}}">Password</label>
-  <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
-	<label for="{{.OtpID}}">2 Factor OTP</label>
-  <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
+    <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
 	<button type="submit" id="submit">Fake Login</button>
   </form>
 </body>
@@ -52,9 +50,7 @@ The custom template html must use the same go template placeholders as used in t
 	<label for="{{.UsernameID}}">Username</label>
 	<input type="text" name="{{.UsernameID}}" id="{{.UsernameID}}">
 	<label for="{{.PasswordID}}">Password</label>
-  <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
-	<label for="{{.OtpID}}">2 Factor OTP</label>
-  <input type="text" name="{{.OtpID}}" id="{{.OtpID}}">
+    <input type="password" name="{{.PasswordID}}" id="{{.PasswordID}}">
 	<button type="submit" id="submit">Fake Login</button>
   </form>
 </body>

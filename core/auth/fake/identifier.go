@@ -16,8 +16,8 @@ import (
 )
 
 type (
-	// Identifier is the fake Identifier implementation
-	Identifier struct {
+	// identifier is the fake identifier implementation
+	identifier struct {
 		responder     *web.Responder
 		broker        string
 		reverseRouter web.ReverseRouter
@@ -68,9 +68,9 @@ const (
 )
 
 var (
-	_ auth.RequestIdentifier = (*Identifier)(nil)
-	_ auth.WebCallbacker     = (*Identifier)(nil)
-	_ auth.WebLogouter       = (*Identifier)(nil)
+	_ auth.RequestIdentifier = (*identifier)(nil)
+	_ auth.WebCallbacker     = (*identifier)(nil)
+	_ auth.WebLogouter       = (*identifier)(nil)
 
 	errMissingUsername  = errors.New("missing username")
 	errInvalidUser      = errors.New("invalid user")
@@ -85,15 +85,15 @@ func IdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		return nil, err
 	}
 
-	return &Identifier{broker: fakeConfig.Broker, config: fakeConfig}, nil
+	return &identifier{broker: fakeConfig.Broker, config: fakeConfig}, nil
 }
 
 // Inject injects module dependencies
-func (i *Identifier) Inject(
+func (i *identifier) Inject(
 	reverseRouter web.ReverseRouter,
 	responder *web.Responder,
 	eventRouter flamingo.EventRouter,
-) *Identifier {
+) *identifier {
 	i.reverseRouter = reverseRouter
 	i.responder = responder
 	i.eventRouter = eventRouter
@@ -102,12 +102,12 @@ func (i *Identifier) Inject(
 }
 
 // Broker returns the broker id from the config
-func (i *Identifier) Broker() string {
+func (i *identifier) Broker() string {
 	return i.broker
 }
 
 // Authenticate action, fake
-func (i *Identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
+func (i *identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
 	var formError error
 
 	postValues, err := r.FormAll()
@@ -122,6 +122,10 @@ func (i *Identifier) Authenticate(_ context.Context, r *web.Request) web.Result 
 		}
 	}
 
+	return i.prepareFormResponse(formError, r)
+}
+
+func (i *identifier) prepareFormResponse(formError error, r *web.Request) web.Result {
 	// get formURL to callback with broker filled in
 	formURL, err := i.reverseRouter.Absolute(r, "core.auth.login", map[string]string{"broker": i.broker})
 	if err != nil {
@@ -167,7 +171,7 @@ func (i *Identifier) Authenticate(_ context.Context, r *web.Request) web.Result 
 	}
 }
 
-func (i *Identifier) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
+func (i *identifier) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
 	usernameVal, ok := values[i.config.UsernameFieldID]
 	if !ok {
 		return errMissingUsername
@@ -200,7 +204,7 @@ func (i *Identifier) handlePostValues(r *web.Request, values map[string][]string
 }
 
 // Identify action, fake
-func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
+func (i *identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	userSessionData, ok := request.Session().Load(fmt.Sprintf(userDataSessionKey, i.broker))
 	if !ok {
 		return nil, errors.New("identity not saved in session")
@@ -217,20 +221,18 @@ func (i *Identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 }
 
 // Callback from fake idp
-func (i *Identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
-	identity, err := i.Identify(ctx, request)
+func (i *identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
+	_, err := i.Identify(ctx, request)
 	if err != nil {
 		i.Logout(ctx, request)
 
-		return i.responder.ServerError(err)
+		return i.prepareFormResponse(err, request)
 	}
-
-	i.eventRouter.Dispatch(ctx, &auth.WebLoginEvent{Broker: i.broker, Request: request, Identity: identity})
 
 	return i.responder.URLRedirect(returnTo(request))
 }
 
 // Logout logs out
-func (i *Identifier) Logout(_ context.Context, request *web.Request) {
+func (i *identifier) Logout(_ context.Context, request *web.Request) {
 	request.Session().Delete(fmt.Sprintf(userDataSessionKey, i.broker))
 }

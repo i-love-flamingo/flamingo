@@ -3,6 +3,7 @@ package fake
 import (
 	"bytes"
 	"context"
+	"html/template"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,9 +30,7 @@ func (m *mockRouter) Relative(_ string, _ map[string]string) (*url.URL, error) {
 
 // Absolute mock action
 func (m *mockRouter) Absolute(_ *web.Request, _ string, _ map[string]string) (*url.URL, error) {
-	resultURL := &url.URL{}
-
-	return resultURL.Parse(strings.ReplaceAll("/core/auth/login/:broker", ":broker", m.broker))
+	return url.Parse(strings.ReplaceAll("/core/auth/login/:broker", ":broker", m.broker))
 }
 
 func Test_Identifier_Authenticate(t *testing.T) {
@@ -57,16 +56,7 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				config: fakeConfig{},
 			},
 			args: args{
-				r: addRequestParameters(web.CreateRequest(
-					&http.Request{
-						Method: http.MethodGet,
-						URL: &url.URL{
-							Scheme: "http",
-						},
-					},
-					web.EmptySession(),
-				),
-				),
+				r: buildRequest(http.MethodGet, nil),
 			},
 			want: wantFormResponseWithMessage(""),
 		},
@@ -76,18 +66,7 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				config: fakeConfig{},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{}),
 			},
 			want: wantFormResponseWithMessage(""),
 		},
@@ -97,20 +76,9 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				config: fakeConfig{},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"invalid-field": []string{"just to get into the form handling"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{
+					"invalid-field": []string{"just to get into the form handling"},
+				}),
 			},
 			want: wantFormResponseWithMessage(errMissingUsername.Error()),
 		},
@@ -129,20 +97,9 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"nonexistent user"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{
+					"username": []string{"nonexistent user"},
+				}),
 			},
 			want: wantFormResponseWithMessage(errInvalidUser.Error()),
 		},
@@ -161,20 +118,9 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"user_b"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{
+					"username": []string{"user_b"},
+				}),
 			},
 			want: &web.RouteRedirectResponse{
 				Response: web.Response{
@@ -201,21 +147,10 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"user_b"},
-								"password": []string{"invalid password"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{
+					"username": []string{"user_b"},
+					"password": []string{"invalid password"},
+				}),
 			},
 			want: wantFormResponseWithMessage(errPasswordMismatch.Error()),
 		},
@@ -235,21 +170,10 @@ func Test_Identifier_Authenticate(t *testing.T) {
 				},
 			},
 			args: args{
-				r: addRequestParameters(
-					web.CreateRequest(
-						&http.Request{
-							Method: http.MethodPost,
-							URL: &url.URL{
-								Scheme: "http",
-							},
-							PostForm: url.Values{
-								"username": []string{"user_b"},
-								"password": []string{"test_b"},
-							},
-						},
-						web.EmptySession(),
-					),
-				),
+				r: buildRequest(http.MethodPost, &url.Values{
+					"username": []string{"user_b"},
+					"password": []string{"test_b"},
+				}),
 			},
 			want: &web.RouteRedirectResponse{
 				Response: web.Response{
@@ -264,12 +188,11 @@ func Test_Identifier_Authenticate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			i := new(Identifier)
+			i := new(identifier)
 
 			i.Inject(&mockRouter{broker: "testBroker"}, &web.Responder{}, &flamingo.DefaultEventRouter{})
 
 			// prepare identifier with default config values not required by the test
-
 			i.config = tt.fields.config
 			i.broker = "testBroker"
 			i.config.UsernameFieldID = "username"
@@ -282,7 +205,55 @@ func Test_Identifier_Authenticate(t *testing.T) {
 	}
 }
 
+func buildRequest(method string, formValues *url.Values) *web.Request {
+	newRequest := &http.Request{
+		Method: method,
+		URL: &url.URL{
+			Scheme: "http",
+		},
+	}
+
+	if formValues != nil && http.MethodPost == method {
+		newRequest.PostForm = *formValues
+	}
+
+	result := web.CreateRequest(
+		newRequest,
+		web.EmptySession(),
+	)
+
+	result.Params = web.RequestParams{"broker": "testBroker"}
+
+	return result
+}
+
 func wantFormResponseWithMessage(message string) *web.Response {
+
+	t := template.New("fake")
+	t, err := t.Parse(defaultLoginTemplate)
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	var body = new(bytes.Buffer)
+	var errMsg string
+
+	if formError != nil {
+		errMsg = formError.Error()
+	}
+
+	err = t.Execute(
+		body,
+		viewData{
+			FormURL:    formURL.String(),
+			Message:    errMsg,
+			UsernameID: i.config.UsernameFieldID,
+			PasswordID: i.config.PasswordFieldID,
+		})
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
 	result := strings.ReplaceAll(defaultLoginTemplate, "{{.FormURL}}", "/core/auth/login/testBroker")
 	result = strings.ReplaceAll(result, "{{.Message}}", message)
 	result = strings.ReplaceAll(result, "{{.UsernameID}}", defaultUserNameFieldID)
@@ -295,10 +266,4 @@ func wantFormResponseWithMessage(message string) *web.Response {
 			"ContentType": {"text/html; charset=utf-8"},
 		},
 	}
-}
-
-func addRequestParameters(request *web.Request) *web.Request {
-	request.Params = web.RequestParams{"broker": "testBroker"}
-
-	return request
 }

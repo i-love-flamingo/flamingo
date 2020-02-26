@@ -27,21 +27,23 @@ type (
 		Absolute(r *Request, to string, params map[string]string) (*url.URL, error)
 	}
 
-	filterProvider func() []Filter
-	routesProvider func() []RoutesModule
+	filterProvider    func() []Filter
+	routesProvider    func() []RoutesModule
+	responderProvider func() *Responder
 
 	// Router represents actual implementation of ReverseRouter interface
 	Router struct {
-		base           *url.URL
-		external       *url.URL
-		eventRouter    flamingo.EventRouter
-		filterProvider filterProvider
-		routesProvider routesProvider
-		logger         flamingo.Logger
-		routerRegistry *RouterRegistry
-		configArea     *config.Area
-		sessionStore   *SessionStore
-		sessionName    string
+		base              *url.URL
+		external          *url.URL
+		eventRouter       flamingo.EventRouter
+		filterProvider    filterProvider
+		routesProvider    routesProvider
+		logger            flamingo.Logger
+		routerRegistry    *RouterRegistry
+		configArea        *config.Area
+		sessionStore      *SessionStore
+		sessionName       string
+		responderProvider responderProvider
 	}
 )
 
@@ -68,6 +70,7 @@ func (r *Router) Inject(
 	routesProvider routesProvider,
 	logger flamingo.Logger,
 	configArea *config.Area,
+	responderProvider responderProvider,
 ) {
 	r.base = &url.URL{
 		Scheme: cfg.Scheme,
@@ -91,6 +94,7 @@ func (r *Router) Inject(
 	if cfg.SessionName != "" {
 		r.sessionName = cfg.SessionName
 	}
+	r.responderProvider = responderProvider
 }
 
 // Handler creates and returns new instance of http.Handler interface
@@ -120,6 +124,10 @@ func (r *Router) Handler() http.Handler {
 		}
 	}
 
+	if r.responderProvider == nil {
+		r.responderProvider = func() *Responder { return new(Responder) }
+	}
+
 	return &handler{
 		routerRegistry: r.routerRegistry,
 		filter:         r.filterProvider(),
@@ -128,6 +136,7 @@ func (r *Router) Handler() http.Handler {
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
 		prefix:         strings.TrimRight(r.base.Path, "/"),
+		responder:      r.responderProvider(),
 	}
 }
 

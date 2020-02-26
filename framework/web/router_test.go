@@ -202,7 +202,7 @@ func TestRouterRelativeAndAbsolute(t *testing.T) {
 			Path:        path,
 			External:    external,
 			SessionName: "test",
-		}, nil, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil)
+		}, nil, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil, nil)
 
 		registry.HandleGet("test", func(context.Context, *Request) Result {
 			return &Response{}

@@ -174,6 +174,10 @@ func (r *Router) relative(to string, params map[string]string) (string, error) {
 
 // Relative returns a root-relative URL, starting with `/`
 func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
+	if r.base == nil {
+		r.base, _ = url.Parse("/")
+	}
+
 	if to == "" {
 		relativePath := r.base.Path
 		if r.external != nil {
@@ -213,9 +217,8 @@ func (r *Router) Absolute(req *Request, to string, params map[string]string) (*u
 
 	var scheme, host string
 
-	if r.base != nil {
-		scheme = r.base.Scheme
-		host = r.base.Host
+	if r.base == nil {
+		r.base, _ = url.Parse("/")
 	}
 
 	if scheme == "" {

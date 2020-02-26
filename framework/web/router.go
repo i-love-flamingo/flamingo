@@ -101,10 +101,6 @@ func (r *Router) Inject(
 func (r *Router) Handler() http.Handler {
 	r.routerRegistry = NewRegistry()
 
-	if r.base == nil {
-		r.base, _ = url.Parse("/")
-	}
-
 	if r.configArea != nil {
 		for _, route := range r.configArea.Routes {
 			r.routerRegistry.MustRoute(route.Path, route.Controller)
@@ -135,7 +131,7 @@ func (r *Router) Handler() http.Handler {
 		logger:         r.logger.WithField(flamingo.LogKeyModule, "web").WithField(flamingo.LogKeyCategory, "handler"),
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
-		prefix:         strings.TrimRight(r.base.Path, "/"),
+		prefix:         strings.TrimRight(r.Base().Path, "/"),
 		responder:      r.responderProvider(),
 	}
 }
@@ -150,6 +146,9 @@ func (r *Router) ListenAndServe(addr string) error {
 
 // Base returns full base urls, containing scheme, domain and base path
 func (r *Router) Base() *url.URL {
+	if r.base == nil {
+		return new(url.URL)
+	}
 	return r.base
 }
 
@@ -174,12 +173,8 @@ func (r *Router) relative(to string, params map[string]string) (string, error) {
 
 // Relative returns a root-relative URL, starting with `/`
 func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
-	if r.base == nil {
-		r.base, _ = url.Parse("/")
-	}
-
 	if to == "" {
-		relativePath := r.base.Path
+		relativePath := r.Base().Path
 		if r.external != nil {
 			relativePath = r.external.Path
 		}
@@ -194,7 +189,7 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 		return nil, err
 	}
 
-	basePath := r.base.Path
+	basePath := r.Base().Path
 	if r.external != nil {
 		basePath = r.external.Path
 	}
@@ -215,11 +210,8 @@ func (r *Router) Absolute(req *Request, to string, params map[string]string) (*u
 		return &e, nil
 	}
 
-	var scheme, host string
-
-	if r.base == nil {
-		r.base, _ = url.Parse("/")
-	}
+	scheme := r.Base().Scheme
+	host := r.Base().Host
 
 	if scheme == "" {
 		if req != nil && req.request.TLS != nil {

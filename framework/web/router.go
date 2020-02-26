@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -11,7 +12,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -116,7 +116,7 @@ func (r *Router) Handler() http.Handler {
 
 	for _, handler := range r.routerRegistry.routes {
 		if _, ok := r.routerRegistry.handler[handler.handler]; !ok {
-			panic(errors.Errorf("The handler %q has no controller, registered for path %q", handler.handler, handler.path.path))
+			panic(fmt.Errorf("the handler %q has no controller, registered for path %q", handler.handler, handler.path.path))
 		}
 	}
 
@@ -260,11 +260,11 @@ func (r *Router) Data(ctx context.Context, handler string, params map[interface{
 		if c.data != nil {
 			return c.data(ctx, req, dataParams(params))
 		}
-		err := errors.Errorf("%q is not a data Controller", handler)
+		err := fmt.Errorf("%q is not a data Controller", handler)
 		r.logger.Error(err)
 		panic(err)
 	}
-	err := errors.Errorf("data Controller %q not found", handler)
+	err := fmt.Errorf("data Controller %q not found", handler)
 	r.logger.Error(err)
 	panic(err)
 }

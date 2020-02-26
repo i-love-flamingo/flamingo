@@ -3,6 +3,8 @@ package cache
 import (
 	"bytes"
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +12,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/golang/groupcache/singleflight"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -115,9 +116,9 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		defer func() {
 			if err := recover(); err != nil {
 				if err2, ok := err.(error); ok {
-					resultErr = errors.WithStack(err2) //errors.Errorf("%#v", err)
+					resultErr = fmt.Errorf("httpfrontend load: %w", err2)
 				} else {
-					resultErr = errors.WithStack(errors.Errorf("HTTPFrontend.load exception: %#v", err))
+					resultErr = fmt.Errorf("httpfrontend load: %v", err2)
 				}
 			}
 		}()

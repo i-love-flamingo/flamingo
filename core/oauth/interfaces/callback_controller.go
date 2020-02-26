@@ -2,18 +2,17 @@ package interfaces
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
-
-	"github.com/pkg/errors"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
 
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
 )
 
 type (
@@ -82,20 +81,20 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		err := errors.New("missing both code and error get parameter")
 		cc.logger.Error("core.auth.callback Missing parameter", err)
 		stats.Record(ctx, loginFailedCount.M(1))
-		return cc.responder.ServerError(errors.WithStack(err))
+		return cc.responder.ServerError(err)
 	} else if code != "" {
 		oauth2Token, err := cc.authManager.OAuth2Config(ctx, request).Exchange(cc.authManager.OAuthCtx(ctx), code)
 		if err != nil {
 			cc.logger.Error("core.auth.callback Error OAuth2Config Exchange", err)
 			stats.Record(ctx, loginFailedCount.M(1))
-			return cc.responder.ServerError(errors.WithStack(err))
+			return cc.responder.ServerError(fmt.Errorf("core.auth.callback error in OAuth2Config Exchange: %w", err))
 		}
 
 		err = cc.authManager.StoreTokenDetails(ctx, request.Session(), oauth2Token)
 		if err != nil {
 			cc.logger.Error("core.auth.callback Error", err)
 			stats.Record(ctx, loginFailedCount.M(1))
-			return cc.responder.ServerError(errors.WithStack(err))
+			return cc.responder.ServerError(fmt.Errorf("core.auth.StoreTokenDetails error %w", err))
 		}
 		cc.eventPublisher.PublishLoginEvent(ctx, &domain.LoginEvent{Session: request.Session()})
 		cc.logger.Debug("successful logged in and saved tokens", oauth2Token)

@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"encoding/gob"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -10,13 +12,11 @@ import (
 	"runtime/debug"
 
 	"flamingo.me/flamingo/v3/core/auth/oauth"
-
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -235,7 +235,7 @@ func (am *AuthManager) OAuth2Token(session *web.Session) (*oauth2.Token, error) 
 	oauth2Token, ok := value.(oauth2.Token)
 	if !ok {
 		am.DeleteTokenDetails(session)
-		return nil, errors.Errorf("invalid token in session %#v", value)
+		return nil, fmt.Errorf("invalid token in session %#v", value)
 	}
 
 	return &oauth2Token, nil
@@ -294,17 +294,17 @@ func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *we
 	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error retrieving tokenSource: %w", err)
 	}
 
 	token, err := tokenSource.Token()
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error retrieving token: %w", err)
 	}
 
 	err = am.StoreTokenDetails(c, session, token)
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error storing token: %w", err)
 	}
 	return nil
 }
@@ -356,7 +356,7 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return "", errors.Errorf("no id token %T / %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
+		return "", fmt.Errorf("no id token %T / %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
 	}
 
 	return rawIDToken, nil

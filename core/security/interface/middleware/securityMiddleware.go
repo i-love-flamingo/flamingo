@@ -11,7 +11,6 @@ import (
 	"flamingo.me/flamingo/v3/core/security/application"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/pkg/errors"
 )
 
 const (
@@ -160,7 +159,7 @@ func (m *SecurityMiddleware) handleForPermissionAndFallback(action web.Action, f
 
 func (m *SecurityMiddleware) forbiddenAction(permission string) web.Action {
 	return func(ctx context.Context, req *web.Request) web.Result {
-		return m.responder.Forbidden(errors.Errorf("Permission %s for path %s.", permission, req.Request().URL.Path))
+		return m.responder.Forbidden(fmt.Errorf("permission %s for path %s", permission, req.Request().URL.Path))
 	}
 }
 

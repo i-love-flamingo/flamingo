@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -15,7 +16,6 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -424,28 +424,28 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("500 Internal Server Error: %w", err), r.templateErrorWithCode, http.StatusInternalServerError)
+	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("500 Internal Server Error: %w", err), r.templateErrorWithCode, http.StatusInternalServerError)
 }
 
 // Unavailable creates a 503 error response
 func (r *Responder) Unavailable(err error) *ServerErrorResponse {
 	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
 
-	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("503 Service Unavailable: %w", err), r.templateUnavailable, http.StatusServiceUnavailable)
+	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("503 Service Unavailable: %w", err), r.templateUnavailable, http.StatusServiceUnavailable)
 }
 
 // NotFound creates a 404 error response
 func (r *Responder) NotFound(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("404 Not Found: %w", err), r.templateNotFound, http.StatusNotFound)
+	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("404 Not Found: %w", err), r.templateNotFound, http.StatusNotFound)
 }
 
 // Forbidden creates a 403 error response
 func (r *Responder) Forbidden(err error) *ServerErrorResponse {
 	r.getLogger().Warn(err)
 
-	return r.ServerErrorWithCodeAndTemplate(fmtErrorf("403 Forbidden: %w", err), r.templateForbidden, http.StatusForbidden)
+	return r.ServerErrorWithCodeAndTemplate(fmt.Errorf("403 Forbidden: %w", err), r.templateForbidden, http.StatusForbidden)
 }
 
 // SetNoCache helper

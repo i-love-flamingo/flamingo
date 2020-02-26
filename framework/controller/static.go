@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"path"
 
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -13,7 +15,11 @@ type fileResponse struct {
 
 // Apply result by calling http.ServeFile
 func (fr fileResponse) Apply(ctx context.Context, rw http.ResponseWriter) error {
-	http.ServeFile(rw, fr.r.Request(), fr.r.Params["name"])
+	if fr.r.Params["dir"] == "" {
+		return errors.New("can not serve from empty dir")
+	}
+
+	http.ServeFile(rw, fr.r.Request(), path.Join(fr.r.Params["dir"], fr.r.Params["name"]))
 	return nil
 }
 

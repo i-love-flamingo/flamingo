@@ -211,8 +211,12 @@ func (r *Router) Absolute(req *Request, to string, params map[string]string) (*u
 		return &e, nil
 	}
 
-	scheme := r.base.Scheme
-	host := r.base.Host
+	var scheme, host string
+
+	if r.base != nil {
+		scheme = r.base.Scheme
+		host = r.base.Host
+	}
 
 	if scheme == "" {
 		if req != nil && req.request.TLS != nil {

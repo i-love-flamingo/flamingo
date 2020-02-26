@@ -40,7 +40,10 @@ func ContextWithSession(ctx context.Context, session *Session) context.Context {
 	return context.WithValue(ctx, contextSession, session)
 }
 
-// SessionFromContext allows to retrieve the stored session
+// SessionFromContext allows to retrieve the stored session.
+// Please note: this is dangerous and should never be used to implicitly pass the session.
+// If your code required the request or session make it clear. Implicit passing of dependencies is
+// dangerous and should be avoided at all costs.
 func SessionFromContext(ctx context.Context) *Session {
 	session, _ := ctx.Value(contextSession).(*Session)
 	return session

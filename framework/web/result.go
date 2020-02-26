@@ -361,6 +361,9 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		}
 	}
 
+	if r.Header == nil {
+		r.Header = make(http.Header)
+	}
 	r.Header.Set("Content-Type", "text/html; charset=utf-8")
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
@@ -467,6 +470,24 @@ func (r *Responder) getLogger() flamingo.Logger {
 		return r.logger
 	}
 	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
+}
+
+func (r *Responder) completeResult(result Result) Result {
+	switch result := result.(type) {
+	case *RenderResponse:
+		if result.engine == nil {
+			result.engine = r.engine
+		}
+	case *RouteRedirectResponse:
+		if result.router == nil {
+			result.router = r.router
+		}
+	case *ServerErrorResponse:
+		if result.engine == nil {
+			result.engine = r.engine
+		}
+	}
+	return result
 }
 
 // ApplyHeaders sets the correct cache control headers

@@ -3,7 +3,9 @@ package web
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -26,6 +28,12 @@ type (
 		sessionStore *SessionStore
 		sessionName  string
 		prefix       string
+		responder    *Responder
+	}
+
+	panicError struct {
+		err   error
+		stack []byte
 	}
 )
 
@@ -44,6 +52,34 @@ func init() {
 	}
 }
 
+func (e *panicError) Error() string {
+	return e.err.Error()
+}
+
+func (e *panicError) String() string {
+	return e.err.Error()
+}
+
+func (e *panicError) Unwrap() error {
+	return e.err
+}
+
+func (e *panicError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			_, _ = io.WriteString(s, e.err.Error())
+			_, _ = fmt.Fprintf(s, "\n%s", e.stack)
+			return
+		}
+		fallthrough
+	case 's':
+		_, _ = io.WriteString(s, e.err.Error())
+	case 'q':
+		_, _ = fmt.Fprintf(s, "%q", e.err)
+	}
+}
+
 func panicToError(p interface{}) error {
 	if p == nil {
 		return nil
@@ -52,11 +88,12 @@ func panicToError(p interface{}) error {
 	var err error
 	switch errIface := p.(type) {
 	case error:
-		err = fmt.Errorf("controller panic: %w", errIface)
+		//err = fmt.Errorf("controller panic: %w", errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %w", errIface), stack: debug.Stack()}
 	case string:
-		err = fmt.Errorf("controller panic: %s", errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %s", errIface), stack: debug.Stack()}
 	default:
-		err = fmt.Errorf("controller panic: %+v", errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %+v", errIface), stack: debug.Stack()}
 	}
 	return err
 }
@@ -129,7 +166,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
 			}
 
-			return response
+			return h.responder.completeResult(response)
 		},
 	}
 
@@ -179,10 +216,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		}()
 
 		if err := h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, finalErr), req).Apply(ctx, rw); err != nil {
-			finishErr = err
-			h.logger.WithContext(ctx).Error(err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			_, _ = fmt.Fprintf(rw, "%+v", err)
+			panic(err)
 		}
 	}
 }

@@ -228,40 +228,30 @@ func buildRequest(method string, formValues *url.Values) *web.Request {
 }
 
 func wantFormResponseWithMessage(message string) *web.Response {
-
 	t := template.New("fake")
 	t, err := t.Parse(defaultLoginTemplate)
 	if err != nil {
-		return i.responder.ServerError(err)
+		return nil
 	}
 
 	var body = new(bytes.Buffer)
-	var errMsg string
-
-	if formError != nil {
-		errMsg = formError.Error()
-	}
 
 	err = t.Execute(
 		body,
 		viewData{
-			FormURL:    formURL.String(),
-			Message:    errMsg,
-			UsernameID: i.config.UsernameFieldID,
-			PasswordID: i.config.PasswordFieldID,
+			FormURL:    "/core/auth/login/testBroker",
+			Message:    message,
+			UsernameID: defaultUserNameFieldID,
+			PasswordID: defaultPasswordFieldID,
 		})
-	if err != nil {
-		return i.responder.ServerError(err)
-	}
 
-	result := strings.ReplaceAll(defaultLoginTemplate, "{{.FormURL}}", "/core/auth/login/testBroker")
-	result = strings.ReplaceAll(result, "{{.Message}}", message)
-	result = strings.ReplaceAll(result, "{{.UsernameID}}", defaultUserNameFieldID)
-	result = strings.ReplaceAll(result, "{{.PasswordID}}", defaultPasswordFieldID)
+	if err != nil {
+		return nil
+	}
 
 	return &web.Response{
 		Status: http.StatusOK,
-		Body:   bytes.NewBufferString(result),
+		Body:   body,
 		Header: http.Header{
 			"ContentType": {"text/html; charset=utf-8"},
 		},

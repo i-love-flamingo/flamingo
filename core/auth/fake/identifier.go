@@ -110,14 +110,17 @@ func (i *identifier) Broker() string {
 func (i *identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
 	var formError error
 
-	postValues, err := r.FormAll()
-	if err == nil {
-		delete(postValues, "broker")
-		if len(postValues) > 0 {
-			formError = i.handlePostValues(r, postValues, i.broker)
+	//r.Request().G
+	if r.Request().Method == http.MethodPost {
+		postValues, err := r.FormAll()
+		if err == nil {
+			delete(postValues, "broker")
+			if len(postValues) > 0 {
+				formError = i.handlePostValues(r, postValues, i.broker)
 
-			if formError == nil {
-				return i.responder.RouteRedirect("core.auth.callback", map[string]string{"broker": i.broker})
+				if formError == nil {
+					return i.responder.RouteRedirect("core.auth.callback", map[string]string{"broker": i.broker})
+				}
 			}
 		}
 	}
@@ -131,6 +134,11 @@ func (i *identifier) prepareFormResponse(formError error, r *web.Request) web.Re
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
+
+	// pass through redirecturl so it doesn't get lost
+	q := formURL.Query()
+	q.Add("redirecturl", r.Params["redirecturl"])
+	formURL.RawQuery = q.Encode()
 
 	var loginTemplate string
 	if i.config.LoginTemplate != "" {

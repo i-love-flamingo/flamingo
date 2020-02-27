@@ -3,11 +3,11 @@ package fake
 import (
 	"bytes"
 	"context"
-	"html/template"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+	"text/template"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 
@@ -231,11 +231,10 @@ func wantFormResponseWithMessage(message string) *web.Response {
 	t := template.New("fake")
 	t, err := t.Parse(defaultLoginTemplate)
 	if err != nil {
-		return nil
+		panic("unable to parse defaultLoginTemplate")
 	}
 
 	var body = new(bytes.Buffer)
-
 	err = t.Execute(
 		body,
 		viewData{
@@ -243,10 +242,11 @@ func wantFormResponseWithMessage(message string) *web.Response {
 			Message:    message,
 			UsernameID: defaultUserNameFieldID,
 			PasswordID: defaultPasswordFieldID,
-		})
+		},
+	)
 
 	if err != nil {
-		return nil
+		panic("unable to execute defaultLoginTemplate")
 	}
 
 	return &web.Response{

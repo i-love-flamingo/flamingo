@@ -55,7 +55,15 @@ type (
 	RoutesModule interface {
 		Routes(registry *RouterRegistry)
 	}
+
+	// RoutesFunc is a short-hand for defining a RouteModule
+	RoutesFunc func(registry *RouterRegistry)
 )
+
+// Routes configures the RouterRegistry by calling the RoutesFunc
+func (fnc RoutesFunc) Routes(registry *RouterRegistry) {
+	fnc(registry)
+}
 
 // BindRoutes is a convenience helper to multi-bind router modules
 func BindRoutes(injector *dingo.Injector, m RoutesModule) {

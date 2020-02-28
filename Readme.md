@@ -5,8 +5,8 @@
 
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/i-love-flamingo/flamingo)](https://goreportcard.com/report/github.com/i-love-flamingo/flamingo) 
-[![GoDoc](https://godoc.org/github.com/i-love-flamingo/flamingo?status.svg)](https://godoc.org/github.com/i-love-flamingo/flamingo) 
-[![Build Status](https://travis-ci.org/i-love-flamingo/flamingo.svg)](https://travis-ci.org/i-love-flamingo/flamingo) 
+[![GoDoc](https://godoc.org/github.com/i-love-flamingo/flamingo?status.svg)](https://godoc.org/github.com/i-love-flamingo/flamingo)
+[![Build Status](https://travis-ci.org/i-love-flamingo/flamingo.svg?branch=master)](https://travis-ci.org/i-love-flamingo/flamingo?branch=master)
 [![Release](https://img.shields.io/github/release/i-love-flamingo/flamingo?style=flat-square)](https://github.com/i-love-flamingo/flamingo/releases)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/i-love-flamingo/flamingo)](https://www.tickgit.com/browse?repo=github.com/i-love-flamingo/flamingo)
 [![Join the chat at https://gitter.im/i-love-flamingo/community](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/i-love-flamingo/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

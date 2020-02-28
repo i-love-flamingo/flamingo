@@ -222,14 +222,11 @@ func wantFormResponseWithMessage(message string) func(*testing.T, web.Result) {
 			t.Error(err)
 		}
 
-		u, _ := url.Parse("/core/auth/login/testBroker")
-	q := u.Query()
-	q.Set("redirecturl", "/test/url")
-	u.RawQuery = q.Encode()var body = new(bytes.Buffer)
+		var body = new(bytes.Buffer)
 		err = tpl.Execute(
 			body,
 			viewData{
-				FormURL:    u.String(),
+				FormURL:    "/core/auth/login/testBroker",
 				Message:    message,
 				UsernameID: defaultUserNameFieldID,
 				PasswordID: defaultPasswordFieldID,

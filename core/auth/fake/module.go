@@ -2,15 +2,12 @@ package fake
 
 import (
 	"flamingo.me/dingo"
-
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
 )
 
-// Module provides Fake OpenID Connect support
-type (
-	Module struct{}
-)
+// Module provides Fake Auth support
+type Module struct{}
 
 // Interface compliance compile type checks
 var (
@@ -21,7 +18,7 @@ var (
 
 // Configure dependency injection
 func (*Module) Configure(injector *dingo.Injector) {
-	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(IdentityProviderFactory)
+	injector.BindMap(new(auth.RequestIdentifierFactory), "fake").ToInstance(identityProviderFactory)
 }
 
 // CueConfig schema

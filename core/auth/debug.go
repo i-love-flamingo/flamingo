@@ -49,7 +49,6 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 	switch action {
 	case "forceauthenticate":
 		broker, _ := request.Query1("__debug__broker")
-		c.attachRedirectURL(request)
 
 		return c.identityService.AuthenticateFor(ctx, broker, request)
 
@@ -58,8 +57,6 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 		if identity, _ := c.identityService.IdentifyFor(ctx, broker, request); identity != nil {
 			break
 		}
-
-		c.attachRedirectURL(request)
 
 		return c.identityService.AuthenticateFor(ctx, broker, request)
 
@@ -97,11 +94,4 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 	}
 
 	return c.responder.HTTP(http.StatusOK, buf)
-}
-
-func (c *debugController) attachRedirectURL(request *web.Request) {
-	// do it like the default controller and pass along the redirecturl
-	originalURL, _ := c.identityService.reverseRouter.Absolute(request, "core.auth.debug", map[string]string{})
-
-	request.Params["redirecturl"] = originalURL.String()
 }

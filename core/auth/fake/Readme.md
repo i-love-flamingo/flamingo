@@ -4,7 +4,7 @@
 
 The module allows to use a fake login service without "real" IDP providers with flexible configurable user credentials.
 
-The module also provides a customizable login form template and also allows you to provide your own IDP login form. The form input is validation is also configurable.
+The module also provides a customizable login form template and also allows you to provide your own login form. The form input is validation is also configurable.
 
 ## Configuration
 

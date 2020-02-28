@@ -72,14 +72,15 @@ var (
 	_ auth.WebCallbacker     = (*identifier)(nil)
 	_ auth.WebLogouter       = (*identifier)(nil)
 
-	errMissingUsername  = errors.New("missing username")
-	errInvalidUser      = errors.New("invalid user")
-	errMissingPassword  = errors.New("missing password")
-	errPasswordMismatch = errors.New("password mismatch")
+	errMissingUsername           = errors.New("missing username")
+	errInvalidUser               = errors.New("invalid user")
+	errMissingPassword           = errors.New("missing password")
+	errPasswordMismatch          = errors.New("password mismatch")
+	errIdentityNotSavedInSession = errors.New("identity not saved in session")
+	errSessionDataInvalid        = errors.New("session data not properly decoded")
 )
 
-// IdentityProviderFactory -
-func IdentityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
+func identityProviderFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var fakeConfig fakeConfig
 	if err := cfg.MapInto(&fakeConfig); err != nil {
 		return nil, err
@@ -108,42 +109,18 @@ func (i *identifier) Broker() string {
 
 // Authenticate action, fake
 func (i *identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
-	var formError error
-
-	if r.Request().Method == http.MethodPost {
-		postValues, err := r.FormAll()
-		if err == nil {
-			delete(postValues, "broker")
-			if len(postValues) > 0 {
-				formError = i.handlePostValues(r, postValues, i.broker)
-
-				if formError == nil {
-					return i.responder.RouteRedirect("core.auth.callback", map[string]string{"broker": i.broker})
-				}
-			}
-		}
-	}
-
-	return i.prepareFormResponse(formError, r)
+	return i.prepareFormResponse(nil, r)
 }
 
 func (i *identifier) prepareFormResponse(formError error, r *web.Request) web.Result {
-	// get formURL to callback with broker filled in
-	formURL, err := i.reverseRouter.Absolute(r, "core.auth.login", map[string]string{"broker": i.broker})
+	callbackURL, err := i.reverseRouter.Absolute(r, "core.auth.callback", map[string]string{"broker": i.broker})
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
 
-	// pass through redirecturl so it doesn't get lost
-	q := formURL.Query()
-	q.Add("redirecturl", r.Params["redirecturl"])
-	formURL.RawQuery = q.Encode()
-
-	var loginTemplate string
+	loginTemplate := defaultLoginTemplate
 	if i.config.LoginTemplate != "" {
 		loginTemplate = i.config.LoginTemplate
-	} else {
-		loginTemplate = defaultLoginTemplate
 	}
 
 	t := template.New("fake")
@@ -162,7 +139,7 @@ func (i *identifier) prepareFormResponse(formError error, r *web.Request) web.Re
 	err = t.Execute(
 		body,
 		viewData{
-			FormURL:    formURL.String(),
+			FormURL:    callbackURL.String(),
 			Message:    errMsg,
 			UsernameID: i.config.UsernameFieldID,
 			PasswordID: i.config.PasswordFieldID,
@@ -171,41 +148,34 @@ func (i *identifier) prepareFormResponse(formError error, r *web.Request) web.Re
 		return i.responder.ServerError(err)
 	}
 
-	return &web.Response{
-		Header: http.Header{"ContentType": []string{"text/html; charset=utf-8"}},
-		Status: http.StatusOK,
-		Body:   body,
-	}
+	response := i.responder.HTTP(http.StatusOK, body)
+	response.Header.Set("Content-Type", "text/html; charset=utf-8")
+	return response
 }
 
-func (i *identifier) handlePostValues(r *web.Request, values map[string][]string, broker string) error {
-	usernameVal, ok := values[i.config.UsernameFieldID]
-	if !ok {
+func (i *identifier) handlePostValues(r *web.Request) error {
+	username, err := r.Form1(i.config.UsernameFieldID)
+	if err != nil {
 		return errMissingUsername
 	}
 
-	user := usernameVal[0]
-
-	userCfg, found := i.config.UserConfig[user]
+	userCfg, found := i.config.UserConfig[username]
 	if !found {
 		return errInvalidUser
 	}
 
 	if i.config.ValidatePassword {
-		passwordVal, ok := values[i.config.PasswordFieldID]
-		if !ok {
+		password, err := r.Form1(i.config.PasswordFieldID)
+		if err != nil {
 			return errMissingPassword
 		}
 
-		expectedPassword := passwordVal[0]
-		userPassword := userCfg.Password
-		if expectedPassword != userPassword {
+		if userCfg.Password != password {
 			return errPasswordMismatch
 		}
 	}
 
-	sessionData := UserSessionData{Subject: user}
-	r.Session().Store(fmt.Sprintf(userDataSessionKey, broker), sessionData)
+	r.Session().Store(fmt.Sprintf(userDataSessionKey, i.broker), UserSessionData{Subject: username})
 
 	return nil
 }
@@ -214,7 +184,7 @@ func (i *identifier) handlePostValues(r *web.Request, values map[string][]string
 func (i *identifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	userSessionData, ok := request.Session().Load(fmt.Sprintf(userDataSessionKey, i.broker))
 	if !ok {
-		return nil, errors.New("identity not saved in session")
+		return nil, errIdentityNotSavedInSession
 	}
 
 	if usd, ok := userSessionData.(UserSessionData); ok {
@@ -224,19 +194,28 @@ func (i *identifier) Identify(ctx context.Context, request *web.Request) (auth.I
 		}, nil
 	}
 
-	return nil, errors.New("session data not properly decoded")
+	return nil, errSessionDataInvalid
 }
 
 // Callback from fake idp
 func (i *identifier) Callback(ctx context.Context, request *web.Request, returnTo func(*web.Request) *url.URL) web.Result {
 	_, err := i.Identify(ctx, request)
-	if err != nil {
-		i.Logout(ctx, request)
-
-		return i.prepareFormResponse(err, request)
+	if err == nil {
+		return i.responder.URLRedirect(returnTo(request))
 	}
 
-	return i.responder.URLRedirect(returnTo(request))
+	i.Logout(ctx, request)
+
+	if request.Request().Method == http.MethodPost {
+		err = i.handlePostValues(request)
+		if err == nil {
+			identity, _ := i.Identify(ctx, request)
+			i.eventRouter.Dispatch(ctx, &auth.WebLoginEvent{Request: request, Broker: i.broker, Identity: identity})
+			return i.responder.URLRedirect(returnTo(request))
+		}
+	}
+
+	return i.prepareFormResponse(err, request)
 }
 
 // Logout logs out

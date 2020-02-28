@@ -10,7 +10,6 @@ import (
 	"text/template"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/assert"
 )
@@ -222,7 +221,7 @@ func buildRequest(method string, formValues *url.Values) *web.Request {
 		web.EmptySession(),
 	)
 
-	result.Params = web.RequestParams{"broker": "testBroker"}
+	result.Params = web.RequestParams{"broker": "testBroker", "redirecturl": "/test/url"}
 
 	return result
 }
@@ -234,11 +233,16 @@ func wantFormResponseWithMessage(message string) *web.Response {
 		panic("unable to parse defaultLoginTemplate")
 	}
 
+	u, _ := url.Parse("/core/auth/login/testBroker")
+	q := u.Query()
+	q.Set("redirecturl", "/test/url")
+	u.RawQuery = q.Encode()
+
 	var body = new(bytes.Buffer)
 	err = t.Execute(
 		body,
 		viewData{
-			FormURL:    "/core/auth/login/testBroker",
+			FormURL:    u.String(),
 			Message:    message,
 			UsernameID: defaultUserNameFieldID,
 			PasswordID: defaultPasswordFieldID,

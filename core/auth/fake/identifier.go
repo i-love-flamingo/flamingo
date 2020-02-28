@@ -110,7 +110,6 @@ func (i *identifier) Broker() string {
 func (i *identifier) Authenticate(_ context.Context, r *web.Request) web.Result {
 	var formError error
 
-	//r.Request().G
 	if r.Request().Method == http.MethodPost {
 		postValues, err := r.FormAll()
 		if err == nil {

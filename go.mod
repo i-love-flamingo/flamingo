@@ -24,8 +24,8 @@ require (
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91
 	github.com/leekchan/accounting v0.0.0-20191104051123-0b9b0bd19c36
-	github.com/mattn/go-colorable v0.0.9 // indirect
-	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/mattn/go-colorable v0.1.4 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/openzipkin/zipkin-go v0.2.2
 	github.com/pact-foundation/pact-go v0.0.13

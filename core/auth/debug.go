@@ -49,17 +49,23 @@ func (c *debugController) Action(ctx context.Context, request *web.Request) web.
 	switch action {
 	case "forceauthenticate":
 		broker, _ := request.Query1("__debug__broker")
+
 		return c.identityService.AuthenticateFor(ctx, broker, request)
+
 	case "authenticate":
 		broker, _ := request.Query1("__debug__broker")
 		if identity, _ := c.identityService.IdentifyFor(ctx, broker, request); identity != nil {
 			break
 		}
+
 		return c.identityService.AuthenticateFor(ctx, broker, request)
+
 	case "logoutall":
 		return c.identityService.Logout(ctx, request, &url.URL{Path: request.Request().URL.Path, ForceQuery: true})
+
 	case "logout":
 		broker, _ := request.Query1("__debug__broker")
+
 		return c.identityService.LogoutFor(ctx, broker, request, &url.URL{Path: request.Request().URL.Path, ForceQuery: true})
 	}
 

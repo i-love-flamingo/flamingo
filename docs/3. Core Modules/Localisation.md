@@ -1,1 +1,0 @@
-../../core/locale/Readme.md

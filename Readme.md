@@ -1,5 +1,8 @@
 # Flamingo
 
+# v2.3.99 do not use.
+# use flamingo.me/flamingo/v3
+
 ## What is Flamingo
 
 Flamingo is a go based, framework for pluggable web projects.

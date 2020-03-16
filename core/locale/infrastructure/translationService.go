@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/nicksnyder/go-i18n/i18n/language"
+	"github.com/nicksnyder/go-i18n/i18n/translation"
 	"text/template"
 
 	"flamingo.me/flamingo/v3/core/locale/domain"
@@ -89,6 +91,18 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 func (ts *TranslationService) AllTranslationKeys(localeCode string) []string {
 	ts.initAndLoad()
 	return ts.i18bundle.LanguageTranslationIDs(localeCode)
+}
+
+// AddTranslation is a wrapper for the i18n bundle function AddTranslation
+func (ts *TranslationService) AddTranslation(lang *language.Language, translations ...translation.Translation) {
+	ts.initAndLoad()
+	ts.i18bundle.AddTranslation(lang, translations...)
+}
+
+// ForceFileReload loads translation files even if they are already loaded
+func (ts *TranslationService) ForceFileReload() {
+	ts.filesLoaded = false
+	ts.initAndLoad()
 }
 
 func (ts *TranslationService) parseDefaultLabel(defaultLabel string, key string, translationArguments map[string]interface{}) string {

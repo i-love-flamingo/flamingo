@@ -129,7 +129,7 @@ func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Aut
 	c = am.OAuthCtx(c)
 	currentToken, err := am.OAuth2Token(session)
 	if err != nil {
-		am.logger.WithContext(c).Error(err)
+		am.logger.WithContext(c).Debug(err)
 		return domain.Auth{}, err
 	}
 	if !currentToken.Valid() {

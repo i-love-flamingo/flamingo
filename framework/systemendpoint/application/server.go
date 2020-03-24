@@ -56,7 +56,7 @@ func (s *SystemServer) Start() {
 	s.server = &http.Server{Addr: s.serviceAddress, Handler: serveMux}
 	go func() {
 		err := s.server.ListenAndServe()
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			panic(err)
 		}
 	}()

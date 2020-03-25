@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -43,7 +44,7 @@ func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 	}
 }
 
-//Start - starts the systemendpoint in a sperate go routine
+// Start the systemendpoint in a separate go routine
 func (s *SystemServer) Start() {
 	s.logger.Info("systemendpoint: Start at ", s.serviceAddress)
 	serveMux := http.NewServeMux()
@@ -56,7 +57,7 @@ func (s *SystemServer) Start() {
 	s.server = &http.Server{Addr: s.serviceAddress, Handler: serveMux}
 	go func() {
 		err := s.server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
 	}()

@@ -124,3 +124,14 @@ func TestFrontRouter(t *testing.T) {
 		})
 	})
 }
+
+func TestFrontRouter_AddDuplicate(t *testing.T) {
+	var fr = NewFrontRouter()
+
+	assert.PanicsWithValue(t,
+		`prefixrouter: duplicate handler registration on prefix "/prefix" from areas "area1" and "area2"`,
+		func() {
+			fr.Add("/prefix", routerHandler{area: "area1"})
+			fr.Add("/prefix", routerHandler{area: "area2"})
+		})
+}

@@ -1,6 +1,7 @@
 package prefixrouter
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -62,6 +63,16 @@ func NewFrontRouter() *FrontRouter {
 
 // Add appends new Handler to Frontrouter
 func (fr *FrontRouter) Add(prefix string, handler routerHandler) {
+	if h, alreadyPresent := fr.router[prefix]; alreadyPresent {
+		panic(
+			fmt.Sprintf(
+				"prefixrouter: duplicate handler registration on prefix %q from areas %q and %q",
+				prefix,
+				h.area,
+				handler.area,
+			),
+		)
+	}
 	fr.router[prefix] = handler
 }
 

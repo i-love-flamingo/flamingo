@@ -62,6 +62,9 @@ type (
 		Request *web.Request
 		Broker  string
 	}
+
+	// IdentityTypeChecker for type asserting an Identity
+	IdentityTypeChecker func(identity Identity) bool
 )
 
 // Inject dependencies
@@ -117,40 +120,23 @@ func (s *WebIdentityService) IdentifyAll(ctx context.Context, request *web.Reque
 	return identities
 }
 
-func typeName(t reflect.Type) string {
-	res := t.Name()
-	if t.PkgPath() != "" {
-		res = t.PkgPath() + "." + res
-	}
-	return res
-}
-
 // IdentifyAs returns an identity for a given interface
-// identity, err := s.IdentifyAs(ctx, request, new(oauth.OpenIDIdentity))
+// identity, err := s.IdentifyAs(ctx, request, OpenIDTypeChecker)
 // identity.(oauth.OpenIDIdentity)
-func (s *WebIdentityService) IdentifyAs(ctx context.Context, request *web.Request, typ interface{}) (Identity, error) {
+func (s *WebIdentityService) IdentifyAs(ctx context.Context, request *web.Request, checkType IdentityTypeChecker) (Identity, error) {
 	if s == nil {
 		return nil, fmt.Errorf("web identity service is nil")
 	}
 
-	rTyp := reflect.TypeOf(typ)
-	if rTyp.Kind() != reflect.Ptr {
-		return nil, fmt.Errorf("typ is not a pointer: %s - please provide a pointer to an interface, such as new(OpenIDIdentity)", typeName(rTyp))
-	}
-	rTyp = rTyp.Elem()
-	if rTyp.Kind() != reflect.Interface {
-		return nil, fmt.Errorf("typ is not an interface: %s", typeName(rTyp))
-	}
-
 	for _, provider := range s.identityProviders {
 		if identity, _ := provider.Identify(ctx, request); identity != nil {
-			if reflect.TypeOf(identity).Implements(rTyp) {
+			if checkType(identity) {
 				return identity, nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("no identity for type %s found", typeName(rTyp))
+	return nil, fmt.Errorf("no identity for type %T found", checkType)
 }
 
 func (s *WebIdentityService) storeRedirectURL(request *web.Request) {

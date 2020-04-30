@@ -41,11 +41,17 @@ type testNotImplementedIdentityType interface {
 	TestIdentityNotImplemented() bool
 }
 
+var testTypeChecker = func(identity Identity) bool {
+	_, ok := identity.(testIdentityType)
+
+	return ok
+}
+
 func Test_WebIdentityServiceIdentifyAs(t *testing.T) {
 	s := &WebIdentityService{identityProviders: []RequestIdentifier{new(testIdentifier)}}
 
 	t.Run("existing identification", func(t *testing.T) {
-		identity, err := s.IdentifyAs(context.Background(), nil, new(testIdentityType))
+		identity, err := s.IdentifyAs(context.Background(), nil, testTypeChecker)
 		assert.NoError(t, err)
 		testIdentity, ok := identity.(testIdentityType)
 		assert.True(t, ok)
@@ -53,21 +59,11 @@ func Test_WebIdentityServiceIdentifyAs(t *testing.T) {
 	})
 
 	t.Run("non-existing indentification", func(t *testing.T) {
-		identity, err := s.IdentifyAs(context.Background(), nil, new(testNotImplementedIdentityType))
-		assert.Error(t, err)
-		t.Log(err)
-		assert.Nil(t, identity)
-	})
+		identity, err := s.IdentifyAs(context.Background(), nil, func(identity Identity) bool {
+			_, ok := identity.(testNotImplementedIdentityType)
 
-	t.Run("must use pointer", func(t *testing.T) {
-		identity, err := s.IdentifyAs(context.Background(), nil, testIdentity{})
-		assert.Error(t, err)
-		t.Log(err)
-		assert.Nil(t, identity)
-	})
-
-	t.Run("must use interface", func(t *testing.T) {
-		identity, err := s.IdentifyAs(context.Background(), nil, new(testIdentity))
+			return ok
+		})
 		assert.Error(t, err)
 		t.Log(err)
 		assert.Nil(t, identity)

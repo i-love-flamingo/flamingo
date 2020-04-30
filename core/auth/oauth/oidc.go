@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/coreos/go-oidc"
+	uuid "github.com/satori/go.uuid"
+	"golang.org/x/oauth2"
+
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/coreos/go-oidc"
-	uuid "github.com/satori/go.uuid"
-	"golang.org/x/oauth2"
 )
 
 type (
@@ -79,7 +80,16 @@ func init() {
 	gob.Register(sessionData{})
 }
 
-var _ OpenIDIdentity = new(oidcIdentity)
+var (
+	_ OpenIDIdentity = new(oidcIdentity)
+
+	// OpenIDTypeChecker checks the Identity for OpenID Identity
+	OpenIDTypeChecker = func(identity auth.Identity) bool {
+		_, ok := identity.(OpenIDIdentity)
+
+		return ok
+	}
+)
 
 func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	var oidcConfig oidcConfig

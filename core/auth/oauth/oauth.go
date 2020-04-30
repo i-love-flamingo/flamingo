@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/gob"
 
-	"flamingo.me/flamingo/v3/framework/web"
 	"golang.org/x/oauth2"
+
+	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -27,6 +29,15 @@ type (
 	authCodeOptionerProvider func() []AuthCodeOptioner
 
 	oauth2AuthCodeOption struct{ authCodeOption oauth2.AuthCodeOption }
+)
+
+var (
+	// OAuthTypeChecker checks the Identity for OAuth Identity
+	OAuthTypeChecker = func(identity auth.Identity) bool {
+		_, ok := identity.(Identity)
+
+		return ok
+	}
 )
 
 func init() {

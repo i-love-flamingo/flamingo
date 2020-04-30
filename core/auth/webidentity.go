@@ -5,7 +5,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net/url"
-	"reflect"
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"

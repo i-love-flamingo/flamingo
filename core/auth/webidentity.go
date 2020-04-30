@@ -61,6 +61,9 @@ type (
 		Request *web.Request
 		Broker  string
 	}
+
+	// IdentityTypeChecker for type asserting an Identity
+	IdentityTypeChecker func(identity Identity) bool
 )
 
 // Inject dependencies
@@ -114,6 +117,25 @@ func (s *WebIdentityService) IdentifyAll(ctx context.Context, request *web.Reque
 	}
 
 	return identities
+}
+
+// IdentifyAs returns an identity for a given interface
+// identity, err := s.IdentifyAs(ctx, request, OpenIDTypeChecker)
+// identity.(oauth.OpenIDIdentity)
+func (s *WebIdentityService) IdentifyAs(ctx context.Context, request *web.Request, checkType IdentityTypeChecker) (Identity, error) {
+	if s == nil {
+		return nil, fmt.Errorf("web identity service is nil")
+	}
+
+	for _, provider := range s.identityProviders {
+		if identity, _ := provider.Identify(ctx, request); identity != nil {
+			if checkType(identity) {
+				return identity, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("no identity for type %T found", checkType)
 }
 
 func (s *WebIdentityService) storeRedirectURL(request *web.Request) {

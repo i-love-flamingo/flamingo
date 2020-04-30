@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/stretchr/testify/assert"
+
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type testIdentifier struct{}
@@ -14,11 +15,11 @@ func (*testIdentifier) Broker() string {
 	return "test"
 }
 
-type testIdentity struct{}
-
-func (*testIdentifier) Identify(ctx context.Context, request *web.Request) (Identity, error) {
+func (*testIdentifier) Identify(context.Context, *web.Request) (Identity, error) {
 	return &testIdentity{}, nil
 }
+
+type testIdentity struct{}
 
 func (*testIdentity) Subject() string {
 	return "test-identity"
@@ -43,24 +44,32 @@ type testNotImplementedIdentityType interface {
 func Test_WebIdentityServiceIdentifyAs(t *testing.T) {
 	s := &WebIdentityService{identityProviders: []RequestIdentifier{new(testIdentifier)}}
 
-	identity, err := s.IdentifyAs(context.Background(), nil, new(testIdentityType))
-	assert.NoError(t, err)
-	testIdentity, ok := identity.(testIdentityType)
-	assert.True(t, ok)
-	assert.True(t, testIdentity.TestIdentity())
+	t.Run("existing identification", func(t *testing.T) {
+		identity, err := s.IdentifyAs(context.Background(), nil, new(testIdentityType))
+		assert.NoError(t, err)
+		testIdentity, ok := identity.(testIdentityType)
+		assert.True(t, ok)
+		assert.True(t, testIdentity.TestIdentity())
+	})
 
-	identity, err = s.IdentifyAs(context.Background(), nil, new(testNotImplementedIdentityType))
-	assert.Error(t, err)
-	t.Log(err)
-	assert.Nil(t, identity)
+	t.Run("non-existing indentification", func(t *testing.T) {
+		identity, err := s.IdentifyAs(context.Background(), nil, new(testNotImplementedIdentityType))
+		assert.Error(t, err)
+		t.Log(err)
+		assert.Nil(t, identity)
+	})
 
-	identity, err = s.IdentifyAs(context.Background(), nil, 123)
-	assert.Error(t, err)
-	t.Log(err)
-	assert.Nil(t, identity)
+	t.Run("must use pointer", func(t *testing.T) {
+		identity, err := s.IdentifyAs(context.Background(), nil, testIdentity{})
+		assert.Error(t, err)
+		t.Log(err)
+		assert.Nil(t, identity)
+	})
 
-	identity, err = s.IdentifyAs(context.Background(), nil, new(string))
-	assert.Error(t, err)
-	t.Log(err)
-	assert.Nil(t, identity)
+	t.Run("must use interface", func(t *testing.T) {
+		identity, err := s.IdentifyAs(context.Background(), nil, new(testIdentity))
+		assert.Error(t, err)
+		t.Log(err)
+		assert.Nil(t, identity)
+	})
 }

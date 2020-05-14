@@ -51,9 +51,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (*Module) CueConfig() string {
 	return `
 core oauth: {
-	server: string
-	secret: string
-	clientid: string
+	server: string | *""
+	secret: string | *""
+	clientid: string | *""
 	disableOfflineToken: bool | *false
 	enabled: bool | *true
 	useFake: bool | *false

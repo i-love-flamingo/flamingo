@@ -11,11 +11,12 @@ OpenId connect implementation to login against a configured SSO
 ## Configuration example
 
 ```yaml
-oauth:
-  server: '%%ENV:AUTH_SERVER%%'
-  secret: '%%ENV:AUTH_CLIENT_SECRET%%'
-  clientid: '%%ENV:AUTH_CLIENT_ID%%'
-  disableOfflineToken: true
+core:
+  oauth:
+      server: flamingo.os.env.OAUTH_SERVER
+      secret: flamingo.os.env.OAUTH_SECRET
+      clientid: flamingo.os.env.OAUTH_CLIENTID
+      disableOfflineToken: true
 ```
 
 # Specific scopes

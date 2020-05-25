@@ -62,3 +62,36 @@ gotemplates:
     layout:
       dir: "layouts", #  layout directory within the template directory
 ```
+
+# Static assets
+You can use Flamingo’s built-in static file handler to serve static assets that you need in your template.
+
+Set it up by adding a route with a param called “name” (that will get the name of the asset), such as 
+
+```
+polls/urls.go:
+```
+
+```go
+func (u *urls) Routes(registry *web.RouterRegistry) {
+    // ...
+    registry.MustRoute("/asset/*name", `flamingo.static.file(name, dir?="asset")`)
+}
+```
+
+Or via the routes.yml feature:
+
+Edit your file `config/routes.yml`
+
+```yaml
+- controller: flamingo.static.file(name, dir?="asset")
+  path: /asset/*name
+```
+
+Then, in your template, create the url by doing:
+````html
+<script src="{{ url "flamingo.static.file" "name" "polls.js"}}"></script>
+````
+(essentially calling ‘flamingo.static.file(name=”polls.js”)’. The “dir” variable has been defined to default to “asset” in the registration.
+
+This way flamingo will automatically serve the asset form your assets folder.

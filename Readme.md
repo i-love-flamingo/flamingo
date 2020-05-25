@@ -161,6 +161,15 @@ And open http://localhost:3322 you will see your "Hello World!" output.
 To learn more about Flamingo you can check out the full [hello-world example tutorial](https://github.com/i-love-flamingo/example-helloworld)
 and read the documentation under [docs.flamingo.me](https://docs.flamingo.me/)
 
+# Getting Help
+
+If you need help you can:
+* join our gitter chat: https://gitter.im/i-love-flamingo/community
+* or ask in stackoverflow (we try to keep track of new questions)
+* write us an email: flamingo@aoe.com
+* Or open an issue in github if you think you found a bug
+
+
 # Framework Details
 
 ## Feature List

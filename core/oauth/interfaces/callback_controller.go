@@ -69,7 +69,10 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 	defer cc.authManager.DeleteAuthState(request.Session())
 
 	if state, ok := cc.authManager.LoadAuthState(request.Session()); !ok || state != request.Request().URL.Query().Get("state") {
-		cc.logger.Error(fmt.Sprintf("Invalid State - expected: %v  got: %v", state, request.Request().URL.Query().Get("state")))
+		if state != "" {
+			cc.logger.Error(fmt.Sprintf("Invalid State - expected: %v  got: %v", state, request.Request().URL.Query().Get("state")))
+		}
+
 		stats.Record(ctx, loginFailedCount.M(1))
 		return cc.responder.ServerError(errors.New("Invalid State"))
 	}

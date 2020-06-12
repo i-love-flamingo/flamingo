@@ -135,24 +135,24 @@ func (m *Module) serve(
 			frontRouter.Add(prefix, routerHandler{area: area.Name, handler: areaRouter.Handler()})
 		}
 
-		whitelist := make([]string, 0, len(configuredURLPrefixSampler.Whitelist)*len(frontRouter.router)+1)
-		blacklist := make([]string, 0, len(configuredURLPrefixSampler.Blacklist)*len(frontRouter.router)+1)
+		include := make([]string, 0, len(configuredURLPrefixSampler.Include)*len(frontRouter.router)+1)
+		exclude := make([]string, 0, len(configuredURLPrefixSampler.Exclude)*len(frontRouter.router)+1)
 
 		// default routes
-		for _, p := range configuredURLPrefixSampler.Whitelist {
-			whitelist = append(whitelist, p.(string))
+		for _, p := range configuredURLPrefixSampler.Include {
+			include = append(include, p.(string))
 		}
-		for _, p := range configuredURLPrefixSampler.Blacklist {
-			blacklist = append(blacklist, p.(string))
+		for _, p := range configuredURLPrefixSampler.Exclude {
+			exclude = append(exclude, p.(string))
 		}
 
 		// prefixed routes
 		for k := range frontRouter.router {
-			for _, p := range configuredURLPrefixSampler.Whitelist {
-				whitelist = append(whitelist, k+p.(string))
+			for _, p := range configuredURLPrefixSampler.Include {
+				include = append(include, k+p.(string))
 			}
-			for _, p := range configuredURLPrefixSampler.Blacklist {
-				blacklist = append(blacklist, k+p.(string))
+			for _, p := range configuredURLPrefixSampler.Exclude {
+				exclude = append(exclude, k+p.(string))
 			}
 		}
 
@@ -162,7 +162,7 @@ func (m *Module) serve(
 			Handler: &ochttp.Handler{
 				IsPublicEndpoint: true,
 				Handler:          frontRouter,
-				GetStartOptions:  opencensus.URLPrefixSampler(whitelist, blacklist, configuredURLPrefixSampler.AllowParentTrace),
+				GetStartOptions:  opencensus.URLPrefixSampler(include, exclude, configuredURLPrefixSampler.AllowParentTrace),
 			},
 		}
 

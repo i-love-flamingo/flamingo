@@ -19,6 +19,8 @@ It is production ready, field tested and has a growing ecosystem.
 
 # Quick start
 
+> See "examples/hello-world"
+
 Initialize an empty project:
 
 ```bash

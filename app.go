@@ -321,6 +321,7 @@ type servemodule struct {
 	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler
+	certFile, keyFile string
 }
 
 // Inject basic application dependencies
@@ -367,6 +368,8 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 		},
 	}
 	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
 	return serveCmd
 }
@@ -375,9 +378,11 @@ func (a *servemodule) listenAndServe() error {
 	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: a.server.Addr})
 	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
-	err := a.server.ListenAndServe()
+	if a.certFile != "" && a.keyFile != "" {
+		return a.server.ListenAndServeTLS(a.certFile, a.keyFile)
+	}
 
-	return err
+	return a.server.ListenAndServe()
 }
 
 // Notify upon flamingo Shutdown event

@@ -4,7 +4,8 @@
 FROM golang:alpine AS builder
 RUN apk update && apk add --no-cache ca-certificates tzdata git && update-ca-certificates
 COPY . /app
-RUN cd /app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app .
+ARG APPVERSION=develop
+RUN cd /app && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X flamingo.me/flamingo/v3/framework/flamingo.appVersion=${APPVERSION}" -o app .
 
 # Final image
 FROM scratch

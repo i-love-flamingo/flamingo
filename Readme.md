@@ -1,4 +1,3 @@
-
 # Flamingo Framework
 
 <img align="right" width="159px" src="https://raw.githubusercontent.com/i-love-flamingo/flamingo/master/docs/assets/flamingo-logo-only-pink-on-white.png">

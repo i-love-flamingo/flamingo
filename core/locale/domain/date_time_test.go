@@ -1,55 +1,11 @@
 package domain
 
 import (
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestDateTimeFormatter_SetDateTime(t *testing.T) {
-	formatter := &DateTimeFormatter{}
-	assert.Equal(t, &DateTimeFormatter{}, formatter)
-
-	now := getUTCNow()
-	loc, err := time.LoadLocation("Europe/Berlin")
-	assert.NoError(t, err)
-
-	formatter.SetDateTime(now, now.In(loc))
-	assert.Equal(t, &DateTimeFormatter{
-		dateTime:      now,
-		localDateTime: now.In(loc),
-	}, formatter)
-}
-
-func TestDateTimeFormatter_SetLocation(t *testing.T) {
-	now := getUTCNow()
-
-	formatter := &DateTimeFormatter{
-		logger:   flamingo.NullLogger{},
-		dateTime: now,
-	}
-
-	assert.Errorf(t, formatter.SetLocation("wrong"), ErrInvalidLocation)
-
-	loc, err := time.LoadLocation("Europe/Berlin")
-	assert.NoError(t, err)
-	assert.NoError(t, formatter.SetLocation(loc.String()))
-	assert.Equal(t, &DateTimeFormatter{
-		logger:        flamingo.NullLogger{},
-		dateTime:      now,
-		localDateTime: now.In(loc),
-	}, formatter)
-}
-
-func TestDateTimeFormatter_SetLogger(t *testing.T) {
-	formatter := &DateTimeFormatter{}
-	assert.Nil(t, formatter.logger)
-
-	formatter.SetLogger(flamingo.NullLogger{})
-	assert.Equal(t, flamingo.NullLogger{}, formatter.logger)
-}
 
 func TestDateTimeFormatter_Format(t *testing.T) {
 	now := getUTCNow()

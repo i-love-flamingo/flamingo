@@ -70,7 +70,7 @@ func (l *Label) SetCount(count int) *Label {
 	return l
 }
 
-// SetLocaleCode on a label
+// SetLocale on a label
 // Deprecated: use SetLocaleCode instead
 func (l *Label) SetLocale(localeCode string) *Label {
 	return l.SetLocaleCode(localeCode)

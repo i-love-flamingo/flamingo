@@ -2,12 +2,14 @@ package templatefunctions
 
 import (
 	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestDateTimeFormatFromIso_Func(t *testing.T) {

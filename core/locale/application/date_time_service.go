@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -31,11 +30,11 @@ var _ DateTimeServiceInterface = (*DateTimeService)(nil)
 func (dts *DateTimeService) Inject(
 	logger flamingo.Logger,
 	config *struct {
-		DateFormat     string `inject:"config:core.locale.date.dateFormat"`
-		TimeFormat     string `inject:"config:core.locale.date.timeFormat"`
-		DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
-		Location       string `inject:"config:core.locale.date.location"`
-	},
+	DateFormat     string `inject:"config:core.locale.date.dateFormat"`
+	TimeFormat     string `inject:"config:core.locale.date.timeFormat"`
+	DateTimeFormat string `inject:"config:core.locale.date.dateTimeFormat"`
+	Location       string `inject:"config:core.locale.date.location"`
+},
 ) {
 	dts.logger = logger
 

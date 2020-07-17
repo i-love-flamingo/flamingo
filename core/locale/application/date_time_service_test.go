@@ -126,15 +126,15 @@ func TestDateTimeService_GetTimeFormatter_FormatterForConfiguredLocale(t *testin
 	loc, err := time.LoadLocation("America/New_York")
 	assert.NoError(t, err, "no error received")
 
-	result := &domain.DateTimeFormatter{
+	expectedResult := &domain.DateTimeFormatter{
 		DateFormat:     time.RFC822,
 		TimeFormat:     time.Kitchen,
 		DateTimeFormat: time.ANSIC,
 	}
-	result.SetDateTime(now, now.In(loc))
-	result.SetLogger(flamingo.NullLogger{})
+	expectedResult.SetDateTime(now, now.In(loc))
+	expectedResult.SetLogger(flamingo.NullLogger{})
 
 	formatter, err := dateTimeService.GetDateTimeFormatter(now)
-	assert.Equal(t, result, formatter, "got a formatter")
+	assert.Equal(t, expectedResult, formatter, "got a formatter")
 	assert.NoError(t, err, "no error received")
 }

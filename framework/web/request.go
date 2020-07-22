@@ -2,12 +2,11 @@ package web
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
-
-	"github.com/pkg/errors"
 )
 
 type (

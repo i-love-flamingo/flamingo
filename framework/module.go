@@ -101,12 +101,15 @@ flamingo: {
 		path?: string
 	}
 	template: {
-		err403: string | *"err/403"
-		err404: string | *"err/404"
-		errWithCode: string | *"err/withCode"
-		err503: string | *"err/503"
+		err403: string | *"error/403"
+		err404: string | *"error/404"
+		errWithCode: string | *"error/withCode"
+		err503: string | *"error/503"
 	}
-	session: name: string | *"flamingo"
+	session: {
+		name: string | *"flamingo"
+		saveMode: *"Always" | "OnRead" | "OnWrite" 
+	}
 }
 `
 }

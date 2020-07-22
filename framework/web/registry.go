@@ -1,12 +1,12 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
 
 	"flamingo.me/dingo"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -175,6 +175,19 @@ func (registry *RouterRegistry) HasData(name string) bool {
 	return ok && la.data != nil
 }
 
+// MustRoute checks the result of a `Route` call
+func MustRoute(handler *Handler, err error) *Handler {
+	if err != nil {
+		panic(err)
+	}
+	return handler
+}
+
+// MustRoute makes a checked Route call
+func (registry *RouterRegistry) MustRoute(path, handler string) *Handler {
+	return MustRoute(registry.Route(path, handler))
+}
+
 // Route assigns a route to a Handler
 func (registry *RouterRegistry) Route(path, handler string) (*Handler, error) {
 	var h = parseHandler(handler)
@@ -298,6 +311,9 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 func (registry *RouterRegistry) Reverse(name string, params map[string]string) (string, error) {
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler
+		if params == nil {
+			params = make(map[string]string, len(alias.params))
+		}
 		for name, param := range alias.params {
 			params[name] = param.value
 		}
@@ -393,7 +409,7 @@ catchallrouteloop:
 		return handler.path.Render(renderparams, usedValues)
 	}
 
-	return "", errors.Errorf("Reverse for %q not found, parameters: %v", name, params)
+	return "", fmt.Errorf("reverse for %q not found, parameters: %v", name, params)
 }
 
 // Match a request path

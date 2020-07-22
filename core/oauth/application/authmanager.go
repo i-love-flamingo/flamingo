@@ -3,18 +3,20 @@ package application
 import (
 	"context"
 	"encoding/gob"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"runtime/debug"
 
+	"flamingo.me/flamingo/v3/core/auth/oauth"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc"
-	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 )
 
@@ -39,6 +41,7 @@ func init() {
 
 type (
 	// AuthManager handles authentication related operations
+	// Deprecated: use core/auth instead
 	AuthManager struct {
 		server              string
 		secret              string
@@ -51,6 +54,7 @@ type (
 		router              *web.Router
 		openIDProvider      *oidc.Provider
 		tokenExtras         config.Slice
+		AuthCodeOptions     []oauth2.AuthCodeOption
 	}
 
 	loggingRoundTripper struct {
@@ -102,7 +106,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 		am.userInfoMapping = config.UserInfoMapping
 		am.tokenExtras = config.TokenExtras
 		if !config.Enabled {
-			am.logger.Warn("OIDC is disabled. Modules depending on OAuth features cannot work properly")
+			am.logger.Info("OIDC is disabled. Modules depending on OAuth features cannot work properly")
 			return
 		}
 
@@ -125,13 +129,13 @@ func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Aut
 	c = am.OAuthCtx(c)
 	currentToken, err := am.OAuth2Token(session)
 	if err != nil {
-		am.logger.WithContext(c).Error(err)
+		am.logger.WithContext(c).Debug(err)
 		return domain.Auth{}, err
 	}
 	if !currentToken.Valid() {
 		err := am.refreshTokenAndUpdateStore(c, session)
 		if err != nil {
-			am.logger.WithContext(c).Error(err)
+			am.logger.WithContext(c).Debug(err)
 			return domain.Auth{}, err
 		}
 	}
@@ -190,6 +194,16 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 		scopes = append(scopes, oidc.ScopeOfflineAccess)
 	}
 
+	claimset := am.getClaimsRequestParameter()
+	if claimset.HasClaims() {
+		authCodeOption, err := am.getClaimsRequestParameter().AuthCodeOption()
+		if err != nil {
+			am.logger.WithField(flamingo.LogKeyCategory, "auth").Error("could not map configuration", err)
+		} else {
+			am.AuthCodeOptions = append(am.AuthCodeOptions, authCodeOption)
+		}
+	}
+
 	oauth2Config := &oauth2.Config{
 		ClientID:     am.clientID,
 		ClientSecret: am.secret,
@@ -197,8 +211,6 @@ func (am *AuthManager) OAuth2Config(_ context.Context, req *web.Request) *oauth2
 
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: scopes,
-
-		ClaimSet: am.getClaimsRequestParameter(),
 	}
 	if am.OpenIDProvider() != nil {
 		oauth2Config.Endpoint = am.OpenIDProvider().Endpoint()
@@ -223,7 +235,7 @@ func (am *AuthManager) OAuth2Token(session *web.Session) (*oauth2.Token, error) 
 	oauth2Token, ok := value.(oauth2.Token)
 	if !ok {
 		am.DeleteTokenDetails(session)
-		return nil, errors.Errorf("invalid token in session %#v", value)
+		return nil, fmt.Errorf("invalid token in session %#v", value)
 	}
 
 	return &oauth2Token, nil
@@ -282,31 +294,31 @@ func (am *AuthManager) refreshTokenAndUpdateStore(c context.Context, session *we
 	c = am.OAuthCtx(c)
 	tokenSource, err := am.TokenSource(c, session)
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error retrieving tokenSource: %w", err)
 	}
 
 	token, err := tokenSource.Token()
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error retrieving token: %w", err)
 	}
 
 	err = am.StoreTokenDetails(c, session, token)
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("error storing token: %w", err)
 	}
 	return nil
 }
 
-func (am *AuthManager) getClaimsRequestParameter() *oauth2.ClaimSet {
-	var claimSet *oauth2.ClaimSet
+func (am *AuthManager) getClaimsRequestParameter() *oauth.ClaimSet {
+	var claimSet *oauth.ClaimSet
 
-	claimSet = am.createClaimSetFromMapping(oauth2.IdTokenClaim, am.idTokenMapping, claimSet)
-	claimSet = am.createClaimSetFromMapping(oauth2.UserInfoClaim, am.userInfoMapping, claimSet)
+	claimSet = am.createClaimSetFromMapping(oauth.TopLevelClaimIDToken, am.idTokenMapping, claimSet)
+	claimSet = am.createClaimSetFromMapping(oauth.TopLevelClaimUserInfo, am.userInfoMapping, claimSet)
 
 	return claimSet
 }
 
-func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth2.ClaimSet) *oauth2.ClaimSet {
+func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configuration config.Slice, claimSet *oauth.ClaimSet) *oauth.ClaimSet {
 	var mapping []string
 	err := configuration.MapInto(&mapping)
 	if err != nil {
@@ -318,7 +330,7 @@ func (am *AuthManager) createClaimSetFromMapping(topLevelName string, configurat
 			continue
 		}
 		if claimSet == nil {
-			claimSet = &oauth2.ClaimSet{}
+			claimSet = &oauth.ClaimSet{}
 		}
 		claimSet.AddVoluntaryClaim(topLevelName, name)
 	}
@@ -344,7 +356,7 @@ func (am *AuthManager) ExtractRawIDToken(oauth2Token *oauth2.Token) (string, err
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return "", errors.Errorf("no id token %T / %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
+		return "", fmt.Errorf("no id token %T / %v", oauth2Token.Extra("id_token"), oauth2Token.Extra("id_token"))
 	}
 
 	return rawIDToken, nil

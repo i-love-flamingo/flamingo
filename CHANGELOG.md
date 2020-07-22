@@ -1,5 +1,27 @@
 # Changelog
 
+## v3.2.0
+
+- license:
+  - Flamingo now uses the MIT license. The CLA has been removed.
+- core/auth:
+  - Flamingo v3.2.0 provides a new auth package which makes authentication easier an more canonical.
+  - the old core/oauth is deprecated and provides a compatibility layer for core/auth.
+- sessions:
+  - web.SessionStore provides programmatic access to web.Session
+  - flamingo.session.saveMode allows to define a more granular session save behaviour
+- config loading:
+  - both routes.yml and routes.yaml are now supported
+- framework/web:
+  - the framework router got a couple of stability updates.
+  - the web responder and responses don't fail anymore for uninitialized responses.
+  - error responses are wrapped with a http error message
+  - the flamingo.static.file controller needs a dir to not serve from root.
+- errors:
+  - all errors are handled via Go's error package
+- go 1.13/1.14:
+  - support for 1.12 has been dropped
+
 ## v3
 
 - "locale" package:

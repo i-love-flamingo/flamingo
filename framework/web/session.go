@@ -11,12 +11,24 @@ import (
 
 // Session holds the data connected to the current user session
 type Session struct {
-	mu       sync.RWMutex
-	s        *sessions.Session
-	hashedid string
+	mu              sync.Mutex
+	s               *sessions.Session
+	hashedid        string
+	dirty           map[interface{}]struct{}
+	dirtyAll        bool
+	sessionSaveMode sessionPersistLevel
 }
 
-const contextSession contextKeyType = "session"
+type sessionPersistLevel uint
+
+const (
+	sessionSaveAlways sessionPersistLevel = iota
+	sessionSaveOnRead
+	sessionSaveOnWrite
+
+	contextSession contextKeyType = "session"
+	flashesKey     string         = "_flash"
+)
 
 // EmptySession creates an empty session instance for testing etc.
 func EmptySession() *Session {
@@ -28,27 +40,47 @@ func ContextWithSession(ctx context.Context, session *Session) context.Context {
 	return context.WithValue(ctx, contextSession, session)
 }
 
-// SessionFromContext allows to retrieve the stored session
+// SessionFromContext allows to retrieve the stored session.
+// Please note: this is dangerous and should never be used to implicitly pass the session.
+// If your code required the request or session make it clear. Implicit passing of dependencies is
+// dangerous and should be avoided at all costs.
 func SessionFromContext(ctx context.Context) *Session {
 	session, _ := ctx.Value(contextSession).(*Session)
 	return session
 }
 
+func (s *Session) markDirty(key interface{}) {
+	// do not mark dirty sessions when session save mode is set to always
+	if s.sessionSaveMode == sessionSaveAlways {
+		return
+	}
+	if s.dirty == nil {
+		s.dirty = make(map[interface{}]struct{})
+	}
+	s.dirty[key] = struct{}{}
+}
+
 // Load data by a key
 func (s *Session) Load(key interface{}) (data interface{}, ok bool) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	data, ok = s.s.Values[key]
+	if s.sessionSaveMode <= sessionSaveOnRead {
+		s.markDirty(key)
+	}
 	return data, ok
 }
 
 // Try to load data by a key
 func (s *Session) Try(key interface{}) (data interface{}) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	data, _ = s.s.Values[key]
+	if s.sessionSaveMode <= sessionSaveOnRead {
+		s.markDirty(key)
+	}
 	return data
 }
 
@@ -58,6 +90,9 @@ func (s *Session) Store(key interface{}, data interface{}) *Session {
 	defer s.mu.Unlock()
 
 	s.s.Values[key] = data
+	if s.sessionSaveMode <= sessionSaveOnWrite {
+		s.markDirty(key)
+	}
 
 	return s
 }
@@ -67,21 +102,26 @@ func (s *Session) Delete(key interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	if s.sessionSaveMode <= sessionSaveOnWrite {
+		s.markDirty(key)
+	}
+
 	delete(s.s.Values, key)
 }
 
 // ID returns the Session id
 func (s *Session) ID() (id string) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	return s.s.ID
 }
 
 // Keys returns an unordered list of session keys
+// Deprecated: please know what you will need
 func (s *Session) Keys() []interface{} {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	keys := make([]interface{}, len(s.s.Values))
 	i := 0
@@ -93,19 +133,30 @@ func (s *Session) Keys() []interface{} {
 }
 
 // ClearAll removes all values from the session
+// Deprecated: do not use ClearAll
 func (s *Session) ClearAll() *Session {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.s.Values = make(map[interface{}]interface{})
+	s.dirtyAll = true
 	return s
 }
 
 // Flashes returns a slice of flash messages from the session
 // todo change?
 func (s *Session) Flashes(vars ...string) []interface{} {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// the call to Flashes actually writes to the session
+	if s.sessionSaveMode <= sessionSaveOnWrite {
+		key := flashesKey
+		if len(vars) > 0 {
+			key = vars[0]
+		}
+		s.markDirty(key)
+	}
 
 	return s.s.Flashes(vars...)
 }
@@ -115,6 +166,14 @@ func (s *Session) Flashes(vars ...string) []interface{} {
 func (s *Session) AddFlash(value interface{}, vars ...string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if s.sessionSaveMode <= sessionSaveOnWrite {
+		key := flashesKey
+		if len(vars) > 0 {
+			key = vars[0]
+		}
+		s.markDirty(key)
+	}
 
 	s.s.AddFlash(value, vars...)
 }

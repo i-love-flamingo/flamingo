@@ -1,11 +1,12 @@
 package application
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -49,7 +50,7 @@ func (dts *DateTimeService) Inject(
 func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
 	timeResult, err := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
 	if err != nil {
-		return nil, errors.Errorf("could not parse date in defined format: %v / Error: %v", dateTimeString, err)
+		return nil, fmt.Errorf("could not parse date in defined format: %v: %w", dateTimeString, err)
 	}
 
 	return dts.GetDateTimeFormatter(timeResult)
@@ -82,7 +83,7 @@ func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.D
 
 func (dts *DateTimeService) loadLocation() (*time.Location, error) {
 	if dts.location == "" {
-		return nil, errors.Errorf("No location configured")
+		return nil, errors.New("no location configured")
 	}
 
 	// try to load the configured location

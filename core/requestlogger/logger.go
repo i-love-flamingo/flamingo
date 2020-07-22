@@ -105,7 +105,7 @@ func (r *logger) Filter(ctx context.Context, req *web.Request, w http.ResponseWr
 			extra.WriteString("-> " + r.To)
 
 		case *web.ServerErrorResponse:
-			extra.WriteString(strings.Split(fmt.Sprintf(`Error: %s`, r.Error.Error()), "\n")[0])
+			extra.WriteString(strings.Split(fmt.Sprintf(`Error: %s`, r.Error), "\n")[0])
 		}
 
 		sizeStr := humanBytes(rwl.length)

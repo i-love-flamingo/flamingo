@@ -24,9 +24,6 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 )
 
-// fmtErrorf shim to allow go 1.12 backwards compatibility
-var fmtErrorf = fmt.Errorf
-
 type (
 	// Application contains a main flamingo application
 	Application struct {
@@ -34,6 +31,7 @@ type (
 		childAreas      []*config.Area
 		area            *config.Area
 		args            []string
+		routesModules   []web.RoutesModule
 		defaultContext  string
 		eagerSingletons bool
 		flagset         *flag.FlagSet
@@ -78,6 +76,13 @@ func WithArgs(args ...string) ApplicationOption {
 	}
 }
 
+// WithRoutes configures a given RoutesModule for usage in the flamingo app
+func WithRoutes(routesModule web.RoutesModule) ApplicationOption {
+	return func(config *Application) {
+		config.routesModules = append(config.routesModules, routesModule)
+	}
+}
+
 type eventRouterProvider func() flamingo.EventRouter
 
 type arrayFlags []string
@@ -113,7 +118,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	dingoInspect := app.flagset.Bool("dingo-inspect", false, "inspect dingo")
 
 	if err := app.flagset.Parse(app.args); err != nil && err != flag.ErrHelp {
-		return nil, fmtErrorf("app: parsing arguments: %w", err)
+		return nil, fmt.Errorf("app: parsing arguments: %w", err)
 	}
 
 	if dingoTraceCircular != nil && *dingoTraceCircular {
@@ -127,6 +132,11 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		new(cmd.Module),
 	}, modules...)
 	modules = append(modules, new(servemodule))
+	for _, routesModule := range app.routesModules {
+		modules = append(modules, dingo.ModuleFunc(func(injector *dingo.Injector) {
+			web.BindRoutes(injector, routesModule)
+		}))
+	}
 
 	root := config.NewArea("root", modules, app.childAreas...)
 
@@ -152,23 +162,23 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	}
 
 	if err := config.Load(root, app.configDir, configLoadOptions...); err != nil {
-		return nil, fmtErrorf("app: config load: %w", err)
+		return nil, fmt.Errorf("app: config load: %w", err)
 	}
 
 	areas, err := root.Flat()
 	if err != nil {
-		return nil, fmtErrorf("app: flat areas: %w", err)
+		return nil, fmt.Errorf("app: flat areas: %w", err)
 	}
 
 	var ok bool
 	app.area, ok = areas[*flamingoContext]
 	if !ok {
-		return nil, fmtErrorf("app: context %q not found", *flamingoContext)
+		return nil, fmt.Errorf("app: context %q not found", *flamingoContext)
 	}
 
 	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		return nil, fmtErrorf("app: get initialized injector: %w", err)
+		return nil, fmt.Errorf("app: get initialized injector: %w", err)
 	}
 
 	if *dingoInspect {
@@ -177,7 +187,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	if app.eagerSingletons {
 		if err := injector.BuildEagerSingletons(false); err != nil {
-			return nil, fmtErrorf("app: build eager singletons: %w", err)
+			return nil, fmt.Errorf("app: build eager singletons: %w", err)
 		}
 	}
 
@@ -204,12 +214,12 @@ func App(modules []dingo.Module, options ...ApplicationOption) {
 func (app *Application) Run() error {
 	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		return fmtErrorf("get initialized injector: %w", err)
+		return fmt.Errorf("get initialized injector: %w", err)
 	}
 
 	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
-		return fmtErrorf("app: get flamingo cobra.Command: %w", err)
+		return fmt.Errorf("app: get flamingo cobra.Command: %w", err)
 	}
 
 	rootCmd := i.(*cobra.Command)
@@ -217,28 +227,58 @@ func (app *Application) Run() error {
 
 	i, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
-		return fmtErrorf("app: get eventRouterProvider: %w", err)
+		return fmt.Errorf("app: get eventRouterProvider: %w", err)
 	}
 	i.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
 	return rootCmd.Execute()
 }
 
-func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
-	name := of.Name()
-	if of.PkgPath() != "" {
-		name = of.PkgPath() + "." + name
+func typeName(of reflect.Type) string {
+	var name string
+
+	for of.Kind() == reflect.Ptr {
+		of = of.Elem()
 	}
+
+	if of.Kind() == reflect.Slice {
+		name += "[]"
+		of = of.Elem()
+	}
+
+	if of.Kind() == reflect.Ptr {
+		name += "*"
+		of = of.Elem()
+	}
+
+	if of.PkgPath() != "" {
+		name += of.PkgPath() + "."
+	}
+
+	name += of.Name()
+
+	return name
+}
+
+func trunc(s string) string {
+	if len(s) > 25 {
+		return s[:25] + "..."
+	}
+	return s
+}
+
+func printBinding(of reflect.Type, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
+	name := typeName(of)
 	if annotation != "" {
-		annotation = fmt.Sprintf("[%q]", annotation)
+		annotation = fmt.Sprintf("(%q)", annotation)
 	}
 	val := "<unset>"
 	if instance != nil {
-		val = fmt.Sprintf("value=%q", instance)
+		val = trunc(fmt.Sprintf("%v", instance.Interface()))
 	} else if provider != nil {
 		val = "provider=" + provider.String()
 	} else if to != nil {
-		val = "type=" + to.PkgPath() + "." + to.Name()
+		val = "type=" + typeName(to)
 	}
 	scopename := ""
 	if in != nil {
@@ -281,6 +321,7 @@ type servemodule struct {
 	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler
+	certFile, keyFile string
 }
 
 // Inject basic application dependencies
@@ -327,17 +368,21 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 		},
 	}
 	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
 	return serveCmd
 }
 
 func (a *servemodule) listenAndServe() error {
-	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: a.server.Addr})
 	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
-	err := a.server.ListenAndServe()
+	if a.certFile != "" && a.keyFile != "" {
+		return a.server.ListenAndServeTLS(a.certFile, a.keyFile)
+	}
 
-	return err
+	return a.server.ListenAndServe()
 }
 
 // Notify upon flamingo Shutdown event

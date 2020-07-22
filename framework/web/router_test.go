@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -167,9 +167,9 @@ func TestRouterTestify(t *testing.T) {
 	defer server.Close()
 
 	request, err := http.NewRequest("GET", "/test", nil)
-	assert.True(t, err == nil)
+	require.NoError(t, err)
 	request.URL, err = url.Parse(server.URL + "/test")
-	assert.True(t, err == nil)
+	require.NoError(t, err)
 
 	defaultClient := &http.Client{}
 	res, err := defaultClient.Do(request)
@@ -191,19 +191,18 @@ func TestRouterRelativeAndAbsolute(t *testing.T) {
 		router := &Router{}
 
 		router.Inject(&struct {
-			Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
-			Host         string         `inject:"config:flamingo.router.host,optional"`
-			Path         string         `inject:"config:flamingo.router.path,optional"`
-			External     string         `inject:"config:flamingo.router.external,optional"`
-			SessionStore sessions.Store `inject:",optional"`
-			SessionName  string         `inject:"config:flamingo.session.name,optional"`
+			Scheme      string `inject:"config:flamingo.router.scheme,optional"`
+			Host        string `inject:"config:flamingo.router.host,optional"`
+			Path        string `inject:"config:flamingo.router.path,optional"`
+			External    string `inject:"config:flamingo.router.external,optional"`
+			SessionName string `inject:"config:flamingo.session.name,optional"`
 		}{
 			Scheme:      scheme,
 			Host:        host,
 			Path:        path,
 			External:    external,
 			SessionName: "test",
-		}, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil)
+		}, nil, new(flamingo.DefaultEventRouter), func() []Filter { return nil }, func() []RoutesModule { return nil }, flamingo.NullLogger{}, nil, nil)
 
 		registry.HandleGet("test", func(context.Context, *Request) Result {
 			return &Response{}

@@ -61,8 +61,8 @@ if flamingo.prefixrouter.rootRedirectHandler.enabled {
 // FlamingoLegacyConfigAlias legacy mapping
 func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	return map[string]string{
-		"prefixrouter.rootRedirectHandler.enabled":             "flamingo.prefixrouter.rootRedirectHandler.enabled",
-		"prefixrouter.rootRedirectHandler.rootRedirectHandler": "flamingo.prefixrouter.rootRedirectHandler.rootRedirectHandler",
+		"prefixrouter.rootRedirectHandler.enabled":        "flamingo.prefixrouter.rootRedirectHandler.enabled",
+		"prefixrouter.rootRedirectHandler.redirectTarget": "flamingo.prefixrouter.rootRedirectHandler.redirectTarget",
 	}
 }
 
@@ -107,7 +107,7 @@ func (m *Module) serve(
 			hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
 
 			if !pathSet && !hostSet {
-				m.logger.WithField("category", "prefixrouter").Warn("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
+				m.logger.WithField("category", "prefixrouter").Info("No prefix configured for config area ", area.Name, "!  Area is not routed by prefixrouter!")
 				continue
 			}
 
@@ -174,7 +174,7 @@ func (m *Module) serve(
 }
 
 func (m *Module) listenAndServe() error {
-	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: m.server.Addr})
 	defer m.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
 	err := m.server.ListenAndServe()

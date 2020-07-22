@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
-	"github.com/gorilla/sessions"
-	"github.com/pkg/errors"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -26,12 +25,16 @@ type (
 		eventRouter flamingo.EventRouter
 		logger      flamingo.Logger
 
-		sessionStore sessions.Store
+		sessionStore *SessionStore
 		sessionName  string
 		prefix       string
+		responder    *Responder
 	}
 
-	emptyResponseWriter struct{}
+	panicError struct {
+		err   error
+		stack []byte
+	}
 )
 
 var (
@@ -49,28 +52,32 @@ func init() {
 	}
 }
 
-func (h *handler) getSession(ctx context.Context, httpRequest *http.Request) (gs *sessions.Session) {
-	// initialize the session
-	if h.sessionStore != nil {
-		var span *trace.Span
-		var err error
+func (e *panicError) Error() string {
+	return e.err.Error()
+}
 
-		ctx, span = trace.StartSpan(ctx, "router/sessions/get")
-		gs, err = h.sessionStore.Get(httpRequest, h.sessionName)
-		if err != nil {
-			h.logger.WithContext(ctx).Warn(err)
-			_, span := trace.StartSpan(ctx, "router/sessions/new")
-			gs, err = h.sessionStore.New(httpRequest, h.sessionName)
-			if err != nil {
-				h.logger.WithContext(ctx).Warn(err)
-			}
-			span.End()
+func (e *panicError) String() string {
+	return e.err.Error()
+}
+
+func (e *panicError) Unwrap() error {
+	return e.err
+}
+
+func (e *panicError) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			_, _ = io.WriteString(s, e.err.Error())
+			_, _ = fmt.Fprintf(s, "\n%s", e.stack)
+			return
 		}
-		span.AddAttributes(trace.StringAttribute(flamingo.LogKeySession, hashID(gs.ID)))
-		span.End()
+		fallthrough
+	case 's':
+		_, _ = io.WriteString(s, e.err.Error())
+	case 'q':
+		_, _ = fmt.Fprintf(s, "%q", e.err)
 	}
-
-	return
 }
 
 func panicToError(p interface{}) error {
@@ -81,11 +88,12 @@ func panicToError(p interface{}) error {
 	var err error
 	switch errIface := p.(type) {
 	case error:
-		err = errors.WithStack(errIface)
+		//err = fmt.Errorf("controller panic: %w", errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %w", errIface), stack: debug.Stack()}
 	case string:
-		err = errors.New(errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %s", errIface), stack: debug.Stack()}
 	default:
-		err = errors.Errorf("router/controller: %+v", errIface)
+		err = &panicError{err: fmt.Errorf("controller panic: %+v", errIface), stack: debug.Stack()}
 	}
 	return err
 }
@@ -96,7 +104,10 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	ctx, span := trace.StartSpan(httpRequest.Context(), "router/ServeHTTP")
 	defer span.End()
 
-	gs := h.getSession(ctx, httpRequest)
+	session, err := h.sessionStore.LoadByRequest(ctx, httpRequest)
+	if err != nil {
+		h.logger.WithContext(ctx).Warn(err)
+	}
 
 	_, span = trace.StartSpan(ctx, "router/matchRequest")
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
@@ -112,10 +123,8 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	req := &Request{
 		request: *httpRequest,
-		session: Session{
-			s: gs,
-		},
-		Params: params,
+		session: Session{s: session.s, sessionSaveMode: session.sessionSaveMode},
+		Params:  params,
 	}
 	ctx = ContextWithRequest(ContextWithSession(ctx, req.Session()), req)
 
@@ -140,7 +149,6 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 			defer func() {
 				if err := panicToError(recover()); err != nil {
-					h.logger.WithContext(ctx).Error(err)
 					response = h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, err), r)
 					span.SetStatus(trace.Status{Code: trace.StatusCodeAborted, Message: "controller panic"})
 				}
@@ -153,24 +161,21 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 			} else if controller.any != nil {
 				response = controller.any(ctx, r)
 			} else {
-				err := errors.Errorf("action for method %q not found and no any fallback", req.Request().Method)
-				h.logger.WithContext(ctx).Warn(err)
+				err := fmt.Errorf("action for method %q not found and no \"any\" fallback", req.Request().Method)
 				response = h.routerRegistry.handler[FlamingoNotfound].any(context.WithValue(ctx, RouterError, err), r)
 				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
 			}
 
-			return response
+			return h.responder.completeResult(response)
 		},
 	}
 
 	result := chain.Next(ctx, req, rw)
 
-	if h.sessionStore != nil {
-		ctx, span := trace.StartSpan(ctx, "router/sessions/save")
-		if err := h.sessionStore.Save(req.Request(), rw, gs); err != nil {
-			h.logger.WithContext(ctx).Warn(err)
-		}
-		span.End()
+	if header, err := h.sessionStore.Save(ctx, req.Session()); err == nil {
+		AddHTTPHeader(rw.Header(), header)
+	} else {
+		h.logger.WithContext(ctx).Warn(err)
 	}
 
 	var finalErr error
@@ -191,12 +196,8 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	}
 
 	// ensure that the session has been saved in the backend
-	if h.sessionStore != nil {
-		ctx, span := trace.StartSpan(ctx, "router/sessions/persist")
-		if err := h.sessionStore.Save(req.Request(), emptyResponseWriter{}, gs); err != nil {
-			h.logger.WithContext(ctx).Warn(err)
-		}
-		span.End()
+	if _, err := h.sessionStore.Save(ctx, req.Session()); err != nil {
+		h.logger.WithContext(ctx).Warn(err)
 	}
 
 	for _, cb := range chain.postApply {
@@ -215,15 +216,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		}()
 
 		if err := h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, finalErr), req).Apply(ctx, rw); err != nil {
-			finishErr = err
-			h.logger.WithContext(ctx).Error(err)
-			rw.WriteHeader(http.StatusInternalServerError)
-			_, _ = fmt.Fprintf(rw, "%+v", err)
+			panic(err)
 		}
 	}
 }
-
-// emptyResponseWriter to be able to properly persist sessions
-func (emptyResponseWriter) Header() http.Header        { return http.Header{} }
-func (emptyResponseWriter) Write([]byte) (int, error)  { return 0, io.ErrUnexpectedEOF }
-func (emptyResponseWriter) WriteHeader(statusCode int) {}

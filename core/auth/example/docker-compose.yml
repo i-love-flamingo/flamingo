@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  dex1:
+    image: quay.io/dexidp/dex:v2.21.0
+    volumes:
+      - ./dex1.yml:/dex.yml
+    command: serve /dex.yml
+    ports:
+      - 3351:3351
+  dex2:
+    image: quay.io/dexidp/dex:v2.21.0
+    volumes:
+      - ./dex2.yml:/dex.yml
+    command: serve /dex.yml
+    ports:
+      - 3352:3352
+  keycloak1:
+    image: quay.io/keycloak/keycloak:8.0.1
+    environment:
+      DB_VENDOR: h2
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_IMPORT: /tmp/realm.json
+    volumes:
+      - ./realm1.json:/tmp/realm.json
+    ports:
+      - 3353:8080
+  keycloak2:
+    image: quay.io/keycloak/keycloak:8.0.1
+    environment:
+      DB_VENDOR: h2
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KEYCLOAK_IMPORT: /tmp/realm.json
+    volumes:
+      - ./realm2.json:/tmp/realm.json
+    ports:
+      - 3354:8080

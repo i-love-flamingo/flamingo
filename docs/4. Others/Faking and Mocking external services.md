@@ -1,8 +1,7 @@
 # Testing and Mocking external Services
 
-
 ## Introduction / Context
-An important typical work in a Flamingo applicationis to consume external services - often via Restful APIs.
+An important typical work in a Flamingo application is to consume external services - often via Restful APIs.
 
 Flamingo acts then as a **Consumer** of Services provided by a **Provider**
 
@@ -13,7 +12,8 @@ So lets clarify the naming:
 * ***Faking:***  Means instead of calling the actual API we are faking a result internally, e.g. by using an implementation that dont calls an API but just answers with (fixed) faked results.
 * ***Mocking:*** Means we try to use the real code that later (in production) should call the real service. But instead of using the real external service we call a separate mock. This mock needs to run.
 
-Faking is good for start. Mocking is the right way if you want to test in a more production-like setup.
+Faking is easy and also allows for local independent testing.
+Mocking has the advantage to test your application in a more production-like setup.
 
 ### Contract Testing
 If you use a Mock, then someone should verify that the Mock behaves like the real service (or the other way around).

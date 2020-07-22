@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 type (
@@ -54,7 +52,7 @@ func (m Map) Add(cfg Map) error {
 					return err
 				}
 			} else {
-				return errors.Errorf("config conflict: %q.%q: %v into %v", k, sub, v, m[k])
+				return fmt.Errorf("config conflict: %q.%q: %v into %v", k, sub, v, m[k])
 			}
 		} else {
 			_, mapleft := m[k].(Map)
@@ -67,7 +65,7 @@ func (m Map) Add(cfg Map) error {
 					return err
 				}
 			} else if mapleft && !mapright {
-				return errors.Errorf("config conflict: %q:%v into %v", k, v, m[k])
+				return fmt.Errorf("config conflict: %q:%v into %v", k, v, m[k])
 			} else if mapright {
 				m[k] = make(Map)
 				if err := m[k].(Map).Add(v.(Map)); err != nil {
@@ -127,12 +125,12 @@ func (m Map) MapInto(out interface{}) error {
 	jsonBytes, err := json.Marshal(m)
 
 	if err != nil {
-		return errors.Wrap(err, "Problem with marshaling map")
+		return fmt.Errorf("problem with marshaling map: %w", err)
 	}
 
 	err = json.Unmarshal(jsonBytes, out)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
+		return fmt.Errorf("problem with unmarshaling into given structure %T: %w", out, err)
 	}
 
 	return nil
@@ -157,12 +155,12 @@ func (s Slice) MapInto(out interface{}) error {
 	jsonBytes, err := json.Marshal(s)
 
 	if err != nil {
-		return errors.Wrap(err, "Problem with marshaling map")
+		return fmt.Errorf("problem with marshaling map: %w", err)
 	}
 
 	err = json.Unmarshal(jsonBytes, &out)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Problem with unmarshaling into given structure %T", out))
+		return fmt.Errorf("problem with unmarshaling into given structure %T: %w", out, err)
 	}
 
 	return nil

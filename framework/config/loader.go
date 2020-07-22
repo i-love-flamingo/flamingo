@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -8,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/format"
+	"cuelang.org/go/cue/parser"
 	"github.com/ghodss/yaml"
 )
 
@@ -72,14 +73,18 @@ func Load(root *Area, basedir string, options ...LoadOption) error {
 		return err
 	}
 	if config.cueDebugCallback != nil {
-		_ = root.loadConfig(false, false)
+		if err := root.loadConfig(false, false); err != nil {
+			log.Println(err)
+		}
 		config.cueDebugCallback(format.Node(root.cueInstance.Lookup(config.cueDebugPath...).Syntax(), format.Simplify()))
 	}
 	return root.loadConfig(config.legacy, config.logLegacy)
 }
 
 func loadConfigFromBasedir(root *Area, config *LoadConfig) error {
-	load(root, config.basedir, "/", config.debug)
+	if err := load(root, config.basedir, "/", config); err != nil {
+		return err
+	}
 
 	// load additional single context file
 	for _, file := range strings.Split(os.Getenv("CONTEXTFILE"), ":") {
@@ -126,25 +131,28 @@ func loadLogged(area *Area, loader func(*Area, string) error, filename string, d
 	}
 }
 
-func load(area *Area, basedir, curdir string, debug bool) {
-	loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config"), debug)
-	loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config"), debug)
-	loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes"), debug)
+func load(area *Area, basedir, curdir string, config *LoadConfig) error {
+	loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config"), config.debug)
+	loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config"), config.debug)
+	loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes"), config.debug)
 	for _, context := range strings.Split(os.Getenv("CONTEXT"), ":") {
 		if context == "" {
 			continue
 		}
-		loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config_"+context+""), debug)
-		loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config_"+context+""), debug)
-		loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes_"+context+""), debug)
+		loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config_"+context+""), config.debug)
+		loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config_"+context+""), config.debug)
+		loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes_"+context+""), config.debug)
 	}
-	loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config_local"), debug)
-	loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config_local"), debug)
-	loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes_local"), debug)
+	loadLogged(area, loadYamlFile, filepath.Join(basedir, curdir, "config_local"), config.debug)
+	loadLogged(area, loadCueFile, filepath.Join(basedir, curdir, "config_local"), config.debug)
+	loadLogged(area, loadYamlRoutesFile, filepath.Join(basedir, curdir, "routes_local"), config.debug)
 
 	for _, child := range area.Childs {
-		load(child, basedir, filepath.Join(curdir, child.Name), debug)
+		if err := load(child, basedir, filepath.Join(curdir, child.Name), config); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func loadCueFile(area *Area, filename string) error {
@@ -156,12 +164,13 @@ func loadCueFile(area *Area, filename string) error {
 		return nil
 	}
 
-	if area.cueBuildInstance == nil {
-		cueContext := build.NewContext()
-		area.cueBuildInstance = cueContext.NewInstance(area.Name, nil)
+	file, err := parser.ParseFile(filename+".cue", nil)
+	if err != nil {
+		return err
 	}
+	area.cueConfig = cueAstMergeFile(area.cueConfig, file)
 
-	return area.cueBuildInstance.AddFile(filename+".cue", nil)
+	return nil
 }
 
 var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
@@ -177,7 +186,7 @@ func loadYamlFile(area *Area, filename string) error {
 		return loadYamlConfig(area, config)
 	}
 
-	return err
+	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
 }
 
 func loadYamlConfig(area *Area, config []byte) error {
@@ -206,8 +215,14 @@ func loadYamlConfig(area *Area, config []byte) error {
 
 func loadYamlRoutesFile(area *Area, filename string) error {
 	routes, err := ioutil.ReadFile(filename + ".yml")
-	if err != nil {
-		return err
+	if err == nil {
+		return yaml.Unmarshal(routes, &area.Routes)
 	}
-	return yaml.Unmarshal(routes, &area.Routes)
+
+	routes, err = ioutil.ReadFile(filename + ".yaml")
+	if err == nil {
+		return yaml.Unmarshal(routes, &area.Routes)
+	}
+
+	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
 }

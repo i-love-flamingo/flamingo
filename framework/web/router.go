@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -11,8 +12,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/gorilla/sessions"
-	"github.com/pkg/errors"
 	"go.opencensus.io/trace"
 )
 
@@ -28,21 +27,23 @@ type (
 		Absolute(r *Request, to string, params map[string]string) (*url.URL, error)
 	}
 
-	filterProvider func() []Filter
-	routesProvider func() []RoutesModule
+	filterProvider    func() []Filter
+	routesProvider    func() []RoutesModule
+	responderProvider func() *Responder
 
 	// Router represents actual implementation of ReverseRouter interface
 	Router struct {
-		base           *url.URL
-		external       *url.URL
-		eventRouter    flamingo.EventRouter
-		filterProvider filterProvider
-		routesProvider routesProvider
-		logger         flamingo.Logger
-		routerRegistry *RouterRegistry
-		configArea     *config.Area
-		sessionStore   sessions.Store
-		sessionName    string
+		base              *url.URL
+		external          *url.URL
+		eventRouter       flamingo.EventRouter
+		filterProvider    filterProvider
+		routesProvider    routesProvider
+		logger            flamingo.Logger
+		routerRegistry    *RouterRegistry
+		configArea        *config.Area
+		sessionStore      *SessionStore
+		sessionName       string
+		responderProvider responderProvider
 	}
 )
 
@@ -57,18 +58,19 @@ const (
 func (r *Router) Inject(
 	cfg *struct {
 		// base url configuration
-		Scheme       string         `inject:"config:flamingo.router.scheme,optional"`
-		Host         string         `inject:"config:flamingo.router.host,optional"`
-		Path         string         `inject:"config:flamingo.router.path,optional"`
-		External     string         `inject:"config:flamingo.router.external,optional"`
-		SessionStore sessions.Store `inject:",optional"`
-		SessionName  string         `inject:"config:flamingo.session.name,optional"`
+		Scheme      string `inject:"config:flamingo.router.scheme,optional"`
+		Host        string `inject:"config:flamingo.router.host,optional"`
+		Path        string `inject:"config:flamingo.router.path,optional"`
+		External    string `inject:"config:flamingo.router.external,optional"`
+		SessionName string `inject:"config:flamingo.session.name,optional"`
 	},
+	sessionStore *SessionStore,
 	eventRouter flamingo.EventRouter,
 	filterProvider filterProvider,
 	routesProvider routesProvider,
 	logger flamingo.Logger,
 	configArea *config.Area,
+	responderProvider responderProvider,
 ) {
 	r.base = &url.URL{
 		Scheme: cfg.Scheme,
@@ -79,7 +81,7 @@ func (r *Router) Inject(
 	if e, err := url.Parse(cfg.External); cfg.External != "" && err == nil {
 		r.external = e
 	} else if cfg.External != "" {
-		r.logger.Warn("External URL Error: " + err.Error())
+		r.logger.Warn("External URL Error: ", err)
 	}
 
 	r.eventRouter = eventRouter
@@ -87,38 +89,39 @@ func (r *Router) Inject(
 	r.routesProvider = routesProvider
 	r.logger = logger
 	r.configArea = configArea
-	r.sessionStore = cfg.SessionStore
+	r.sessionStore = sessionStore
 	r.sessionName = "flamingo"
 	if cfg.SessionName != "" {
 		r.sessionName = cfg.SessionName
 	}
+	r.responderProvider = responderProvider
 }
 
 // Handler creates and returns new instance of http.Handler interface
 func (r *Router) Handler() http.Handler {
 	r.routerRegistry = NewRegistry()
 
-	if r.base == nil {
-		r.base, _ = url.Parse("/")
-	}
-
-	for _, m := range r.routesProvider() {
-		m.Routes(r.routerRegistry)
-	}
-
 	if r.configArea != nil {
 		for _, route := range r.configArea.Routes {
-			r.routerRegistry.Route(route.Path, route.Controller)
+			r.routerRegistry.MustRoute(route.Path, route.Controller)
 			if route.Name != "" {
 				r.routerRegistry.Alias(route.Name, route.Controller)
 			}
 		}
 	}
 
+	for _, m := range r.routesProvider() {
+		m.Routes(r.routerRegistry)
+	}
+
 	for _, handler := range r.routerRegistry.routes {
 		if _, ok := r.routerRegistry.handler[handler.handler]; !ok {
-			panic(errors.Errorf("The handler %q has no controller, registered for path %q", handler.handler, handler.path.path))
+			panic(fmt.Errorf("the handler %q has no controller, registered for path %q", handler.handler, handler.path.path))
 		}
+	}
+
+	if r.responderProvider == nil {
+		r.responderProvider = func() *Responder { return new(Responder) }
 	}
 
 	return &handler{
@@ -128,13 +131,14 @@ func (r *Router) Handler() http.Handler {
 		logger:         r.logger.WithField(flamingo.LogKeyModule, "web").WithField(flamingo.LogKeyCategory, "handler"),
 		sessionStore:   r.sessionStore,
 		sessionName:    r.sessionName,
-		prefix:         strings.TrimRight(r.base.Path, "/"),
+		prefix:         strings.TrimRight(r.Base().Path, "/"),
+		responder:      r.responderProvider(),
 	}
 }
 
 // ListenAndServe starts flamingo server
 func (r *Router) ListenAndServe(addr string) error {
-	r.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{})
+	r.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: addr})
 	defer r.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
 	return http.ListenAndServe(addr, r.Handler())
@@ -142,6 +146,9 @@ func (r *Router) ListenAndServe(addr string) error {
 
 // Base returns full base urls, containing scheme, domain and base path
 func (r *Router) Base() *url.URL {
+	if r.base == nil {
+		return new(url.URL)
+	}
 	return r.base
 }
 
@@ -167,7 +174,7 @@ func (r *Router) relative(to string, params map[string]string) (string, error) {
 // Relative returns a root-relative URL, starting with `/`
 func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
 	if to == "" {
-		relativePath := r.base.Path
+		relativePath := r.Base().Path
 		if r.external != nil {
 			relativePath = r.external.Path
 		}
@@ -182,7 +189,7 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 		return nil, err
 	}
 
-	basePath := r.base.Path
+	basePath := r.Base().Path
 	if r.external != nil {
 		basePath = r.external.Path
 	}
@@ -203,8 +210,8 @@ func (r *Router) Absolute(req *Request, to string, params map[string]string) (*u
 		return &e, nil
 	}
 
-	scheme := r.base.Scheme
-	host := r.base.Host
+	scheme := r.Base().Scheme
+	host := r.Base().Host
 
 	if scheme == "" {
 		if req != nil && req.request.TLS != nil {
@@ -261,11 +268,11 @@ func (r *Router) Data(ctx context.Context, handler string, params map[interface{
 		if c.data != nil {
 			return c.data(ctx, req, dataParams(params))
 		}
-		err := errors.Errorf("%q is not a data Controller", handler)
+		err := fmt.Errorf("%q is not a data Controller", handler)
 		r.logger.Error(err)
 		panic(err)
 	}
-	err := errors.Errorf("data Controller %q not found", handler)
+	err := fmt.Errorf("data Controller %q not found", handler)
 	r.logger.Error(err)
 	panic(err)
 }

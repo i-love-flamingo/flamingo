@@ -1,0 +1,26 @@
+issuer: http://127.0.0.1:3351/dex
+storage:
+  type: memory
+
+expiry:
+  IDTokens: 20s
+
+web:
+  http: 0.0.0.0:3351
+
+staticClients:
+  - id: client1
+    redirectURIs:
+      - 'http://localhost:3322/auth-special'
+    name: 'Client1 App'
+    secret: client1
+  - id: customOidcBroker
+    redirectURIs:
+      - 'http://localhost:3322/core/auth/callback/customOidcBroker'
+    name: 'customOidcBroker App'
+    secret: customOidcBroker
+
+connectors:
+  - type: mockCallback
+    id: mock
+    name: Example

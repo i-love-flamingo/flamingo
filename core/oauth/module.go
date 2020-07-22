@@ -2,16 +2,19 @@ package oauth
 
 import (
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	fakeService "flamingo.me/flamingo/v3/core/oauth/application/fake"
 	"flamingo.me/flamingo/v3/core/oauth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
+	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
 // Module for core.auth
+// Deprecated: use core/auth instead
 type Module struct {
 	UseFake                     bool   `inject:"config:core.oauth.useFake"`
 	PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`
@@ -38,15 +41,19 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(role.Provider)).To(application.AuthRoleProvider{})
 
 	web.BindRoutes(injector, new(routes))
+
+	injector.BindMap(new(auth.RequestIdentifierFactory), "flamingo.core.oauth").ToInstance(func(config config.Map) (auth.RequestIdentifier, error) {
+		return &interfaces.LegacyIdentifier{}, nil
+	})
 }
 
 // CueConfig for oauth module
 func (*Module) CueConfig() string {
 	return `
 core oauth: {
-	server: string
-	secret: string
-	clientid: string
+	server: string | *""
+	secret: string | *""
+	clientid: string | *""
 	disableOfflineToken: bool | *false
 	enabled: bool | *true
 	useFake: bool | *false
@@ -71,7 +78,14 @@ core oauth: {
 		}
 	}
 	preventSimultaneousSessions: bool | *false
+
+	legacyAuthIdentifier: {
+		broker: "flamingo.core.oauth"
+		typ: "flamingo.core.oauth"
+	}
 }
+
+core: auth: web: broker: [core.oauth.legacyAuthIdentifier, ...]
 `
 }
 

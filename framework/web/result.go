@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -76,7 +77,8 @@ type (
 	// ServerErrorResponse returns a server error, by default http 500
 	ServerErrorResponse struct {
 		RenderResponse
-		Error error
+		Error     error
+		ErrString string
 	}
 
 	// CacheDirectiveBuilder constructs a CacheDirective with the most commonly used options
@@ -163,6 +165,9 @@ func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
 			w.Header().Add(name, val)
 		}
 	}
+	if r.Status == 0 {
+		r.Status = http.StatusOK
+	}
 	w.WriteHeader(int(r.Status))
 	if r.Body == nil {
 		return nil
@@ -194,6 +199,10 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 
 // Apply response
 func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	if r.router == nil {
+		return errors.New("no reverserouter available")
+	}
+
 	to, err := r.router.Relative(r.To, r.Data)
 	if err != nil {
 		return err
@@ -234,6 +243,10 @@ func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 
 // Apply response
 func (r *URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+	if r.URL == nil {
+		return errors.New("URL is nil")
+	}
+
 	w.Header().Set("Location", r.URL.String())
 	return r.Response.Apply(c, w)
 }
@@ -269,6 +282,9 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		return err
 	}
 	r.Body = buf
+	if r.Response.Header == nil {
+		r.Response.Header = make(http.Header)
+	}
 	r.Response.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return r.Response.Apply(c, w)
 }
@@ -345,6 +361,9 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		}
 	}
 
+	if r.Header == nil {
+		r.Header = make(http.Header)
+	}
 	r.Header.Set("Content-Type", "text/html; charset=utf-8")
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
@@ -361,17 +380,34 @@ func (r *RenderResponse) SetNoCache() *RenderResponse {
 
 // Apply response
 func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
-	return r.RenderResponse.Apply(c, w)
+	if r.RenderResponse.DataResponse.Response.Status == 0 {
+		r.RenderResponse.DataResponse.Response.Status = http.StatusInternalServerError
+	}
+
+	if err := r.RenderResponse.Apply(c, w); err != nil {
+		http.Error(w, r.ErrString, int(r.RenderResponse.DataResponse.Response.Status))
+	}
+
+	return nil
 }
 
 // ServerErrorWithCodeAndTemplate error response with template and http status code
 func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status uint) *ServerErrorResponse {
-	errstr := err.Error()
+	var errstr string
+
+	if err == nil {
+		err = errors.New("")
+	}
+
 	if r.debug {
 		errstr = fmt.Sprintf("%+v", err)
+	} else {
+		errstr = err.Error()
 	}
+
 	return &ServerErrorResponse{
-		Error: err,
+		Error:     err,
+		ErrString: errstr,
 		RenderResponse: RenderResponse{
 			Template: tpl,
 			engine:   r.engine,
@@ -436,6 +472,24 @@ func (r *Responder) getLogger() flamingo.Logger {
 		return r.logger
 	}
 	return &flamingo.StdLogger{Logger: *log.New(os.Stdout, "flamingo", log.LstdFlags)}
+}
+
+func (r *Responder) completeResult(result Result) Result {
+	switch result := result.(type) {
+	case *RenderResponse:
+		if result.engine == nil {
+			result.engine = r.engine
+		}
+	case *RouteRedirectResponse:
+		if result.router == nil {
+			result.router = r.router
+		}
+	case *ServerErrorResponse:
+		if result.engine == nil {
+			result.engine = r.engine
+		}
+	}
+	return result
 }
 
 // ApplyHeaders sets the correct cache control headers

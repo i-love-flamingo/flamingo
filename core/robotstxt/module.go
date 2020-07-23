@@ -8,12 +8,12 @@ import (
 
 type (
 	// Module for robotstxt
-	Module struct {}
+	Module struct{}
 
 	routes struct {
 		securityTxtActivated bool
 		humansTxtActivated   bool
-		files interfaces.FileControllerInterface
+		files                interfaces.FileControllerInterface
 	}
 )
 
@@ -42,8 +42,8 @@ func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 // Inject routes dependencies
 func (r *routes) Inject(
 	config *struct {
-		SecurityTxtActivated bool   `inject:"config:core.securitytxt.enabled,optional"`
-		HumansTxtActivated   bool   `inject:"config:core.humanstxt.enabled,optional"`
+		SecurityTxtActivated bool `inject:"config:core.securitytxt.enabled,optional"`
+		HumansTxtActivated   bool `inject:"config:core.humanstxt.enabled,optional"`
 	},
 	files interfaces.FileControllerInterface,
 ) {

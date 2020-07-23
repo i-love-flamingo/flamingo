@@ -36,10 +36,10 @@ func (d *DefaultFileControllerInterface) Inject(
 	responder *web.Responder,
 	logger flamingo.Logger,
 	config *struct {
-	RobotsTxtFilepath   string `inject:"config:core.robotstxt.filepath"`
-	SecurityTxtFilepath string `inject:"config:core.securitytxt.filepath"`
-	HumansTxtFilepath   string `inject:"config:core.humanstxt.filepath"`
-},
+		RobotsTxtFilepath   string `inject:"config:core.robotstxt.filepath"`
+		SecurityTxtFilepath string `inject:"config:core.securitytxt.filepath"`
+		HumansTxtFilepath   string `inject:"config:core.humanstxt.filepath"`
+	},
 ) {
 	d.responder = responder
 	d.logger = logger.WithField("category", "robotstxt")

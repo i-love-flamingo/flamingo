@@ -1,6 +1,7 @@
 package flamingo
 
 import (
+	"net/http"
 	"net/url"
 	"os"
 
@@ -66,10 +67,8 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		sessionStore.SetMaxAge(m.maxAge)
 		sessionStore.SetMaxLength(m.storeLength)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
 		sessionStore.DefaultMaxAge = m.redisMaxAge
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 		injector.Bind(new(redis.Pool)).ToInstance(sessionStore.Pool)
@@ -79,9 +78,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		sessionStore.MaxLength(m.storeLength)
 		sessionStore.MaxAge(m.maxAge)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 	default: //memory
@@ -89,12 +86,19 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		sessionStore.MaxLength(m.storeLength)
 		sessionStore.MaxAge(m.maxAge)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 	}
+}
+
+func (m *SessionModule) setSessionstoreOptions(options *sessions.Options) {
+	options.Domain = ""
+	options.Path = m.path
+	options.MaxAge = m.maxAge
+	options.Secure = m.secure
+	options.HttpOnly = true
+	options.SameSite = http.SameSiteLaxMode
 }
 
 // CueConfig defines the session config scheme

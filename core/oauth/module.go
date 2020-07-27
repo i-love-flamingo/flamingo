@@ -3,8 +3,10 @@ package oauth
 import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	fakeService "flamingo.me/flamingo/v3/core/oauth/application/fake"
+	"flamingo.me/flamingo/v3/core/oauth/infrastructure"
 	"flamingo.me/flamingo/v3/core/oauth/interfaces"
 	fakeController "flamingo.me/flamingo/v3/core/oauth/interfaces/fake"
 	"flamingo.me/flamingo/v3/core/security/application/role"
@@ -19,6 +21,7 @@ type Module struct {
 	UseFake                     bool   `inject:"config:core.oauth.useFake"`
 	PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`
 	SessionBackend              string `inject:"config:flamingo.session.backend"`
+	CheckAuthServer             bool   `inject:"config:core.oauth.healthcheck,optional"`
 }
 
 // Configure core.auth module
@@ -45,6 +48,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.BindMap(new(auth.RequestIdentifierFactory), "flamingo.core.oauth").ToInstance(func(config config.Map) (auth.RequestIdentifier, error) {
 		return &interfaces.LegacyIdentifier{}, nil
 	})
+
+	if m.CheckAuthServer {
+		injector.BindMap(new(healthcheck.Status), "auth").To(infrastructure.Auth{})
+	}
 }
 
 // CueConfig for oauth module
@@ -110,6 +117,7 @@ func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	} {
 		alias[v] = "core." + v
 	}
+	alias["core.healthcheck.checkAuth"] = "core.oauth.healthcheck"
 	return alias
 }
 

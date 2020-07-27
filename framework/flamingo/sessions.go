@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
 	"github.com/boj/redistore"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/sessions"
@@ -25,6 +27,7 @@ type SessionModule struct {
 	redisPassword        string
 	redisIdleConnections int
 	redisMaxAge          int
+	healthcheckSession   bool
 }
 
 // Inject dependencies
@@ -43,6 +46,7 @@ func (m *SessionModule) Inject(config *struct {
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
+	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
 	m.secret = config.Secret
@@ -54,6 +58,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
+	m.healthcheckSession = config.CheckSession
 }
 
 // Configure DI
@@ -72,6 +77,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 		injector.Bind(new(redis.Pool)).ToInstance(sessionStore.Pool)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
+		}
 	case "file":
 		os.Mkdir(m.fileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))
@@ -81,6 +90,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.FileSession{})
+		}
 	default: //memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.secret))
 
@@ -89,6 +102,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(healthcheck.Nil{})
+		}
 	}
 }
 
@@ -140,6 +157,7 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 		"session.redis.password":         "flamingo.session.redis.password",
 		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
 		"session.redis.maxAge":           "flamingo.session.redis.maxAge",
+		"core.healthcheck.checkSession":  "flamingo.session.healthcheck",
 	}
 }
 

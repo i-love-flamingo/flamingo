@@ -1,13 +1,17 @@
 package healthcheck
 
-import "os"
+import (
+	"os"
+
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+)
 
 // FileSession session backend health check
 type FileSession struct {
 	fileName string
 }
 
-var _ Status = &FileSession{}
+var _ healthcheck.Status = &FileSession{}
 
 // Inject configuration for session backend
 func (s *FileSession) Inject(cfg *struct {

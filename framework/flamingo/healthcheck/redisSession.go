@@ -1,13 +1,16 @@
 package healthcheck
 
-import "github.com/gomodule/redigo/redis"
+import (
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	"github.com/gomodule/redigo/redis"
+)
 
 // RedisSession pool status check
 type RedisSession struct {
 	pool *redis.Pool
 }
 
-var _ Status = &RedisSession{}
+var _ healthcheck.Status = &RedisSession{}
 
 // Inject redis pool for session
 func (s *RedisSession) Inject(pool *redis.Pool) {

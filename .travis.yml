@@ -1,12 +1,13 @@
 language: go
 
 go:
-  - 1.x
-  - 1.13.x
+  - stable
+  - oldstable
 
 install: true
 
 script:
+  - go version
   - set -e
   - fmt=$(gofmt -l .)
   - test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
@@ -17,9 +18,10 @@ script:
 jobs:
   include:
     - stage: testrecent
-      go: 1.x
+      go: stable
       script:
         # test is done only for recent version.
         # Older versions might include other files during compilation and may therefore generate different go.mod files
+        - go version
         - go generate ./...
         - git diff --quiet || (echo 'generated go files are not up to date, check go generate, go.sum and go.mod' ; git diff ; exit 1)

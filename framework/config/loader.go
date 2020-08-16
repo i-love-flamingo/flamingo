@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"cuelang.org/go/cue/format"
@@ -203,6 +204,7 @@ func loadYamlConfig(area *Area, config []byte) error {
 
 	cfg := make(Map)
 	if err := yaml.Unmarshal(config, &cfg); err != nil {
+		log.Print(errorLineDebug(err, config))
 		panic(err)
 	}
 
@@ -211,6 +213,37 @@ func loadYamlConfig(area *Area, config []byte) error {
 	}
 
 	return area.loadedConfig.Add(cfg)
+}
+
+//errorLineDebug returns the lines where the error occurred (if possible)
+func errorLineDebug(err error, config []byte) string {
+	r, _ := regexp.Compile(": line (.*):")
+	matches := r.FindStringSubmatch(err.Error())
+	if len(matches) != 2 {
+		return ""
+	}
+	line, aerr := strconv.Atoi(matches[1])
+	if aerr != nil {
+		return ""
+	}
+	errorLines := fmt.Sprintln("")
+	lines := strings.Split(string(config), "\n")
+	first := line - 10
+	last := line + 10
+	if first < 0 {
+		first = 0
+	}
+	if last > len(lines) {
+		last = len(lines)
+	}
+	for i := first; i < last; i++ {
+		if i == line {
+			errorLines = errorLines + fmt.Sprintln(">", i, lines[i])
+		} else {
+			errorLines = errorLines + fmt.Sprintln(" ", i, lines[i])
+		}
+	}
+	return errorLines
 }
 
 func loadYamlRoutesFile(area *Area, filename string) error {
@@ -224,5 +257,5 @@ func loadYamlRoutesFile(area *Area, filename string) error {
 		return yaml.Unmarshal(routes, &area.Routes)
 	}
 
-	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
+	return fmt.Errorf("can not load %s.yml nor %s.yaml  %v", filename, filename, errorLineDebug(err, routes))
 }

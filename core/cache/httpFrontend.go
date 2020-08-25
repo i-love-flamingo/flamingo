@@ -89,26 +89,22 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
-			go hf.load(context.Background(), key, loader)
+			go hf.load(context.Background(), key, loader, true)
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
 	hf.logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
 
-	return copyResponse(hf.load(ctx, key, loader))
+	return copyResponse(hf.load(ctx, key, loader, false))
 }
 
-func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader) (cachedResponse, error) {
+func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader, keepExistingEntry bool) (cachedResponse, error) {
 	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/load")
 	span.Annotate(nil, key)
 	defer span.End()
 
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
-		//_, fetchSpan := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/fetch")
-		//fetchSpan.Annotate(nil, key)
-		//defer fetchSpan.End()
-
 		ctx, fetchRoutineSpan := trace.StartSpan(context.Background(), "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.Annotate(nil, key)
 		defer fetchRoutineSpan.End()
@@ -147,12 +143,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		return loaderResponse{cached, meta, fetchRoutineSpan.SpanContext()}, err
 	})
 
-	//if err != nil {
-	//	if hf.Logger != nil {
-	//		hf.Logger.Error("cache load failed: ", err)
-	//	}
-	//	return cachedResponse{}, err
-	//}
+	keepExistingEntry = keepExistingEntry && (err != nil || data == nil)
 
 	if data == nil {
 		data = loaderResponse{
@@ -174,15 +165,19 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader)
 		cached = loadedData.(cachedResponse)
 	}
 
-	hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
-	hf.backend.Set(key, &Entry{
-		Data: cached,
-		Meta: Meta{
-			lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
-			gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
-			Tags:      data.(loaderResponse).meta.Tags,
-		},
-	})
+	if keepExistingEntry {
+		hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("No store/overwrite in cache because we couldn't fetch new data", key)
+	} else {
+		hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
+		hf.backend.Set(key, &Entry{
+			Data: cached,
+			Meta: Meta{
+				lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
+				gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
+				Tags:      data.(loaderResponse).meta.Tags,
+			},
+		})
+	}
 
 	span.AddAttributes(trace.StringAttribute("parenttrace", data.(loaderResponse).span.TraceID.String()))
 	span.AddAttributes(trace.StringAttribute("parentspan", data.(loaderResponse).span.SpanID.String()))

@@ -45,6 +45,11 @@ type (
 		sessionName       string
 		responderProvider responderProvider
 	}
+
+	// AreaRoutedEvent is dispatched when the router initializes the Handler
+	AreaRoutedEvent struct {
+		ConfigArea *config.Area
+	}
 )
 
 const (
@@ -122,6 +127,10 @@ func (r *Router) Handler() http.Handler {
 
 	if r.responderProvider == nil {
 		r.responderProvider = func() *Responder { return new(Responder) }
+	}
+
+	if r.eventRouter != nil {
+		r.eventRouter.Dispatch(context.Background(), &AreaRoutedEvent{ConfigArea: r.configArea})
 	}
 
 	return &handler{

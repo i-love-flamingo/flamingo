@@ -397,14 +397,21 @@ func (am *AuthManager) StoreTokenDetails(ctx context.Context, session *web.Sessi
 	if !oauth2Token.Valid() {
 		am.logger.WithContext(ctx).Warn("StoreTokenDetails got already invalid token")
 	}
-	rawToken, err := am.ExtractRawIDToken(oauth2Token)
-	if err != nil {
-		am.logger.Error("core.auth.callback Error ExtractRawIDToken", err)
-		return err
+	var rawToken string
+	// load old token first
+	if token, ok := session.Load(keyRawIDToken); ok {
+		rawToken = token.(string)
+	}
+	// check if we have a newer token
+	if newRawToken, err := am.ExtractRawIDToken(oauth2Token); err == nil && newRawToken != "" {
+		rawToken = newRawToken
+	}
+	if rawToken == "" {
+		return fmt.Errorf("StoreTokenDetails has no ID token available")
 	}
 
 	var extras []string
-	err = am.tokenExtras.MapInto(&extras)
+	err := am.tokenExtras.MapInto(&extras)
 	if err != nil {
 		return err
 	}

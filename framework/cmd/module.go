@@ -42,7 +42,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 			once.Do(func() {
-				go shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+				go func() {
+					<-signals
+					shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+				}()
 			})
 
 			rootCmd := &cobra.Command{
@@ -50,7 +53,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Short:            "Flamingo " + config.Name,
 				TraverseChildren: true,
 				PersistentPostRun: func(cmd *cobra.Command, args []string) {
-					signals <- syscall.SIGTERM
+					shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
 					<-shutdownComplete
 				},
 				Example: `Run with -h or -help to see global debug flags`,
@@ -79,7 +82,6 @@ func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 }
 
 func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, complete chan<- struct{}, logger flamingo.Logger) {
-	<-signals
 	logger.Info("start graceful shutdown")
 
 	stopper := make(chan struct{})
@@ -99,7 +101,6 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, comple
 	case <-stopper:
 		logger.Info("graceful shutdown complete")
 		complete <- struct{}{}
-		os.Exit(0)
 	}
 }
 

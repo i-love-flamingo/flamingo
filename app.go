@@ -360,7 +360,7 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 			err := a.listenAndServe()
 			if err != nil {
 				if err == http.ErrServerClosed {
-					logger.Error(err)
+					logger.Info(err)
 				} else {
 					logger.Fatal("unexpected error in serving:", err)
 				}

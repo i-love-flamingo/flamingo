@@ -81,8 +81,9 @@ func (s *SystemServer) Start() {
 }
 
 func (s *SystemServer) shutdown() {
-	s.logger.Info("systemendpoint: shutdown at ", s.serviceAddress)
 	if s.server != nil {
+		s.logger.Info("systemendpoint: shutdown at ", s.serviceAddress)
 		_ = s.server.Shutdown(context.Background())
+		s.server = nil
 	}
 }

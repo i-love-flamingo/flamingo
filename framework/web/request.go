@@ -12,10 +12,11 @@ import (
 type (
 	// Request object stores the actual HTTP Request, Session, Params and attached Values
 	Request struct {
-		request http.Request
-		session Session
-		Params  RequestParams
-		Values  sync.Map
+		request     http.Request
+		session     Session
+		handlerName string
+		Params      RequestParams
+		Values      sync.Map
 	}
 
 	// RequestParams store string->string values for request data
@@ -144,4 +145,14 @@ func (r *Request) Query1(name string) (string, error) {
 // QueryAll returns a Map of the Raw Query
 func (r *Request) QueryAll() url.Values {
 	return r.request.URL.Query()
+}
+
+// HandlerName returns a Name of found handler
+func (r *Request) HandlerName() string {
+	return r.handlerName
+}
+
+// HasHandler checks if there is a handler for request
+func (r *Request) HasHandler() bool {
+	return r.handlerName != ""
 }

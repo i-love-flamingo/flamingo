@@ -112,7 +112,9 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	_, span = trace.StartSpan(ctx, "router/matchRequest")
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
 
+	var handlerName string
 	if handler != nil {
+		handlerName = handler.handler
 		ctx, _ = tag.New(ctx, tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Insert(opencensus.KeyArea, "-"))
 		httpRequest = httpRequest.WithContext(ctx)
 		start := time.Now()
@@ -122,9 +124,10 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	}
 
 	req := &Request{
-		request: *httpRequest,
-		session: Session{s: session.s, sessionSaveMode: session.sessionSaveMode},
-		Params:  params,
+		request:     *httpRequest,
+		session:     Session{s: session.s, sessionSaveMode: session.sessionSaveMode},
+		handlerName: handlerName,
+		Params:      params,
 	}
 	ctx = ContextWithRequest(ContextWithSession(ctx, req.Session()), req)
 

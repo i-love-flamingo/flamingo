@@ -330,12 +330,15 @@ func (a *servemodule) Inject(
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
+	cfg *struct {
+		Port int `inject:"config:core.serve.port"`
+	},
 ) {
 	a.router = router
 	a.eventRouter = eventRouter
 	a.logger = logger
 	a.server = &http.Server{
-		Addr: ":3322",
+		Addr: fmt.Sprintf(":%d", cfg.Port),
 	}
 	a.configuredSampler = configuredSampler
 }
@@ -347,6 +350,11 @@ func (a *servemodule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
 		return serveProvider(a, a.logger)
 	})
+}
+
+// CueConfig for the module
+func (a *servemodule) CueConfig() string {
+	return `core: serve: port: number | *3322`
 }
 
 func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
@@ -367,7 +375,7 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 			}
 		},
 	}
-	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", a.server.Addr, "addr on which flamingo runs")
 	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
 	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 

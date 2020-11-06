@@ -27,6 +27,7 @@ type SessionModule struct {
 	redisPassword        string
 	redisIdleConnections int
 	redisMaxAge          int
+	redisDatabase        string
 	healthcheckSession   bool
 }
 
@@ -46,6 +47,7 @@ func (m *SessionModule) Inject(config *struct {
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
+	RedisDatabase        string  `inject:"config:flamingo.session.redis.database,optional"`
 	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
@@ -57,6 +59,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.path = config.Path
 	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
+	m.redisDatabase = config.RedisDatabase
 	m.maxAge = int(config.MaxAge)
 	m.healthcheckSession = config.CheckSession
 }
@@ -65,7 +68,15 @@ func (m *SessionModule) Inject(config *struct {
 func (m *SessionModule) Configure(injector *dingo.Injector) {
 	switch m.backend {
 	case "redis":
-		sessionStore, err := redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		var sessionStore *redistore.RediStore
+		var err error
+
+		if m.redisDatabase != "" {
+			sessionStore, err = redistore.NewRediStoreWithDB(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
+		} else {
+			sessionStore, err = redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		}
+
 		if err != nil {
 			panic(err) // todo: don't panic? fallback?
 		}
@@ -137,6 +148,7 @@ flamingo: session: {
 		password: string | *""
 		idle: connections: float | int | *10
 		maxAge: float | int | *(60 * 60 * 24 * 30)
+		database: string | *""
 	}
 }
 `

@@ -101,6 +101,7 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, comple
 	case <-stopper:
 		logger.Info("graceful shutdown complete")
 		complete <- struct{}{}
+		os.Exit(0)
 	}
 }
 

@@ -184,7 +184,7 @@ func (m *Module) listenAndServe() error {
 
 // Notify handles the app shutdown event
 func (m *Module) Notify(ctx context.Context, event flamingo.Event) {
-	if _, ok := event.(*flamingo.ServerShutdownEvent); ok {
+	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if m.server == nil {
 			m.logger.WithField("category", "prefixrouter").Info("Shutdown: server not started.. ")
 			return

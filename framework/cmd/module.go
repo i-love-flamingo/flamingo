@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 var once = sync.Once{}
+var shutdownOnce = sync.Once{}
 
 type (
 	eventRouterProvider func() flamingo.EventRouter
@@ -44,7 +46,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			once.Do(func() {
 				go func() {
 					<-signals
-					shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+					// shutdown by signal for infinite running commands (e.g. serve command)
+					shutdownOnce.Do(func() {
+						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+						<-shutdownComplete
+					})
 				}()
 			})
 
@@ -53,8 +59,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Short:            "Flamingo " + config.Name,
 				TraverseChildren: true,
 				PersistentPostRun: func(cmd *cobra.Command, args []string) {
-					shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
-					<-shutdownComplete
+					// shutdown through command that is finite (e.g. help command)
+					shutdownOnce.Do(func() {
+						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+						<-shutdownComplete
+					})
 				},
 				Example: `Run with -h or -help to see global debug flags`,
 			}

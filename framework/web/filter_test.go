@@ -30,7 +30,10 @@ func TestNewFilterChain(t *testing.T) {
 		filters []Filter
 		sorted  []Filter
 	}{
-		{},
+		{
+			filters: []Filter{},
+			sorted:  []Filter{},
+		},
 		{
 			filters: []Filter{
 				&mockedFilter{

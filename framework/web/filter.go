@@ -94,23 +94,23 @@ func (sf sortableFilers) Swap(i, j int) {
 }
 
 func (sf sortableFilers) toFilters() []Filter {
-	var filters []Filter
+	filters := make([]Filter, len(sf))
 
-	for _, f := range sf {
-		filters = append(filters, f.filter)
+	for i, f := range sf {
+		filters[i] = f.filter
 	}
 
 	return filters
 }
 
 func newSortableFilters(filters []Filter) sortableFilers {
-	var result sortableFilers
+	result := make(sortableFilers, len(filters))
 
 	for i, f := range filters {
-		result = append(result, sortableFilter{
+		result[i] = sortableFilter{
 			filter: f,
 			index:  i,
-		})
+		}
 	}
 
 	return result

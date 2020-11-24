@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
@@ -57,9 +58,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
-	m.redisIdleConnections = int(config.RedisIdleConnections)
-	m.redisDatabase = config.RedisDatabase
+	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
 	m.maxAge = int(config.MaxAge)
 	m.healthcheckSession = config.CheckSession
 }
@@ -173,21 +172,33 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword string) (string, string) {
-	if redisURL != "" {
-		parsedRedisURL, err := url.Parse(redisURL)
-		if err != nil {
-			return redisHost, redisPassword
-		}
-		redisHostFromURL := parsedRedisURL.Host
-		if redisHostFromURL != "" {
-			redisHost = redisHostFromURL
-		}
-		redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
-		if isRedisPasswordInURL {
-			redisPassword = redisPasswordFromURL
-		}
+func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisDatabase string) (string, string, string) {
+	if redisURL == "" {
+		return redisHost, redisPassword, redisDatabase
 	}
 
-	return redisHost, redisPassword
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisHost, redisPassword, redisDatabase
+	}
+
+	redisHostFromURL := parsedRedisURL.Host
+	if redisHostFromURL != "" {
+		redisHost = redisHostFromURL
+	}
+
+	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+	if isRedisPasswordInURL {
+		redisPassword = redisPasswordFromURL
+	}
+
+	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
+	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
+	if len(redisDatabaseFromPath) > 0 {
+		redisDatabase = redisDatabaseFromPath
+	} else if len(redisDatabaseFromQuery) > 0 {
+		redisDatabase = redisDatabaseFromQuery
+	}
+
+	return redisHost, redisPassword, redisDatabase
 }

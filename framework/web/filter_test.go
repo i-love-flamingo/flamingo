@@ -37,7 +37,7 @@ func TestNewFilterChain(t *testing.T) {
 			sorted:  []Filter{},
 		},
 		{
-			name:    "default ordering in chain",
+			name: "default ordering in chain",
 			filters: []Filter{
 				&mockedFilter{
 					name: "first",
@@ -62,7 +62,7 @@ func TestNewFilterChain(t *testing.T) {
 			},
 		},
 		{
-			name:    "simple reordering in chain",
+			name: "simple reordering in chain",
 			filters: []Filter{
 				&mockedPrioritizedFilter{
 					mockedFilter: mockedFilter{
@@ -99,7 +99,7 @@ func TestNewFilterChain(t *testing.T) {
 			},
 		},
 		{
-			name:    "multiple filters with same priority",
+			name: "multiple filters with same priority",
 			filters: []Filter{
 				&mockedPrioritizedFilter{
 					mockedFilter: mockedFilter{

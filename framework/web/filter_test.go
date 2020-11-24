@@ -29,12 +29,15 @@ func TestNewFilterChain(t *testing.T) {
 	testCases := []struct {
 		filters []Filter
 		sorted  []Filter
+		name    string
 	}{
 		{
+			name:    "empty chain",
 			filters: []Filter{},
 			sorted:  []Filter{},
 		},
 		{
+			name:    "default ordering in chain",
 			filters: []Filter{
 				&mockedFilter{
 					name: "first",
@@ -59,6 +62,7 @@ func TestNewFilterChain(t *testing.T) {
 			},
 		},
 		{
+			name:    "simple reordering in chain",
 			filters: []Filter{
 				&mockedPrioritizedFilter{
 					mockedFilter: mockedFilter{
@@ -95,6 +99,7 @@ func TestNewFilterChain(t *testing.T) {
 			},
 		},
 		{
+			name:    "multiple filters with same priority",
 			filters: []Filter{
 				&mockedPrioritizedFilter{
 					mockedFilter: mockedFilter{
@@ -175,7 +180,9 @@ func TestNewFilterChain(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		chain := NewFilterChain(nil, tc.filters...)
-		assert.Equal(t, tc.sorted, chain.filters)
+		t.Run(tc.name, func(t *testing.T) {
+			chain := NewFilterChain(nil, tc.filters...)
+			assert.Equal(t, tc.sorted, chain.filters)
+		})
 	}
 }

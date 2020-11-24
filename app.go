@@ -354,7 +354,7 @@ func (a *servemodule) Configure(injector *dingo.Injector) {
 
 // CueConfig for the module
 func (a *servemodule) CueConfig() string {
-	return `core: serve: port: number | *3322`
+	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
 func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {

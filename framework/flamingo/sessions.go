@@ -59,6 +59,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
 	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
+	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
 	m.healthcheckSession = config.CheckSession
 }

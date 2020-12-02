@@ -31,7 +31,9 @@ func (l *LabelService) Inject(labelProvider labelProvider, translationService do
 	l.defaultLocaleCode = config.DefaultLocaleCode
 	err := config.FallbackLocalCode.MapInto(&l.defaultFallbackLocaleCodes)
 	if err != nil {
-		logger.WithField("category", "LabelService").Warn(err)
+		logger.
+			WithField("LogKeyCategory", "LabelService").
+			WithField(flamingo.LogKeyModule, "locale").Warn(err)
 	}
 }
 

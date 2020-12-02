@@ -60,7 +60,7 @@ func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString str
 
 // GetDateTimeFormatter from time
 func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.DateTimeFormatter, error) {
-	loc, err := dts.loadLocation()
+	loc, err := time.LoadLocation(dts.location)
 	if err != nil {
 		if dts.logger != nil {
 			dts.logger.Error("dateTime Parsing error - could not load location - use UTC as fallback", dts.location)
@@ -81,13 +81,4 @@ func (dts *DateTimeService) GetDateTimeFormatter(timeValue time.Time) (*domain.D
 	dateTime.SetDateTime(timeValue, timeValue.In(loc))
 
 	return &dateTime, nil
-}
-
-func (dts *DateTimeService) loadLocation() (*time.Location, error) {
-	if dts.location == "" {
-		return time.UTC, nil
-	}
-
-	// try to load the configured location
-	return time.LoadLocation(dts.location)
 }

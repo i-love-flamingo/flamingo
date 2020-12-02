@@ -29,7 +29,7 @@ func TestLabelFormat_Func(t *testing.T) {
 		FallbackLocalCode: config.Slice{"de"},
 	})
 
-	tFuncProvider := &LabelFormat{}
+	tFuncProvider := &LabelFunc{}
 	tFuncProvider.Inject(labelService, flamingo.NullLogger{})
 
 	tFunc, ok := tFuncProvider.Func(context.Background()).(func(key string, params ...interface{}) *domain.Label)

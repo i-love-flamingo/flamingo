@@ -43,6 +43,12 @@ func (l *Label) GetLocaleCode() string {
 	return l.localeCode
 }
 
+// GetFallbacklocaleCodes for label
+// Deprecated: use GetFallbackLocaleCodes instead
+func (l *Label) GetFallbacklocaleCodes() []string {
+	return l.GetFallbackLocaleCodes()
+}
+
 // GetFallbackLocaleCodes for label
 func (l *Label) GetFallbackLocaleCodes() []string {
 	return l.fallbackLocaleCodes
@@ -82,16 +88,34 @@ func (l *Label) SetLocaleCode(localeCode string) *Label {
 	return l
 }
 
+// SetFallbackLocales on a label
+// Deprecated: use SetFallbackLocaleCodes instead
+func (l *Label) SetFallbackLocales(fallbackLocaleCodes []string) *Label {
+	return l.SetFallbackLocaleCodes(fallbackLocaleCodes)
+}
+
 // SetFallbackLocaleCodes on a label
 func (l *Label) SetFallbackLocaleCodes(fallbackLocaleCodes []string) *Label {
 	l.fallbackLocaleCodes = fallbackLocaleCodes
 	return l
 }
 
+// NoFallbackLocales on a label - removes any fallback locale codes
+// Deprecated: use NoFallbackLocaleCodes instead
+func (l *Label) NoFallbackLocales() *Label {
+	return l.NoFallbackLocaleCodes()
+}
+
 // NoFallbackLocaleCodes on a label - removes any fallback locale codes
 func (l *Label) NoFallbackLocaleCodes() *Label {
 	l.fallbackLocaleCodes = nil
 	return l
+}
+
+// AddFallbackLocale on a label
+// Deprecated: use AddFallbackLocaleCode instead
+func (l *Label) AddFallbackLocale(localeCode string) *Label {
+	return l.AddFallbackLocaleCode(localeCode)
 }
 
 // AddFallbackLocaleCode on a label

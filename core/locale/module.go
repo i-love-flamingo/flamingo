@@ -29,7 +29,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		web.BindRoutes(injector, new(routes))
 	}
 
-	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.LabelFormat))
+	flamingo.BindTemplateFunc(injector, "__", new(templatefunctions.LabelFunc))
 	flamingo.BindTemplateFunc(injector, "priceFormat", new(templatefunctions.PriceFormatFunc))
 	flamingo.BindTemplateFunc(injector, "priceFormatLong", new(templatefunctions.PriceFormatLongFunc))
 	flamingo.BindTemplateFunc(injector, "numberFormat", new(templatefunctions.NumberFormatFunc))

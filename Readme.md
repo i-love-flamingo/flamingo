@@ -129,7 +129,7 @@ func indexHandler(ctx context.Context, req *web.Request) web.Result {
 ```
 
 This file now defines a very simple module, that can be used in the Flamingo bootstrap. 
-In this case it registeres a new handler that renders a simple "Hello World" message and binds the route "/" to this handler.
+In this case it registers a new handler that renders a simple "Hello World" message and binds the route "/" to this handler.
 Now please include this new module in your existing `main.go` file:
 
 ```go
@@ -182,7 +182,7 @@ If you need help you can:
 * Authentication concepts and security middleware
 * Flexible routing with support for prefix routes and reverse routing
 * Web controller concept with request/response abstraction; form handling etc
-* Operational readiness: logging, (distributed) tracing, metrics and healthchecks with seperate endpoint
+* Operational readiness: logging, (distributed) tracing, metrics and healthchecks with separate endpoint
 * Localisation support
 * Commands using [Cobra](https://github.com/spf13/cobra)
 * Event handling

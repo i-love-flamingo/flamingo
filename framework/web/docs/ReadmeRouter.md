@@ -151,7 +151,7 @@ Beside registering routes in the code it is also possible to register them in yo
 The root node consists of an array of objects with:
 
 * `controller`: must name a controller to execute
-* `path`: optional path where this is accessable
+* `path`: optional path where this is accessible
 * `name`: optional name where this will be available for reverse routing
 
 Context routes always take precedence over normal routes!

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
@@ -27,6 +28,7 @@ type SessionModule struct {
 	redisPassword        string
 	redisIdleConnections int
 	redisMaxAge          int
+	redisDatabase        string
 	healthcheckSession   bool
 }
 
@@ -46,6 +48,7 @@ func (m *SessionModule) Inject(config *struct {
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
+	RedisDatabase        string  `inject:"config:flamingo.session.redis.database,optional"`
 	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
@@ -55,7 +58,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
+	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
 	m.healthcheckSession = config.CheckSession
@@ -65,7 +68,15 @@ func (m *SessionModule) Inject(config *struct {
 func (m *SessionModule) Configure(injector *dingo.Injector) {
 	switch m.backend {
 	case "redis":
-		sessionStore, err := redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		var sessionStore *redistore.RediStore
+		var err error
+
+		if m.redisDatabase != "" {
+			sessionStore, err = redistore.NewRediStoreWithDB(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
+		} else {
+			sessionStore, err = redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		}
+
 		if err != nil {
 			panic(err) // todo: don't panic? fallback?
 		}
@@ -137,6 +148,7 @@ flamingo: session: {
 		password: string | *""
 		idle: connections: float | int | *10
 		maxAge: float | int | *(60 * 60 * 24 * 30)
+		database: string | *""
 	}
 }
 `
@@ -161,21 +173,33 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword string) (string, string) {
-	if redisURL != "" {
-		parsedRedisURL, err := url.Parse(redisURL)
-		if err != nil {
-			return redisHost, redisPassword
-		}
-		redisHostFromURL := parsedRedisURL.Host
-		if redisHostFromURL != "" {
-			redisHost = redisHostFromURL
-		}
-		redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
-		if isRedisPasswordInURL {
-			redisPassword = redisPasswordFromURL
-		}
+func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisDatabase string) (string, string, string) {
+	if redisURL == "" {
+		return redisHost, redisPassword, redisDatabase
 	}
 
-	return redisHost, redisPassword
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisHost, redisPassword, redisDatabase
+	}
+
+	redisHostFromURL := parsedRedisURL.Host
+	if redisHostFromURL != "" {
+		redisHost = redisHostFromURL
+	}
+
+	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+	if isRedisPasswordInURL {
+		redisPassword = redisPasswordFromURL
+	}
+
+	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
+	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
+	if len(redisDatabaseFromPath) > 0 {
+		redisDatabase = redisDatabaseFromPath
+	} else if len(redisDatabaseFromQuery) > 0 {
+		redisDatabase = redisDatabaseFromQuery
+	}
+
+	return redisHost, redisPassword, redisDatabase
 }

@@ -27,7 +27,7 @@ func (c *controller) Callback(ctx context.Context, request *web.Request) web.Res
 	if resp := c.service.callback(ctx, request); resp != nil {
 		return resp
 	}
-	return c.responder.NotFound(errors.New("broker callback found"))
+	return c.responder.NotFound(errors.New("broker for callback not found"))
 }
 
 // Login starts an authenticate for flow
@@ -41,7 +41,7 @@ func (c *controller) Login(ctx context.Context, request *web.Request) web.Result
 	if resp := c.service.AuthenticateFor(ctx, request.Params["broker"], request); resp != nil {
 		return resp
 	}
-	return c.responder.NotFound(errors.New("broker login found"))
+	return c.responder.NotFound(errors.New("broker for login not found"))
 }
 
 // LogoutAll removes all identities

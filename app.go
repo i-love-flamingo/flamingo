@@ -396,6 +396,10 @@ func (a *servemodule) listenAndServe() error {
 // Notify upon flamingo Shutdown event
 func (a *servemodule) Notify(ctx context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
+		if a.server.Handler == nil {
+			// server not running, nothing to shut down
+			return
+		}
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		a.logger.Info("Shutdown server on ", a.server.Addr)

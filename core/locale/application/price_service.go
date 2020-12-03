@@ -34,7 +34,7 @@ func (s *PriceService) Inject(labelService *LabelService, logger flamingo.Logger
 	err := config.Config.MapInto(&s.configs)
 	if err != nil {
 		logger.
-			WithField("LogKeyCategory", "PriceService").
+			WithField(flamingo.LogKeyCategory, "PriceService").
 			WithField(flamingo.LogKeyModule, "locale").Error(err)
 	}
 }

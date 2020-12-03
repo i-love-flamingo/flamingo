@@ -35,7 +35,7 @@ func (ts *TranslationService) Inject(
 		TranslationFiles config.Slice `inject:"config:core.locale.translationFiles,optional"`
 	},
 ) {
-	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField("category", "locale.translationService")
+	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField(flamingo.LogKeyCategory, "locale.translationService")
 	if config != nil {
 		ts.translationFile = config.TranslationFile
 		ts.translationFiles = config.TranslationFiles

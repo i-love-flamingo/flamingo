@@ -194,6 +194,8 @@ The filters are handled in order of `dingo.Modules` as defined in `flamingo.App(
 You will have to return `fc.Next(ctx, req, w)` in your `Filter` function to call the next filter. If you return something else,
 the chain will be aborted and the actual controller action will not be executed.
 
+A filter can prioritized if it implements interface `web.PrioritizedFilter`, by providing additional method `Priority() int`. By providing higher value, Filter will be executed earlier in a chain. Priority can be any integer number, positive or negative. In case Filter doesn't implement this interface, default priority value is `0`. 
+
 ## Routing config
 
 You can define the URL under which the routing takes place:

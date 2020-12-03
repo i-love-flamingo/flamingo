@@ -9,19 +9,17 @@ import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
-type (
-	// DateTimeFormatFromIso template helper function
-	DateTimeFormatFromIso struct {
-		dateTimeService *application.DateTimeService
-		logger          flamingo.Logger
-	}
+// DateTimeFormatFromIso template helper function
+type DateTimeFormatFromIso struct {
+	dateTimeService *application.DateTimeService
+	logger          flamingo.Logger
+}
 
-	// DateTimeFormatFromTime template helper function
-	DateTimeFormatFromTime struct {
-		dateTimeService *application.DateTimeService
-		logger          flamingo.Logger
-	}
-)
+// DateTimeFormatFromTime template helper function
+type DateTimeFormatFromTime struct {
+	dateTimeService *application.DateTimeService
+	logger          flamingo.Logger
+}
 
 // Inject dependencies
 func (tf *DateTimeFormatFromIso) Inject(service *application.DateTimeService, logger flamingo.Logger) {

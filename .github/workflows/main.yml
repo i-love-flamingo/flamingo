@@ -49,7 +49,7 @@ jobs:
         run: go run golang.org/x/lint/golint -set_exit_status $(go list ./... | grep -v test/integrationtest/projecttest/graphql)
       - name: Spelling
         run: go run github.com/client9/misspell/cmd/misspell -error .
-      - name: In effective assignments
+      - name: Ineffective assignments
         run: go run github.com/gordonklaus/ineffassign .
       - name: Go Generate
         run: |

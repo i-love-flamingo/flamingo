@@ -1,6 +1,6 @@
 # Response
 
-In your interface layer (e.g. in your controllers) you will normaly return a result that is some kind of response.
+In your interface layer (e.g. in your controllers) you will normally return a result that is some kind of response.
 
 A response need to implement the generic "result" interface `Apply' function.
 

@@ -49,7 +49,7 @@ By providing different configurations for the different configuration areas (see
   # Display the label for the given key:
   __("key")
   
-  # Display the label and pass a default that is used if the key is not existend in a labelfile
+  # Display the label and pass a default that is used if the key is not existent in a labelfile
 	__("key").setDefaultLabel("default")
 	
 	# Display the label with dynamic values replaces:

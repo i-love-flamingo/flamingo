@@ -13,7 +13,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-// OidcModule configures an "overriden" openid connect module
+// OidcModule configures an "overridden" openid connect module
 type OidcModule struct{}
 
 // Configure dependency injection

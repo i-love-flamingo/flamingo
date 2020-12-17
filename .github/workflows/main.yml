@@ -1,0 +1,57 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.14', '1.*' ]
+    name: Tests
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+      - name: Test
+        run: CGO_ENABLED=1 go test -race ./...
+  static-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.*' ]
+    name: Static checks
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+      - name: Go Vet
+        run: go vet ./...
+      - name: Go Fmt
+        run: |
+          fmt=$(gofmt -l .)
+          test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
+      - name: Go Lint
+        run: go run golang.org/x/lint/golint -set_exit_status $(go list ./... | grep -v test/integrationtest/projecttest/graphql)
+      - name: Spelling
+        run: go run github.com/client9/misspell/cmd/misspell -error .
+      - name: Ineffective assignments
+        run: go run github.com/gordonklaus/ineffassign .
+      - name: Go Generate
+        run: |
+          go generate ./...
+          git diff --quiet || (echo 'generated go files are not up to date, check go generate, go.sum and go.mod' ; git diff ; exit 1)

@@ -31,6 +31,11 @@ type (
 	LoadOption func(*LoadConfig)
 )
 
+var (
+	envRegex  = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
+	lineRegex = regexp.MustCompile(": line (.*):")
+)
+
 // DebugLog enables/disabled detailed debug logging
 func DebugLog(debug bool) LoadOption {
 	return func(config *LoadConfig) {
@@ -174,8 +179,6 @@ func loadCueFile(area *Area, filename string) error {
 	return nil
 }
 
-var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
-
 func loadYamlFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename + ".yml")
 	if err == nil {
@@ -191,12 +194,12 @@ func loadYamlFile(area *Area, filename string) error {
 }
 
 func loadYamlConfig(area *Area, config []byte) error {
-	config = regex.ReplaceAllFunc(
+	config = envRegex.ReplaceAllFunc(
 		config,
 		func(a []byte) []byte {
-			value := os.Getenv(string(regex.FindSubmatch(a)[1]))
+			value := os.Getenv(string(envRegex.FindSubmatch(a)[1]))
 			if value == "" {
-				value = string(regex.FindSubmatch(a)[3])
+				value = string(envRegex.FindSubmatch(a)[3])
 			}
 			return []byte(value)
 		},
@@ -217,8 +220,7 @@ func loadYamlConfig(area *Area, config []byte) error {
 
 //errorLineDebug returns the lines where the error occurred (if possible)
 func errorLineDebug(err error, config []byte) string {
-	r, _ := regexp.Compile(": line (.*):")
-	matches := r.FindStringSubmatch(err.Error())
+	matches := lineRegex.FindStringSubmatch(err.Error())
 	if len(matches) != 2 {
 		return ""
 	}
@@ -238,9 +240,9 @@ func errorLineDebug(err error, config []byte) string {
 	}
 	for i := first; i < last; i++ {
 		if i == line {
-			errorLines = errorLines + fmt.Sprintln(">", i, lines[i])
+			errorLines = errorLines + fmt.Sprintln(">", i+1, lines[i])
 		} else {
-			errorLines = errorLines + fmt.Sprintln(" ", i, lines[i])
+			errorLines = errorLines + fmt.Sprintln(" ", i+1, lines[i])
 		}
 	}
 	return errorLines

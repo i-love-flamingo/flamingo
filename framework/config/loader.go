@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"cuelang.org/go/cue/format"
@@ -28,6 +29,11 @@ type (
 
 	// LoadOption to be passed to Load(, ...)
 	LoadOption func(*LoadConfig)
+)
+
+var (
+	envRegex  = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
+	lineRegex = regexp.MustCompile(": line (.*):")
 )
 
 // DebugLog enables/disabled detailed debug logging
@@ -173,8 +179,6 @@ func loadCueFile(area *Area, filename string) error {
 	return nil
 }
 
-var regex = regexp.MustCompile(`%%ENV:([^%\n]+)%%(([^%\n]+)%%)?`)
-
 func loadYamlFile(area *Area, filename string) error {
 	config, err := ioutil.ReadFile(filename + ".yml")
 	if err == nil {
@@ -190,12 +194,12 @@ func loadYamlFile(area *Area, filename string) error {
 }
 
 func loadYamlConfig(area *Area, config []byte) error {
-	config = regex.ReplaceAllFunc(
+	config = envRegex.ReplaceAllFunc(
 		config,
 		func(a []byte) []byte {
-			value := os.Getenv(string(regex.FindSubmatch(a)[1]))
+			value := os.Getenv(string(envRegex.FindSubmatch(a)[1]))
 			if value == "" {
-				value = string(regex.FindSubmatch(a)[3])
+				value = string(envRegex.FindSubmatch(a)[3])
 			}
 			return []byte(value)
 		},
@@ -203,6 +207,7 @@ func loadYamlConfig(area *Area, config []byte) error {
 
 	cfg := make(Map)
 	if err := yaml.Unmarshal(config, &cfg); err != nil {
+		log.Print(errorLineDebug(err, config))
 		panic(err)
 	}
 
@@ -211,6 +216,36 @@ func loadYamlConfig(area *Area, config []byte) error {
 	}
 
 	return area.loadedConfig.Add(cfg)
+}
+
+//errorLineDebug returns the lines where the error occurred (if possible)
+func errorLineDebug(err error, config []byte) string {
+	matches := lineRegex.FindStringSubmatch(err.Error())
+	if len(matches) != 2 {
+		return ""
+	}
+	line, aerr := strconv.Atoi(matches[1])
+	if aerr != nil {
+		return ""
+	}
+	errorLines := fmt.Sprintln("")
+	lines := strings.Split(string(config), "\n")
+	first := line - 10
+	last := line + 10
+	if first < 0 {
+		first = 0
+	}
+	if last > len(lines) {
+		last = len(lines)
+	}
+	for i := first; i < last; i++ {
+		if i == line {
+			errorLines = errorLines + fmt.Sprintln(">", i+1, lines[i])
+		} else {
+			errorLines = errorLines + fmt.Sprintln(" ", i+1, lines[i])
+		}
+	}
+	return errorLines
 }
 
 func loadYamlRoutesFile(area *Area, filename string) error {
@@ -224,5 +259,5 @@ func loadYamlRoutesFile(area *Area, filename string) error {
 		return yaml.Unmarshal(routes, &area.Routes)
 	}
 
-	return fmt.Errorf("can not load %s.yml nor %s.yaml", filename, filename)
+	return fmt.Errorf("can not load %s.yml nor %s.yaml  %v", filename, filename, errorLineDebug(err, routes))
 }

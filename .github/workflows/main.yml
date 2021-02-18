@@ -55,7 +55,7 @@ jobs:
         run: |
           go generate ./...
           git diff --quiet || (echo 'generated go files are not up to date, check go generate, go.sum and go.mod' ; git diff ; exit 1)
-  build:
+  vulnerability-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory

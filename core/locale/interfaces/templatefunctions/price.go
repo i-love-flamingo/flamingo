@@ -8,6 +8,24 @@ import (
 	"flamingo.me/flamingo/v3/framework/config"
 )
 
+// PriceFormatFunc for formatting prices
+type PriceFormatFunc struct {
+	priceService *application.PriceService
+}
+
+// Inject dependencies
+func (pff *PriceFormatFunc) Inject(priceService *application.PriceService) {
+	pff.priceService = priceService
+}
+
+// Func formats the value and adds currency sign/symbol
+// example output could be: $ 21,500.99
+func (pff *PriceFormatFunc) Func(context.Context) interface{} {
+	return func(value float64, currency string) string {
+		return pff.priceService.FormatPrice(value, currency)
+	}
+}
+
 // PriceFormatLongFunc for formatting prices with additional currency code/label
 type PriceFormatLongFunc struct {
 	config       config.Map
@@ -42,9 +60,8 @@ func (pff *PriceFormatLongFunc) Func(ctx context.Context) interface{} {
 		// get config for currency or default config
 		formatConfig := pff.priceService.GetConfigForCurrency(currency)
 
-		format, ok := formatConfig["formatLong"].(string)
-		if ok {
-			return fmt.Sprintf(format, price, currencyLabel)
+		if formatConfig.FormatLong != "" {
+			return fmt.Sprintf(formatConfig.FormatLong, price, currencyLabel)
 		}
 
 		return price

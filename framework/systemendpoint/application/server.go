@@ -3,7 +3,10 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"runtime"
+	"runtime/debug"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
@@ -54,6 +57,20 @@ func (s *SystemServer) Start() {
 			serveMux.Handle(route, handler)
 		}
 	}
+
+	serveMux.HandleFunc("/version", func(writer http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintf(writer, "version: %s\n", flamingo.AppVersion())
+		fmt.Fprintf(writer, "go: %s\n", runtime.Version())
+		if info, ok := debug.ReadBuildInfo(); ok {
+			fmt.Fprintf(writer, "path: %s\n", info.Path)
+			for _, module := range info.Deps {
+				if module.Path == "flamingo.me/flamingo/v3" {
+					fmt.Fprintf(writer, "flamingo: %s\n", module.Version)
+				}
+			}
+		}
+	})
+
 	s.server = &http.Server{Addr: s.serviceAddress, Handler: serveMux}
 	go func() {
 		err := s.server.ListenAndServe()
@@ -64,8 +81,9 @@ func (s *SystemServer) Start() {
 }
 
 func (s *SystemServer) shutdown() {
-	s.logger.Info("systemendpoint: shutdown at ", s.serviceAddress)
 	if s.server != nil {
+		s.logger.Info("systemendpoint: shutdown at ", s.serviceAddress)
 		_ = s.server.Shutdown(context.Background())
+		s.server = nil
 	}
 }

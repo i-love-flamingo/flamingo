@@ -13,17 +13,15 @@ import (
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
 )
 
-type (
-	// TranslationService is the default TranslationService implementation
-	TranslationService struct {
-		translationFile  string
-		translationFiles config.Slice
-		logger           flamingo.Logger
-		devmode          bool
-		filesLoaded      bool
-		i18bundle        *bundle.Bundle
-	}
-)
+// TranslationService is the default TranslationService implementation
+type TranslationService struct {
+	translationFile  string
+	translationFiles config.Slice
+	logger           flamingo.Logger
+	devmode          bool
+	filesLoaded      bool
+	i18bundle        *bundle.Bundle
+}
 
 // check if translationService implements its interface
 var _ domain.TranslationService = (*TranslationService)(nil)
@@ -37,7 +35,7 @@ func (ts *TranslationService) Inject(
 		TranslationFiles config.Slice `inject:"config:core.locale.translationFiles,optional"`
 	},
 ) {
-	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField("category", "locale.translationService")
+	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField(flamingo.LogKeyCategory, "locale.translationService")
 	if config != nil {
 		ts.translationFile = config.TranslationFile
 		ts.translationFiles = config.TranslationFiles
@@ -51,7 +49,7 @@ func (ts *TranslationService) TranslateLabel(label domain.Label) string {
 	translatedString, err := ts.translateWithLib(label.GetLocaleCode(), label.GetKey(), label.GetCount(), label.GetTranslationArguments())
 
 	//while there is an error check fallBacks
-	for _, fallbackLocale := range label.GetFallbacklocaleCodes() {
+	for _, fallbackLocale := range label.GetFallbackLocaleCodes() {
 		if err != nil {
 			translatedString, err = ts.translateWithLib(fallbackLocale, label.GetKey(), label.GetCount(), label.GetTranslationArguments())
 		}

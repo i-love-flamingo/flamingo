@@ -330,12 +330,15 @@ func (a *servemodule) Inject(
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
+	cfg *struct {
+		Port int `inject:"config:core.serve.port"`
+	},
 ) {
 	a.router = router
 	a.eventRouter = eventRouter
 	a.logger = logger
 	a.server = &http.Server{
-		Addr: ":3322",
+		Addr: fmt.Sprintf(":%d", cfg.Port),
 	}
 	a.configuredSampler = configuredSampler
 }
@@ -349,6 +352,11 @@ func (a *servemodule) Configure(injector *dingo.Injector) {
 	})
 }
 
+// CueConfig for the module
+func (a *servemodule) CueConfig() string {
+	return `core: serve: port: >= 0 & <= 65535 | *3322`
+}
+
 func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
@@ -360,14 +368,14 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 			err := a.listenAndServe()
 			if err != nil {
 				if err == http.ErrServerClosed {
-					logger.Error(err)
+					logger.Info(err)
 				} else {
 					logger.Fatal("unexpected error in serving:", err)
 				}
 			}
 		},
 	}
-	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", ":3322", "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", a.server.Addr, "addr on which flamingo runs")
 	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
 	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
@@ -388,6 +396,10 @@ func (a *servemodule) listenAndServe() error {
 // Notify upon flamingo Shutdown event
 func (a *servemodule) Notify(ctx context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
+		if a.server.Handler == nil {
+			// server not running, nothing to shut down
+			return
+		}
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 		a.logger.Info("Shutdown server on ", a.server.Addr)

@@ -1,10 +1,14 @@
 package flamingo
 
 import (
+	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
 	"github.com/boj/redistore"
 	"github.com/gomodule/redigo/redis"
 	"github.com/gorilla/sessions"
@@ -24,6 +28,8 @@ type SessionModule struct {
 	redisPassword        string
 	redisIdleConnections int
 	redisMaxAge          int
+	redisDatabase        string
+	healthcheckSession   bool
 }
 
 // Inject dependencies
@@ -42,6 +48,8 @@ func (m *SessionModule) Inject(config *struct {
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
+	RedisDatabase        string  `inject:"config:flamingo.session.redis.database,optional"`
+	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
 	m.secret = config.Secret
@@ -50,51 +58,75 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword)
+	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
+	m.healthcheckSession = config.CheckSession
 }
 
 // Configure DI
 func (m *SessionModule) Configure(injector *dingo.Injector) {
 	switch m.backend {
 	case "redis":
-		sessionStore, err := redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		var sessionStore *redistore.RediStore
+		var err error
+
+		if m.redisDatabase != "" {
+			sessionStore, err = redistore.NewRediStoreWithDB(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
+		} else {
+			sessionStore, err = redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+		}
+
 		if err != nil {
 			panic(err) // todo: don't panic? fallback?
 		}
 
 		sessionStore.SetMaxAge(m.maxAge)
 		sessionStore.SetMaxLength(m.storeLength)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
 		sessionStore.DefaultMaxAge = m.redisMaxAge
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 		injector.Bind(new(redis.Pool)).ToInstance(sessionStore.Pool)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
+		}
 	case "file":
 		os.Mkdir(m.fileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))
 
 		sessionStore.MaxLength(m.storeLength)
 		sessionStore.MaxAge(m.maxAge)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.FileSession{})
+		}
 	default: //memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.secret))
 
 		sessionStore.MaxLength(m.storeLength)
 		sessionStore.MaxAge(m.maxAge)
-		sessionStore.Options.Secure = m.secure
-		sessionStore.Options.HttpOnly = true
-		sessionStore.Options.Path = m.path
+		m.setSessionstoreOptions(sessionStore.Options)
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
+
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(healthcheck.Nil{})
+		}
 	}
+}
+
+func (m *SessionModule) setSessionstoreOptions(options *sessions.Options) {
+	options.Domain = ""
+	options.Path = m.path
+	options.MaxAge = m.maxAge
+	options.Secure = m.secure
+	options.HttpOnly = true
+	options.SameSite = http.SameSiteLaxMode
 }
 
 // CueConfig defines the session config scheme
@@ -116,6 +148,7 @@ flamingo: session: {
 		password: string | *""
 		idle: connections: float | int | *10
 		maxAge: float | int | *(60 * 60 * 24 * 30)
+		database: string | *""
 	}
 }
 `
@@ -136,24 +169,37 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 		"session.redis.password":         "flamingo.session.redis.password",
 		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
 		"session.redis.maxAge":           "flamingo.session.redis.maxAge",
+		"core.healthcheck.checkSession":  "flamingo.session.healthcheck",
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword string) (string, string) {
-	if redisURL != "" {
-		parsedRedisURL, err := url.Parse(redisURL)
-		if err != nil {
-			return redisHost, redisPassword
-		}
-		redisHostFromURL := parsedRedisURL.Host
-		if redisHostFromURL != "" {
-			redisHost = redisHostFromURL
-		}
-		redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
-		if isRedisPasswordInURL {
-			redisPassword = redisPasswordFromURL
-		}
+func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisDatabase string) (string, string, string) {
+	if redisURL == "" {
+		return redisHost, redisPassword, redisDatabase
 	}
 
-	return redisHost, redisPassword
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisHost, redisPassword, redisDatabase
+	}
+
+	redisHostFromURL := parsedRedisURL.Host
+	if redisHostFromURL != "" {
+		redisHost = redisHostFromURL
+	}
+
+	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+	if isRedisPasswordInURL {
+		redisPassword = redisPasswordFromURL
+	}
+
+	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
+	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
+	if len(redisDatabaseFromPath) > 0 {
+		redisDatabase = redisDatabaseFromPath
+	} else if len(redisDatabaseFromQuery) > 0 {
+		redisDatabase = redisDatabaseFromQuery
+	}
+
+	return redisHost, redisPassword, redisDatabase
 }

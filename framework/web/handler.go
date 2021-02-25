@@ -124,6 +124,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	req := &Request{
 		request: *httpRequest,
 		session: Session{s: session.s, sessionSaveMode: session.sessionSaveMode},
+		Handler: handler,
 		Params:  params,
 	}
 	ctx = ContextWithRequest(ContextWithSession(ctx, req.Session()), req)

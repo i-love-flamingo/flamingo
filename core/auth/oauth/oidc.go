@@ -267,6 +267,11 @@ func (i *oidcIdentity) String() string {
 	return fmt.Sprintf("%s, (%s) expiry: %s", i.subject, string(i.idTokenClaims), i.IDToken().Expiry)
 }
 
+// RawIDToken returns the actual raw ID token for further processing
+func (i *oidcIdentity) RawIDToken() string {
+	return i.rawIDToken
+}
+
 // Broker getter
 func (i *openIDIdentifier) Broker() string {
 	return i.broker

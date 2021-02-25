@@ -1,9 +1,10 @@
-package healthcheck
+package infrastructure
 
 import (
 	"context"
 	"net/http"
 
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"flamingo.me/flamingo/v3/core/oauth/application"
 )
 
@@ -12,7 +13,7 @@ type Auth struct {
 	authManager *application.AuthManager
 }
 
-var _ Status = &Auth{}
+var _ healthcheck.Status = &Auth{}
 
 // Inject auth manager dependency
 func (s *Auth) Inject(authManager *application.AuthManager) {

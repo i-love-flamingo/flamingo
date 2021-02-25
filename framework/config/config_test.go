@@ -15,9 +15,9 @@ func readConfig(t *testing.T, configName string) Map {
 	config, err := ioutil.ReadFile(configName)
 	assert.NoError(t, err)
 
-	config = []byte(regex.ReplaceAllStringFunc(
+	config = []byte(envRegex.ReplaceAllStringFunc(
 		string(config),
-		func(a string) string { return os.Getenv(regex.FindStringSubmatch(a)[1]) },
+		func(a string) string { return os.Getenv(envRegex.FindStringSubmatch(a)[1]) },
 	))
 
 	cfg := make(Map)

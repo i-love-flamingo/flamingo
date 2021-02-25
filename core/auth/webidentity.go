@@ -141,7 +141,7 @@ func (s *WebIdentityService) IdentifyAs(ctx context.Context, request *web.Reques
 func (s *WebIdentityService) storeRedirectURL(request *web.Request) {
 	redirecturl, ok := request.Params["redirecturl"]
 	if !ok || redirecturl == "" {
-		u, err := s.reverseRouter.Absolute(request, request.Request().URL.Path, nil)
+		u, err := s.reverseRouter.Absolute(request, "", nil)
 		if err == nil {
 			redirecturl = u.String()
 		}

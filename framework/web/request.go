@@ -14,6 +14,7 @@ type (
 	Request struct {
 		request http.Request
 		session Session
+		Handler *Handler
 		Params  RequestParams
 		Values  sync.Map
 	}
@@ -144,4 +145,9 @@ func (r *Request) Query1(name string) (string, error) {
 // QueryAll returns a Map of the Raw Query
 func (r *Request) QueryAll() url.Values {
 	return r.request.URL.Query()
+}
+
+// HasHandler checks if there is a handler for request
+func (r *Request) HasHandler() bool {
+	return r.Handler != nil
 }

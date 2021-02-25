@@ -151,7 +151,7 @@ Beside registering routes in the code it is also possible to register them in yo
 The root node consists of an array of objects with:
 
 * `controller`: must name a controller to execute
-* `path`: optional path where this is accessable
+* `path`: optional path where this is accessible
 * `name`: optional name where this will be available for reverse routing
 
 Context routes always take precedence over normal routes!
@@ -193,6 +193,8 @@ A Filter must implement the `web.Filter` interface by providing a Filter functio
 The filters are handled in order of `dingo.Modules` as defined in `flamingo.App()` call.
 You will have to return `fc.Next(ctx, req, w)` in your `Filter` function to call the next filter. If you return something else,
 the chain will be aborted and the actual controller action will not be executed.
+
+A filter can prioritized if it implements interface `web.PrioritizedFilter`, by providing additional method `Priority() int`. By providing higher value, Filter will be executed earlier in a chain. Priority can be any integer number, positive or negative. In case Filter doesn't implement this interface, default priority value is `0`. 
 
 ## Routing config
 

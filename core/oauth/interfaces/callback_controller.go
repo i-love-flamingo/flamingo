@@ -77,6 +77,9 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		return cc.responder.ServerError(errors.New("Invalid State"))
 	}
 
+	// cleanup previous token information
+	cc.authManager.DeleteTokenDetails(request.Session())
+
 	code := request.Request().URL.Query().Get("code")
 	errCode := request.Request().URL.Query().Get("error")
 

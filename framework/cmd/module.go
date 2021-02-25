@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 var once = sync.Once{}
+var shutdownOnce = sync.Once{}
 
 type (
 	eventRouterProvider func() flamingo.EventRouter
@@ -42,7 +44,14 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 			once.Do(func() {
-				go shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+				go func() {
+					<-signals
+					// shutdown by signal for infinite running commands (e.g. serve command)
+					shutdownOnce.Do(func() {
+						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+						<-shutdownComplete
+					})
+				}()
 			})
 
 			rootCmd := &cobra.Command{
@@ -50,8 +59,11 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Short:            "Flamingo " + config.Name,
 				TraverseChildren: true,
 				PersistentPostRun: func(cmd *cobra.Command, args []string) {
-					signals <- syscall.SIGTERM
-					<-shutdownComplete
+					// shutdown through command that is finite (e.g. help command)
+					shutdownOnce.Do(func() {
+						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+						<-shutdownComplete
+					})
 				},
 				Example: `Run with -h or -help to see global debug flags`,
 			}
@@ -79,7 +91,6 @@ func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 }
 
 func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, complete chan<- struct{}, logger flamingo.Logger) {
-	<-signals
 	logger.Info("start graceful shutdown")
 
 	stopper := make(chan struct{})
@@ -99,7 +110,6 @@ func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, comple
 	case <-stopper:
 		logger.Info("graceful shutdown complete")
 		complete <- struct{}{}
-		os.Exit(0)
 	}
 }
 

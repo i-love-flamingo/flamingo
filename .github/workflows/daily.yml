@@ -1,0 +1,23 @@
+name: Scheduled Tests
+
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 8 * * *'
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.*' ]
+    name: Static checks
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: WriteGoList
+        run: go list -json -m all > go.list
+      - name: Nancy
+        uses: sonatype-nexus-community/nancy-github-action@main

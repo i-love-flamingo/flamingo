@@ -5,16 +5,18 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 8 * * *'
 jobs:
-  vulnerability-scan:
-    name: Vulnerability scan
+  static-checks:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.*' ]
+    name: Static checks
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
-      - name: Set up Go 1.x in order to write go.list file
+      - uses: actions/checkout@v2
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.13
+          go-version: ${{ matrix.go }}
       - name: WriteGoList
         run: go list -json -m all > go.list
       - name: Nancy

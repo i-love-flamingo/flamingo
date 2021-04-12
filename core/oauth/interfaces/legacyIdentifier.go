@@ -16,7 +16,8 @@ import (
 
 // LegacyIdentity is an oauth.OIDCIdentifier for old oauth module
 type LegacyIdentity struct {
-	auth domain.Auth
+	auth       domain.Auth
+	rawIDToken string
 }
 
 var _ oauth.OpenIDIdentity = new(LegacyIdentity)
@@ -49,6 +50,11 @@ func (identity *LegacyIdentity) IDToken() *oidc.IDToken {
 // IDTokenClaims mapper
 func (identity *LegacyIdentity) IDTokenClaims(into interface{}) error {
 	return identity.auth.IDToken.Claims(into)
+}
+
+// RawIDToken returns the raw JWT id token
+func (identity *LegacyIdentity) RawIDToken() string {
+	return identity.rawIDToken
 }
 
 // LegacyIdentifier bridges core/oauth and core/auth/oauth together
@@ -88,7 +94,9 @@ func (identifier *LegacyIdentifier) Identify(ctx context.Context, request *web.R
 		return nil, err
 	}
 
-	return &LegacyIdentity{auth: authData}, nil
+	rawIDToken, err := identifier.authmanager.GetRawIDToken(ctx, request.Session())
+
+	return &LegacyIdentity{auth: authData, rawIDToken: rawIDToken}, nil
 }
 
 // Authenticate an incoming request with the logincontroller

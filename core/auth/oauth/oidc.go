@@ -25,6 +25,7 @@ type (
 		Identity
 		IDToken() *oidc.IDToken
 		IDTokenClaims(into interface{}) error
+		RawIDToken() string
 	}
 
 	oidcIdentity struct {

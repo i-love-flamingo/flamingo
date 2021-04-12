@@ -46,6 +46,7 @@ type (
 	Auth struct {
 		TokenSource oauth2.TokenSource
 		IDToken     *oidc.IDToken
+		RawIDToken  string
 	}
 )
 

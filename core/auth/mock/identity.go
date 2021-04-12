@@ -24,6 +24,11 @@ type (
 	}
 )
 
+// RawIDToken returns a mocked raw id token
+func (i *OIDCIdentity) RawIDToken() string {
+	return "raw-id-token"
+}
+
 // Subject getter
 func (i *Identity) Subject() string {
 	return i.Sub

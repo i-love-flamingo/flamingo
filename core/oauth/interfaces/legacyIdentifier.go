@@ -94,8 +94,7 @@ func (identifier *LegacyIdentifier) Identify(ctx context.Context, request *web.R
 		return nil, err
 	}
 
-	rawIDToken, err := identifier.authmanager.GetRawIDToken(ctx, request.Session())
-
+	rawIDToken, _ := identifier.authmanager.GetRawIDToken(ctx, request.Session())
 	return &LegacyIdentity{auth: authData, rawIDToken: rawIDToken}, nil
 }
 

@@ -55,3 +55,7 @@ jobs:
         run: |
           go generate ./...
           git diff --quiet || (echo 'generated go files are not up to date, check go generate, go.sum and go.mod' ; git diff ; exit 1)
+      - name: WriteGoList
+        run: go list -json -m all > go.list
+      - name: Nancy
+        uses: sonatype-nexus-community/nancy-github-action@main

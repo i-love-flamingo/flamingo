@@ -9,13 +9,16 @@ require (
 	cuelang.org/go v0.0.15
 	flamingo.me/dingo v0.2.9
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
+	github.com/coreos/etcd v3.3.24+incompatible // indirect
 	github.com/coreos/go-oidc v2.0.0+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/go-cmp v0.4.0
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20210209182638-d0e41b2fc8ed // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
 	github.com/gorilla/securecookie v1.1.1
@@ -41,6 +44,7 @@ require (
 	github.com/uber/jaeger-client-go v2.22.1+incompatible // indirect
 	github.com/vektra/mockery v1.1.2 // indirect
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
+	go.etcd.io/etcd v3.3.25+incompatible // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/multierr v1.5.0 // indirect
@@ -49,4 +53,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.19.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
+	sigs.k8s.io/yaml v1.2.0 // indirect
 )

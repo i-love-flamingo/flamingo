@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/v4"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )

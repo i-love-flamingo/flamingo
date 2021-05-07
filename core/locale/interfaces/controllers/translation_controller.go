@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -29,9 +30,9 @@ func (c *TranslationController) Inject(
 
 // GetAllTranslations controller for TranslationController
 func (c *TranslationController) GetAllTranslations(ctx context.Context, r *web.Request) web.Result {
-	var translations []TranslationJSON
 	l := c.labelService.AllLabels()
 
+	translations := make([]TranslationJSON, 0, len(l))
 	for _, la := range l {
 		translations = append(translations, TranslationJSON{
 			Key:         la.GetKey(),

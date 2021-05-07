@@ -21,6 +21,7 @@ type SessionModule struct {
 	secret               string
 	fileName             string
 	secure               bool
+	sameSite             string
 	storeLength          int
 	maxAge               int
 	path                 string
@@ -39,6 +40,7 @@ func (m *SessionModule) Inject(config *struct {
 	Secret   string `inject:"config:flamingo.session.secret"`
 	FileName string `inject:"config:flamingo.session.file"`
 	Secure   bool   `inject:"config:flamingo.session.cookie.secure"`
+	SameSite string `inject:"config:flamingo.session.cookie.sameSite"`
 	// float64 is used due to the injection as config from json - int is not possible on this
 	StoreLength          float64 `inject:"config:flamingo.session.store.length"`
 	MaxAge               float64 `inject:"config:flamingo.session.max.age"`
@@ -55,6 +57,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.secret = config.Secret
 	m.fileName = config.FileName
 	m.secure = config.Secure
+	m.sameSite = config.SameSite
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
@@ -126,7 +129,16 @@ func (m *SessionModule) setSessionstoreOptions(options *sessions.Options) {
 	options.MaxAge = m.maxAge
 	options.Secure = m.secure
 	options.HttpOnly = true
-	options.SameSite = http.SameSiteLaxMode
+	switch m.sameSite {
+	case "strict":
+		options.SameSite = http.SameSiteStrictMode
+	case "none":
+		options.SameSite = http.SameSiteNoneMode
+	case "lax":
+		options.SameSite = http.SameSiteLaxMode
+	default:
+		options.SameSite = http.SameSiteDefaultMode
+	}
 }
 
 // CueConfig defines the session config scheme
@@ -141,6 +153,7 @@ flamingo: session: {
 	cookie: {
 		secure: bool | *true
 		path: string | *"/"
+		sameSite: *"lax" | "strict" | "none" | "default"
 	}
 	redis: {
 		url: string | *""

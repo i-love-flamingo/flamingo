@@ -11,6 +11,7 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
+	"github.com/gorilla/securecookie"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
@@ -106,7 +107,11 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	session, err := h.sessionStore.LoadByRequest(ctx, httpRequest)
 	if err != nil {
-		h.logger.WithContext(ctx).Warn(err)
+		if cookieErr, ok := err.(securecookie.Error); ok && (cookieErr.IsUsage() || cookieErr.IsDecode()) {
+			h.logger.WithContext(ctx).Debug(err)
+		} else {
+			h.logger.WithContext(ctx).Warn(err)
+		}
 	}
 
 	_, span = trace.StartSpan(ctx, "router/matchRequest")

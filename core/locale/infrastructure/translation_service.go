@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
+	"sync"
 	"text/template"
+	"time"
 
 	"flamingo.me/flamingo/v3/core/locale/domain"
-
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
@@ -15,11 +17,11 @@ import (
 
 // TranslationService is the default TranslationService implementation
 type TranslationService struct {
-	translationFile  string
-	translationFiles config.Slice
+	sync.RWMutex
+	lastReload       time.Time
+	translationFiles []string
 	logger           flamingo.Logger
 	devmode          bool
-	filesLoaded      bool
 	i18bundle        *bundle.Bundle
 }
 
@@ -37,15 +39,24 @@ func (ts *TranslationService) Inject(
 ) {
 	ts.logger = logger.WithField(flamingo.LogKeyModule, "locale").WithField(flamingo.LogKeyCategory, "locale.translationService")
 	if config != nil {
-		ts.translationFile = config.TranslationFile
-		ts.translationFiles = config.TranslationFiles
+		err := config.TranslationFiles.MapInto(&ts.translationFiles)
+		if err != nil {
+			ts.logger.Warn(fmt.Sprintf("could not map core.locale.translationFiles: %v", err))
+		}
+
+		if config.TranslationFile != "" {
+			ts.translationFiles = append(ts.translationFiles, config.TranslationFile)
+		}
 		ts.devmode = config.DevMode
 	}
+
+	ts.i18bundle = bundle.New()
+	ts.loadFiles()
 }
 
 // TranslateLabel returns the result for translating a Label
 func (ts *TranslationService) TranslateLabel(label domain.Label) string {
-	ts.initAndLoad()
+	ts.reloadFilesIfNecessary()
 	translatedString, err := ts.translateWithLib(label.GetLocaleCode(), label.GetKey(), label.GetCount(), label.GetTranslationArguments())
 
 	//while there is an error check fallBacks
@@ -67,7 +78,7 @@ func (ts *TranslationService) TranslateLabel(label domain.Label) string {
 
 // Translate returns the result for translating a key, with a default label for a given locale code
 func (ts *TranslationService) Translate(key string, defaultLabel string, localeCode string, count int, translationArguments map[string]interface{}) string {
-	ts.initAndLoad()
+	ts.reloadFilesIfNecessary()
 	label, err := ts.translateWithLib(localeCode, key, count, translationArguments)
 
 	if err != nil {
@@ -85,7 +96,7 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 
 // AllTranslationKeys returns all keys for a given locale code
 func (ts *TranslationService) AllTranslationKeys(localeCode string) []string {
-	ts.initAndLoad()
+	ts.reloadFilesIfNecessary()
 	return ts.i18bundle.LanguageTranslationIDs(localeCode)
 }
 
@@ -123,33 +134,43 @@ func (ts *TranslationService) translateWithLib(localeCode string, key string, co
 	}
 	return label, nil
 }
-func (ts *TranslationService) loadFiles() {
-	if ts.filesLoaded && !ts.devmode {
+
+func (ts *TranslationService) reloadFilesIfNecessary() {
+	if !ts.devmode {
 		return
 	}
 
-	if ts.translationFile != "" {
-		err := ts.i18bundle.LoadTranslationFile(ts.translationFile)
+	var lastFileChange time.Time
+	for _, fileName := range ts.translationFiles {
+		stat, err := os.Stat(fileName)
 		if err != nil {
-			ts.logger.Warn(fmt.Sprintf("Load translationfile failed: %s", err))
+			continue
+		}
+
+		if stat.ModTime().After(lastFileChange) {
+			lastFileChange = stat.ModTime()
 		}
 	}
-	if len(ts.translationFiles) > 0 {
-		for _, file := range ts.translationFiles {
-			if fileName, ok := file.(string); ok {
-				err := ts.i18bundle.LoadTranslationFile(fileName)
-				if err != nil {
-					ts.logger.Warn(fmt.Sprintf("Load translationfile failed: %s", err))
-				}
-			}
-		}
+
+	ts.RLock()
+	lastReload := ts.lastReload
+	ts.RUnlock()
+
+	if lastFileChange.After(lastReload) {
+		ts.loadFiles()
 	}
-	ts.filesLoaded = true
 }
 
-func (ts *TranslationService) initAndLoad() {
-	if ts.i18bundle == nil {
-		ts.i18bundle = bundle.New()
+func (ts *TranslationService) loadFiles() {
+	ts.Lock()
+	defer ts.Unlock()
+
+	for _, fileName := range ts.translationFiles {
+		err := ts.i18bundle.LoadTranslationFile(fileName)
+		if err != nil {
+			ts.logger.Warn(fmt.Sprintf("loading of translationfile %s failed: %s", fileName, err))
+		}
 	}
-	ts.loadFiles()
+
+	ts.lastReload = time.Now()
 }

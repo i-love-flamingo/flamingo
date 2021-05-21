@@ -13,12 +13,14 @@ import (
 type debugController struct {
 	responder       *web.Responder
 	identityService *WebIdentityService
+	reverseRouter   web.ReverseRouter
 }
 
 // Inject dependencies
-func (c *debugController) Inject(responder *web.Responder, identityService *WebIdentityService) {
+func (c *debugController) Inject(responder *web.Responder, identityService *WebIdentityService, reverseRouter web.ReverseRouter) {
 	c.responder = responder
 	c.identityService = identityService
+	c.reverseRouter = reverseRouter
 }
 
 var tpl = template.Must(template.New("debug").Parse(
@@ -45,6 +47,9 @@ var tpl = template.Must(template.New("debug").Parse(
 
 // Action handles auth debugging
 func (c *debugController) Action(ctx context.Context, request *web.Request) web.Result {
+	u, _ := c.reverseRouter.Absolute(request, request.Handler.GetHandlerName(), nil)
+	request.Params["redirecturl"] = u.String()
+
 	action, _ := request.Query1("__debug__action")
 	switch action {
 	case "forceauthenticate":

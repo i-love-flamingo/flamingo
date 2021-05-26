@@ -17,7 +17,7 @@ import (
 
 // TranslationService is the default TranslationService implementation
 type TranslationService struct {
-	sync.RWMutex
+	mutex sync.Mutex
 	lastReload       time.Time
 	translationFiles []string
 	logger           flamingo.Logger
@@ -51,7 +51,9 @@ func (ts *TranslationService) Inject(
 	}
 
 	ts.i18bundle = bundle.New()
+	ts.mutex.Lock()
 	ts.loadFiles()
+	ts.mutex.Unlock()
 }
 
 // TranslateLabel returns the result for translating a Label
@@ -152,19 +154,15 @@ func (ts *TranslationService) reloadFilesIfNecessary() {
 		}
 	}
 
-	ts.RLock()
-	lastReload := ts.lastReload
-	ts.RUnlock()
-
-	if lastFileChange.After(lastReload) {
+	ts.mutex.Lock()
+	if lastFileChange.After(ts.lastReload) {
 		ts.loadFiles()
 	}
+	ts.mutex.Unlock()
 }
 
+// loadFiles must only be called when mutex is locked
 func (ts *TranslationService) loadFiles() {
-	ts.Lock()
-	defer ts.Unlock()
-
 	for _, fileName := range ts.translationFiles {
 		err := ts.i18bundle.LoadTranslationFile(fileName)
 		if err != nil {

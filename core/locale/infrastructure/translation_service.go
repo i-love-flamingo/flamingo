@@ -17,7 +17,7 @@ import (
 
 // TranslationService is the default TranslationService implementation
 type TranslationService struct {
-	mutex sync.Mutex
+	mutex            sync.Mutex
 	lastReload       time.Time
 	translationFiles []string
 	logger           flamingo.Logger

@@ -150,7 +150,7 @@ func (s *WebIdentityService) storeRedirectURL(request *web.Request) {
 	absolute, _ := s.reverseRouter.Absolute(request, "", nil)
 
 	refURL, err := url.Parse(redirecturl)
-	if err != nil || (refURL.Host != request.Request().Host && refURL.Host != absolute.Host) {
+	if err != nil || (redirecturl[0] != '/' && (refURL.Host != request.Request().Host && refURL.Host != absolute.Host)) {
 		redirecturl = absolute.String()
 	}
 

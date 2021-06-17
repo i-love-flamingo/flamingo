@@ -45,9 +45,9 @@ func (l *LabelService) NewLabel(key string) *domain.Label {
 
 // AllLabels return a array of all labels
 func (l *LabelService) AllLabels() []domain.Label {
-	var labels []domain.Label
 	tags := l.translationService.AllTranslationKeys(l.defaultLocaleCode)
 
+	labels := make([]domain.Label, 0, len(tags))
 	for _, tag := range tags {
 		label := l.NewLabel(tag)
 		if label != nil {

@@ -1,11 +1,17 @@
 # Changelog
 
+## Upcoming
+
+- core/locale:
+  - fixed a race condition in `TranslationService`
+  - improved translation performance in flamingo debug mode
+
 ## v3.2.0
 
 - license:
   - Flamingo now uses the MIT license. The CLA has been removed.
 - core/auth:
-  - Flamingo v3.2.0 provides a new auth package which makes authentication easier an more canonical.
+  - Flamingo v3.2.0 provides a new auth package which makes authentication easier and more canonical.
   - the old core/oauth is deprecated and provides a compatibility layer for core/auth.
 - sessions:
   - web.SessionStore provides programmatic access to web.Session
@@ -26,7 +32,7 @@
 
 - "locale" package:
   - the templatefunc __(key) is now returning a Label and instead additional parameters you need to use the label setters (see doc)
-- Depricated Features are removed:
+- Deprecated Features are removed:
   - `flamingo.me/dingo` need to be used now
   - support for responder.*Aware types is removed
 - `framework/web.Response` is now `framework/web.Result`

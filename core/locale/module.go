@@ -45,10 +45,7 @@ func (r *routes) Inject(
 
 func (r *routes) Routes(registry *web.RouterRegistry) {
 	registry.HandleGet("api.translations", r.translationController.GetAllTranslations)
-	_, err := registry.Route("/api/translations", "api.translations")
-	if err != nil {
-		panic(err)
-	}
+	registry.MustRoute("/api/translations", "api.translations")
 }
 
 // CueConfig for this module
@@ -56,6 +53,8 @@ func (m *Module) CueConfig() string {
 	return `
 core: locale: {
 	locale: string | *"en-US"
+	translationFile: string | *""
+	translationFiles: [...string] | *[]
 	accounting: {
 		default: {
 			decimal: string | *"."

@@ -199,6 +199,7 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 
 	token, idtoken, err := identity.tokens(ctx)
 	if err != nil {
+		request.Session().Delete(sessionCode)
 		return nil, err
 	}
 

@@ -55,12 +55,34 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 
 // Module registers the opencensus module which in turn enables jaeger & co
 type Module struct {
-	Endpoint       string `inject:"config:flamingo.opencensus.jaeger.endpoint"`
-	ServiceName    string `inject:"config:flamingo.opencensus.serviceName"`
-	ServiceAddr    string `inject:"config:flamingo.opencensus.serviceAddr"`
-	JaegerEnable   bool   `inject:"config:flamingo.opencensus.jaeger.enable"`
-	ZipkinEnable   bool   `inject:"config:flamingo.opencensus.zipkin.enable"`
-	ZipkinEndpoint string `inject:"config:flamingo.opencensus.zipkin.endpoint"`
+	endpoint       string
+	serviceName    string
+	serviceAddr    string
+	jaegerEnable   bool
+	zipkinEnable   bool
+	zipkinEndpoint string
+}
+
+// Inject dependencies
+func (m *Module) Inject(
+	cfg *struct {
+		Endpoint       string `inject:"config:flamingo.opencensus.jaeger.endpoint"`
+		ServiceName    string `inject:"config:flamingo.opencensus.serviceName"`
+		ServiceAddr    string `inject:"config:flamingo.opencensus.serviceAddr"`
+		JaegerEnable   bool   `inject:"config:flamingo.opencensus.jaeger.enable"`
+		ZipkinEnable   bool   `inject:"config:flamingo.opencensus.zipkin.enable"`
+		ZipkinEndpoint string `inject:"config:flamingo.opencensus.zipkin.endpoint"`
+	},
+) *Module {
+	if cfg != nil {
+		m.endpoint = cfg.Endpoint
+		m.serviceName = cfg.ServiceName
+		m.serviceAddr = cfg.ServiceAddr
+		m.jaegerEnable = cfg.JaegerEnable
+		m.zipkinEnable = cfg.ZipkinEnable
+		m.zipkinEndpoint = cfg.ZipkinEndpoint
+	}
+	return m
 }
 
 // find first not-loopback ipv4 address
@@ -95,13 +117,13 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.NeverSample()})
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
-		if m.JaegerEnable {
+		if m.jaegerEnable {
 			// Register the Jaeger exporter to be able to retrieve
 			// the collected spans.
 			exporter, err := jaeger.NewExporter(jaeger.Options{
-				CollectorEndpoint: m.Endpoint,
+				CollectorEndpoint: m.endpoint,
 				Process: jaeger.Process{
-					ServiceName: m.ServiceName,
+					ServiceName: m.serviceName,
 					Tags: []jaeger.Tag{
 						jaeger.StringTag("ip", localAddr()),
 					},
@@ -113,15 +135,15 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			trace.RegisterExporter(exporter)
 		}
 
-		if m.ZipkinEnable {
-			localEndpoint, err := openzipkin.NewEndpoint(m.ServiceName, localAddr())
+		if m.zipkinEnable {
+			localEndpoint, err := openzipkin.NewEndpoint(m.serviceName, localAddr())
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			// The Zipkin reporter takes collected spans from the app and reports them to the backend
 			// http://localhost:9411/api/v2/spans is the default for the Zipkin Span v2
-			reporter := reporterHttp.NewReporter(m.ZipkinEndpoint)
+			reporter := reporterHttp.NewReporter(m.zipkinEndpoint)
 			// defer reporter.Close()
 
 			// The OpenCensus exporter wraps the Zipkin reporter

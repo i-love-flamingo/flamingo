@@ -17,10 +17,28 @@ func (m *DefaultCacheStrategyModule) Configure(injector *dingo.Injector) {
 }
 
 type cacheStrategyFilter struct {
-	DefaultIsReuseable             bool    `inject:"config:flamingo.web.filter.cachestrategy.default.isReusable,optional"`
-	DefaultRevalidateEachTime      bool    `inject:"config:flamingo.web.filter.cachestrategy.default.revalidateEachTime,optional"`
-	DefaultMaxCacheLifetime        float64 `inject:"config:flamingo.web.filter.cachestrategy.default.maxCacheLifetime,optional"`
-	DefaultAllowIntermediateCaches bool    `inject:"config:flamingo.web.filter.cachestrategy.default.allowIntermediateCaches,optional"`
+	defaultIsReuseable             bool
+	defaultRevalidateEachTime      bool
+	defaultMaxCacheLifetime        float64
+	defaultAllowIntermediateCaches bool
+}
+
+// Inject dependencies
+func (f *cacheStrategyFilter) Inject(
+	cfg *struct {
+		DefaultIsReuseable             bool    `inject:"config:flamingo.web.filter.cachestrategy.default.isReusable,optional"`
+		DefaultRevalidateEachTime      bool    `inject:"config:flamingo.web.filter.cachestrategy.default.revalidateEachTime,optional"`
+		DefaultMaxCacheLifetime        float64 `inject:"config:flamingo.web.filter.cachestrategy.default.maxCacheLifetime,optional"`
+		DefaultAllowIntermediateCaches bool    `inject:"config:flamingo.web.filter.cachestrategy.default.allowIntermediateCaches,optional"`
+	},
+) *cacheStrategyFilter {
+	if cfg != nil {
+		f.defaultIsReuseable = cfg.DefaultIsReuseable
+		f.defaultRevalidateEachTime = cfg.DefaultRevalidateEachTime
+		f.defaultMaxCacheLifetime = cfg.DefaultMaxCacheLifetime
+		f.defaultAllowIntermediateCaches = cfg.DefaultAllowIntermediateCaches
+	}
+	return f
 }
 
 // Filter sets the cache strategy for responses
@@ -46,9 +64,9 @@ func (f *cacheStrategyFilter) setDefault(response *web.Response) {
 	}
 
 	response.CacheDirective = web.CacheDirectiveBuilder{
-		IsReusable:              f.DefaultIsReuseable,
-		RevalidateEachTime:      f.DefaultRevalidateEachTime,
-		AllowIntermediateCaches: f.DefaultAllowIntermediateCaches,
-		MaxCacheLifetime:        int(f.DefaultMaxCacheLifetime),
+		IsReusable:              f.defaultIsReuseable,
+		RevalidateEachTime:      f.defaultRevalidateEachTime,
+		AllowIntermediateCaches: f.defaultAllowIntermediateCaches,
+		MaxCacheLifetime:        int(f.defaultMaxCacheLifetime),
 	}.Build()
 }

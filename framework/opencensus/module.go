@@ -160,7 +160,9 @@ flamingo: opencensus: {
 	serviceName: string | *"flamingo"
 	serviceAddr: string | *":13210"
 	tracing: sampler: {
+		include: [...string]
 		whitelist: [...string]
+		exclude: [...string]
 		blacklist: [...string]
 		allowParentTrace: bool | *true
 	}
@@ -171,15 +173,17 @@ flamingo: opencensus: {
 // FlamingoLegacyConfigAlias maps legacy config to new
 func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	return map[string]string{
-		"opencensus.jaeger.enable":                    "flamingo.opencensus.jaeger.enable",
-		"opencensus.jaeger.endpoint":                  "flamingo.opencensus.jaeger.endpoint",
-		"opencensus.zipkin.enable":                    "flamingo.opencensus.zipkin.enable",
-		"opencensus.zipkin.endpoint":                  "flamingo.opencensus.zipkin.endpoint",
-		"opencensus.serviceName":                      "flamingo.opencensus.serviceName",
-		"opencensus.serviceAddr":                      "flamingo.opencensus.serviceAddr",
-		"opencensus.tracing.sampler.whitelist":        "flamingo.opencensus.tracing.sampler.whitelist",
-		"opencensus.tracing.sampler.blacklist":        "flamingo.opencensus.tracing.sampler.blacklist",
-		"opencensus.tracing.sampler.allowParentTrace": "flamingo.opencensus.tracing.sampler.allowParentTrace",
+		"opencensus.jaeger.enable":                      "flamingo.opencensus.jaeger.enable",
+		"opencensus.jaeger.endpoint":                    "flamingo.opencensus.jaeger.endpoint",
+		"opencensus.zipkin.enable":                      "flamingo.opencensus.zipkin.enable",
+		"opencensus.zipkin.endpoint":                    "flamingo.opencensus.zipkin.endpoint",
+		"opencensus.serviceName":                        "flamingo.opencensus.serviceName",
+		"opencensus.serviceAddr":                        "flamingo.opencensus.serviceAddr",
+		"opencensus.tracing.sampler.whitelist":          "flamingo.opencensus.tracing.sampler.whitelist",
+		"flamingo.opencensus.tracing.sampler.whitelist": "flamingo.opencensus.tracing.sampler.include",
+		"opencensus.tracing.sampler.blacklist":          "flamingo.opencensus.tracing.sampler.blacklist",
+		"flamingo.opencensus.tracing.sampler.blacklist": "flamingo.opencensus.tracing.sampler.exclude",
+		"opencensus.tracing.sampler.allowParentTrace":   "flamingo.opencensus.tracing.sampler.allowParentTrace",
 	}
 }
 

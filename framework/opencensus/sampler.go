@@ -10,19 +10,19 @@ import (
 
 // URLPrefixSampler creates a sampling getter for ochttp.Server.
 //
-// If the whitelist is empty it is treated as allowed, otherwise checked first.
-// If the blacklist is set it will disable sampling again.
+// If the include list is empty it is treated as allowed, otherwise checked first.
+// If the exclude list is set it will disable sampling again.
 // If takeParentDecision is set we allow the decision to be taken from incoming tracing,
 // otherwise we enforce our decision
-func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func(*http.Request) trace.StartOptions {
+func URLPrefixSampler(include, exclude []string, allowParentTrace bool) func(*http.Request) trace.StartOptions {
 	return func(request *http.Request) trace.StartOptions {
 
 		path := request.URL.Path
 
-		// empty whitelist means all
-		sample := len(whitelist) == 0
-		// check whitelist if len is > 0, and decide if we should sample
-		for _, p := range whitelist {
+		// empty include means all
+		sample := len(include) == 0
+		// check include if len is > 0, and decide if we should sample
+		for _, p := range include {
 			if strings.HasPrefix(path, p) {
 				sample = true
 				break
@@ -38,8 +38,8 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 			}
 		}
 
-		// check sampling decision against blacklist
-		for _, p := range blacklist {
+		// check sampling decision against exclude
+		for _, p := range exclude {
 			if strings.HasPrefix(path, p) {
 				sample = false
 				break
@@ -57,16 +57,16 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 
 // ConfiguredURLPrefixSampler constructs the prefix GetStartOptions getter with the default opencensus configuration
 type ConfiguredURLPrefixSampler struct {
-	Whitelist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.whitelist,optional"`
-	Blacklist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.blacklist,optional"`
+	Include          config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.include,optional"`
+	Exclude          config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.exclude,optional"`
 	AllowParentTrace bool         `inject:"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional"`
 }
 
 // GetStartOptions constructor for ochttp.Server
 func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace.StartOptions {
-	var whitelist, blacklist []string
-	c.Whitelist.MapInto(&whitelist)
-	c.Blacklist.MapInto(&blacklist)
+	var include, exclude []string
+	c.Include.MapInto(&include)
+	c.Exclude.MapInto(&exclude)
 
-	return URLPrefixSampler(whitelist, blacklist, c.AllowParentTrace)
+	return URLPrefixSampler(include, exclude, c.AllowParentTrace)
 }

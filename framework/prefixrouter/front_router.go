@@ -134,7 +134,13 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 		req = req.WithContext(r)
 
-		req.URL, _ = url.Parse(path[len(prefix)-len(host):])
+		var err error
+		req.URL, err = url.Parse(path[len(prefix)-len(host):])
+		if err != nil {
+			w.WriteHeader(404)
+			return
+		}
+
 		req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
 
 		span.End()
@@ -148,13 +154,20 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			matchedPrefixes = append(matchedPrefixes, prefix)
 		}
 	}
+
 	if len(matchedPrefixes) > 0 {
 		prefix := longest(matchedPrefixes)
 		router := fr.router[prefix]
 		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
 		req = req.WithContext(r)
 
-		req.URL, _ = url.Parse(path[len(prefix):])
+		var err error
+		req.URL, err = url.Parse(path[len(prefix):])
+		if err != nil {
+			w.WriteHeader(404)
+			return
+		}
+
 		req.URL.Path = "/" + strings.TrimLeft(req.URL.Path, "/")
 
 		span.End()

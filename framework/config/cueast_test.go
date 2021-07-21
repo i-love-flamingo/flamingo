@@ -5,8 +5,10 @@ import (
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/build"
+	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/parser"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_cueAstTree(t *testing.T) {
@@ -52,9 +54,9 @@ b: 2
 
 func Test_cueAstMerge(t *testing.T) {
 	predefined, err := parser.ParseFile("predefined", `
-predef :: {x: 1}
+#predef: {x: 1}
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	base, err := parser.ParseFile("base", `
 a: int
@@ -68,10 +70,10 @@ list: [1,2,3]
 struct: x: 1
 defbase :: { c: 3 }
 def :: { defbase, a: 1,	b: 2}
-defined: def
-predefined: predef
+defined: #def
+predefined: #predef
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	in, err := parser.ParseFile("in", `
 b: 22
@@ -79,17 +81,17 @@ struct: d: e: f2: 223
 list: [3,2,1]
 struct: y: 2
 struct: z: {z1: 51, z2: 52}
-def :: { b: 3 }
+#def: { b: 3 }
 `)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	res := cueAstMergeFile(base, in)
 
 	buildInstance := build.NewContext().NewInstance("", nil)
-	assert.NoError(t, buildInstance.AddSyntax(predefined))
-	assert.NoError(t, buildInstance.AddSyntax(res))
-	instance, err := new(cue.Runtime).Build(buildInstance)
-	assert.NoError(t, err)
+	require.NoError(t, buildInstance.AddSyntax(predefined))
+	require.NoError(t, buildInstance.AddSyntax(res))
+	ctx := cuecontext.New()
+	instance := ctx.BuildInstance(buildInstance)
 
 	var testData struct {
 		A      int

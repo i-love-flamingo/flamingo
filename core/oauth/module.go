@@ -57,7 +57,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // CueConfig for oauth module
 func (*Module) CueConfig() string {
 	return `
-core oauth: {
+core: oauth: {
 	server: string | *""
 	secret: string | *""
 	clientid: string | *""

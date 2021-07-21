@@ -58,7 +58,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 // CueConfig schema and configuration
 func (m *Module) CueConfig() string {
 	return `
-core healthcheck: {
+core: healthcheck: {
 	checkSession: bool | *true
 	checkAuth: bool | *false
 	checkPath: string | *"/status/healthcheck"

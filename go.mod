@@ -6,7 +6,7 @@ require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
-	cuelang.org/go v0.0.15
+	cuelang.org/go v0.4.0
 	flamingo.me/dingo v0.2.9
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/etcd v3.3.24+incompatible // indirect
@@ -36,6 +36,7 @@ require (
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
 	github.com/prometheus/client_golang v1.4.1 // indirect
 	github.com/prometheus/procfs v0.0.10 // indirect
+	github.com/rogpeppe/testscript v1.1.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5

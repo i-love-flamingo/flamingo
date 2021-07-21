@@ -26,9 +26,9 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) CueConfig() string {
 	return `
 // general config
-core gotemplate engine: {
-	templates basepath: string | *"templates"
-	layout dir: string | *""
+core: gotemplate: engine: {
+	templates: basepath: string | *"templates"
+	layout: dir: string | *""
 }
 `
 }

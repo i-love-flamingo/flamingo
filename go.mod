@@ -42,7 +42,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.22.1+incompatible // indirect
-	github.com/vektra/mockery v1.1.2 // indirect
+	github.com/vektra/mockery/v2 v2.9.0 // indirect
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.etcd.io/etcd v3.3.25+incompatible // indirect
 	go.opencensus.io v0.22.3

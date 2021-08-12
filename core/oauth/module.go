@@ -18,10 +18,29 @@ import (
 // Module for core.auth
 // Deprecated: use core/auth instead
 type Module struct {
-	UseFake                     bool   `inject:"config:core.oauth.useFake"`
-	PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`
-	SessionBackend              string `inject:"config:flamingo.session.backend"`
-	CheckAuthServer             bool   `inject:"config:core.oauth.healthcheck,optional"`
+	useFake                     bool
+	preventSimultaneousSessions bool
+	sessionBackend              string
+	checkAuthServer             bool
+}
+
+// Inject dependencies
+func (m *Module) Inject(
+	cfg *struct {
+		UseFake                     bool   `inject:"config:core.oauth.useFake"`
+		PreventSimultaneousSessions bool   `inject:"config:core.oauth.preventSimultaneousSessions"`
+		SessionBackend              string `inject:"config:flamingo.session.backend"`
+		CheckAuthServer             bool   `inject:"config:core.oauth.healthcheck,optional"`
+	},
+) *Module {
+	if cfg != nil {
+		m.useFake = cfg.UseFake
+		m.preventSimultaneousSessions = cfg.PreventSimultaneousSessions
+		m.sessionBackend = cfg.SessionBackend
+		m.checkAuthServer = cfg.CheckAuthServer
+	}
+
+	return m
 }
 
 // Configure core.auth module
@@ -29,7 +48,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(application.AuthManager{}).In(dingo.ChildSingleton)
 	injector.Bind(new(interfaces.LogoutRedirectAware)).To(interfaces.DefaultLogoutRedirect{})
 	flamingo.BindEventSubscriber(injector).To(&application.EventHandler{})
-	if !m.UseFake {
+	if !m.useFake {
 		injector.Bind(new(application.UserServiceInterface)).To(application.UserService{})
 		injector.Bind(new(interfaces.LoginControllerInterface)).To(interfaces.LoginController{})
 		injector.Bind(new(interfaces.CallbackControllerInterface)).To(interfaces.CallbackController{})
@@ -49,7 +68,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		return &interfaces.LegacyIdentifier{}, nil
 	})
 
-	if m.CheckAuthServer {
+	if m.checkAuthServer {
 		injector.BindMap(new(healthcheck.Status), "auth").To(infrastructure.Auth{})
 	}
 }
@@ -133,7 +152,7 @@ type routes struct {
 	logout   interfaces.LogoutControllerInterface
 	callback interfaces.CallbackControllerInterface
 	user     *interfaces.UserController
-	UseFake  bool `inject:"config:core.oauth.useFake"`
+	useFake  bool
 }
 
 // Inject routes dependencies
@@ -142,26 +161,30 @@ func (r *routes) Inject(
 	logout interfaces.LogoutControllerInterface,
 	callback interfaces.CallbackControllerInterface,
 	user *interfaces.UserController,
-	fake *bool,
+	cfg *struct {
+		UseFake bool `inject:"config:core.oauth.useFake"`
+	},
 ) {
 	r.login = login
 	r.logout = logout
 	r.callback = callback
 	r.user = user
-	r.UseFake = *fake
+	if cfg != nil {
+		r.useFake = cfg.UseFake
+	}
 }
 
 // Routes module
 func (r *routes) Routes(registry *web.RouterRegistry) {
-	registry.Route("/auth/login", `auth.login(redirecturl?="")`)
+	registry.MustRoute("/auth/login", `auth.login(redirecturl?="")`)
 	registry.HandleGet("auth.login", r.login.Get)
-	if r.UseFake {
-		registry.Route("/auth/callback", `auth.callback(group?="")`)
+	if r.useFake {
+		registry.MustRoute("/auth/callback", `auth.callback(group?="")`)
 	} else {
-		registry.Route("/auth/callback", `auth.callback`)
+		registry.MustRoute("/auth/callback", `auth.callback`)
 	}
 	registry.HandleGet("auth.callback", r.callback.Get)
-	registry.Route("/auth/logout", "auth.logout")
+	registry.MustRoute("/auth/logout", "auth.logout")
 	registry.HandleGet("auth.logout", r.logout.Get)
 
 	registry.HandleData("user", r.user.Data)

@@ -57,16 +57,32 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 
 // ConfiguredURLPrefixSampler constructs the prefix GetStartOptions getter with the default opencensus configuration
 type ConfiguredURLPrefixSampler struct {
-	Whitelist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.whitelist,optional"`
-	Blacklist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.blacklist,optional"`
-	AllowParentTrace bool         `inject:"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional"`
+	Whitelist        config.Slice
+	Blacklist        config.Slice
+	AllowParentTrace bool
+}
+
+// Inject dependencies
+func (c *ConfiguredURLPrefixSampler) Inject(
+	cfg *struct {
+		Whitelist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.whitelist,optional"`
+		Blacklist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.blacklist,optional"`
+		AllowParentTrace bool         `inject:"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional"`
+	},
+) *ConfiguredURLPrefixSampler {
+	if cfg != nil {
+		c.Whitelist = cfg.Whitelist
+		c.Blacklist = cfg.Blacklist
+		c.AllowParentTrace = cfg.AllowParentTrace
+	}
+	return c
 }
 
 // GetStartOptions constructor for ochttp.Server
 func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace.StartOptions {
 	var whitelist, blacklist []string
-	c.Whitelist.MapInto(&whitelist)
-	c.Blacklist.MapInto(&blacklist)
+	_ = c.Whitelist.MapInto(&whitelist)
+	_ = c.Blacklist.MapInto(&blacklist)
 
 	return URLPrefixSampler(whitelist, blacklist, c.AllowParentTrace)
 }

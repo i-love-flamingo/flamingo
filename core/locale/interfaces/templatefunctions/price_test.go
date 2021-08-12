@@ -2,12 +2,12 @@ package templatefunctions_test
 
 import (
 	"context"
-	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"reflect"
 	"testing"
 
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/core/locale/domain"
+	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"flamingo.me/flamingo/v3/core/locale/interfaces/templatefunctions"
 	"flamingo.me/flamingo/v3/framework/config"
 )
@@ -24,7 +24,7 @@ func TestPriceFormatFunc_Func(t *testing.T) {
 	labelService.Inject(fakeLabelProvider, nil, nil, nil)
 
 	type fields struct {
-		config       config.Map `inject:"config:core.locale.accounting"`
+		config       config.Map
 		labelService *application.LabelService
 	}
 	type args struct {
@@ -128,7 +128,7 @@ func TestPriceFormatLongFunc_Func(t *testing.T) {
 	labelService.Inject(fakeLabelProvider, nil, nil, nil)
 
 	type fields struct {
-		config       config.Map `inject:"config:core.locale.accounting"`
+		config       config.Map
 		labelService *application.LabelService
 	}
 	type args struct {

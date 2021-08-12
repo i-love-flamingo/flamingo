@@ -161,13 +161,17 @@ func (r *routes) Inject(
 	logout interfaces.LogoutControllerInterface,
 	callback interfaces.CallbackControllerInterface,
 	user *interfaces.UserController,
-	fake *bool,
+	cfg *struct {
+		UseFake bool `inject:"config:core.oauth.useFake"`
+	},
 ) {
 	r.login = login
 	r.logout = logout
 	r.callback = callback
 	r.user = user
-	r.useFake = *fake
+	if cfg != nil {
+		r.useFake = cfg.UseFake
+	}
 }
 
 // Routes module

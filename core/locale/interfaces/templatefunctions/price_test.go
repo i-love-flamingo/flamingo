@@ -5,10 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
-
 	"flamingo.me/flamingo/v3/core/locale/application"
 	"flamingo.me/flamingo/v3/core/locale/domain"
+	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"flamingo.me/flamingo/v3/core/locale/interfaces/templatefunctions"
 	"flamingo.me/flamingo/v3/framework/config"
 )

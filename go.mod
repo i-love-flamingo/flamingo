@@ -55,3 +55,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+replace (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.0.0
+)

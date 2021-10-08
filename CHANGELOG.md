@@ -7,6 +7,13 @@
   - improved translation performance in flamingo debug mode
 - core/internalauth:
   - switched form `github.com/dgrijalva/jwt-go` to `github.com/golang-jwt/jwt/v4` this is a drop-in replacement
+    
+    use search and replace to change the import path or add a replace to your go.mod:
+    ```
+    replace (
+    	github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.1.0
+    )
+    ```
 
 ## v3.2.0
 

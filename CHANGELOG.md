@@ -5,6 +5,8 @@
 - core/locale:
   - fixed a race condition in `TranslationService`
   - improved translation performance in flamingo debug mode
+- core/internalauth:
+  - switched form `github.com/dgrijalva/jwt-go` to `github.com/golang-jwt/jwt/v4` this is a drop-in replacement
 
 ## v3.2.0
 

@@ -11,9 +11,9 @@ require (
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/etcd v3.3.24+incompatible // indirect
 	github.com/coreos/go-oidc v2.0.0+incompatible
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -54,8 +54,4 @@ require (
 	google.golang.org/api v0.19.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
-)
-
-replace (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.0.0
 )

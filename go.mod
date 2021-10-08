@@ -1,6 +1,6 @@
 module flamingo.me/flamingo/v3
 
-go 1.14
+go 1.16
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0
@@ -11,9 +11,9 @@ require (
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
 	github.com/coreos/etcd v3.3.24+incompatible // indirect
 	github.com/coreos/go-oidc v2.0.0+incompatible
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible

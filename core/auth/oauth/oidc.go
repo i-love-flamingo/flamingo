@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/coreos/go-oidc"
 	uuid "github.com/satori/go.uuid"
@@ -285,10 +286,63 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 	return &oauth2Config
 }
 
+type state struct {
+	State string
+	TS    time.Time
+}
+
+const stateTimeout = time.Minute * 30
+
+func init() {
+	gob.Register(state{})
+}
+
+const sessionStatesKey = "states"
+
+var now = time.Now
+
+func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string) bool {
+	sessionStates, ok := request.Session().Load(i.sessionCode(sessionStatesKey))
+	if !ok {
+		return false
+	}
+	states, ok := sessionStates.([]state)
+	if !ok {
+		return false
+	}
+	newstates := make([]state, 0, len(states))
+	validated := false
+	for _, state := range states {
+		if state.TS.Add(stateTimeout).Before(now()) {
+			continue
+		}
+		if state.State == code {
+			validated = true
+			continue
+		}
+		newstates = append(newstates, state)
+	}
+	request.Session().Store(i.sessionCode(sessionStatesKey), newstates)
+	return validated
+}
+
+func (i *openIDIdentifier) createSessionCode(request *web.Request, code string) {
+	sessionStates, ok := request.Session().Load(i.sessionCode(sessionStatesKey))
+	if !ok {
+		sessionStates = []state{}
+	}
+	states := sessionStates.([]state)
+	states = append(states, state{
+		State: code,
+		TS:    now(),
+	})
+	request.Session().Store(i.sessionCode(sessionStatesKey), states)
+}
+
 // Authenticate a user
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
 	state := uuid.NewV4().String()
-	request.Session().Store(i.sessionCode("state"), state)
+	i.createSessionCode(request, state)
 	options := make([]oauth2.AuthCodeOption, 0, len(i.authcodeOptions))
 	for _, o := range i.authcodeOptions {
 		options = append(options, o.Options(ctx, i.Broker(), request)...)
@@ -311,12 +365,11 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
 	}
 
-	state, ok := request.Session().Load(i.sessionCode("state"))
-	if !ok {
-		return i.responder.ServerError(errors.New("no state in session"))
+	queryState, err := request.Query1("state")
+	if err != nil {
+		return i.responder.ServerError(errors.New("no state in request"))
 	}
-	request.Session().Delete(i.sessionCode("state"))
-	if queryState, err := request.Query1("state"); err != nil || queryState != state.(string) {
+	if !i.validateSessionCode(request, queryState) {
 		return i.responder.ServerError(errors.New("state mismatch"))
 	}
 

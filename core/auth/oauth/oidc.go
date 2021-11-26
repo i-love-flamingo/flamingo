@@ -286,7 +286,7 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 	return &oauth2Config
 }
 
-type state struct {
+type StateEntry struct {
 	State string
 	TS    time.Time
 }
@@ -294,7 +294,8 @@ type state struct {
 const stateTimeout = time.Minute * 30
 
 func init() {
-	gob.Register(state{})
+	gob.Register([]StateEntry(nil))
+	gob.Register(StateEntry{})
 }
 
 const sessionStatesKey = "states"
@@ -306,11 +307,11 @@ func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string
 	if !ok {
 		return false
 	}
-	states, ok := sessionStates.([]state)
+	states, ok := sessionStates.([]StateEntry)
 	if !ok {
 		return false
 	}
-	newstates := make([]state, 0, len(states))
+	newstates := make([]StateEntry, 0, len(states))
 	validated := false
 	for _, state := range states {
 		if state.TS.Add(stateTimeout).Before(now()) {
@@ -329,10 +330,10 @@ func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string
 func (i *openIDIdentifier) createSessionCode(request *web.Request, code string) {
 	sessionStates, ok := request.Session().Load(i.sessionCode(sessionStatesKey))
 	if !ok {
-		sessionStates = []state{}
+		sessionStates = []StateEntry{}
 	}
-	states := sessionStates.([]state)
-	states = append(states, state{
+	states := sessionStates.([]StateEntry)
+	states = append(states, StateEntry{
 		State: code,
 		TS:    now(),
 	})

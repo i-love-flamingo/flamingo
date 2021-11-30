@@ -45,6 +45,7 @@ core: auth: {
 			userInfo: [...string]
 		}
 		enableEndSessionEndpoint: bool | *true
+		overrideIssuerURL: string | *""
 	}
 }
 `

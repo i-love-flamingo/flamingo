@@ -102,7 +102,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 
 	ctx := context.Background()
 	if oidcConfig.OverrideIssuerURL != "" {
-		oidc.InsecureIssuerURLContext(ctx, oidcConfig.OverrideIssuerURL)
+		ctx = oidc.InsecureIssuerURLContext(ctx, oidcConfig.OverrideIssuerURL)
 	}
 
 	provider, err := oidc.NewProvider(ctx, oidcConfig.Endpoint)

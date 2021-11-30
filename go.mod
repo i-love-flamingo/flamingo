@@ -9,7 +9,7 @@ require (
 	cuelang.org/go v0.0.15
 	flamingo.me/dingo v0.2.9
 	github.com/boj/redistore v0.0.0-20180917114910-cd5dcc76aeff
-	github.com/coreos/go-oidc v2.0.0+incompatible
+	github.com/coreos/go-oidc/v3 v3.1.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
@@ -45,5 +45,4 @@ require (
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	google.golang.org/api v0.56.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.1.9 // indirect
 )

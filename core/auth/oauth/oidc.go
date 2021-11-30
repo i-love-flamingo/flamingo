@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 
@@ -73,7 +73,8 @@ type (
 			IDToken     map[string]string `json:"idToken"`
 			AccessToken map[string]string `json:"accessToken"`
 		} `json:"claims"`
-		EnableEndSessionEndpoint bool `json:"enableEndSessionEndpoint"`
+		EnableEndSessionEndpoint bool   `json:"enableEndSessionEndpoint"`
+		OverrideIssuerURL        string `json:"overrideIssuerURL"`
 	}
 )
 
@@ -99,7 +100,12 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		return nil, err
 	}
 
-	provider, err := oidc.NewProvider(context.Background(), oidcConfig.Endpoint)
+	ctx := context.Background()
+	if oidcConfig.OverrideIssuerURL != "" {
+		ctx = oidc.InsecureIssuerURLContext(ctx, oidcConfig.OverrideIssuerURL)
+	}
+
+	provider, err := oidc.NewProvider(ctx, oidcConfig.Endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +318,7 @@ func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string
 	if !ok {
 		return false
 	}
-	newstates := make([]StateEntry, 0, len(states))
+	newStates := make([]StateEntry, 0, len(states))
 	validated := false
 	for _, state := range states {
 		if state.TS.Add(stateTimeout).Before(now()) {
@@ -322,9 +328,9 @@ func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string
 			validated = true
 			continue
 		}
-		newstates = append(newstates, state)
+		newStates = append(newStates, state)
 	}
-	request.Session().Store(i.sessionCode(sessionStatesKey), newstates)
+	request.Session().Store(i.sessionCode(sessionStatesKey), newStates)
 	return validated
 }
 

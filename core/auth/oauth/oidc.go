@@ -292,7 +292,6 @@ func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 	return &oauth2Config
 }
 
-
 // StateEntry stores entries of recent states during login (oidc states)
 type StateEntry struct {
 	State string

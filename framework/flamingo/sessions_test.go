@@ -10,6 +10,7 @@ import (
 type testData struct {
 	redisURL              string
 	redisHost             string
+	redisPort             string
 	redisPassword         string
 	redisDatabase         string
 	expectedRedisHost     string
@@ -26,7 +27,9 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 	redisURLWithDatabaseInQuery := fmt.Sprintf("redis://%s:%s@%s?db=%s", redisURLUser, redisURLPassword, redisURLHost, redisDatabase)
 	redisURLWithoutUser := fmt.Sprintf("redis://:%s@%s/%s", redisURLPassword, redisURLHost, redisDatabase)
 	redisHost := "redis-host"
+	redisPort := "68043"
 	redisPassword := "pw1234"
+	redisHostWithPort := redisHost + ":" + redisPort
 
 	testSet := map[string]testData{
 		"url only without user": {
@@ -77,6 +80,11 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 			redisDatabase:         redisDatabase,
 			expectedRedisDatabase: redisDatabase,
 		},
+		"host and port": {
+			redisHost:         redisHost,
+			redisPort:         redisPort,
+			expectedRedisHost: redisHostWithPort,
+		},
 		"host and password": {
 			redisHost:             redisHost,
 			redisPassword:         redisPassword,
@@ -96,7 +104,7 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 	t.Run("Get Redis connection information", func(t *testing.T) {
 		for name, data := range testSet {
 			t.Run(name, func(t *testing.T) {
-				actualHost, actualPassword, actualDatabase := getRedisConnectionInformation(data.redisURL, data.redisHost, data.redisPassword, data.redisDatabase)
+				actualHost, actualPassword, actualDatabase := getRedisConnectionInformation(data.redisURL, data.redisHost, data.redisPort, data.redisPassword, data.redisDatabase)
 				assert.Equal(t, data.expectedRedisHost, actualHost)
 				assert.Equal(t, data.expectedRedisPassword, actualPassword)
 				assert.Equal(t, data.expectedRedisDatabase, actualDatabase)

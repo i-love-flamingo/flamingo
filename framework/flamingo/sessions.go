@@ -1,6 +1,7 @@
 package flamingo
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -47,6 +48,7 @@ func (m *SessionModule) Inject(config *struct {
 	Path                 string  `inject:"config:flamingo.session.cookie.path"`
 	RedisURL             string  `inject:"config:flamingo.session.redis.url"`
 	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
+	RedisPort            string  `inject:"config:flamingo.session.redis.port"`
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
@@ -61,7 +63,7 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
+	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPort, config.RedisPassword, config.RedisDatabase)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.maxAge = int(config.MaxAge)
 	m.healthcheckSession = config.CheckSession
@@ -75,9 +77,9 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		var err error
 
 		if m.redisDatabase != "" {
-			sessionStore, err = redistore.NewRediStoreWithDB(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
+			sessionStore, err = redistore.NewRediStoreWithDB(m.redisIdleConnections, "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
 		} else {
-			sessionStore, err = redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+			sessionStore, err = redistore.NewRediStore(m.redisIdleConnections, "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
 		}
 
 		if err != nil {
@@ -158,6 +160,7 @@ flamingo: session: {
 	redis: {
 		url: string | *""
 		host: string | *"redis"
+		port: string | *""
 		password: string | *""
 		idle: connections: float | int | *10
 		maxAge: float | int | *(60 * 60 * 24 * 30)
@@ -186,8 +189,11 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisDatabase string) (string, string, string) {
+func getRedisConnectionInformation(redisURL, redisHost, redisPort, redisPassword, redisDatabase string) (string, string, string) {
 	if redisURL == "" {
+		if redisPort != "" {
+			redisHost = fmt.Sprintf("%s:%s", redisHost, redisPort)
+		}
 		return redisHost, redisPassword, redisDatabase
 	}
 

@@ -13,6 +13,7 @@ import (
 type (
 	// Identity defines a TokenSource which is can be used to get an AccessToken vor OAuth2 flows
 	Identity interface {
+		auth.Identity
 		TokenSource() oauth2.TokenSource
 		AccessTokenClaims(into interface{}) error
 	}

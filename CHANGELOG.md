@@ -18,6 +18,8 @@
 - framework/flamingo:
   - switch redis session backend to [rbcervilla/redisstore](https://github.com/rbcervilla/redisstore)
   - add support for TLS and cluster mode for redis session backend
+- core/auth:
+  - oauth.Identity includes Identity. This is a backwards-incompatible break
 
 ## v3.2.0
 

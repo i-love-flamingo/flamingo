@@ -74,6 +74,7 @@ func (s *SessionStore) requestFromID(id string) *http.Request {
 	case *memorystore.MemoryStore:
 		codecs = s.Codecs
 	case *redistore.RediStore:
+		// TODO replace with new redis store
 		codecs = s.Codecs
 	case *sessions.FilesystemStore:
 		codecs = s.Codecs

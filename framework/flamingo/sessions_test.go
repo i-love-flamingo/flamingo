@@ -11,20 +11,20 @@ type testData struct {
 	redisURL              string
 	redisHost             string
 	redisPassword         string
-	redisDatabase         string
+	redisDatabase         int
 	expectedRedisHost     string
 	expectedRedisPassword string
-	expectedRedisDatabase string
+	expectedRedisDatabase int
 }
 
 func TestGetRedisConnectionInformation(t *testing.T) {
 	redisURLHost := "redis-url-host:68043"
 	redisURLUser := "redis-url-user"
 	redisURLPassword := "redis-url-pw"
-	redisDatabase := "2"
-	redisURL := fmt.Sprintf("redis://%s:%s@%s/%s", redisURLUser, redisURLPassword, redisURLHost, redisDatabase)
-	redisURLWithDatabaseInQuery := fmt.Sprintf("redis://%s:%s@%s?db=%s", redisURLUser, redisURLPassword, redisURLHost, redisDatabase)
-	redisURLWithoutUser := fmt.Sprintf("redis://:%s@%s/%s", redisURLPassword, redisURLHost, redisDatabase)
+	redisDatabase := 2
+	redisURL := fmt.Sprintf("redis://%s:%s@%s/%d", redisURLUser, redisURLPassword, redisURLHost, redisDatabase)
+	redisURLWithDatabaseInQuery := fmt.Sprintf("redis://%s:%s@%s?db=%d", redisURLUser, redisURLPassword, redisURLHost, redisDatabase)
+	redisURLWithoutUser := fmt.Sprintf("redis://:%s@%s/%d", redisURLPassword, redisURLHost, redisDatabase)
 	redisHost := "redis-host"
 	redisPassword := "pw1234"
 

@@ -131,11 +131,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 
-		// TODO handle bindings for healthcheck
-		//injector.Bind(new(redis.Pool)).ToInstance(sessionStore.Pool)
-		//if m.healthcheckSession {
-		//	injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
-		//}
+		injector.Bind(new(redis.UniversalClient)).ToInstance(client)
+		if m.healthcheckSession {
+			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
+		}
 	case "file":
 		os.Mkdir(m.fileName, os.ModePerm)
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))

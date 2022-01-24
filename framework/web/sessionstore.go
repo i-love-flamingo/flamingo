@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"github.com/boj/redistore"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/zemirco/memorystore"
@@ -73,18 +72,17 @@ func (s *SessionStore) requestFromID(id string) *http.Request {
 	switch s := s.sessionStore.(type) {
 	case *memorystore.MemoryStore:
 		codecs = s.Codecs
-	case *redistore.RediStore:
-		// TODO replace with new redis store
-		codecs = s.Codecs
 	case *sessions.FilesystemStore:
 		codecs = s.Codecs
-	default:
-		panic("not supported")
 	}
 
-	cookie, err := securecookie.EncodeMulti(s.sessionName, id, codecs...)
-	if err != nil {
-		panic(err)
+	cookie := id
+	if len(codecs) > 0 {
+		var err error
+		cookie, err = securecookie.EncodeMulti(s.sessionName, id, codecs...)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return &http.Request{

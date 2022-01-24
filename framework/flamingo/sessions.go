@@ -114,7 +114,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		sessionStore, err := redisstore.NewRedisStore(context.Background(), client)
 		if err != nil {
-			panic(err) // todo: don't panic? fallback?
+			panic(err)
 		}
 
 		sessionStore.Options(sessions.Options{
@@ -193,7 +193,7 @@ flamingo: session: {
 		password: string | *""
 		idle: connections: float | int | *10
 		maxAge: float | int | *(60 * 60 * 24 * 30)
-		database: string | *""
+		database: float | int | *0
 	}
 }
 `
@@ -239,11 +239,16 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, re
 
 	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
 	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
-	// TODO handle errors?
 	if len(redisDatabaseFromPath) > 0 {
-		redisDatabase, _ = strconv.Atoi(redisDatabaseFromPath)
+		redisDatabase, err = strconv.Atoi(redisDatabaseFromPath)
+		if err != nil {
+			panic(err)
+		}
 	} else if len(redisDatabaseFromQuery) > 0 {
-		redisDatabase, _ = strconv.Atoi(redisDatabaseFromQuery)
+		redisDatabase, err = strconv.Atoi(redisDatabaseFromQuery)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return redisHost, redisPassword, redisDatabase

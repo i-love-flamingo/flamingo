@@ -3,6 +3,7 @@ package flamingo
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -123,9 +124,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 			HttpOnly: true,
 			SameSite: m.sameSite,
 		})
-
-		// TODO unused configs:
-		// m.storeLength
+		sessionStore.Serializer(maxLengthSerializer{
+			maxLength:  m.storeLength,
+			serializer: redisstore.GobSerializer{},
+		})
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 
@@ -245,4 +247,26 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, re
 	}
 
 	return redisHost, redisPassword, redisDatabase
+}
+
+type maxLengthSerializer struct {
+	maxLength  int
+	serializer redisstore.SessionSerializer
+}
+
+func (m maxLengthSerializer) Serialize(s *sessions.Session) ([]byte, error) {
+	b, err := m.serializer.Serialize(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.maxLength != 0 && len(b) > m.maxLength {
+		return nil, errors.New("the value to store is too big")
+	}
+
+	return b, nil
+}
+
+func (m maxLengthSerializer) Deserialize(b []byte, s *sessions.Session) error {
+	return m.serializer.Deserialize(b, s)
 }

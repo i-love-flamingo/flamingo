@@ -191,8 +191,9 @@ flamingo: session: {
 		host: string | *"redis"
 		password: string | *""
 		idle: connections: float | int | *10
-		maxAge: float | int | *(60 * 60 * 24 * 30)
 		database: float | int | *0
+		tls: bool | *false
+		clusterMode: bool | *false
 	}
 }
 `

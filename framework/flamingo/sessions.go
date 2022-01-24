@@ -31,7 +31,6 @@ type SessionModule struct {
 	redisHost            string
 	redisPassword        string
 	redisIdleConnections int
-	redisMaxAge          int
 	redisDatabase        int
 	redisTLS             bool
 	redisClusterMode     bool
@@ -54,7 +53,6 @@ func (m *SessionModule) Inject(config *struct {
 	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
-	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
 	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
 	RedisTLS             bool    `inject:"config:flamingo.session.redis.tls,optional"`
 	RedisClusterMode     bool    `inject:"config:flamingo.session.redis.clusterMode,optional"`
@@ -71,7 +69,6 @@ func (m *SessionModule) Inject(config *struct {
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.redisTLS = config.RedisTLS
 	m.redisClusterMode = config.RedisClusterMode
-	m.redisMaxAge = int(config.RedisMaxAge)
 	m.healthcheckSession = config.CheckSession
 
 	switch config.SameSite {
@@ -128,9 +125,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		})
 
 		// TODO unused configs:
-		// m.secret
 		// m.storeLength
-		// m.redisMaxAge
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 
@@ -216,7 +211,6 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 		"session.redis.host":             "flamingo.session.redis.host",
 		"session.redis.password":         "flamingo.session.redis.password",
 		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
-		"session.redis.maxAge":           "flamingo.session.redis.maxAge",
 		"core.healthcheck.checkSession":  "flamingo.session.healthcheck",
 	}
 }

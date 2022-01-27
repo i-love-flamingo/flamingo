@@ -11,10 +11,13 @@
     use search and replace to change the import path or add a replace statement to your go.mod:
     ```
     replace (
-    	github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.1.0
+        github.com/dgrijalva/jwt-go v3.2.0+incompatible => github.com/golang-jwt/jwt/v4 v4.1.0
     )
     ```
     More details can be found here: https://github.com/golang-jwt/jwt/blob/main/MIGRATION_GUIDE.md
+- framework/flamingo:
+  - switch redis session backend to [rbcervilla/redisstore](https://github.com/rbcervilla/redisstore)
+  - add support for TLS and cluster mode for redis session backend
 
 ## v3.2.0
 

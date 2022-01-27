@@ -1,17 +1,21 @@
 package flamingo
 
 import (
+	"context"
+	"crypto/tls"
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
-	"github.com/boj/redistore"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/sessions"
+	"github.com/rbcervilla/redisstore/v8"
 	"github.com/zemirco/memorystore"
 )
 
@@ -21,15 +25,16 @@ type SessionModule struct {
 	secret               string
 	fileName             string
 	secure               bool
-	sameSite             string
+	sameSite             http.SameSite
 	storeLength          int
 	maxAge               int
 	path                 string
 	redisHost            string
 	redisPassword        string
 	redisIdleConnections int
-	redisMaxAge          int
-	redisDatabase        string
+	redisDatabase        int
+	redisTLS             bool
+	redisClusterMode     bool
 	healthcheckSession   bool
 }
 
@@ -49,49 +54,84 @@ func (m *SessionModule) Inject(config *struct {
 	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
-	RedisMaxAge          float64 `inject:"config:flamingo.session.redis.maxAge"`
-	RedisDatabase        string  `inject:"config:flamingo.session.redis.database,optional"`
+	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
+	RedisTLS             bool    `inject:"config:flamingo.session.redis.tls,optional"`
+	RedisClusterMode     bool    `inject:"config:flamingo.session.redis.clusterMode,optional"`
 	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
 	m.secret = config.Secret
 	m.fileName = config.FileName
 	m.secure = config.Secure
-	m.sameSite = config.SameSite
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
 	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
 	m.redisIdleConnections = int(config.RedisIdleConnections)
-	m.maxAge = int(config.MaxAge)
+	m.redisTLS = config.RedisTLS
+	m.redisClusterMode = config.RedisClusterMode
 	m.healthcheckSession = config.CheckSession
+
+	switch config.SameSite {
+	case "strict":
+		m.sameSite = http.SameSiteStrictMode
+	case "none":
+		m.sameSite = http.SameSiteNoneMode
+	case "lax":
+		m.sameSite = http.SameSiteLaxMode
+	default:
+		m.sameSite = http.SameSiteDefaultMode
+	}
 }
 
 // Configure DI
 func (m *SessionModule) Configure(injector *dingo.Injector) {
 	switch m.backend {
 	case "redis":
-		var sessionStore *redistore.RediStore
-		var err error
+		var client redis.UniversalClient
 
-		if m.redisDatabase != "" {
-			sessionStore, err = redistore.NewRediStoreWithDB(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, m.redisDatabase, []byte(m.secret))
+		var tlsConfig *tls.Config
+		if m.redisTLS {
+			tlsConfig = &tls.Config{}
+		}
+
+		if m.redisClusterMode {
+			client = redis.NewClusterClient(&redis.ClusterOptions{
+				Addrs:     []string{m.redisHost},
+				Password:  m.redisPassword,
+				PoolSize:  m.redisIdleConnections,
+				TLSConfig: tlsConfig,
+			})
 		} else {
-			sessionStore, err = redistore.NewRediStore(int(m.redisIdleConnections), "tcp", m.redisHost, m.redisPassword, []byte(m.secret))
+			client = redis.NewClient(&redis.Options{
+				Addr:      m.redisHost,
+				Password:  m.redisPassword,
+				DB:        m.redisDatabase,
+				PoolSize:  m.redisIdleConnections,
+				TLSConfig: tlsConfig,
+			})
 		}
 
+		sessionStore, err := redisstore.NewRedisStore(context.Background(), client)
 		if err != nil {
-			panic(err) // todo: don't panic? fallback?
+			panic(err)
 		}
 
-		sessionStore.SetMaxAge(m.maxAge)
-		sessionStore.SetMaxLength(m.storeLength)
-		sessionStore.DefaultMaxAge = m.redisMaxAge
-		m.setSessionstoreOptions(sessionStore.Options)
+		sessionStore.Options(sessions.Options{
+			Path:     m.path,
+			MaxAge:   m.maxAge,
+			Secure:   m.secure,
+			HttpOnly: true,
+			SameSite: m.sameSite,
+		})
+		sessionStore.Serializer(maxLengthSerializer{
+			maxLength:  m.storeLength,
+			serializer: redisstore.GobSerializer{},
+		})
 
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
-		injector.Bind(new(redis.Pool)).ToInstance(sessionStore.Pool)
 
+		injector.Bind(new(redis.UniversalClient)).ToInstance(client)
 		if m.healthcheckSession {
 			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
 		}
@@ -129,16 +169,7 @@ func (m *SessionModule) setSessionstoreOptions(options *sessions.Options) {
 	options.MaxAge = m.maxAge
 	options.Secure = m.secure
 	options.HttpOnly = true
-	switch m.sameSite {
-	case "strict":
-		options.SameSite = http.SameSiteStrictMode
-	case "none":
-		options.SameSite = http.SameSiteNoneMode
-	case "lax":
-		options.SameSite = http.SameSiteLaxMode
-	default:
-		options.SameSite = http.SameSiteDefaultMode
-	}
+	options.SameSite = m.sameSite
 }
 
 // CueConfig defines the session config scheme
@@ -160,8 +191,9 @@ flamingo: session: {
 		host: string | *"redis"
 		password: string | *""
 		idle: connections: float | int | *10
-		maxAge: float | int | *(60 * 60 * 24 * 30)
-		database: string | *""
+		database: float | int | *0
+		tls: bool | *false
+		clusterMode: bool | *false
 	}
 }
 `
@@ -181,12 +213,11 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 		"session.redis.host":             "flamingo.session.redis.host",
 		"session.redis.password":         "flamingo.session.redis.password",
 		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
-		"session.redis.maxAge":           "flamingo.session.redis.maxAge",
 		"core.healthcheck.checkSession":  "flamingo.session.healthcheck",
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisDatabase string) (string, string, string) {
+func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, redisDatabase int) (string, string, int) {
 	if redisURL == "" {
 		return redisHost, redisPassword, redisDatabase
 	}
@@ -209,10 +240,38 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword, redisData
 	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
 	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
 	if len(redisDatabaseFromPath) > 0 {
-		redisDatabase = redisDatabaseFromPath
+		redisDatabase, err = strconv.Atoi(redisDatabaseFromPath)
+		if err != nil {
+			panic(err)
+		}
 	} else if len(redisDatabaseFromQuery) > 0 {
-		redisDatabase = redisDatabaseFromQuery
+		redisDatabase, err = strconv.Atoi(redisDatabaseFromQuery)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return redisHost, redisPassword, redisDatabase
+}
+
+type maxLengthSerializer struct {
+	maxLength  int
+	serializer redisstore.SessionSerializer
+}
+
+func (m maxLengthSerializer) Serialize(s *sessions.Session) ([]byte, error) {
+	b, err := m.serializer.Serialize(s)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.maxLength != 0 && len(b) > m.maxLength {
+		return nil, errors.New("the value to store is too big")
+	}
+
+	return b, nil
+}
+
+func (m maxLengthSerializer) Deserialize(b []byte, s *sessions.Session) error {
+	return m.serializer.Deserialize(b, s)
 }

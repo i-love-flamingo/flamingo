@@ -1,29 +1,30 @@
 package healthcheck
 
 import (
+	"context"
+
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 )
 
-// RedisSession pool status check
+// RedisSession status check
 type RedisSession struct {
-	pool *redis.Pool
+	client redis.UniversalClient
 }
 
 var _ healthcheck.Status = &RedisSession{}
 
-// Inject redis pool for session
-func (s *RedisSession) Inject(pool *redis.Pool) {
-	s.pool = pool
+// Inject redis client for session
+func (s *RedisSession) Inject(client redis.UniversalClient) {
+	s.client = client
 }
 
 // Status checks if the redis server is available
 func (s *RedisSession) Status() (bool, string) {
-	conn := s.pool.Get()
-	_, err := conn.Do("PING")
-	if err == nil {
-		return true, "success"
+	err := s.client.Ping(context.Background()).Err()
+	if err != nil {
+		return false, err.Error()
 	}
 
-	return false, err.Error()
+	return true, "success"
 }

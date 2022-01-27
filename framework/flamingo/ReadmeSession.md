@@ -17,12 +17,36 @@ Persistence is done automatically if you use `Values`.
 
 #### Session Configuration
 
-Flamingo expects a `session.Store` dingo binding, this is currently handled via the `session.backend` config parameter.
+Flamingo expects a `session.Store` dingo binding, this is currently handled via the `flamingo.session.backend` config parameter.
+Flamingo comes with 3 implementations for sessions: `redis`, `file` and `memory`. 
 
-Flamingo comes with 3 persistence implementations for sessions: `redis`, `file` and `memory`. 
-The redis backend uses the config param `session.backend.redis.host` to find the redis, e.g. `redis.host:6379`.
+##### memory
+Stores the sessions in memory only. 
+There is no persistence across application restarts. 
+This option should only be used for testing or local development.
 
-You can create your own one by implementing the `sessions.Store` interface and replace the default `flamingo.SessionModule`.
+##### file
+Stores the sessions in the directory specified by the `flamingo.session.file` parameter (default is `/sessions`).
+The files will be persisted across application restarts. 
+
+##### redis
+Stores the session in an external instance of [redis](https://redis.io/). 
+Use the following parameters to configure the connection to redis. 
+
+```yaml
+flamingo.session.redis.url: redis://:my-secret-password@my-redis/0    # full URL (can be used instead of host, password, database)
+flamingo.session.redis.host: my-redis                                 # hostname
+flamingo.session.redis.password: my-secret-password                   # password
+flamingo.session.redis.database: 0                                    # database
+flamingo.session.redis.idle.connections: 10                           # maximum number of idle connections
+flamingo.session.redis.tls: true                                      # enable tls for connections
+flamingo.session.redis.clusterMode: false                             # for redis servers running in cluster mode
+```
+
+##### custom
+You can create your own session backend by implementing the gorilla `sessions.Store` interface. 
+There is a list of existing implementation in the [gorilla/sessions repository](https://github.com/gorilla/sessions/#store-implementations).
+To use them, just replace the default `flamingo.SessionModule` and bind your implementation to the `session.Store` interface via dingo.
 
 ### Authentication
 

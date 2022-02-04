@@ -9,14 +9,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
-	uuid "github.com/satori/go.uuid"
-	"golang.org/x/oauth2"
-
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/coreos/go-oidc/v3/oidc"
+	uuid "github.com/satori/go.uuid"
+	"golang.org/x/oauth2"
 )
 
 type (

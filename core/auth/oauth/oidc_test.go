@@ -2,13 +2,18 @@ package oauth
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
+	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )
@@ -84,4 +89,84 @@ func TestParallelStateRaceConditions(t *testing.T) {
 
 		now = time.Now
 	})
+}
+
+type testOidcProvider struct {
+	url string
+}
+
+func (p *testOidcProvider) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	switch strings.Trim(r.URL.Path, "/") {
+	case ".well-known/openid-configuration":
+		fmt.Fprintf(rw, `{
+			"issuer": "%s",
+			"token_endpoint": "%s/token",
+			"jwks_uri": "%s/certs"
+		}`, p.url, p.url, p.url)
+	case "certs":
+		fmt.Fprint(rw, `{"keys":[{"kid":"3vfKZm_SqyuYCsD7isNlzs1EORs5guIF0XnisUqvjFQ","kty":"RSA","alg":"RS256","use":"sig","n":"o1ZomEdwneplkdgUJMUqHjaZRt3qCP7wQJq0XwK2J95LXYIwPaXy9b2IQruOfhhoy34hWnzsJkQpnugFj069qxZ3ni7Cb1Wau2x6xuhBoiko1iaB_IddG8tSi0FyMUhMtSpf8eBPQB9i5UX8Uymj36B4z2HfbDLLU8ld2ve4PNCFnRDwWCVzE_LwER0rIDeIpODptKVL8bEPsgLgGCB7WGIFIpVwmaS8UwWrCPtlMBJVhHOi1GwuAoPVhOTQhqyCrxh9c3PcZjO0o-yW2BBdSWSHs69zboa-DPGg4jUo7SHkGL4tC--Nvg46ZojNtmjlMJpquK3XJA6SC8l-W776Tw","e":"AQAB","x5c":["MIICmzCCAYMCBgF/MQ1x7DANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZtYXN0ZXIwHhcNMjIwMjI1MTMyMjE5WhcNMzIwMjI1MTMyMzU5WjARMQ8wDQYDVQQDDAZtYXN0ZXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCjVmiYR3Cd6mWR2BQkxSoeNplG3eoI/vBAmrRfArYn3ktdgjA9pfL1vYhCu45+GGjLfiFafOwmRCme6AWPTr2rFneeLsJvVZq7bHrG6EGiKSjWJoH8h10by1KLQXIxSEy1Kl/x4E9AH2LlRfxTKaPfoHjPYd9sMstTyV3a97g80IWdEPBYJXMT8vARHSsgN4ik4Om0pUvxsQ+yAuAYIHtYYgUilXCZpLxTBasI+2UwElWEc6LUbC4Cg9WE5NCGrIKvGH1zc9xmM7Sj7JbYEF1JZIezr3Nuhr4M8aDiNSjtIeQYvi0L742+DjpmiM22aOUwmmq4rdckDpILyX5bvvpPAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAJIa6nWcYN6AHpYvpQeA62kjXzixXTb3sS5TCx1MVIrA1HK9oYkRqp8L6js0HZ9r4Bi6m7phuh9nssHQQo1HUWnkMvBXi7Su8OstUpMV3cef7E2eOiXl/XXoKOYzn00wuviajofGL6JopV9RpIGsZoU8mmjmpBpRcby/V9ILsCZeU6Q/mQw7xTG7eRZZOPtqgSdvOXxDWFrpycFk9ZaEBI8bVchfQ0B19VsmD/2P2ujGgRgxlZIx6R+gNDn6PiF+acbEaSqnl4WyrajgDQp0ZSsWhrSQ+AgrH3lGOe2KBMGrpaI93vEzSM/wMBgSwrGovnYaiiCD58uuAMnebrSPLnQ="],"x5t":"3pqpFR1KsffXGgRSwaEpW9HB0uQ","x5t#S256":"UXfYw2fnfmPyGfA4___BJynPIB9ZtHSvcE5A5jiKC14"}]}`)
+	case "token":
+		idtoken := `eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIzdmZLWm1fU3F5dVlDc0Q3aXNObHpzMUVPUnM1Z3VJRjBYbmlzVXF2akZRIn0.eyJleHAiOjE2NDYzMTQ0NTQsImlhdCI6MTY0NjMxNDM5NCwiYXV0aF90aW1lIjoxNjQ2MzE0MTM0LCJqdGkiOiJhZGM0MDAzYy0wNTEzLTQ4ZjYtYjdiOS0wYTNjOGY2YmVlYWIiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvYXV0aC9yZWFsbXMvbWFzdGVyIiwiYXVkIjoic2VjdXJpdHktYWRtaW4tY29uc29sZSIsInN1YiI6IjA0N2UwMDdhLTFhNTgtNDQ3Ni05ODc3LTFhMWIwN2U2OTlhMSIsInR5cCI6IklEIiwiYXpwIjoic2VjdXJpdHktYWRtaW4tY29uc29sZSIsIm5vbmNlIjoiNzI0ZjdhMTgtMmVkZi00MTBmLThhZmUtYWExYWNiNWI0YWI3Iiwic2Vzc2lvbl9zdGF0ZSI6IjQxN2MzZmExLTY2ZmUtNGQ2MC05ZDgyLTE0NTkxNmExMWNmNCIsImF0X2hhc2giOiJmUG4yWDZpakIxSFdVWWRNNGE3bjJnIiwiYWNyIjoiMSIsInNpZCI6IjQxN2MzZmExLTY2ZmUtNGQ2MC05ZDgyLTE0NTkxNmExMWNmNCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwicHJlZmVycmVkX3VzZXJuYW1lIjoibG9jYWxhZG1pbiJ9.AcnJ_RuTBWWBK_MvGTvvD2LBhLlIoOA_F7_TcAm9Cit2tRoUPUWAiclHE3pn2UsJ1YnEPJCraDFC1Ef0KBHTXZN9DmRrGCJxLrArQ89PuYrVSK6f7-C3TWwHKDTpHwTfONFBwuFmGxFbIGjzd8f3xX4jT0ISGdXCyP8Lv5yI0r7oVN_saqlIiC2X50etPicpFV8JrcVFhmBIDhGgATnl5FOWs5_xlMN1fWGWDyfZglkrWSyJPg73dt4JvEdnbZeI1vDLf_AXjjIVigzAAJfV2ZurcozGy1iaMO-UfghUsDIn8UUhQUtJk8EUSrCuYgIK8L5JImODp_IBLrcHAxQCow`
+		accesstoken := fmt.Sprintf("header.%s", base64.RawURLEncoding.EncodeToString([]byte(`{"at_claim_1": "at-claim-1-value"}`)))
+		rw.Header().Set("Content-type", "application/json")
+		fmt.Fprintf(rw, `{
+			"access_token": "%s",
+			"id_token": "%s",
+			"legacy-token-response-claim": "legacy-token-response-claim-value"
+		}`, accesstoken, idtoken)
+	default:
+		panic("unable to handle: " + r.URL.Path)
+	}
+}
+
+func TestOidcCallback(t *testing.T) {
+	provider := &testOidcProvider{}
+	testserver := httptest.NewServer(provider)
+	defer testserver.Close()
+	provider.url = testserver.URL
+
+	identifier := new(openIDIdentifier)
+	identifier.reverseRouter = new(mockRouter)
+	identifier.eventRouter = &flamingo.DefaultEventRouter{}
+	identifier.responder = new(web.Responder)
+	identifier.verifierConfigurator = append(identifier.verifierConfigurator, func(c *oidc.Config) {
+		c.SkipClientIDCheck = true
+		c.SkipExpiryCheck = true
+		c.SkipIssuerCheck = true
+	})
+	identifier.oidcConfig.Claims.AccessToken = map[string]string{
+		"claim-1":      "at_claim_1",
+		"legacy-claim": "legacy-token-response-claim",
+	}
+
+	var err error
+	identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
+	assert.NoError(t, err)
+	identifier.oauth2Config = &oauth2.Config{
+		Endpoint: identifier.provider.Endpoint(),
+	}
+
+	session := web.EmptySession()
+	request := web.CreateRequest(nil, session)
+
+	identifier.createSessionCode(request, "test-callback-state")
+
+	request.Request().URL.RawQuery = "state=test-callback-state&code=test-callback-code"
+	returnCalled := false
+	identifier.Callback(context.Background(), request, func(request *web.Request) *url.URL {
+		returnCalled = true
+		return new(url.URL)
+	})
+	assert.True(t, returnCalled, "the return callback was not called")
+
+	identity, err := identifier.Identify(context.Background(), request)
+	assert.NoError(t, err)
+
+	var testClaims struct {
+		Claim1      string `json:"claim-1"`
+		LegacyClaim string `json:"legacy-claim"`
+	}
+	assert.NoError(t, identity.(Identity).AccessTokenClaims(&testClaims))
+	assert.Equal(t, "at-claim-1-value", testClaims.Claim1)
+	assert.Equal(t, "legacy-token-response-claim-value", testClaims.LegacyClaim)
 }

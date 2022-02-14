@@ -1,12 +1,15 @@
 package oauth
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"flamingo.me/flamingo/v3/core/auth"
@@ -47,6 +50,7 @@ type (
 		authCodeOptionerProvider authCodeOptionerProvider
 		eventRouter              flamingo.EventRouter
 		oidcConfig               oidcConfig
+		verifierConfigurator     []func(*oidc.Config)
 	}
 
 	sessionData struct {
@@ -193,11 +197,16 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 		return nil, errors.New("broken sessiondata")
 	}
 
+	verifierConfig := &oidc.Config{ClientID: i.oauth2Config.ClientID}
+	for _, configurator := range i.verifierConfigurator {
+		configurator(verifierConfig)
+	}
+
 	identity := &oidcIdentity{
 		token:             token{tokenSource: i.config(request).TokenSource(ctx, sessiondata.Token)},
 		broker:            i.broker,
 		subject:           sessiondata.Subject,
-		verifier:          i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID}),
+		verifier:          i.provider.Verifier(verifierConfig),
 		rawIDToken:        sessiondata.RawIDToken,
 		idTokenClaims:     sessiondata.IDTokenClaims,
 		accessTokenClaims: sessiondata.AccessTokenClaims,
@@ -396,7 +405,11 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(errors.New("claim id_token missing"))
 	}
 
-	verifier := i.provider.Verifier(&oidc.Config{ClientID: i.oauth2Config.ClientID})
+	verifierConfig := &oidc.Config{ClientID: i.oauth2Config.ClientID}
+	for _, configurator := range i.verifierConfigurator {
+		configurator(verifierConfig)
+	}
+	verifier := i.provider.Verifier(verifierConfig)
 
 	// Parse and verify ID Token payload.
 	idToken, err := verifier.Verify(ctx, rawIDToken)
@@ -416,8 +429,22 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	for k, v := range i.oidcConfig.Claims.IDToken {
 		idTokenClaims[k] = tempIDTokenClaims[v]
 	}
+
+	accessTokenParts := strings.Split(oauth2Token.AccessToken, ".")
+	if len(accessTokenParts) >= 2 {
+		decoded, _ := base64.RawURLEncoding.DecodeString(accessTokenParts[1])
+		var cs map[string]interface{}
+		json.NewDecoder(bytes.NewBuffer(decoded)).Decode(&cs)
+		if cs != nil {
+			for k, v := range i.oidcConfig.Claims.AccessToken {
+				accessTokenClaims[k] = cs[v]
+			}
+		}
+	}
 	for k, v := range i.oidcConfig.Claims.AccessToken {
-		accessTokenClaims[k] = oauth2Token.Extra(v)
+		if oauth2Token.Extra(v) != nil {
+			accessTokenClaims[k] = oauth2Token.Extra(v)
+		}
 	}
 
 	itc, _ := json.Marshal(idTokenClaims)

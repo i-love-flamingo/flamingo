@@ -10,7 +10,7 @@ type Module struct{}
 
 // Configure dependency injection
 func (*Module) Configure(injector *dingo.Injector) {
-	// injector.BindMap(new(auth.WebIdentifierFactory), "oauth2").ToInstance(oauth2Factory)
+	injector.BindMap(new(auth.RequestIdentifierFactory), "oauth2").ToInstance(oauth2Factory)
 	injector.BindMap(new(auth.RequestIdentifierFactory), "oidc").ToInstance(oidcFactory)
 }
 

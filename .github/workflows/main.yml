@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.16', '1.*' ]
+        go: [ '1.*' ]
     name: Tests
     steps:
       - uses: actions/checkout@v2
@@ -24,7 +24,28 @@ jobs:
       - name: Get dependencies
         run: go get -v -t -d ./...
       - name: Test
-        run: CGO_ENABLED=1 go test -race ./...
+        run: |
+          CGO_ENABLED=1 go run gotest.tools/gotestsum@v1.7.0 --junitfile test.xml --format testname -- -coverprofile coverage.txt -race ./...
+          go run github.com/boumenot/gocover-cobertura@v1.2.0 -ignore-gen-files -by-files < coverage.txt > coverage.xml
+      - name: Code Coverage Summary Report
+        uses: irongut/CodeCoverageSummary@v1.2.0
+        with:
+          filename: coverage.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: true
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '50 75'
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
   static-checks:
     runs-on: ubuntu-latest
     strategy:
@@ -45,13 +66,17 @@ jobs:
         run: |
           fmt=$(gofmt -l .)
           test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
-      - name: Go Lint
-        run: go run golang.org/x/lint/golint@6edffad -set_exit_status $(go list ./...)
+      - name: Go Staticcheck
+        run: go run honnef.co/go/tools/cmd/staticcheck@latest ./...
       - name: Spelling
         run: go run github.com/client9/misspell/cmd/misspell@v0.3.4 -error .
       - name: Ineffective assignments
         run: go run github.com/gordonklaus/ineffassign@4cc7213 .
+      - name: Goimports
+        run: |
+          go run golang.org/x/tools/cmd/goimports@latest -w .
+          git diff --quiet || (echo 'goimports requires code cleanup:' ; git diff ; exit 1)
       - name: Go Generate
         run: |
           go generate ./...
-          git diff --quiet || (echo 'generated go files are not up-to-date, check go generate, go.sum and go.mod' ; git diff ; exit 1)
+          git diff --quiet || (echo 'generated go files are not up-to-date, check go generate, go.sum and go.mod:' ; git diff ; exit 1)

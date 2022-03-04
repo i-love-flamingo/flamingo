@@ -1,0 +1,25 @@
+name: Semanticore
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  semanticore:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.*' ]
+    name: Semanticore
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Semanticore
+        run: go run github.com/aoepeople/semanticore@v0
+        env:
+          SEMANTICORE_TOKEN: ${{secrets.GITHUB_TOKEN}}

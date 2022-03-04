@@ -1,10 +1,7 @@
 # Changelog
 
-## Upcoming
+## Important Notes
 
-- core/locale:
-  - fixed a race condition in `TranslationService`
-  - improved translation performance in flamingo debug mode
 - core/internalauth:
   - switched from `github.com/dgrijalva/jwt-go` to `github.com/golang-jwt/jwt/v4`. this is a drop-in replacement
     
@@ -15,9 +12,6 @@
     )
     ```
     More details can be found here: https://github.com/golang-jwt/jwt/blob/main/MIGRATION_GUIDE.md
-- framework/flamingo:
-  - switch redis session backend to [rbcervilla/redisstore](https://github.com/rbcervilla/redisstore)
-  - add support for TLS and cluster mode for redis session backend
 - core/auth:
   - oauth.Identity includes Identity. This is a backwards-incompatible break
 

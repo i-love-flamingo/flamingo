@@ -11,6 +11,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.1.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-redis/redis/v8 v8.11.4
+	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/google/go-cmp v0.5.6
@@ -31,7 +32,6 @@ require (
 	github.com/prometheus/client_golang v1.4.1 // indirect
 	github.com/prometheus/procfs v0.0.10 // indirect
 	github.com/rbcervilla/redisstore/v8 v8.1.0
-	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/objx v0.2.0 // indirect

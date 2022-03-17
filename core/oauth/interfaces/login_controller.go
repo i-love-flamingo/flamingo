@@ -6,7 +6,7 @@ import (
 
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/framework/web"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -56,7 +56,7 @@ func (l *LoginController) Get(c context.Context, request *web.Request) web.Resul
 		redirecturl = absolute.String()
 	}
 
-	state := uuid.NewV4().String()
+	state := uuid.Must(uuid.NewV4()).String()
 	l.authManager.StoreAuthState(request.Session(), state)
 	request.Session().Store("auth.redirect", redirecturl)
 

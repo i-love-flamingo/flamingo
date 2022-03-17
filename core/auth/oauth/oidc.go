@@ -17,7 +17,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc/v3/oidc"
-	uuid "github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -357,7 +357,7 @@ func (i *openIDIdentifier) createSessionCode(request *web.Request, code string) 
 
 // Authenticate a user
 func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Request) web.Result {
-	state := uuid.NewV4().String()
+	state := uuid.Must(uuid.NewV4()).String()
 	i.createSessionCode(request, state)
 	options := make([]oauth2.AuthCodeOption, 0, len(i.authcodeOptions))
 	for _, o := range i.authcodeOptions {

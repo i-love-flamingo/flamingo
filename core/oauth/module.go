@@ -85,6 +85,7 @@ core oauth: {
 	useFake: bool | *false
 	fakeUserData: [string]: _
 	fakeLoginTemplate: string | *""
+	overrideIssuerURL: string | *""
 	scopes: [...string] | *["profile", "email"]
 	claims: {
 		idToken: [...string]

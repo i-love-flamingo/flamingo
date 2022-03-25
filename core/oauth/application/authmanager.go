@@ -93,6 +93,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 	TokenExtras         config.Slice `inject:"config:core.oauth.tokenExtras"`
 	DebugMode           bool         `inject:"config:flamingo.debug.mode"`
 	Enabled             bool         `inject:"config:core.oauth.enabled"`
+	OverrideIssuerURL   string       `inject:"config:core.oauth.overrideIssuerURL"`
 }) {
 	am.logger = logger.WithField(flamingo.LogKeyModule, "oauth")
 	am.router = router
@@ -110,13 +111,18 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 			return
 		}
 
+		ctx := context.Background()
+		if config.OverrideIssuerURL != "" {
+			ctx = oidc.InsecureIssuerURLContext(ctx, config.OverrideIssuerURL)
+		}
+
 		var err error
-		am.openIDProvider, err = oidc.NewProvider(context.Background(), config.Server)
+		am.openIDProvider, err = oidc.NewProvider(ctx, config.Server)
 		if err != nil {
 			if config.DebugMode {
 				am.logger.Error(err)
 			} else {
-				//panic on err since we really expect a valid authmanager state and application is in a failed state otherwise
+				// panic on err since we really expect a valid authmanager state and application is in a failed state otherwise
 				panic(err)
 			}
 		}
@@ -161,7 +167,7 @@ func (am *AuthManager) OpenIDProvider() *oidc.Provider {
 	return am.openIDProvider
 }
 
-//OAuthCtx - returns ctx that should be used to pass to oauth2 lib - it enables logging for Debug reasons
+// OAuthCtx - returns ctx that should be used to pass to oauth2 lib - it enables logging for Debug reasons
 func (am *AuthManager) OAuthCtx(ctx context.Context) context.Context {
 	if os.Getenv("OAUTHDEBUG") == "1" {
 		oauthHTTPClient := &http.Client{

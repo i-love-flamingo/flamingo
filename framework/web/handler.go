@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"github.com/gorilla/securecookie"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 type (
@@ -178,9 +179,8 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	result := chain.Next(ctx, req, rw)
 
-	if header, err := h.sessionStore.Save(ctx, req.Session()); err == nil {
-		AddHTTPHeader(rw.Header(), header)
-	} else {
+	// ensure that the session has been created before the controller call
+	if _, err := h.sessionStore.Save(ctx, req.Session()); err != nil {
 		h.logger.WithContext(ctx).Warn(err)
 	}
 
@@ -201,8 +201,10 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		span.End()
 	}
 
-	// ensure that the session has been saved in the backend
-	if _, err := h.sessionStore.Save(ctx, req.Session()); err != nil {
+	// update session and add cookie to the response
+	if header, err := h.sessionStore.Save(ctx, req.Session()); err == nil {
+		AddHTTPHeader(rw.Header(), header)
+	} else {
 		h.logger.WithContext(ctx).Warn(err)
 	}
 

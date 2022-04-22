@@ -179,8 +179,9 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	result := chain.Next(ctx, req, rw)
 
-	// ensure that the session has been created before the controller call
-	if _, err := h.sessionStore.Save(ctx, req.Session()); err != nil {
+	if header, err := h.sessionStore.Save(ctx, req.Session()); err == nil {
+		AddHTTPHeader(rw.Header(), header)
+	} else {
 		h.logger.WithContext(ctx).Warn(err)
 	}
 
@@ -201,10 +202,8 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		span.End()
 	}
 
-	// update session and add cookie to the response
-	if header, err := h.sessionStore.Save(ctx, req.Session()); err == nil {
-		AddHTTPHeader(rw.Header(), header)
-	} else {
+	// ensure that the session has been saved in the backend
+	if _, err := h.sessionStore.Save(ctx, req.Session()); err != nil {
 		h.logger.WithContext(ctx).Warn(err)
 	}
 

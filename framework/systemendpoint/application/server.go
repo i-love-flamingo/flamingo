@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"runtime"
 	"runtime/debug"
@@ -49,7 +50,6 @@ func (s *SystemServer) Notify(_ context.Context, e flamingo.Event) {
 
 // Start the systemendpoint in a separate go routine
 func (s *SystemServer) Start() {
-	s.logger.Info("systemendpoint: Start at ", s.serviceAddress)
 	serveMux := http.NewServeMux()
 	for route, handler := range s.handlerProvider() {
 		if handler != nil {
@@ -71,9 +71,15 @@ func (s *SystemServer) Start() {
 		}
 	})
 
-	s.server = &http.Server{Addr: s.serviceAddress, Handler: serveMux}
+	listener, err := net.Listen("tcp", s.serviceAddress)
+	if err != nil {
+		s.logger.Fatal(err)
+	}
+
+	s.server = &http.Server{Handler: serveMux}
 	go func() {
-		err := s.server.ListenAndServe()
+		s.logger.Info("Starting HTTP Server (systemendpoint) at ", listener.Addr())
+		err := s.server.Serve(listener)
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
@@ -82,7 +88,7 @@ func (s *SystemServer) Start() {
 
 func (s *SystemServer) shutdown() {
 	if s.server != nil {
-		s.logger.Info("systemendpoint: shutdown at ", s.serviceAddress)
+		s.logger.Info("systemendpoint: shutdown")
 		_ = s.server.Shutdown(context.Background())
 		s.server = nil
 	}

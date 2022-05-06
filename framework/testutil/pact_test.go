@@ -26,6 +26,6 @@ func TestPactEncodeLike(t *testing.T) {
 	var testencoded = PactEncodeLike(b)
 
 	if testencoded != `` {
-		//t.Fatal("wrong encoding", testencoded)
+		t.Fatal("wrong encoding", testencoded)
 	}
 }

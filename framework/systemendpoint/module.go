@@ -4,14 +4,11 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/application"
-	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
 type (
 	// Module basic struct
-	Module struct {
-		handlerProvider domain.HandlerProvider
-	}
+	Module struct{}
 )
 
 // Configure DI

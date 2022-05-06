@@ -211,11 +211,6 @@ func (registry *RouterRegistry) GetRoutes() []*Handler {
 	return registry.routes
 }
 
-// getHandler returns registered Routes
-func (registry *RouterRegistry) getHandler() map[string]handlerAction {
-	return registry.handler
-}
-
 // Alias for an existing router definition
 func (registry *RouterRegistry) Alias(name, to string) {
 	registry.alias[name] = parseHandler(to)

@@ -10,7 +10,6 @@ import (
 	interfaceMocks "flamingo.me/flamingo/v3/core/security/interface/middleware/mocks"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/gorilla/sessions"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -25,7 +24,6 @@ type (
 		context    context.Context
 		request    *web.Request
 		response   web.Result
-		session    *sessions.Session
 		webSession *web.Session
 		action     web.Action
 	}

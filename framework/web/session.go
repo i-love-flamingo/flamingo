@@ -77,7 +77,7 @@ func (s *Session) Try(key interface{}) (data interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	data, _ = s.s.Values[key]
+	data = s.s.Values[key]
 	if s.sessionSaveMode <= sessionSaveOnRead {
 		s.markDirty(key)
 	}

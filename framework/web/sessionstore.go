@@ -56,7 +56,7 @@ func (s *SessionStore) LoadByRequest(ctx context.Context, req *http.Request) (*S
 	defer span.End()
 	gs, err := s.sessionStore.New(req, s.sessionName)
 
-	span.AddAttributes(trace.StringAttribute(flamingo.LogKeySession, hashID(gs.ID)))
+	span.AddAttributes(trace.StringAttribute(string(flamingo.LogKeySession), hashID(gs.ID)))
 
 	return &Session{s: gs, sessionSaveMode: s.sessionSaveMode}, err
 }

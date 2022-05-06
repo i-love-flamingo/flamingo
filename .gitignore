@@ -3,6 +3,8 @@
 .idea
 .temp
 coverage
+coverage.txt
+coverage.xml
 context_local.yml
 
 docs/docs/3. Core Packages

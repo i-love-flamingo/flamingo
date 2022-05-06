@@ -1,9 +1,10 @@
 package cmd_test
 
 import (
+	"testing"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/cmd"
-	"testing"
 )
 
 func TestModule_Configure(t *testing.T) {

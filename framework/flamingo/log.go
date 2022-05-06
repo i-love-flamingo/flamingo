@@ -8,34 +8,34 @@ import (
 // Common logger field keys
 const (
 	LogKeyAccesslog         LogKey = "accesslog" // LogKeyAccesslog marks a logmessage belonging to an (incoming) call (value should be 1)
-	LogKeyApicall                  = "apicall"   // LogKeyApicall marks a logmessage belonging to an (outgoing) api call (value should be 1)
-	LogKeyArea                     = "area"
-	LogKeyBusinessID               = "businessId"
-	LogKeyCategory                 = "category"
-	LogKeyModule                   = "module"
-	LogKeySubCategory              = "sub_category"
-	LogKeyClientIP                 = "client_ip"
-	LogKeyCode                     = "code"
-	LogKeyConnectionStatus         = "connection_status"
-	LogKeyCorrelationID            = "correlationId"
-	LogKeyTraceID                  = "traceID"
-	LogKeySpanID                   = "spanID"
-	LogKeyLevel                    = "level"
-	LogKeyMessage                  = "message"
-	LogKeyMethod                   = "method"
-	LogKeySession                  = "session"
-	LogKeyPath                     = "path"
-	LogKeyReferer                  = "referer"
-	LogKeyRequest                  = "request"
-	LogKeyRequestTime              = "request_time"
-	LogKeyRequestedEndpoint        = "requested_endpoint"
-	LogKeyRequestedURL             = "requested_url"
-	LogKeyResponse                 = "response"
-	LogKeyResponseCode             = "response_code"
-	LogKeyResponseTime             = "response_time"
-	LogKeySource                   = "source"
-	LogKeyTimestamp                = "@timestamp"
-	LogKeyTrace                    = "trace"
+	LogKeyApicall           LogKey = "apicall"   // LogKeyApicall marks a logmessage belonging to an (outgoing) api call (value should be 1)
+	LogKeyArea              LogKey = "area"
+	LogKeyBusinessID        LogKey = "businessId"
+	LogKeyCategory          LogKey = "category"
+	LogKeyModule            LogKey = "module"
+	LogKeySubCategory       LogKey = "sub_category"
+	LogKeyClientIP          LogKey = "client_ip"
+	LogKeyCode              LogKey = "code"
+	LogKeyConnectionStatus  LogKey = "connection_status"
+	LogKeyCorrelationID     LogKey = "correlationId"
+	LogKeyTraceID           LogKey = "traceID"
+	LogKeySpanID            LogKey = "spanID"
+	LogKeyLevel             LogKey = "level"
+	LogKeyMessage           LogKey = "message"
+	LogKeyMethod            LogKey = "method"
+	LogKeySession           LogKey = "session"
+	LogKeyPath              LogKey = "path"
+	LogKeyReferer           LogKey = "referer"
+	LogKeyRequest           LogKey = "request"
+	LogKeyRequestTime       LogKey = "request_time"
+	LogKeyRequestedEndpoint LogKey = "requested_endpoint"
+	LogKeyRequestedURL      LogKey = "requested_url"
+	LogKeyResponse          LogKey = "response"
+	LogKeyResponseCode      LogKey = "response_code"
+	LogKeyResponseTime      LogKey = "response_time"
+	LogKeySource            LogKey = "source"
+	LogKeyTimestamp         LogKey = "@timestamp"
+	LogKeyTrace             LogKey = "trace"
 )
 
 type (
@@ -91,7 +91,7 @@ func (l *StdLogger) Warn(args ...interface{}) {
 }
 
 // WithContext currently does nothing
-func (l *StdLogger) WithContext(ctx context.Context) Logger {
+func (l *StdLogger) WithContext(_ context.Context) Logger {
 	return l
 }
 
@@ -119,34 +119,34 @@ func (l *StdLogger) Flush() {}
 type NullLogger struct{}
 
 // WithContext null-implementation
-func (n NullLogger) WithContext(ctx context.Context) Logger { return n }
+func (n NullLogger) WithContext(_ context.Context) Logger { return n }
 
 // WithField null-implementation
-func (n NullLogger) WithField(key LogKey, value interface{}) Logger { return n }
+func (n NullLogger) WithField(_ LogKey, _ interface{}) Logger { return n }
 
 // WithFields null-implementation
-func (n NullLogger) WithFields(fields map[LogKey]interface{}) Logger { return n }
+func (n NullLogger) WithFields(_ map[LogKey]interface{}) Logger { return n }
 
 // Debug null-implementation
-func (NullLogger) Debug(args ...interface{}) {}
+func (NullLogger) Debug(_ ...interface{}) {}
 
 // Debugf null-implementation
-func (NullLogger) Debugf(log string, args ...interface{}) {}
+func (NullLogger) Debugf(_ string, _ ...interface{}) {}
 
 // Info null-implementation
-func (NullLogger) Info(args ...interface{}) {}
+func (NullLogger) Info(_ ...interface{}) {}
 
 // Warn null-implementation
-func (NullLogger) Warn(args ...interface{}) {}
+func (NullLogger) Warn(_ ...interface{}) {}
 
 // Error null-implementation
-func (NullLogger) Error(args ...interface{}) {}
+func (NullLogger) Error(_ ...interface{}) {}
 
 // Fatal null-implementation
-func (NullLogger) Fatal(args ...interface{}) {}
+func (NullLogger) Fatal(_ ...interface{}) {}
 
 // Panic null-implementation
-func (NullLogger) Panic(args ...interface{}) {}
+func (NullLogger) Panic(_ ...interface{}) {}
 
 // Flush null-implementation
 func (n NullLogger) Flush() {}

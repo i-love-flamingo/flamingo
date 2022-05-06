@@ -114,7 +114,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	host := req.Host
-	if strings.Index(host, ":") > -1 {
+	if strings.Contains(host, ":") {
 		host = strings.Split(host, ":")[0]
 	}
 

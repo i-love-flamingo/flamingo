@@ -1,10 +1,10 @@
 package application
 
 import (
-	"flamingo.me/flamingo/v3/core/locale/domain"
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/stretchr/testify/assert"
 )

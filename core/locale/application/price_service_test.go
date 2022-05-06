@@ -1,12 +1,13 @@
 package application
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/leekchan/accounting"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestPriceService_GetConfigForCurrency(t *testing.T) {

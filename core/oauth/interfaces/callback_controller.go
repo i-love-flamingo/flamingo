@@ -74,7 +74,7 @@ func (cc *CallbackController) Get(ctx context.Context, request *web.Request) web
 		}
 
 		stats.Record(ctx, loginFailedCount.M(1))
-		return cc.responder.ServerError(errors.New("Invalid State"))
+		return cc.responder.ServerError(errors.New("invalid state"))
 	}
 
 	// cleanup previous token information

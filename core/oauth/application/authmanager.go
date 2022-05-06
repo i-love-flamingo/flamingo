@@ -65,7 +65,7 @@ type (
 // RoundTrip implements RoundTripper interface and adds logging
 func (f *loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req == nil {
-		return nil, errors.New("No request given")
+		return nil, errors.New("no request given")
 	}
 	b, err := httputil.DumpRequest(req, true)
 	log.Println()
@@ -432,8 +432,7 @@ func (am *AuthManager) StoreTokenDetails(ctx context.Context, session *web.Sessi
 		tokenExtras.Add(extra, parsed)
 	}
 
-	var token oauth2.Token
-	token = *oauth2Token
+	token := *oauth2Token
 	session.Store(keyToken, token)
 	session.Store(keyRawIDToken, rawToken)
 	session.Store(keyTokenExtras, tokenExtras)

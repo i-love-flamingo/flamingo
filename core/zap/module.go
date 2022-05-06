@@ -105,12 +105,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		Sampling:          samplingConfig,
 		Encoding:          output,
 		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey:     flamingo.LogKeyMessage,
-			LevelKey:       flamingo.LogKeyLevel,
-			TimeKey:        flamingo.LogKeyTimestamp,
+			MessageKey:     string(flamingo.LogKeyMessage),
+			LevelKey:       string(flamingo.LogKeyLevel),
+			TimeKey:        string(flamingo.LogKeyTimestamp),
 			NameKey:        "logger",
-			CallerKey:      flamingo.LogKeySource,
-			StacktraceKey:  flamingo.LogKeyTrace,
+			CallerKey:      string(flamingo.LogKeySource),
+			StacktraceKey:  string(flamingo.LogKeyTrace),
 			LineEnding:     zapcore.DefaultLineEnding,
 			EncodeLevel:    encoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
@@ -151,7 +151,7 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if logger, ok := subscriber.logger.(*Logger); ok {
 			logger.Debug("Zap Logger shutdown event")
-			logger.Sync()
+			_ = logger.Sync()
 		}
 	}
 }

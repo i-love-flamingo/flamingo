@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"flamingo.me/dingo"
@@ -156,7 +158,6 @@ func (m *Module) serve(
 			}
 		}
 
-		m.logger.WithField("category", "prefixrouter").Info("Starting HTTP Server (Prefixrouter) at ", *addr, ".....")
 		m.server = &http.Server{
 			Addr: *addr,
 			Handler: &ochttp.Handler{
@@ -174,12 +175,19 @@ func (m *Module) serve(
 }
 
 func (m *Module) listenAndServe() error {
-	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: m.server.Addr})
+	listener, err := net.Listen("tcp", m.server.Addr)
+	if err != nil {
+		return err
+	}
+
+	addr := listener.Addr().String()
+	m.logger.WithField("category", "prefixrouter").Info(fmt.Sprintf("Starting HTTP Server (Prefixrouter) at %s", addr))
+
+	port := addr[strings.LastIndex(addr, ":")+1:]
+	m.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: port})
 	defer m.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
-	err := m.server.ListenAndServe()
-
-	return err
+	return m.server.Serve(listener)
 }
 
 // Notify handles the app shutdown event

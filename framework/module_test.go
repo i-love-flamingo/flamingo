@@ -1,9 +1,10 @@
 package framework_test
 
 import (
+	"testing"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework"
-	"testing"
 )
 
 func TestModule_Configure(t *testing.T) {

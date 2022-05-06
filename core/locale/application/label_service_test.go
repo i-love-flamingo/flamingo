@@ -1,12 +1,13 @@
 package application
 
 import (
+	"testing"
+
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestLabelService_NewLabel(t *testing.T) {

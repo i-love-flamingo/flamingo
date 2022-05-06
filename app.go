@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"reflect"
@@ -362,7 +363,6 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", a.server.Addr))
 			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
 
 			err := a.listenAndServe()
@@ -383,14 +383,23 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 }
 
 func (a *servemodule) listenAndServe() error {
-	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: a.server.Addr})
+	listener, err := net.Listen("tcp", a.server.Addr)
+	if err != nil {
+		return err
+	}
+
+	addr := listener.Addr().String()
+	a.logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
+
+	port := addr[strings.LastIndex(addr, ":")+1:]
+	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: port})
 	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
 	if a.certFile != "" && a.keyFile != "" {
-		return a.server.ListenAndServeTLS(a.certFile, a.keyFile)
+		return a.server.ServeTLS(listener, a.certFile, a.keyFile)
 	}
 
-	return a.server.ListenAndServe()
+	return a.server.Serve(listener)
 }
 
 // Notify upon flamingo Shutdown event

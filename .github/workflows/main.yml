@@ -24,6 +24,22 @@ jobs:
       - name: Get dependencies
         run: go get -v -t -d ./...
       - name: Test
+        run: CGO_ENABLED=1 go test -race ./...
+  coverage:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.*' ]
+    name: Coverage Report
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Get dependencies
+        run: go get -v -t -d ./...
+      - name: Test
         run: |
           CGO_ENABLED=1 go run gotest.tools/gotestsum@v1.7.0 --junitfile test.xml --format testname -- -coverprofile coverage.txt -race ./...
           go run github.com/boumenot/gocover-cobertura@v1.2.0 -ignore-gen-files -by-files < coverage.txt > coverage.xml
@@ -45,7 +61,6 @@ jobs:
         with:
           recreate: true
           path: code-coverage-results.md
-
   static-checks:
     runs-on: ubuntu-latest
     strategy:

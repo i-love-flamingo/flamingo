@@ -323,6 +323,7 @@ type servemodule struct {
 	logger            flamingo.Logger
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler
 	certFile, keyFile string
+	publicEndpoint    bool
 }
 
 // Inject basic application dependencies
@@ -332,7 +333,8 @@ func (a *servemodule) Inject(
 	logger flamingo.Logger,
 	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
 	cfg *struct {
-		Port int `inject:"config:core.serve.port"`
+		Port           int  `inject:"config:core.serve.port"`
+		PublicEndpoint bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
 	},
 ) {
 	a.router = router
@@ -342,6 +344,7 @@ func (a *servemodule) Inject(
 		Addr: fmt.Sprintf(":%d", cfg.Port),
 	}
 	a.configuredSampler = configuredSampler
+	a.publicEndpoint = cfg.PublicEndpoint
 }
 
 // Configure dependency injection
@@ -363,7 +366,7 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: true, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
+			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: a.publicEndpoint, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
 
 			err := a.listenAndServe()
 			if err != nil {

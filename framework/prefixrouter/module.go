@@ -25,6 +25,7 @@ type Module struct {
 	eventRouter               flamingo.EventRouter
 	logger                    flamingo.Logger
 	enableRootRedirectHandler bool
+	publicEndpoint            bool
 }
 
 // Inject dependencies
@@ -33,11 +34,13 @@ func (m *Module) Inject(
 	logger flamingo.Logger,
 	config *struct {
 		EnableRootRedirectHandler bool `inject:"config:flamingo.prefixrouter.rootRedirectHandler.enabled,optional"`
+		PublicEndpoint            bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
 	},
 ) {
 	m.eventRouter = eventRouter
 	m.logger = logger
 	m.enableRootRedirectHandler = config.EnableRootRedirectHandler
+	m.publicEndpoint = config.PublicEndpoint
 }
 
 // Configure DI
@@ -161,7 +164,7 @@ func (m *Module) serve(
 		m.server = &http.Server{
 			Addr: *addr,
 			Handler: &ochttp.Handler{
-				IsPublicEndpoint: true,
+				IsPublicEndpoint: m.publicEndpoint,
 				Handler:          frontRouter,
 				GetStartOptions:  opencensus.URLPrefixSampler(whitelist, blacklist, configuredURLPrefixSampler.AllowParentTrace),
 			},

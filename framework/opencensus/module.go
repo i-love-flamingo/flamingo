@@ -186,6 +186,7 @@ flamingo: opencensus: {
 		blacklist: [...string]
 		allowParentTrace: bool | *true
 	}
+	publicEndpoint: bool | *true
 }
 `
 }

@@ -18,7 +18,7 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/hashicorp/golang-lru v0.5.3
-	github.com/labstack/gommon v0.0.0-20180613044413-d6898124de91
+	github.com/labstack/gommon v0.3.1
 	github.com/leekchan/accounting v0.0.0-20191104051123-0b9b0bd19c36
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/openzipkin/zipkin-go v0.2.2
@@ -49,8 +49,8 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-colorable v0.1.11 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mpvl/unique v0.0.0-20150818121801-cbe035fff7de // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect

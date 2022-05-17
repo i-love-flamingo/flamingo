@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   dex1:
-    image: quay.io/dexidp/dex:v2.21.0
+    image: quay.io/dexidp/dex:v2.28.1
     volumes:
       - ./dex1.yml:/dex.yml
     command: serve /dex.yml

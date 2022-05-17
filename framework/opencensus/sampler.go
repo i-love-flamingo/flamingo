@@ -14,15 +14,15 @@ import (
 // If the blacklist is set it will disable sampling again.
 // If takeParentDecision is set we allow the decision to be taken from incoming tracing,
 // otherwise we enforce our decision
-func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func(*http.Request) trace.StartOptions {
+func URLPrefixSampler(allowed, blocked []string, allowParentTrace bool) func(*http.Request) trace.StartOptions {
 	return func(request *http.Request) trace.StartOptions {
 
 		path := request.URL.Path
 
-		// empty whitelist means all
-		sample := len(whitelist) == 0
-		// check whitelist if len is > 0, and decide if we should sample
-		for _, p := range whitelist {
+		// empty allowed means all
+		sample := len(allowed) == 0
+		// check allowed if len is > 0, and decide if we should sample
+		for _, p := range allowed {
 			if strings.HasPrefix(path, p) {
 				sample = true
 				break
@@ -38,8 +38,8 @@ func URLPrefixSampler(whitelist, blacklist []string, allowParentTrace bool) func
 			}
 		}
 
-		// check sampling decision against blacklist
-		for _, p := range blacklist {
+		// check sampling decision against blocked
+		for _, p := range blocked {
 			if strings.HasPrefix(path, p) {
 				sample = false
 				break
@@ -80,9 +80,9 @@ func (c *ConfiguredURLPrefixSampler) Inject(
 
 // GetStartOptions constructor for ochttp.Server
 func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace.StartOptions {
-	var whitelist, blacklist []string
-	_ = c.Whitelist.MapInto(&whitelist)
-	_ = c.Blacklist.MapInto(&blacklist)
+	var allowed, blocked []string
+	_ = c.Whitelist.MapInto(&allowed)
+	_ = c.Blacklist.MapInto(&blocked)
 
-	return URLPrefixSampler(whitelist, blacklist, c.AllowParentTrace)
+	return URLPrefixSampler(allowed, blocked, c.AllowParentTrace)
 }

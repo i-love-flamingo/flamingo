@@ -26,7 +26,7 @@ require (
 	github.com/rbcervilla/redisstore/v8 v8.1.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.23.0
 	go.uber.org/automaxprocs v1.3.0

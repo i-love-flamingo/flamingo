@@ -16,7 +16,7 @@ import (
 func TestOauthService(t *testing.T) {
 	service := new(application.OauthService)
 	service.Inject(&struct {
-		BaseURL string "inject:\"config:core.internalauth.baseurl\""
+		BaseURL string `inject:"config:core.internalauth.baseurl"`
 	}{
 		BaseURL: "http://example.com/",
 	})

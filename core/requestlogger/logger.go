@@ -10,7 +10,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/labstack/gommon/color"
 )
 
 type (
@@ -72,18 +71,32 @@ func humanBytes(bc int) string {
 	return strconv.Itoa(bc) + "b"
 }
 
-func statusCodeColor(code int) func(msg interface{}, styles ...string) string {
+const (
+	green  = "32"
+	blue   = "34"
+	yellow = "33"
+	red    = "31"
+	grey   = "90"
+)
+
+func colored(color string) func(msg string) string {
+	return func(msg string) string {
+		return fmt.Sprintf("\x1b[%sm%s\x1b[0m", color, msg)
+	}
+}
+
+func statusCodeColor(code int) func(msg string) string {
 	switch {
 	case code >= 200 && code < 300:
-		return color.Green
+		return colored(green)
 	case code >= 300 && code < 400:
-		return color.Blue
+		return colored(blue)
 	case code >= 400 && code < 500:
-		return color.Yellow
+		return colored(yellow)
 	case code == 0 || (code >= 500 && code < 600):
-		return color.Red
+		return colored(red)
 	default:
-		return color.Grey
+		return colored(grey)
 	}
 }
 

@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.23.0
-	go.uber.org/automaxprocs v1.3.0
+	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.17.0
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 )

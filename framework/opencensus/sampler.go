@@ -12,9 +12,9 @@ import (
 //
 // If the whitelist is empty it is treated as allowed, otherwise checked first.
 // If the blacklist is set it will disable sampling again.
-// If takeParentDecision is set we allow the decision to be taken from incoming tracing,
+// If ignoreParentDecision is set we allow the decision to be taken from incoming tracing,
 // otherwise we enforce our decision
-func URLPrefixSampler(allowed, blocked []string, allowParentTrace bool) func(*http.Request) trace.StartOptions {
+func URLPrefixSampler(allowed, blocked []string, ignoreParentDecision bool) func(*http.Request) trace.StartOptions {
 	return func(request *http.Request) trace.StartOptions {
 
 		path := request.URL.Path
@@ -33,7 +33,7 @@ func URLPrefixSampler(allowed, blocked []string, allowParentTrace bool) func(*ht
 		if !sample {
 			return trace.StartOptions{
 				Sampler: func(p trace.SamplingParameters) trace.SamplingDecision {
-					return trace.SamplingDecision{Sample: !allowParentTrace && p.ParentContext.IsSampled()}
+					return trace.SamplingDecision{Sample: !ignoreParentDecision && p.ParentContext.IsSampled()}
 				},
 			}
 		}
@@ -49,7 +49,7 @@ func URLPrefixSampler(allowed, blocked []string, allowParentTrace bool) func(*ht
 		// we sample, or the parent sampled
 		return trace.StartOptions{
 			Sampler: func(p trace.SamplingParameters) trace.SamplingDecision {
-				return trace.SamplingDecision{Sample: (!allowParentTrace && p.ParentContext.IsSampled()) || sample}
+				return trace.SamplingDecision{Sample: (!ignoreParentDecision && p.ParentContext.IsSampled()) || sample}
 			},
 		}
 	}

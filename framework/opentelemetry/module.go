@@ -3,6 +3,7 @@ package opentelemetry
 import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -13,7 +14,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -53,7 +56,7 @@ var schemaURL = "https://flamingo.me/schemas/1.0.0"
 
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
-
+		http.DefaultTransport = &correlationIDInjector{next: otelhttp.NewTransport(http.DefaultTransport)}
 		// traces
 		tracerProviderOptions := make([]tracesdk.TracerProviderOption, 0, 3)
 		// Create the Jaeger exporter
@@ -99,4 +102,16 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 	global.SetMeterProvider(exp.MeterProvider())
 	injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exp)
+}
+
+type correlationIDInjector struct {
+	next http.RoundTripper
+}
+
+func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
+	span := trace.SpanFromContext(req.Context())
+	if span.IsRecording() {
+		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID().String())
+	}
+	return rt.next.RoundTrip(req)
 }

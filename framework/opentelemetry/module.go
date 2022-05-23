@@ -28,7 +28,6 @@ var (
 type Module struct {
 	endpoint       string
 	serviceName    string
-	serviceAddr    string
 	jaegerEnable   bool
 	zipkinEnable   bool
 	zipkinEndpoint string

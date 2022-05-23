@@ -12,9 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	"flamingo.me/dingo"
 	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 
 	"flamingo.me/flamingo/v3/core/runtime"
 	"flamingo.me/flamingo/v3/core/zap"
@@ -22,7 +24,6 @@ import (
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -331,7 +332,7 @@ type servemodule struct {
 	server            *http.Server
 	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler
+	configuredSampler *opentelemetry.ConfiguredURLPrefixSampler
 	certFile, keyFile string
 	publicEndpoint    bool
 }
@@ -341,10 +342,10 @@ func (a *servemodule) Inject(
 	router *web.Router,
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
+	configuredSampler *opentelemetry.ConfiguredURLPrefixSampler,
 	cfg *struct {
 		Port           int  `inject:"config:core.serve.port"`
-		PublicEndpoint bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
+		PublicEndpoint bool `inject:"config:flamingo.opentelemetry.publicEndpoint,optional"`
 	},
 ) {
 	a.router = router
@@ -376,7 +377,13 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: a.publicEndpoint, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
+			options := []otelhttp.Option{
+				otelhttp.WithFilter(a.configuredSampler.GetFilterOption()),
+			}
+			if a.publicEndpoint {
+				options = append(options, otelhttp.WithPublicEndpoint())
+			}
+			a.server.Handler = otelhttp.NewHandler(a.router.Handler(), "server", options...)
 
 			err := a.listenAndServe()
 			if err != nil {

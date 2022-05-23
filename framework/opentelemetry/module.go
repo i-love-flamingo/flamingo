@@ -1,6 +1,10 @@
 package opentelemetry
 
 import (
+	"log"
+	"net/http"
+	"sync"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -15,9 +19,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-	"log"
-	"net/http"
-	"sync"
 )
 
 var (

@@ -7,9 +7,11 @@ import (
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
+	octrace "go.opencensus.io/trace"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/bridge/opencensus"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/exporters/zipkin"
@@ -52,7 +54,11 @@ func (m *Module) Inject(
 	return m
 }
 
-var schemaURL = "https://flamingo.me/schemas/1.0.0"
+const (
+	name      = "instrumentation/flamingo"
+	version   = "1.0.0"
+	schemaURL = "https://flamingo.me/schemas/1.0.0"
+)
 
 func (m *Module) Configure(injector *dingo.Injector) {
 	registerOnce.Do(func() {
@@ -63,7 +69,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		if m.jaegerEnable {
 			exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(m.endpoint)))
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Failed to initialze Jeager exporter: %v", err)
 			}
 			tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
 		}
@@ -73,7 +79,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				m.zipkinEndpoint,
 			)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("Failed to initialize Zipkin exporter: %v", err)
 			}
 			tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
 		}
@@ -98,7 +104,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	// TODO: which Config can be tweaked?
 	exp, err := prometheus.New(prometheus.Config{}, &basic.Controller{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to initialize Prometheus exporter: %v", err)
 	}
 	global.SetMeterProvider(exp.MeterProvider())
 	injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exp)
@@ -114,4 +120,19 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID().String())
 	}
 	return rt.next.RoundTrip(req)
+}
+
+type Instrumentation struct {
+	tracer trace.Tracer
+}
+
+func NewInstrumentation(tp trace.TracerProvider) *Instrumentation {
+	if tp == nil {
+		tp = otel.GetTracerProvider()
+	}
+	tr := tp.Tracer(name, trace.WithInstrumentationVersion(version))
+	octrace.DefaultTracer = opencensus.NewTracer(tr)
+	return &Instrumentation{
+		tracer: tr,
+	}
 }

@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"sync"
 
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	octrace "go.opencensus.io/trace"
@@ -20,7 +23,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -122,9 +124,13 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 
 type Instrumentation struct {
 	tracer trace.Tracer
+	meter  metric.Meter
 }
 
-var tracer trace.Tracer
+var (
+	tracer trace.Tracer
+	meter  metric.Meter
+)
 
 func NewInstrumentation() *Instrumentation {
 	createTracerOnce.Do(func() {
@@ -132,8 +138,12 @@ func NewInstrumentation() *Instrumentation {
 		tr := tp.Tracer(name, trace.WithInstrumentationVersion(version))
 		octrace.DefaultTracer = opencensus.NewTracer(tr)
 		tracer = tr
+
+		mp := global.MeterProvider()
+		meter = mp.Meter(name, metric.WithInstrumentationVersion(version))
 	})
 	return &Instrumentation{
 		tracer: tracer,
+		meter:  meter,
 	}
 }

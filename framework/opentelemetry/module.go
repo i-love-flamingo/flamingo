@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	registerOnce sync.Once
+	createTracerOnce sync.Once
 )
 
 type Module struct {
@@ -61,43 +61,41 @@ const (
 )
 
 func (m *Module) Configure(injector *dingo.Injector) {
-	registerOnce.Do(func() {
-		http.DefaultTransport = &correlationIDInjector{next: otelhttp.NewTransport(http.DefaultTransport)}
-		// traces
-		tracerProviderOptions := make([]tracesdk.TracerProviderOption, 0, 3)
-		// Create the Jaeger exporter
-		if m.jaegerEnable {
-			exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(m.endpoint)))
-			if err != nil {
-				log.Fatalf("Failed to initialze Jeager exporter: %v", err)
-			}
-			tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
+	http.DefaultTransport = &correlationIDInjector{next: otelhttp.NewTransport(http.DefaultTransport)}
+	// traces
+	tracerProviderOptions := make([]tracesdk.TracerProviderOption, 0, 3)
+	// Create the Jaeger exporter
+	if m.jaegerEnable {
+		exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(m.endpoint)))
+		if err != nil {
+			log.Fatalf("Failed to initialze Jeager exporter: %v", err)
 		}
-		// Create the Zipkin exporter
-		if m.zipkinEnable {
-			exp, err := zipkin.New(
-				m.zipkinEndpoint,
-			)
-			if err != nil {
-				log.Fatalf("Failed to initialize Zipkin exporter: %v", err)
-			}
-			tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
+		tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
+	}
+	// Create the Zipkin exporter
+	if m.zipkinEnable {
+		exp, err := zipkin.New(
+			m.zipkinEndpoint,
+		)
+		if err != nil {
+			log.Fatalf("Failed to initialize Zipkin exporter: %v", err)
 		}
-		tracerProviderOptions = append(tracerProviderOptions,
-			tracesdk.WithResource(resource.NewWithAttributes(
-				// TODO: should we use a schemaURL? https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md#how-schemas-work
-				schemaURL,
-				attribute.String("service.name", m.serviceName),
-			)),
-			tracesdk.WithSampler(tracesdk.NeverSample()),
-		)
-		tp := tracesdk.NewTracerProvider(
-			tracerProviderOptions...,
-		)
-		otel.SetTracerProvider(tp)
-		// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md#propagators-distribution
-		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-	})
+		tracerProviderOptions = append(tracerProviderOptions, tracesdk.WithBatcher(exp))
+	}
+	tracerProviderOptions = append(tracerProviderOptions,
+		tracesdk.WithResource(resource.NewWithAttributes(
+			// TODO: should we use a schemaURL? https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md#how-schemas-work
+			schemaURL,
+			attribute.String("service.name", m.serviceName),
+		)),
+		tracesdk.WithSampler(tracesdk.NeverSample()),
+	)
+	tp := tracesdk.NewTracerProvider(
+		tracerProviderOptions...,
+	)
+	otel.SetTracerProvider(tp)
+	// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md#propagators-distribution
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	// metrics
 	// TODO: opentelemetry-go doesn't provide cpu metrics, is there a better solution? https://pkg.go.dev/go.opentelemetry.io/contrib/plugins/runtime
@@ -126,13 +124,16 @@ type Instrumentation struct {
 	tracer trace.Tracer
 }
 
-func NewInstrumentation(tp trace.TracerProvider) *Instrumentation {
-	if tp == nil {
-		tp = otel.GetTracerProvider()
-	}
-	tr := tp.Tracer(name, trace.WithInstrumentationVersion(version))
-	octrace.DefaultTracer = opencensus.NewTracer(tr)
+var tracer trace.Tracer
+
+func NewInstrumentation() *Instrumentation {
+	createTracerOnce.Do(func() {
+		tp := otel.GetTracerProvider()
+		tr := tp.Tracer(name, trace.WithInstrumentationVersion(version))
+		octrace.DefaultTracer = opencensus.NewTracer(tr)
+		tracer = tr
+	})
 	return &Instrumentation{
-		tracer: tr,
+		tracer: tracer,
 	}
 }

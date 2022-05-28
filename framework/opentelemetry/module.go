@@ -5,6 +5,10 @@ import (
 	"net/http"
 	"sync"
 
+	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
+	"go.opentelemetry.io/otel/sdk/metric/aggregator/histogram"
+	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
+
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
@@ -20,7 +24,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
+	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
+	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -58,7 +64,6 @@ func (m *Module) Inject(
 
 const (
 	name      = "instrumentation/flamingo"
-	version   = "1.0.0"
 	schemaURL = "https://flamingo.me/schemas/1.0.0"
 )
 
@@ -86,7 +91,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 	tracerProviderOptions = append(tracerProviderOptions,
 		tracesdk.WithResource(resource.NewWithAttributes(
-			// TODO: should we use a schemaURL? https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/overview.md#how-schemas-work
 			schemaURL,
 			attribute.String("service.name", m.serviceName),
 		)),
@@ -100,13 +104,30 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	// metrics
-	// TODO: opentelemetry-go doesn't provide cpu metrics, is there a better solution? https://pkg.go.dev/go.opentelemetry.io/contrib/plugins/runtime
-	// TODO: which Config can be tweaked?
-	exp, err := prometheus.New(prometheus.Config{}, &basic.Controller{})
+	config := prometheus.Config{
+		DefaultHistogramBoundaries: []float64{1, 2, 5, 10, 20, 50},
+	}
+	c := controller.New(
+		processor.NewFactory(
+			selector.NewWithHistogramDistribution(
+				histogram.WithExplicitBoundaries(config.DefaultHistogramBoundaries),
+			),
+			aggregation.CumulativeTemporalitySelector(),
+			processor.WithMemory(true),
+		),
+		controller.WithResource(resource.NewWithAttributes(
+			schemaURL,
+			attribute.String("service.name", m.serviceName),
+		)),
+	)
+	exp, err := prometheus.New(config, c)
 	if err != nil {
 		log.Fatalf("Failed to initialize Prometheus exporter: %v", err)
 	}
 	global.SetMeterProvider(exp.MeterProvider())
+	if err := runtimemetrics.Start(); err != nil {
+		panic(err)
+	}
 	injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exp)
 }
 
@@ -123,8 +144,8 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 }
 
 type Instrumentation struct {
-	tracer trace.Tracer
-	meter  metric.Meter
+	Tracer trace.Tracer
+	Meter  metric.Meter
 }
 
 var (
@@ -135,15 +156,15 @@ var (
 func NewInstrumentation() *Instrumentation {
 	createTracerOnce.Do(func() {
 		tp := otel.GetTracerProvider()
-		tr := tp.Tracer(name, trace.WithInstrumentationVersion(version))
+		tr := tp.Tracer(name, trace.WithInstrumentationVersion(SemVersion()))
 		octrace.DefaultTracer = opencensus.NewTracer(tr)
 		tracer = tr
 
 		mp := global.MeterProvider()
-		meter = mp.Meter(name, metric.WithInstrumentationVersion(version))
+		meter = mp.Meter(name, metric.WithInstrumentationVersion(SemVersion()))
 	})
 	return &Instrumentation{
-		tracer: tracer,
-		meter:  meter,
+		Tracer: tracer,
+		Meter:  meter,
 	}
 }

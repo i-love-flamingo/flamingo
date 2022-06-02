@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync"
 
+	"go.opentelemetry.io/otel/baggage"
+
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel/sdk/metric/aggregator/histogram"
 	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
@@ -33,6 +35,8 @@ import (
 
 var (
 	createTracerOnce sync.Once
+	createMeterOnce  sync.Once
+	KeyArea, _       = baggage.NewKeyProperty("area")
 )
 
 type Module struct {
@@ -153,18 +157,20 @@ var (
 	meter  metric.Meter
 )
 
-func NewInstrumentation() *Instrumentation {
+func GetTracer() trace.Tracer {
 	createTracerOnce.Do(func() {
 		tp := otel.GetTracerProvider()
 		tr := tp.Tracer(name, trace.WithInstrumentationVersion(SemVersion()))
 		octrace.DefaultTracer = opencensus.NewTracer(tr)
 		tracer = tr
+	})
+	return tracer
+}
 
+func GetMeter() metric.Meter {
+	createMeterOnce.Do(func() {
 		mp := global.MeterProvider()
 		meter = mp.Meter(name, metric.WithInstrumentationVersion(SemVersion()))
 	})
-	return &Instrumentation{
-		Tracer: tracer,
-		Meter:  meter,
-	}
+	return meter
 }

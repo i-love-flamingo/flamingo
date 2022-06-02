@@ -6,11 +6,13 @@ import (
 	"io"
 	"net/http"
 
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/otel/attribute"
+
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/zemirco/memorystore"
-	"go.opencensus.io/trace"
 )
 
 // SessionStore handles flamingo's session loading and storing.
@@ -50,13 +52,11 @@ func (s *SessionStore) LoadByRequest(ctx context.Context, req *http.Request) (*S
 		return EmptySession(), nil
 	}
 
-	var span *trace.Span
-
-	_, span = trace.StartSpan(ctx, "flamingo/web/session/load")
+	_, span := opentelemetry.GetTracer().Start(ctx, "flamingo/web/session/load")
 	defer span.End()
 	gs, err := s.sessionStore.New(req, s.sessionName)
 
-	span.AddAttributes(trace.StringAttribute(string(flamingo.LogKeySession), hashID(gs.ID)))
+	span.SetAttributes(attribute.String(string(flamingo.LogKeySession), hashID(gs.ID)))
 
 	return &Session{s: gs, sessionSaveMode: s.sessionSaveMode}, err
 }
@@ -136,7 +136,7 @@ func (s *SessionStore) Save(ctx context.Context, session *Session) (http.Header,
 		session.dirty = nil
 	}
 
-	_, span := trace.StartSpan(ctx, "flamingo/web/session/save")
+	_, span := opentelemetry.GetTracer().Start(ctx, "flamingo/web/session/save")
 	defer span.End()
 	rw := headerResponseWriter(make(http.Header))
 	if err := s.sessionStore.Save(s.requestFromID(session.s.ID), rw, gs); err != nil {

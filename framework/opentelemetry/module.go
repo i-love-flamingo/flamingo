@@ -126,7 +126,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	}
 	global.SetMeterProvider(exp.MeterProvider())
 	if err := runtimemetrics.Start(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	injector.BindMap((*domain.Handler)(nil), "/metrics").ToInstance(exp)
 }

@@ -82,7 +82,7 @@ func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) erro
 		err = r.result.Apply(ctx, responseWriter)
 	}
 
-	statusBaggage, err := baggage.NewMember(keyHTTPStatus.Key(), strconv.Itoa(responseWriter.status/100)+"xx")
+	statusBaggage, _ := baggage.NewMember(keyHTTPStatus.Key(), strconv.Itoa(responseWriter.status/100)+"xx")
 	bagg := baggage.FromContext(ctx)
 	bagg, _ = bagg.SetMember(statusBaggage)
 	c := baggage.ContextWithBaggage(ctx, bagg)

@@ -19,6 +19,10 @@ func (*testIdentifier) Identify(context.Context, *web.Request) (Identity, error)
 	return &testIdentity{}, nil
 }
 
+func (*testIdentifier) RefreshIdentity(ctx context.Context, request *web.Request) error {
+	return nil
+}
+
 type testIdentity struct{}
 
 func (*testIdentity) Subject() string {
@@ -67,5 +71,17 @@ func Test_WebIdentityServiceIdentifyAs(t *testing.T) {
 		assert.Error(t, err)
 		t.Log(err)
 		assert.Nil(t, identity)
+	})
+
+	t.Run("refresh identity", func(t *testing.T) {
+		identity := s.Identify(context.Background(), nil)
+		assert.NotNil(t, identity)
+
+		identifier := s.RequestIdentifier(identity.Broker())
+		assert.NotNil(t, identifier)
+
+		refresher, ok := identifier.(WebIdentityRefresher)
+		assert.True(t, ok)
+		assert.NoError(t, refresher.RefreshIdentity(context.Background(), nil))
 	})
 }

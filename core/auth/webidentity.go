@@ -41,6 +41,11 @@ type (
 		Logout(ctx context.Context, request *web.Request) *url.URL
 	}
 
+	// WebIdentityRefresher refreshs an existing identity, e.g. by invalidating cached session data
+	WebIdentityRefresher interface {
+		RefreshIdentity(ctx context.Context, request *web.Request) error
+	}
+
 	// WebIdentityService calls one or more identifier to get all possible identities of a user
 	WebIdentityService struct {
 		identityProviders []RequestIdentifier

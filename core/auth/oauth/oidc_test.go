@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -169,4 +170,34 @@ func TestOidcCallback(t *testing.T) {
 	assert.NoError(t, identity.(Identity).AccessTokenClaims(&testClaims))
 	assert.Equal(t, "at-claim-1-value", testClaims.Claim1)
 	assert.Equal(t, "legacy-token-response-claim-value", testClaims.LegacyClaim)
+}
+
+func Test_openIDIdentifier_RefreshIdentity(t *testing.T) {
+	var identifier auth.RequestIdentifier = &openIDIdentifier{broker: "broker"}
+	session := web.EmptySession()
+	session.Store("core.auth.oidc.broker.sessiondata", sessionData{
+		Token: &oauth2.Token{
+			AccessToken:  "access-token",
+			RefreshToken: "refresh-token",
+			Expiry:       time.Now().Add(time.Minute * 5),
+		},
+	})
+	ctx := web.ContextWithSession(context.Background(), session)
+
+	req := web.CreateRequest(nil, session)
+	ctx = web.ContextWithRequest(ctx, req)
+
+	refresher, ok := identifier.(auth.WebIdentityRefresher)
+	assert.True(t, ok)
+
+	err := refresher.RefreshIdentity(ctx, req)
+	assert.NoError(t, err)
+
+	data, found := session.Load("core.auth.oidc.broker.sessiondata")
+	assert.True(t, found)
+
+	sessiondata, ok := data.(sessionData)
+	assert.True(t, ok)
+	assert.Empty(t, sessiondata.Token.AccessToken)
+	assert.Equal(t, "refresh-token", sessiondata.Token.RefreshToken)
 }

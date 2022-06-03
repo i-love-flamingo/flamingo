@@ -125,7 +125,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	if handler != nil {
 		bagg := baggage.FromContext(ctx)
 		ctrBaggage, _ := baggage.NewMember(ControllerKey.Key(), handler.GetHandlerName())
-		areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.String(), "-")
+		areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), "-")
 		bagg, _ = bagg.SetMember(ctrBaggage)
 		afterDeletionBagg := bagg.DeleteMember(areaBaggage.Key())
 		if afterDeletionBagg.Len() == bagg.Len() {

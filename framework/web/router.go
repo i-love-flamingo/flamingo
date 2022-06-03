@@ -10,9 +10,10 @@ import (
 	"strconv"
 	"strings"
 
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
+
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"go.opencensus.io/trace"
 )
 
 type (
@@ -267,8 +268,8 @@ func dataParams(params map[interface{}]interface{}) RequestParams {
 
 // Data calls a flamingo data controller
 func (r *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
-	ctx, span := trace.StartSpan(ctx, "flamingo/router/data")
-	span.Annotate(nil, handler)
+	ctx, span := opentelemetry.GetTracer().Start(ctx, "flamingo/router/data")
+	span.AddEvent(handler)
 	defer span.End()
 
 	req := RequestFromContext(ctx)

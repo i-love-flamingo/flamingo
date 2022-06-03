@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/metric/instrument"
+	"go.opentelemetry.io/otel/metric/instrument/syncint64"
+	"go.opentelemetry.io/otel/metric/unit"
+
 	"flamingo.me/flamingo/v3/framework/web"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
 )
 
 type (
@@ -28,18 +30,25 @@ type (
 )
 
 var (
-	// responseMeasure counts different HTTP responses
-	responseMeasure = stats.Int64("flamingo/response/bytes", "Count of http responses by status code", stats.UnitBytes)
+	// responseBytesCount counts the total number of bytes served by the application
+	responseBytesCount syncint64.Counter
 
+	// responseCount count the number of responses served by the application
+	responsesCount syncint64.Counter
 	// keyHTTPStatus defines response http status code
-	keyHTTPStatus, _ = tag.NewKey("status_code")
+	keyHTTPStatus, _ = baggage.NewKeyProperty("status_code")
 )
 
 func init() {
-	if err := opencensus.View("flamingo/response/bytes_count", responseMeasure, view.Count(), keyHTTPStatus); err != nil {
+	var err error
+	responseBytesCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/response/bytes_count",
+		instrument.WithDescription("Count of responses number of bytes"), instrument.WithUnit(unit.Bytes))
+	if err != nil {
 		panic(err)
 	}
-	if err := opencensus.View("flamingo/response/bytes_sum", responseMeasure, view.Sum(), keyHTTPStatus); err != nil {
+	responsesCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/response/count",
+		instrument.WithDescription("Count of number of responses"), instrument.WithUnit(unit.Dimensionless))
+	if err != nil {
 		panic(err)
 	}
 }
@@ -73,8 +82,12 @@ func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) erro
 		err = r.result.Apply(ctx, responseWriter)
 	}
 
-	c, _ := tag.New(ctx, tag.Upsert(keyHTTPStatus, strconv.Itoa(responseWriter.status/100)+"xx"))
-	stats.Record(c, responseMeasure.M(responseWriter.bytes))
+	statusBaggage, err := baggage.NewMember(keyHTTPStatus.Key(), strconv.Itoa(responseWriter.status/100)+"xx")
+	bagg := baggage.FromContext(ctx)
+	bagg, _ = bagg.SetMember(statusBaggage)
+	c := baggage.ContextWithBaggage(ctx, bagg)
+	responseBytesCount.Add(c, responseWriter.bytes)
+	responsesCount.Add(c, 1)
 
 	return err
 }

@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"time"
 
-	"go.opencensus.io/trace"
-	"golang.org/x/sync/singleflight"
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/otel/attribute"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"github.com/golang/groupcache/singleflight"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type (
@@ -79,8 +81,8 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 		return nil, errors.New("NO backend in Cache")
 	}
 
-	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/Get")
-	span.Annotate(nil, key)
+	ctx, span := opentelemetry.GetTracer().Start(ctx, "flamingo/cache/httpFrontend/Get")
+	span.AddEvent(key)
 	defer span.End()
 
 	if entry, ok := hf.backend.Get(key); ok {
@@ -114,13 +116,13 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	oldSpan := trace.FromContext(ctx)
 	newContext := trace.NewContext(context.Background(), oldSpan)
 
-	newContextWithSpan, span := trace.StartSpan(newContext, "flamingo/cache/httpFrontend/load")
-	span.Annotate(nil, key)
+	newContextWithSpan, span := opentelemetry.GetTracer().Start(newContext, "flamingo/cache/httpFrontend/load")
+	span.AddEvent(key)
 	defer span.End()
 
 	data, err, _ := hf.Do(key, func() (res interface{}, resultErr error) {
-		ctx, fetchRoutineSpan := trace.StartSpan(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
-		fetchRoutineSpan.Annotate(nil, key)
+		ctx, fetchRoutineSpan := opentelemetry.GetTracer().Start(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
+		fetchRoutineSpan.AddEvent(key)
 		defer fetchRoutineSpan.End()
 
 		defer func() {
@@ -198,8 +200,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 		})
 	}
 
-	span.AddAttributes(trace.StringAttribute("parenttrace", response.span.TraceID.String()))
-	span.AddAttributes(trace.StringAttribute("parentspan", response.span.SpanID.String()))
+	span.SetAttributes(attribute.String("parenttrace", response.span.TraceID().String()))
+	span.SetAttributes(attribute.String("parentspan", response.span.SpanID().String()))
 
 	return cached, err
 }

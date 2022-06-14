@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/metric/unit"
@@ -20,8 +21,8 @@ import (
 type Option func(*Logger)
 
 var (
-	logCount    syncint64.Counter
-	keyLevel, _ = baggage.NewKeyProperty("level")
+	logCount syncint64.Counter
+	keyLevel attribute.Key = "level"
 )
 
 func init() {
@@ -94,11 +95,8 @@ func (l *Logger) record(level string) {
 		return
 	}
 
-	areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), l.configArea)
-	levelBaggage, _ := baggage.NewMember(keyLevel.Key(), level)
-	bagg, _ := baggage.New(areaBaggage, levelBaggage)
-	ctx := baggage.ContextWithBaggage(context.Background(), bagg)
-	logCount.Add(ctx, 1)
+	logCount.Add(context.Background(), 1, attribute.String(opentelemetry.KeyArea.Key(), l.configArea),
+		keyLevel.String(level))
 }
 
 // Debug logs a message at debug level

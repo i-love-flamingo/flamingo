@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/instrument/syncint64"
 	"go.opentelemetry.io/otel/metric/unit"
@@ -36,7 +37,7 @@ var (
 	// responseCount count the number of responses served by the application
 	responsesCount syncint64.Counter
 	// keyHTTPStatus defines response http status code
-	keyHTTPStatus, _ = baggage.NewKeyProperty("status_code")
+	keyHTTPStatus attribute.Key = "status_code"
 )
 
 func init() {
@@ -82,12 +83,9 @@ func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) erro
 		err = r.result.Apply(ctx, responseWriter)
 	}
 
-	statusBaggage, _ := baggage.NewMember(keyHTTPStatus.Key(), strconv.Itoa(responseWriter.status/100)+"xx")
-	bagg := baggage.FromContext(ctx)
-	bagg, _ = bagg.SetMember(statusBaggage)
-	c := baggage.ContextWithBaggage(ctx, bagg)
-	responseBytesCount.Add(c, responseWriter.bytes)
-	responsesCount.Add(c, 1)
+	statusAttribute := keyHTTPStatus.String(strconv.Itoa(responseWriter.status/100) + "xx")
+	responseBytesCount.Add(ctx, responseWriter.bytes, statusAttribute)
+	responsesCount.Add(ctx, 1, statusAttribute)
 
 	return err
 }

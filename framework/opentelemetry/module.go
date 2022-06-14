@@ -98,7 +98,10 @@ func (m *Module) Configure(injector *dingo.Injector) {
 			schemaURL,
 			attribute.String("service.name", m.serviceName),
 		)),
-		tracesdk.WithSampler(tracesdk.NeverSample()),
+		tracesdk.WithSampler(tracesdk.ParentBased(tracesdk.NeverSample(),
+			tracesdk.WithLocalParentSampled(tracesdk.AlwaysSample()), tracesdk.WithLocalParentNotSampled(tracesdk.NeverSample()),
+			tracesdk.WithRemoteParentSampled(tracesdk.AlwaysSample()), tracesdk.WithRemoteParentNotSampled(tracesdk.NeverSample()),
+		)),
 	)
 	tp := tracesdk.NewTracerProvider(
 		tracerProviderOptions...,
@@ -141,7 +144,7 @@ type correlationIDInjector struct {
 
 func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
 	span := trace.SpanFromContext(req.Context())
-	if span.IsRecording() {
+	if span.SpanContext().IsSampled() {
 		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID().String())
 	}
 	return rt.next.RoundTrip(req)
@@ -173,4 +176,26 @@ func GetMeter() metric.Meter {
 		meter = mp.Meter(name, metric.WithInstrumentationVersion(SemVersion()))
 	})
 	return meter
+}
+
+func (m *Module) CueConfig() string {
+	return `
+flamingo: opentelemetry: {
+	jaeger: {
+		enable: bool | *false
+		endpoint: string | *"http://localhost:14268/api/traces"
+	}
+	zipkin: {
+		enable: bool | *false
+		endpoint: string | *"http://localhost:9411/api/v2/spans"
+	}
+	serviceName: string | *"flamingo"
+	tracing: sampler: {
+		whitelist: [...string]
+		blacklist: [...string]
+		allowParentTrace: bool | *true
+	}
+	publicEndpoint: bool | *true
+}
+`
 }

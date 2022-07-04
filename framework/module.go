@@ -41,7 +41,7 @@ type (
 func (*InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.RoutesCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.HandlerCmd)
-	injector.BindMulti(new(cobra.Command)).ToProvider(web.ModulesCmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(config.ModulesCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(config.Cmd)
 
 	web.BindRoutes(injector, new(routes))

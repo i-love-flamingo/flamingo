@@ -1,4 +1,4 @@
-package web
+package config
 
 import (
 	"fmt"
@@ -6,14 +6,12 @@ import (
 
 	"flamingo.me/dingo"
 	"github.com/spf13/cobra"
-
-	"flamingo.me/flamingo/v3/framework/config"
 )
 
-const showAllDuplicatesArg = "-a"
+const showAllDuplicatesArg = "all"
 
 // ModulesCmd for debugging the router configuration
-func ModulesCmd(area *config.Area) *cobra.Command {
+func ModulesCmd(area *Area) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "modules",
@@ -33,7 +31,8 @@ func ModulesCmd(area *config.Area) *cobra.Command {
 	return cmd
 }
 
-func dumpModules(area *config.Area, argsMap map[string]struct{}) {
+// dumpModules from root area with arguments
+func dumpModules(area *Area, argsMap map[string]struct{}) {
 	if area == nil {
 		return
 	}
@@ -54,23 +53,36 @@ func dumpModules(area *config.Area, argsMap map[string]struct{}) {
 	}
 
 	for _, childArea := range area.Childs {
-		fmt.Println()
-		fmt.Println("****************************************************************************")
-		fmt.Printf("Child Area: %s\n", childArea.Name)
-		fmt.Println("****************************************************************************")
-
-		for _, module := range childArea.Modules {
-			moduleName := getModuleName(module)
-			_, foundDuplicate := registry[moduleName]
-			printModuleName := !foundDuplicate || printDuplicatedModules
-			if printModuleName {
-				fmt.Print(moduleName)
-			}
-		}
+		printChildAreaModules(childArea, registry, printDuplicatedModules)
 	}
 	fmt.Println()
 }
 
+// printChildAreaModules recursively prints area's modules and modules from every child area
+func printChildAreaModules(area *Area, registry map[string]struct{}, printDuplicatedModules bool) {
+	if area == nil {
+		return
+	}
+	fmt.Println()
+	fmt.Println("****************************************************************************")
+	fmt.Printf("Child Area: %s\n", area.Name)
+	fmt.Println("****************************************************************************")
+
+	for _, module := range area.Modules {
+		moduleName := getModuleName(module)
+		_, foundDuplicate := registry[moduleName]
+		printModuleName := !foundDuplicate || printDuplicatedModules
+		if printModuleName {
+			fmt.Print(moduleName)
+		}
+	}
+
+	for _, childArea := range area.Childs {
+		printChildAreaModules(childArea, registry, printDuplicatedModules)
+	}
+}
+
+// getModuleName from module using package path and interface name
 func getModuleName(module dingo.Module) string {
 	moduleType := reflect.TypeOf(module)
 	toRemember := ""

@@ -88,6 +88,12 @@ func init() {
 var (
 	_ OpenIDIdentity = new(oidcIdentity)
 
+	_ auth.RequestIdentifier     = new(openIDIdentifier)
+	_ auth.WebAuthenticater      = new(openIDIdentifier)
+	_ auth.WebCallbacker         = new(openIDIdentifier)
+	_ auth.WebIdentityRefresher  = new(openIDIdentifier)
+	_ auth.WebLogoutWithRedirect = new(openIDIdentifier)
+
 	// OpenIDTypeChecker checks the Identity for OpenID Identity
 	OpenIDTypeChecker = func(identity auth.Identity) bool {
 		_, ok := identity.(OpenIDIdentity)

@@ -88,6 +88,12 @@ func init() {
 var (
 	_ OpenIDIdentity = new(oidcIdentity)
 
+	_ auth.RequestIdentifier     = new(openIDIdentifier)
+	_ auth.WebAuthenticater      = new(openIDIdentifier)
+	_ auth.WebCallbacker         = new(openIDIdentifier)
+	_ auth.WebIdentityRefresher  = new(openIDIdentifier)
+	_ auth.WebLogoutWithRedirect = new(openIDIdentifier)
+
 	// OpenIDTypeChecker checks the Identity for OpenID Identity
 	OpenIDTypeChecker = func(identity auth.Identity) bool {
 		_, ok := identity.(OpenIDIdentity)
@@ -186,15 +192,9 @@ func (i *openIDIdentifier) Inject(
 func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
 	sessionCode := i.sessionCode("sessiondata")
 
-	data, ok := request.Session().Load(sessionCode)
-	if !ok {
-		return nil, errors.New("no sessiondata")
-	}
-
-	sessiondata, ok := data.(sessionData)
-	if !ok {
-		request.Session().Delete(sessionCode)
-		return nil, errors.New("broken sessiondata")
+	sessiondata, err := i.sessionData(request, sessionCode)
+	if err != nil {
+		return nil, err
 	}
 
 	verifierConfig := &oidc.Config{ClientID: i.oauth2Config.ClientID}
@@ -227,6 +227,37 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 	})
 
 	return identity, nil
+}
+
+func (i *openIDIdentifier) sessionData(request *web.Request, sessionCode string) (sessionData, error) {
+	data, ok := request.Session().Load(sessionCode)
+	if !ok {
+		return sessionData{}, errors.New("no sessiondata")
+	}
+
+	sessiondata, ok := data.(sessionData)
+	if !ok {
+		request.Session().Delete(sessionCode)
+		return sessionData{}, errors.New("broken sessiondata")
+	}
+
+	return sessiondata, nil
+}
+
+// RefreshIdentity by invalidating the access token from the token stored in the session data
+// which will cause a refresh request the next time an identity is requested
+func (i *openIDIdentifier) RefreshIdentity(_ context.Context, request *web.Request) error {
+	sessionCode := i.sessionCode("sessiondata")
+
+	sessiondata, err := i.sessionData(request, sessionCode)
+	if err != nil {
+		return err
+	}
+
+	sessiondata.Token.AccessToken = ""
+	request.Session().Store(sessionCode, sessiondata)
+
+	return nil
 }
 
 func (i *oidcIdentity) tokens(ctx context.Context) (*oauth2.Token, *oidc.IDToken, error) {

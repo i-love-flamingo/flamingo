@@ -97,6 +97,7 @@ flamingo: {
 		notfound: string | *"flamingo.notfound"
 		error: string | *"flamingo.error"
 		timeout: int | *60000
+		scheme?: string
 		host?: string
 		path?: string
 	}

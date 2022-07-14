@@ -6,19 +6,18 @@ import (
 	"sort"
 	"strings"
 
-	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/spf13/cobra"
 )
 
 // RoutesCmd for debugging the router configuration
-func RoutesCmd(router *Router, area *config.Area) *cobra.Command {
+func RoutesCmd(router *Router) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "routes",
 		Short: "Routes dump",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			dumpRoutes(router, area)
+			dumpRoutes(router)
 
 		},
 	}
@@ -27,14 +26,14 @@ func RoutesCmd(router *Router, area *config.Area) *cobra.Command {
 }
 
 // HandlerCmd for debugging the router/handler configuration
-func HandlerCmd(router *Router, area *config.Area) *cobra.Command {
+func HandlerCmd(router *Router) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "handler",
 		Short: "Dump the Handlers and its registered methods",
 		Run: func(cmd *cobra.Command, args []string) {
 
-			dumpHandler(router, area)
+			dumpHandler(router)
 
 		},
 	}
@@ -42,7 +41,7 @@ func HandlerCmd(router *Router, area *config.Area) *cobra.Command {
 	return cmd
 }
 
-func dumpRoutes(router *Router, area *config.Area) {
+func dumpRoutes(router *Router) {
 	if router == nil {
 		return
 	}
@@ -60,7 +59,7 @@ func dumpRoutes(router *Router, area *config.Area) {
 	}
 }
 
-func dumpHandler(router *Router, area *config.Area) {
+func dumpHandler(router *Router) {
 	if router == nil {
 		return
 	}

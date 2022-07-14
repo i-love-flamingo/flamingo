@@ -10,12 +10,13 @@ package framework
 
 import (
 	"flamingo.me/dingo"
+	"github.com/spf13/cobra"
+
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/controller"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 	"flamingo.me/flamingo/v3/framework/web/filter"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -40,6 +41,7 @@ type (
 func (*InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.RoutesCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.HandlerCmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(config.ModulesCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(config.Cmd)
 
 	web.BindRoutes(injector, new(routes))

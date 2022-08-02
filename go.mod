@@ -1,6 +1,6 @@
 module flamingo.me/flamingo/v3
 
-go 1.17
+go 1.19
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.1

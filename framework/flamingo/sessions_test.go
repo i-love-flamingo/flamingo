@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"flamingo.me/flamingo/v3/framework/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,6 +16,18 @@ type testData struct {
 	expectedRedisHost     string
 	expectedRedisPassword string
 	expectedRedisDatabase int
+}
+
+func TestModule_Configure(t *testing.T) {
+	t.Run("empty additional configuration", func(t *testing.T) {
+		if err := config.TryModules(nil, new(SessionModule)); err != nil {
+			t.Error(err)
+		}
+	})
+	t.Run("invalid redis timeout should lead to error", func(t *testing.T) {
+		err := config.TryModules(config.Map{"flamingo.session.redis.timeout": "foo"}, new(SessionModule))
+		assert.Error(t, err)
+	})
 }
 
 func TestGetRedisConnectionInformation(t *testing.T) {

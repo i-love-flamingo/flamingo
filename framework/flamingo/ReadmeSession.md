@@ -41,6 +41,7 @@ flamingo.session.redis.database: 0                                    # database
 flamingo.session.redis.idle.connections: 10                           # maximum number of idle connections
 flamingo.session.redis.tls: true                                      # enable tls for connections
 flamingo.session.redis.clusterMode: false                             # for redis servers running in cluster mode
+flamingo.session.redis.timeout: 5s                                    # timeout for establishing the connection (as time.Duration string)
 ```
 
 ##### custom

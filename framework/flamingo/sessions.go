@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
@@ -35,6 +37,7 @@ type SessionModule struct {
 	redisDatabase        int
 	redisTLS             bool
 	redisClusterMode     bool
+	redisTimeout         time.Duration
 	healthcheckSession   bool
 }
 
@@ -57,6 +60,7 @@ func (m *SessionModule) Inject(config *struct {
 	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
 	RedisTLS             bool    `inject:"config:flamingo.session.redis.tls,optional"`
 	RedisClusterMode     bool    `inject:"config:flamingo.session.redis.clusterMode,optional"`
+	RedisTimeout         string  `inject:"config:flamingo.session.redis.timeout,optional"`
 	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
 	m.backend = config.Backend
@@ -71,6 +75,14 @@ func (m *SessionModule) Inject(config *struct {
 	m.redisTLS = config.RedisTLS
 	m.redisClusterMode = config.RedisClusterMode
 	m.healthcheckSession = config.CheckSession
+
+	if config.RedisTimeout != "" {
+		redisTimeout, err := time.ParseDuration(config.RedisTimeout)
+		if err != nil {
+			panic(fmt.Errorf("invalid duration on %q: %q (%w)", "flamingo.session.redis.timeout", config.RedisTimeout, err))
+		}
+		m.redisTimeout = redisTimeout
+	}
 
 	switch config.SameSite {
 	case "strict":
@@ -112,9 +124,15 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 			})
 		}
 
-		sessionStore, err := redisstore.NewRedisStore(context.Background(), client)
+		ctx := context.Background()
+		if m.redisTimeout > 0 {
+			c, cancel := context.WithTimeout(ctx, m.redisTimeout)
+			defer cancel()
+			ctx = c
+		}
+		sessionStore, err := redisstore.NewRedisStore(ctx, client)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("failed on creating redis store: %w", err))
 		}
 
 		sessionStore.Options(sessions.Options{
@@ -148,7 +166,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		if m.healthcheckSession {
 			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.FileSession{})
 		}
-	default: //memory
+	default: // memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.secret))
 
 		sessionStore.MaxLength(m.storeLength)
@@ -194,6 +212,7 @@ flamingo: session: {
 		database: float | int | *0
 		tls: bool | *false
 		clusterMode: bool | *false
+		timeout: string | *"5s"
 	}
 }
 `

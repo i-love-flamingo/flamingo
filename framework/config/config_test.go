@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"reflect"
 	"testing"
@@ -12,7 +11,7 @@ import (
 )
 
 func readConfig(t *testing.T, configName string) Map {
-	config, err := ioutil.ReadFile(configName)
+	config, err := os.ReadFile(configName)
 	assert.NoError(t, err)
 
 	config = []byte(envRegex.ReplaceAllStringFunc(

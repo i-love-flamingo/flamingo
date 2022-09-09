@@ -3,7 +3,6 @@ package cache
 import (
 	"bytes"
 	"encoding/gob"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -37,7 +36,7 @@ func NewFileBackend(baseDir string) *FileBackend {
 func (fb *FileBackend) Get(key string) (entry *Entry, found bool) {
 	key = escape.ReplaceAllString(key, ".")
 
-	b, err := ioutil.ReadFile(filepath.Join(fb.baseDir, key))
+	b, err := os.ReadFile(filepath.Join(fb.baseDir, key))
 	if err != nil {
 		return nil, false
 	}
@@ -66,7 +65,7 @@ func (fb *FileBackend) Set(key string, entry *Entry) error {
 		return err
 	}
 
-	ioutil.WriteFile(filepath.Join(fb.baseDir, key), b.Bytes(), os.ModePerm)
+	os.WriteFile(filepath.Join(fb.baseDir, key), b.Bytes(), os.ModePerm)
 
 	return nil
 }

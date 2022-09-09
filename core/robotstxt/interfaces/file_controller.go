@@ -3,8 +3,8 @@ package interfaces
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"net/http"
+	"os"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
@@ -56,7 +56,7 @@ func (d *FileController) GetHumansTxt(ctx context.Context, _ *web.Request) web.R
 }
 
 func (d *FileController) serveFile(ctx context.Context, filePath string) web.Result {
-	fileContent, err := ioutil.ReadFile(filePath)
+	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
 		d.logger.WithContext(ctx).Error(err)
 

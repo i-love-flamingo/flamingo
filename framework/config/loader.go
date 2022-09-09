@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -180,12 +179,12 @@ func loadCueFile(area *Area, filename string) error {
 }
 
 func loadYamlFile(area *Area, filename string) error {
-	config, err := ioutil.ReadFile(filename + ".yml")
+	config, err := os.ReadFile(filename + ".yml")
 	if err == nil {
 		return loadYamlConfig(area, config)
 	}
 
-	config, err = ioutil.ReadFile(filename + ".yaml")
+	config, err = os.ReadFile(filename + ".yaml")
 	if err == nil {
 		return loadYamlConfig(area, config)
 	}
@@ -249,12 +248,12 @@ func errorLineDebug(err error, config []byte) string {
 }
 
 func loadYamlRoutesFile(area *Area, filename string) error {
-	routes, err := ioutil.ReadFile(filename + ".yml")
+	routes, err := os.ReadFile(filename + ".yml")
 	if err == nil {
 		return yaml.Unmarshal(routes, &area.Routes)
 	}
 
-	routes, err = ioutil.ReadFile(filename + ".yaml")
+	routes, err = os.ReadFile(filename + ".yaml")
 	if err == nil {
 		return yaml.Unmarshal(routes, &area.Routes)
 	}

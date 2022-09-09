@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -167,7 +166,7 @@ func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs templ
 	}
 
 	for _, file := range layoutFilesNames {
-		tContent, err := ioutil.ReadFile(file)
+		tContent, err := os.ReadFile(file)
 		if err != nil {
 			return nil, err
 		}
@@ -188,7 +187,7 @@ func (e *engine) parseLayoutTemplates(functionsMap template.FuncMap, funcs templ
 
 // parses all templates from a given directory into a clone of the given layout template, so that all layouts are available
 func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, dir string) error {
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
@@ -202,7 +201,7 @@ func (e *engine) parseSiteTemplateDirectory(layoutTemplate *template.Template, d
 			}
 			continue
 		}
-		tContent, err := ioutil.ReadFile(fullName)
+		tContent, err := os.ReadFile(fullName)
 		if err != nil {
 			return err
 		}

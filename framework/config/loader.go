@@ -218,7 +218,7 @@ func loadYamlConfig(area *Area, config []byte) error {
 	return area.loadedConfig.Add(cfg)
 }
 
-//errorLineDebug returns the lines where the error occurred (if possible)
+// errorLineDebug returns the lines where the error occurred (if possible)
 func errorLineDebug(err error, config []byte) string {
 	matches := lineRegex.FindStringSubmatch(err.Error())
 	if len(matches) != 2 {

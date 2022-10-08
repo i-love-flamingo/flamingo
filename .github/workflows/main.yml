@@ -81,12 +81,6 @@ jobs:
         run: |
           fmt=$(gofmt -l .)
           test -z $fmt || (echo "please run gofmt" ; echo $fmt ; exit 1)
-      - name: Go Staticcheck
-        run: go run honnef.co/go/tools/cmd/staticcheck@latest ./...
-      - name: Spelling
-        run: go run github.com/client9/misspell/cmd/misspell@v0.3.4 -error .
-      - name: Ineffective assignments
-        run: go run github.com/gordonklaus/ineffassign@4cc7213 .
       - name: Goimports
         run: |
           go run golang.org/x/tools/cmd/goimports@latest -w .

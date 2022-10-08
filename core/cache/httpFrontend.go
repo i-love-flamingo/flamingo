@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -131,7 +130,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 		}
 
 		response := data
-		body, _ := ioutil.ReadAll(response.Body)
+		body, _ := io.ReadAll(response.Body)
 
 		response.Body.Close()
 

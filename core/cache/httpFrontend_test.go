@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -273,8 +273,8 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			}
 			require.NotNil(t, got, "result of Get() is nil")
 			assert.Equal(t, got.Header, tt.want.Header)
-			gotBody, _ := ioutil.ReadAll(got.Body)
-			wantBody, _ := ioutil.ReadAll(tt.want.Body)
+			gotBody, _ := io.ReadAll(got.Body)
+			wantBody, _ := io.ReadAll(tt.want.Body)
 			assert.Equal(t, string(wantBody), string(gotBody))
 		})
 	}

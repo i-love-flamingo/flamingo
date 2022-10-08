@@ -3,7 +3,7 @@ package web
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -176,7 +176,7 @@ func TestRouterTestify(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	greeting, err := ioutil.ReadAll(res.Body)
+	greeting, err := io.ReadAll(res.Body)
 	assert.NoError(t, res.Body.Close())
 	if err != nil {
 		t.Fatal(err)

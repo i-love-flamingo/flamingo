@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -344,7 +343,7 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 
 			result := make(map[string]string, len(content))
 			for k, v := range content {
-				buf, err := ioutil.ReadAll(v)
+				buf, err := io.ReadAll(v)
 				if err != nil {
 					return err
 				}

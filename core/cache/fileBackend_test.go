@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"flag"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -150,7 +149,7 @@ func TestFileBackendSet(t *testing.T) {
 				t.Errorf("FileBackend.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			written, err := ioutil.ReadFile(expectedCacheFileName)
+			written, err := os.ReadFile(expectedCacheFileName)
 			if err != nil {
 				t.Fatal("cache entry not written")
 			}
@@ -160,7 +159,7 @@ func TestFileBackendSet(t *testing.T) {
 				f.Set(tt.args.key+".golden", tt.args.entry)
 			}
 
-			golden, err := ioutil.ReadFile(expectedCacheFileName + ".golden")
+			golden, err := os.ReadFile(expectedCacheFileName + ".golden")
 			if err != nil {
 				t.Fatalf("failed reading .golden: %s", err)
 			}

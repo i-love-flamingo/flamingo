@@ -130,7 +130,7 @@ func (am *AuthManager) Inject(logger flamingo.Logger, router *web.Router, config
 }
 
 // Auth tries to retrieve the authentication context for a active session - this is used to pass Authentication to services
-//	- if the stored token for the Auth is not valid anymore it will refresh the token before
+//   - if the stored token for the Auth is not valid anymore it will refresh the token before
 func (am *AuthManager) Auth(c context.Context, session *web.Session) (domain.Auth, error) {
 	c = am.OAuthCtx(c)
 	currentToken, err := am.OAuth2Token(session)

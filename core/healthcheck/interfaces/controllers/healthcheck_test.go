@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -72,7 +72,7 @@ func TestController_Healthcheck(t *testing.T) {
 			controller.ServeHTTP(recorder, tt.args.request)
 
 			resp := recorder.Result()
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -88,7 +88,7 @@ func TestController_Ping(t *testing.T) {
 	controller.ServeHTTP(recorder, nil)
 
 	resp := recorder.Result()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

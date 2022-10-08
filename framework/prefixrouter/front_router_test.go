@@ -1,7 +1,7 @@
 package prefixrouter
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,7 +44,7 @@ func TestFrontRouter(t *testing.T) {
 
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte(`Host1, Prefix 1`), body)
 		})
@@ -56,7 +56,7 @@ func TestFrontRouter(t *testing.T) {
 
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte(`Host1, Prefix 11`), body)
 		})
@@ -66,7 +66,7 @@ func TestFrontRouter(t *testing.T) {
 			request := httptest.NewRequest("GET", "/prefix1/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte(`Prefix 1`), body)
 		})
@@ -76,7 +76,7 @@ func TestFrontRouter(t *testing.T) {
 			request := httptest.NewRequest("GET", "/prefix2/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, []byte(`Prefix 2`), body)
 		})
@@ -86,7 +86,7 @@ func TestFrontRouter(t *testing.T) {
 			request := httptest.NewRequest("GET", "/prefix2", nil)
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(`Prefix 2`))
 		})
@@ -96,7 +96,7 @@ func TestFrontRouter(t *testing.T) {
 			request := httptest.NewRequest("GET", "/prefix22/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(`Prefix 22`))
 		})
@@ -106,7 +106,7 @@ func TestFrontRouter(t *testing.T) {
 			request := httptest.NewRequest("GET", "/UNKNOWN/test", nil)
 			fr.ServeHTTP(recorder, request)
 
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(`Default`))
 		})
@@ -118,7 +118,7 @@ func TestFrontRouter(t *testing.T) {
 			emptyFR.ServeHTTP(recorder, request)
 
 			assert.Equal(t, recorder.Result().StatusCode, 404)
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(``))
 		})
@@ -131,7 +131,7 @@ func TestFrontRouter(t *testing.T) {
 			fr.ServeHTTP(recorder, request)
 
 			assert.Equal(t, recorder.Result().StatusCode, 404)
-			body, err := ioutil.ReadAll(recorder.Result().Body)
+			body, err := io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(``))
 
@@ -143,7 +143,7 @@ func TestFrontRouter(t *testing.T) {
 			fr.ServeHTTP(recorder, request)
 
 			assert.Equal(t, recorder.Result().StatusCode, 404)
-			body, err = ioutil.ReadAll(recorder.Result().Body)
+			body, err = io.ReadAll(recorder.Result().Body)
 			assert.NoError(t, err)
 			assert.Equal(t, body, []byte(``))
 		})

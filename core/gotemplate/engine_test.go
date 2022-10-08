@@ -2,7 +2,7 @@ package gotemplate
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"testing"
 	"time"
 
@@ -175,7 +175,7 @@ customTemplateFunc: test-abc`,
 			}
 
 			if gotReader != nil {
-				got, _ := ioutil.ReadAll(gotReader)
+				got, _ := io.ReadAll(gotReader)
 				if diff := cmp.Diff(string(got), tt.want); diff != "" {
 					t.Errorf("Render() -got +want: %v", diff)
 				}

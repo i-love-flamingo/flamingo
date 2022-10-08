@@ -8,10 +8,12 @@ import (
 // a: b: 1
 // a: c: 1
 // becomes
-// a: {
-//   b: 1
-//   c: 1
-// }
+//
+//	a: {
+//	  b: 1
+//	  c: 1
+//	}
+//
 // currently field comprehensions are not supported
 func cueAstTree(in []ast.Decl) []ast.Decl {
 	result := make([]ast.Decl, 0, len(in))

@@ -67,27 +67,69 @@ var _ Logger = new(StdLogger)
 
 // StdLogger uses the go stdlib logger for logging
 type StdLogger struct {
-	log.Logger
+	Logger log.Logger
+}
+
+func isLoggerNil(l *StdLogger) bool {
+	return l == nil || l.Logger.Writer() == nil
+}
+
+func (l *StdLogger) Fatal(args ...interface{}) {
+	if isLoggerNil(l) {
+		log.Fatalln(args...)
+		return
+	}
+
+	l.Logger.Fatal(args...)
+}
+
+func (l *StdLogger) Panic(args ...interface{}) {
+	if isLoggerNil(l) {
+		log.Panic(args...)
+		return
+	}
+
+	l.Logger.Panic(args...)
 }
 
 // Debug logs output
 func (l *StdLogger) Debug(args ...interface{}) {
-	l.Print(args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
 }
 
 // Debugf outputs the formatted debug string
 func (l *StdLogger) Debugf(f string, args ...interface{}) {
-	l.Printf(f, args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Printf(f, args...)
 }
 
 // Info log output
 func (l *StdLogger) Info(args ...interface{}) {
-	l.Print(args...)
+	if l == nil {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
 }
 
 // Warn log output
 func (l *StdLogger) Warn(args ...interface{}) {
-	l.Print(args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
 }
 
 // WithContext currently does nothing
@@ -109,7 +151,12 @@ func (l *StdLogger) WithFields(fields map[LogKey]interface{}) Logger {
 
 // Error log
 func (l *StdLogger) Error(args ...interface{}) {
-	l.Print(args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
 }
 
 // Flush does nothing

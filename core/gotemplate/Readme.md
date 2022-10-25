@@ -1,6 +1,6 @@
 # Gotemplate
 
-Flamingo comes with a wrapped `html/template` as simple default template engine.
+Flamingo comes with a wrapped `html/template` as a simple default template engine.
 
 ## Structured templating
 
@@ -99,9 +99,9 @@ Hello World
 
 Ok, let's look at what we did step by step:
 
-1. We moved all the html we want to reuse into the `base.html` layout
-2. We defined into which layout our template will be inserted into via the `{{template "layouts/base.html" .}}` action. (The dot after the path hands the data to the specified layout when everything is being rendered)
-3. We defined our template blocks via the `{{define "<block-name>"}}` action and closed said definitoin with the `{{end}}` action.
+1. We moved all the html we want to reuse into the `base.html` layout.
+2. We defined the layout our template will be inserted into via the `{{template "layouts/base.html" .}}` action. (The dot after the path hands the data to the specified layout when everything is being rendered)
+3. We defined our template blocks via the `{{define "<block-name>"}}` action and closed said definition with the `{{end}}` action.
 
 Next, let's look at our layout file:
 
@@ -155,8 +155,6 @@ gotemplates:
 # Static assets
 You can use Flamingo’s built-in static file handler to automatically serve necessary static assets from your asset folder.
 
-## Code-based configuration
-
 You can set it up by adding a route and setting the `name` param to the name of your asset folder.
 
 In the following example, our assets lie in the `asset` folder:
@@ -171,8 +169,6 @@ func (u *urls) Routes(registry *web.RouterRegistry) {
 
 Or via your routes.yml configuration file:
 
-## routes.yml configuration
-
 ```yaml
 # /config/routes.yml
 - controller: flamingo.static.file(name, dir?="asset")
@@ -186,4 +182,4 @@ Then, set up a reference to the the url by adding the following script to your t
 <script src="{{ url "flamingo.static.file" "name" "polls.js"}}"></script>
 ````
 
-*This essentially calls the ‘flamingo.static.file(name=”polls.js”)’ command with the `dir` param set to its default, which you defined in your `routes.yml`.*
+*This essentially calls the `flamingo.static.file(name=”polls.js”)` command with the `dir` param set to its default. Its default is defined in your `routes.yml`.*

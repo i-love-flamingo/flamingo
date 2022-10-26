@@ -19,7 +19,7 @@ output:
   # Example: "checkstyle:report.json,colored-line-number"
   #
   # Default: colored-line-number
-  format: tab
+  format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
   uniq-by-line: true
@@ -93,35 +93,6 @@ issues:
         - goerr113
         - varnamelen
         - wrapcheck
-
-severity:
-  default-severity: blocker
-  rules: # code-climate format from gitlab supports: info, minor, major, critical, or blocker
-    - severity: critical
-      linters:
-        - gosec
-    - severity: major
-      linters:
-        - goerr113
-        - prealloc
-        - wrapcheck
-    - severity: minor
-      linters:
-        - cyclop
-        - decorder
-        - errname
-        - goconst
-        - gocognit
-        - predeclared
-        - testpackage
-        - tparallel
-        - usestdlibvars
-        - varnamelen
-    - severity: info
-      linters:
-        - paralleltest
-        - thelper
-        - wsl
 
 linters-settings:
   gomnd:

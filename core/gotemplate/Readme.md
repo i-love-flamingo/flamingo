@@ -47,20 +47,16 @@ You can refer to the [html/template documentation](golang.org/pkg/html/template/
 To render `index.html` in your controller, just call
 
 ```go
-return controller.responder.Render("templates/deep/nested/index")
+return controller.responder.Render("/deep/nested/index")
 ```
 
-You can also [register the `templates` directory as the directory containing all static assets](#static-assets), therefore reducing the render call to:
-
-```go
-return controller.responder.Render("deep/nested/index")
-```
+*Note: The template directory's name can also be changed within your [config](#configuration) but it defaults to `templates` if unset.*
 
 ### Layout templates
 
 Layouts can be used to reduce boilerplate html when creating templates by encapsulating your templates.
 
-To begin, let's start by creating a new `layouts` folder and a `base.html` layout file. You can configure the location of your layouts folder in your project [configuration](#configuration).
+To begin, let's start by creating a new `layouts` folder with a `base.html` layout file inside of our `templates` directory. You can configure the name of your layouts folder in your [project configuration](#configuration), although it must always reside inside of your templates folder.
 
 ```text
 /project/
@@ -155,7 +151,7 @@ gotemplates:
 # Static assets
 You can use Flamingo’s built-in static file handler to automatically serve necessary static assets from your asset folder.
 
-You can set it up by adding a route and setting the `name` param to the name of your asset folder.
+You can set it up by adding a route to your `urls.go` file and setting the `name` param to the name of your asset folder.
 
 In the following example, our assets lie in the `asset` folder:
 
@@ -166,20 +162,3 @@ func (u *urls) Routes(registry *web.RouterRegistry) {
     registry.MustRoute("/asset/*name", `flamingo.static.file(name, dir?="asset")`)
 }
 ```
-
-Or via your routes.yml configuration file:
-
-```yaml
-# /config/routes.yml
-- controller: flamingo.static.file(name, dir?="asset")
-  path: /asset/*name
-```
-
-Then, set up a reference to the the url by adding the following script to your template:
-
-````html
-<!-- /templates/deep/nested/index.html -->
-<script src="{{ url "flamingo.static.file" "name" "polls.js"}}"></script>
-````
-
-*This essentially calls the `flamingo.static.file(name=”polls.js”)` command with the `dir` param set to its default. Its default is defined in your `routes.yml`.*

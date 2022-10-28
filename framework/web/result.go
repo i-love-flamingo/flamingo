@@ -155,7 +155,7 @@ func (r *Responder) HTTP(status uint, body io.Reader) *Response {
 }
 
 // Apply response
-func (r *Response) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *Response) Apply(_ context.Context, w http.ResponseWriter) error {
 	if r.CacheDirective != nil {
 		r.CacheDirective.ApplyHeaders(r.Header)
 	}
@@ -426,7 +426,11 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 
 // ServerError creates a 500 error response
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
-	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+	if errors.Is(err, context.Canceled) {
+		r.getLogger().Debug(fmt.Sprintf("%+v\n", err))
+	} else {
+		r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+	}
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
 }

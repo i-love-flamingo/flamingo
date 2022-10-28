@@ -1,60 +1,145 @@
 # Gotemplate
 
-Flamingo comes with a wrapped `html/template` as simple default template engine.
-
-Refer to [golang.org/pkg/html/template/](https://golang.org/pkg/html/template/) for the basic documentation
+Flamingo comes with a wrapped `html/template` as a simple default template engine.
 
 ## Structured templating
 
 ### Template directory
 
-This module allows to set up a deeply nested directory structure with template (html) files. 
+This module allows you to set up a deeply nested directory structure containing template files with the `.html` type ending. 
 These files can be referenced from a controller by just using the path without `.html`.
 
-For example, to render `deep/nested/index.html` in your controller, just call
+An example for such a directory structure could be:
+
+```text
+/project/
+  /templates/
+    /deep/
+      /nested/
+        /index.html
+  main.go
+  go.mod
+```
+
+Here `index.html` resembles an example template. For our purposes, it contains the following content:
+
+```html
+<!-- /templates/deep/nested/index.html -->
+<!doctype html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <title>Hello World</title>
+  </head>
+  <body>
+    <main>
+      <h1>Huzzah! It works!</h1>
+      <p>
+        This is an example text.
+      </p>
+    </main>
+  </body>
+</html>
+```
+
+You can refer to the [html/template documentation](golang.org/pkg/html/template/) for further information on how to fill your template.
+
+To render `index.html` in your controller, just call
 
 ```go
-return controller.responder.Render("deep/nested/index")
+return controller.responder.Render("/deep/nested/index")
 ```
+
+*Note: The template directory's name can also be changed within your [config](#configuration) but it defaults to `templates` if unset.*
 
 ### Layout templates
 
-In addition, a set of base layout templates can be defined in a separate directory. These layout templates can be included
-into all rendered templates.
+Layouts can be used to reduce boilerplate html when creating templates by encapsulating your templates.
 
-If you want to define a site template, just call different sub templates inside like
+To begin, let's start by creating a new `layouts` folder with a `base.html` layout file inside of our `templates` directory. You can configure the name of your layouts folder in your [project configuration](#configuration), although it must always reside inside of your templates folder.
 
-```gotemplate
-{{template "content" .}}
+```text
+/project/
+  /templates/
+    /deep/
+      /nested/
+        /index.html
+    /layouts/
+      base.html
+  main.go
+  go.mod
 ```
 
-In your rendered template, you can call the layout template and define all needed blocks:
+A layout contains all the html that you want to reuse. Therefore, we first want to extract all the boilerplate html out of our templates and place it into our `base.html` and update our `index.html` accordingly.
 
-```gotemplate
-{{template "pages/site.html" .}}
+Here is what our `index.html` looks like, after refactoring:
+
+```html
+<!-- /templates/deep/nested/index.html -->
+{{template "layouts/base.html" .}}
+
+{{define "title"}}
+Hello World
+{{end}}
 
 {{define "content"}}
-  <h1>The site content</h1>
+<main>
+  <h1>Huzzah! It works!</h1>
+  <p>
+    This is an example text.
+  </p>
+</main>
 {{end}}
+ 
 ```
 
-The layout templates can also be used to define common "snippets" which can be used in every rendered template, for example:
+Ok, let's look at what we did step by step:
 
-```gotemplate
+1. We moved all the html we want to reuse into the `base.html` layout.
+2. We defined the layout our template will be inserted into via the `{{template "layouts/base.html" .}}` action. (The dot after the path hands the data to the specified layout when everything is being rendered)
+3. We defined our template blocks via the `{{define "<block-name>"}}` action and closed said definition with the `{{end}}` action.
+
+Next, let's look at our layout file:
+
+```html
+<!-- /templates/layouts/base.html -->
+<!doctype html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <title>{{template "title" .}}</title>
+  </head>
+  <body>
+    {{template "content" .}}
+  </body>
+</html>
+```
+
+As you can see, this is where most of the html from `index.html` has ended up. You may also have notice that the previously defined template blocks have been called upon at there corresponding positions.
+
+If you were to now render `index.html` you would recieve an html page like the one we started out with.
+
+Congratulations! You have understood the basic concept of layouts, but that's not all!
+
+You can make use of layouts and templates to create fragments which can then be called upon dynamically, like in this example:
+
+```html
 {{range $i, $p := .Products}}
-  {{if gt $i 0}}
-    <hr/>
+  {{if le $i 0}}
+    {{template "deep/otherNest/noProducts.html" $p}}
   {{end}}
   <div class="row">
-    {{template "blocks/product.html" $p}}
+    {{template "deep/otherNest/product.html" $p}}
   </div>
 {{end}}
-
 ```
 
 ## Configuration
 
-```yaml
+Within your `config.yml` you can define the paths for your template and layout directory.
+
+```yml
+# /config/config.yml
 gotemplates:
   engine:
     templates:
@@ -64,34 +149,16 @@ gotemplates:
 ```
 
 # Static assets
-You can use Flamingo’s built-in static file handler to serve static assets that you need in your template.
+You can use Flamingo’s built-in static file handler to automatically serve necessary static assets from your asset folder.
 
-Set it up by adding a route with a param called “name” (that will get the name of the asset), such as 
+You can set it up by adding a route to your `urls.go` file and setting the `name` param to the name of your asset folder.
 
-```
-polls/urls.go:
-```
+In the following example, our assets lie in the `asset` folder:
 
 ```go
+// /polls/urls.go
 func (u *urls) Routes(registry *web.RouterRegistry) {
     // ...
     registry.MustRoute("/asset/*name", `flamingo.static.file(name, dir?="asset")`)
 }
 ```
-
-Or via the routes.yml feature:
-
-Edit your file `config/routes.yml`
-
-```yaml
-- controller: flamingo.static.file(name, dir?="asset")
-  path: /asset/*name
-```
-
-Then, in your template, create the url by doing:
-````html
-<script src="{{ url "flamingo.static.file" "name" "polls.js"}}"></script>
-````
-(essentially calling ‘flamingo.static.file(name=”polls.js”)’. The “dir” variable has been defined to default to “asset” in the registration.
-
-This way flamingo will automatically serve the asset form your assets folder.

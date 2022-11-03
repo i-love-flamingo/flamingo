@@ -1,5 +1,92 @@
 # Changelog
 
+## Version v3.4.0 (2022-11-03)
+
+### Features
+
+- **session:** add timeout for redis connection (#277) (eb0fe55f)
+- **framework/config:** module dump command (#273) (8a1b9154)
+- **auth:** add session refresh interface (#269) (3eba3475)
+- **core/oauth:** support issuer URL overriding (#227) (fa5bd34b)
+- **oauth:** add oauth identifier (#220) (9883a4dc)
+
+### Fixes
+
+- **framework/web:** Avoid error log pollution, switch context cancelled log level to debug (#294) (c1d6dc87)
+- **framework/flamingo/log:** added nil check for StdLogger and Logger (f636b7ec)
+- **framework:** Add missing scheme property to the router cue config (#274) (3ee35cd8)
+- **router:** allow config for public endpoint (3f47d251)
+- **framework/systemendpoint:** use real port information in systemendpoint (4f59dc4a)
+- **framework/prefixrouter:** use real port information in ServerStartEvent (79ae6f95)
+- **servemodule:** use real port information in ServerStartEvent (c5209de3)
+- **oauth:** correctly map access-token claims (5a7331f3)
+- **auth:** add missing auth.Identity interface (#216) (27b93c16)
+- **deps:** exclude unmaintained redigo (#218) (6061f4ab)
+- fix missing gob register (0c488981)
+
+### Tests
+
+- **internalauth:** add unittests (#258) (46341b4d)
+- **requestlogger:** add unittests (c8c18474)
+- **framework/opencensus:** add tests (932299a5)
+
+### Ops and CI/CD
+
+- adjust gloangci-lint config for github actions (bbabfc08)
+- make "new-from-rev" work for golangci-lint (258a7b50)
+- remove now unnecessary steps from main pipeline (dc2df28f)
+- fix git rev (84ebd56d)
+- add golangci-lint to pipeline (bf3eaeab)
+- **semanticore:** add semanticore (a741f30d)
+
+### Documentation
+
+- **core/gotemplate:** Enhance documentation (#291) (8b5b8a97)
+- typos and wording (#290) (9745b18e)
+- **flamingo:** update logos (4227815b)
+
+### Chores and tidying
+
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.4.0 (#293) (f5a791f1)
+- **deps:** update module github.com/google/go-cmp to v0.5.9 (#282) (8d546ca7)
+- **deps:** update module github.com/openzipkin/zipkin-go to v0.4.1 (#286) (bf432c9f)
+- **deps:** update module github.com/stretchr/testify to v1.8.1 (#292) (56ddf827)
+- **deps:** update irongut/codecoveragesummary action to v1.3.0 (#278) (2399c75f)
+- bump to go 1.19 (#279) (da07d03e)
+- **deps:** update module github.com/stretchr/testify to v1.8.0 (#271) (c81b3226)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v4.4.2 (#272) (7dd92887)
+- **deps:** update module github.com/stretchr/testify to v1.7.2 (#270) (fb271199)
+- **deps:** update module go.uber.org/automaxprocs to v1.5.1 (2b868ee5)
+- **deps:** update module github.com/openzipkin/zipkin-go to v0.4.0 (38acb057)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v4.4.1 (daf8fd7a)
+- **deps:** update module github.com/hashicorp/golang-lru to v0.5.4 (2b8bd64c)
+- **gomod:** go mod tidy (3e911268)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.2.0 (0e52661e)
+- **deps:** update dependency quay.io/dexidp/dex to v2.28.1 (2643bd00)
+- **deps:** update module contrib.go.opencensus.io/exporter/prometheus to v0.4.1 (5bd0be1a)
+- **deps:** update module github.com/stretchr/testify to v1.7.1 (d643c92c)
+- **deps:** update module github.com/google/go-cmp to v0.5.8 (559dea58)
+- **deps:** update module contrib.go.opencensus.io/exporter/zipkin to v0.1.2 (11533458)
+- **deps:** update actions/setup-go action to v3 (3592ea01)
+- **deps:** update actions/checkout action to v3 (c9d2f124)
+- **deps:** update module github.com/go-redis/redis/v8 to v8.11.5 (2b6581a8)
+- **deps:** update module contrib.go.opencensus.io/exporter/jaeger to v0.2.1 (f7285f09)
+- **deps:** update dependency quay.io/keycloak/keycloak to v8.0.2 (58f1a27b)
+- **deps:** update golang.org/x/oauth2 digest to 9780585 (bb60190b)
+- **deps:** update github.com/golang/groupcache digest to 41bb18b (68a4f7e2)
+- Update renovate.json (ca2c97b9)
+- **deps:** add renovate.json (e0edaf27)
+- bump go version to 1.17, replace golint with staticcheck (#222) (ae2b39e8)
+- **auth:** switch to github.com/gofrs/uuid (1854abc6)
+
+### Other
+
+- continue-on-error for coverage pr comment (#288) (21b26df3)
+- framework/flamingo: replace redis session backend (#219) (8451ed0b)
+- core/auth: update to recent go-oidc v3, allow oidc issuer URL override (#212) (86076485)
+- add comment to StateEntry (a8be5d77)
+- allow multiple parallel state responses (d7b30a06)
+
 ## Important Notes
 
 - core/internalauth:

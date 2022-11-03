@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"github.com/gorilla/securecookie"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 type (
@@ -214,8 +216,12 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		finishErr = finalErr
 		defer func() {
 			if err := panicToError(recover()); err != nil {
+				if errors.Is(err, context.Canceled) {
+					h.logger.WithContext(ctx).Debug(err)
+				} else {
+					h.logger.WithContext(ctx).Error(err)
+				}
 				finishErr = err
-				h.logger.WithContext(ctx).Error(err)
 				rw.WriteHeader(http.StatusInternalServerError)
 				_, _ = fmt.Fprintf(rw, "%+v", err)
 			}

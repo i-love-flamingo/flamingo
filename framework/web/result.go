@@ -155,24 +155,24 @@ func (r *Responder) HTTP(status uint, body io.Reader) *Response {
 }
 
 // Apply response
-func (r *Response) Apply(_ context.Context, w http.ResponseWriter) error {
+func (r *Response) Apply(_ context.Context, responseWriter http.ResponseWriter) error {
 	if r.CacheDirective != nil {
 		r.CacheDirective.ApplyHeaders(r.Header)
 	}
 	for name, vals := range r.Header {
 		for _, val := range vals {
-			w.Header().Add(name, val)
+			responseWriter.Header().Add(name, val)
 		}
 	}
 	if r.Status == 0 {
 		r.Status = http.StatusOK
 	}
-	w.WriteHeader(int(r.Status))
+	responseWriter.WriteHeader(int(r.Status))
 	if r.Body == nil {
 		return nil
 	}
 
-	_, err := io.Copy(w, r.Body)
+	_, err := io.Copy(responseWriter, r.Body)
 	return err
 }
 
@@ -197,7 +197,7 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 }
 
 // Apply response
-func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *RouteRedirectResponse) Apply(ctx context.Context, responseWriter http.ResponseWriter) error {
 	if r.router == nil {
 		return errors.New("no reverserouter available")
 	}
@@ -207,8 +207,8 @@ func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) 
 		return err
 	}
 	to.Fragment = r.fragment
-	w.Header().Set("Location", to.String())
-	return r.Response.Apply(c, w)
+	responseWriter.Header().Set("Location", to.String())
+	return r.Response.Apply(ctx, responseWriter)
 }
 
 // Fragment adds a fragment to the resulting URL, argument must be given without '#'
@@ -241,13 +241,13 @@ func (r *Responder) URLRedirect(url *url.URL) *URLRedirectResponse {
 }
 
 // Apply response
-func (r *URLRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *URLRedirectResponse) Apply(ctx context.Context, responseWriter http.ResponseWriter) error {
 	if r.URL == nil {
 		return errors.New("URL is nil")
 	}
 
-	w.Header().Set("Location", r.URL.String())
-	return r.Response.Apply(c, w)
+	responseWriter.Header().Set("Location", r.URL.String())
+	return r.Response.Apply(ctx, responseWriter)
 }
 
 // Permanent marks a redirect as being permanent (http 301)
@@ -275,7 +275,7 @@ func (r *Responder) Data(data interface{}) *DataResponse {
 
 // Apply response
 // todo: support more than json
-func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *DataResponse) Apply(ctx context.Context, responseWriter http.ResponseWriter) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(r.Data); err != nil {
 		return err
@@ -285,7 +285,7 @@ func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		r.Response.Header = make(http.Header)
 	}
 	r.Response.Header.Set("Content-Type", "application/json; charset=utf-8")
-	return r.Response.Apply(c, w)
+	return r.Response.Apply(ctx, responseWriter)
 }
 
 // Status changes response status code
@@ -327,16 +327,16 @@ func (r *Responder) Render(tpl string, data interface{}) *RenderResponse {
 }
 
 // Apply response
-func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *RenderResponse) Apply(ctx context.Context, responseWriter http.ResponseWriter) error {
 	var err error
 
 	if r.engine == nil {
-		return r.DataResponse.Apply(c, w)
+		return r.DataResponse.Apply(ctx, responseWriter)
 	}
-	if req := RequestFromContext(c); req != nil && r.engine != nil {
+	if req := RequestFromContext(ctx); req != nil && r.engine != nil {
 		partialRenderer, ok := r.engine.(flamingo.PartialTemplateEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
-			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
+			content, err := partialRenderer.RenderPartials(ctx, r.Template, r.Data, strings.Split(partials, ","))
 			if err != nil {
 				return err
 			}
@@ -350,13 +350,13 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 				result[k] = string(buf)
 			}
 
-			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
+			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(ctx).(func() map[string]interface{})()})
 			if err != nil {
 				return err
 			}
 			r.Body = bytes.NewBuffer(body)
 			r.Header.Set("Content-Type", "application/json; charset=utf-8")
-			return r.Response.Apply(c, w)
+			return r.Response.Apply(ctx, responseWriter)
 		}
 	}
 
@@ -364,11 +364,11 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		r.Header = make(http.Header)
 	}
 	r.Header.Set("Content-Type", "text/html; charset=utf-8")
-	r.Body, err = r.engine.Render(c, r.Template, r.Data)
+	r.Body, err = r.engine.Render(ctx, r.Template, r.Data)
 	if err != nil {
 		return err
 	}
-	return r.Response.Apply(c, w)
+	return r.Response.Apply(ctx, responseWriter)
 }
 
 // SetNoCache helper
@@ -378,13 +378,13 @@ func (r *RenderResponse) SetNoCache() *RenderResponse {
 }
 
 // Apply response
-func (r *ServerErrorResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *ServerErrorResponse) Apply(ctx context.Context, responseWriter http.ResponseWriter) error {
 	if r.RenderResponse.DataResponse.Response.Status == 0 {
 		r.RenderResponse.DataResponse.Response.Status = http.StatusInternalServerError
 	}
 
-	if err := r.RenderResponse.Apply(c, w); err != nil {
-		http.Error(w, r.ErrString, int(r.RenderResponse.DataResponse.Response.Status))
+	if err := r.RenderResponse.Apply(ctx, responseWriter); err != nil {
+		http.Error(responseWriter, r.ErrString, int(r.RenderResponse.DataResponse.Response.Status))
 	}
 
 	return nil

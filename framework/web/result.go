@@ -167,7 +167,9 @@ func (r *Response) Apply(_ context.Context, responseWriter http.ResponseWriter) 
 	if r.Status == 0 {
 		r.Status = http.StatusOK
 	}
+
 	responseWriter.WriteHeader(int(r.Status))
+
 	if r.Body == nil {
 		return nil
 	}

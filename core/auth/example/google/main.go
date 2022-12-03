@@ -55,6 +55,7 @@ func (controller *testController) Inject(responder *web.Responder, webIdentitySe
 func (controller *testController) Index(ctx context.Context, req *web.Request) web.Result {
 	identity := controller.webIdentityService.Identify(ctx, req)
 	body := ""
+
 	if identity == nil {
 		body = "Hello Guest"
 	} else {
@@ -66,5 +67,4 @@ func (controller *testController) Index(ctx context.Context, req *web.Request) w
 		http.StatusOK,
 		strings.NewReader(body),
 	)
-
 }

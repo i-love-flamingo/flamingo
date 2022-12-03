@@ -206,6 +206,7 @@ flamingo.router.path=subpath
 ```
 
 This will result in:
+
 * the router can generate correct absolute URLs ("https://www.example.com/subpath/yourcontrollerroute")
 * the router will route after removing the prefix "subpath" from the request
 

@@ -13,16 +13,17 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"github.com/spf13/cobra"
+	"go.opencensus.io/plugin/ochttp"
+
 	"flamingo.me/flamingo/v3/core/runtime"
-	"flamingo.me/flamingo/v3/core/zap"
+	"flamingo.me/flamingo/v3/core/silentlogger"
 	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 type (
@@ -128,7 +129,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	modules = append([]dingo.Module{
 		new(framework.InitModule),
-		new(zap.Module),
+		new(silentlogger.Module),
 		new(runtime.Module),
 		new(cmd.Module),
 	}, modules...)

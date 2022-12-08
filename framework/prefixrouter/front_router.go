@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 var rt = stats.Int64("flamingo/prefixrouter/requesttimes", "prefixrouter request times", stats.UnitMilliseconds)
@@ -108,6 +109,9 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// process registered primaryHandlers - and if they are successful exist
 	for _, handler := range fr.primaryHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
+
+		// here log singleton created
+
 		if !proceed {
 			return
 		}

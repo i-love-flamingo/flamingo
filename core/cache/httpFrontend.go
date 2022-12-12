@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/golang/groupcache/singleflight"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
 )
 
 type (
@@ -88,7 +89,8 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
-			go hf.load(context.Background(), key, loader, true)
+			newContext := trace.NewContext(context.Background(), trace.FromContext(ctx))
+			go hf.load(newContext, key, loader, true)
 			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
@@ -104,7 +106,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	defer span.End()
 
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
-		ctx, fetchRoutineSpan := trace.StartSpan(context.Background(), "flamingo/cache/httpFrontend/fetchRoutine")
+		ctx, fetchRoutineSpan := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.Annotate(nil, key)
 		defer fetchRoutineSpan.End()
 

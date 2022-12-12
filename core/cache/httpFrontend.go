@@ -84,18 +84,36 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 
 	if entry, ok := hf.backend.Get(key); ok {
 		if entry.Meta.lifetime.After(time.Now()) {
-			hf.logger.WithField("category", "httpFrontendCache").Debug("Serving from cache", key)
+			hf.logger.WithContext(ctx).
+				WithField("category", "httpFrontendCache").
+				Debug("Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 
 		if entry.Meta.gracetime.After(time.Now()) {
-			newContext := trace.NewContext(context.Background(), trace.FromContext(ctx))
-			go hf.load(newContext, key, loader, true)
-			hf.logger.WithField("category", "httpFrontendCache").Debug("Gracetime! Serving from cache", key)
+			go func() {
+				newContext := trace.NewContext(context.Background(), trace.FromContext(ctx))
+
+				//nolint:contextcheck // this request should be done in completely new context
+				_, err := hf.load(newContext, key, loader, true)
+				if err != nil {
+					//nolint:contextcheck // log is part of the request
+					hf.logger.WithContext(newContext).
+						WithField("category", "httpFrontendCache").
+						Warn("failed to update cache entry: ", err)
+				}
+			}()
+
+			hf.logger.WithContext(ctx).
+				WithField("category", "httpFrontendCache").
+				Debug("Gracetime! Serving from cache", key)
 			return copyResponse(entry.Data.(cachedResponse), nil)
 		}
 	}
-	hf.logger.WithField("category", "httpFrontendCache").Debug("No cache entry for", key)
+
+	hf.logger.WithContext(ctx).
+		WithField("category", "httpFrontendCache").
+		Debug("No cache entry for", key)
 
 	return copyResponse(hf.load(ctx, key, loader, false))
 }

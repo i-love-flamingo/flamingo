@@ -27,7 +27,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.1
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
-	go.opencensus.io v0.23.0
+	go.opencensus.io v0.24.0
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.17.0
 	golang.org/x/oauth2 v0.2.0

@@ -92,16 +92,7 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 
 		if entry.Meta.gracetime.After(time.Now()) {
 			go func() {
-				newContext := trace.NewContext(context.Background(), trace.FromContext(ctx))
-
-				//nolint:contextcheck // this request should be done in completely new context
-				_, err := hf.load(newContext, key, loader, true)
-				if err != nil {
-					//nolint:contextcheck // log is part of the request
-					hf.logger.WithContext(newContext).
-						WithField("category", "httpFrontendCache").
-						Warn("failed to update cache entry: ", err)
-				}
+				_, _ = hf.load(ctx, key, loader, true)
 			}()
 
 			hf.logger.WithContext(ctx).
@@ -119,12 +110,15 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 }
 
 func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader, keepExistingEntry bool) (cachedResponse, error) {
-	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/load")
+	oldSpan := trace.FromContext(ctx)
+	newContext := trace.NewContext(context.Background(), oldSpan)
+
+	newContextWithSpan, span := trace.StartSpan(newContext, "flamingo/cache/httpFrontend/load")
 	span.Annotate(nil, key)
 	defer span.End()
 
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
-		ctx, fetchRoutineSpan := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/fetchRoutine")
+		ctx, fetchRoutineSpan := trace.StartSpan(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.Annotate(nil, key)
 		defer fetchRoutineSpan.End()
 
@@ -185,9 +179,11 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	}
 
 	if keepExistingEntry {
-		hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("No store/overwrite in cache because we couldn't fetch new data", key)
+		//nolint:contextcheck // this log entry should be done in new context
+		hf.logger.WithContext(newContextWithSpan).WithField("category", "httpFrontendCache").Debug("No store/overwrite in cache because we couldn't fetch new data", key)
 	} else {
-		hf.logger.WithContext(ctx).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
+		//nolint:contextcheck // this log entry should be done in new context
+		hf.logger.WithContext(newContextWithSpan).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
 		hf.backend.Set(key, &Entry{
 			Data: cached,
 			Meta: Meta{

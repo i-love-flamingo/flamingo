@@ -158,7 +158,9 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 
 	keepExistingEntry = keepExistingEntry && (err != nil || data == nil)
 
-	if data == nil {
+	response, ok := data.(loaderResponse)
+
+	if !ok {
 		data = loaderResponse{
 			cachedResponse{
 				orig: new(http.Response),
@@ -172,7 +174,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 		}
 	}
 
-	loadedData := data.(loaderResponse).data
+	loadedData := response.data
 	var cached cachedResponse
 	if loadedData != nil {
 		cached = loadedData.(cachedResponse)
@@ -183,19 +185,19 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 		hf.logger.WithContext(newContextWithSpan).WithField("category", "httpFrontendCache").Debug("No store/overwrite in cache because we couldn't fetch new data", key)
 	} else {
 		//nolint:contextcheck // this log entry should be done in new context
-		hf.logger.WithContext(newContextWithSpan).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, data.(loaderResponse).meta)
+		hf.logger.WithContext(newContextWithSpan).WithField("category", "httpFrontendCache").Debug("Store in Cache", key, response.meta)
 		hf.backend.Set(key, &Entry{
 			Data: cached,
 			Meta: Meta{
-				lifetime:  time.Now().Add(data.(loaderResponse).meta.Lifetime),
-				gracetime: time.Now().Add(data.(loaderResponse).meta.Lifetime + data.(loaderResponse).meta.Gracetime),
-				Tags:      data.(loaderResponse).meta.Tags,
+				lifetime:  time.Now().Add(response.meta.Lifetime),
+				gracetime: time.Now().Add(response.meta.Lifetime + response.meta.Gracetime),
+				Tags:      response.meta.Tags,
 			},
 		})
 	}
 
-	span.AddAttributes(trace.StringAttribute("parenttrace", data.(loaderResponse).span.TraceID.String()))
-	span.AddAttributes(trace.StringAttribute("parentspan", data.(loaderResponse).span.SpanID.String()))
+	span.AddAttributes(trace.StringAttribute("parenttrace", response.span.TraceID.String()))
+	span.AddAttributes(trace.StringAttribute("parentspan", response.span.SpanID.String()))
 	//span.AddLink(trace.Link{
 	//	SpanID:  data.(loaderResponse).span.SpanID,
 	//	TraceID: data.(loaderResponse).span.TraceID,

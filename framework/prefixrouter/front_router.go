@@ -109,9 +109,6 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// process registered primaryHandlers - and if they are successful exist
 	for _, handler := range fr.primaryHandlers {
 		proceed, _ := handler.TryServeHTTP(w, req)
-
-		// here log singleton created
-
 		if !proceed {
 			return
 		}

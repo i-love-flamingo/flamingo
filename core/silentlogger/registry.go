@@ -28,6 +28,7 @@ func (r *LoggingContextRegistry) Get(id string) *SilentContext {
 
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return r.registry[id]
 }
 
@@ -35,17 +36,23 @@ func (r *LoggingContextRegistry) Notify(_ context.Context, event flamingo.Event)
 	switch typed := event.(type) {
 	case *web.OnRequestEvent:
 		ctx := typed.Request.Request().Context()
+
+		//nolint:contextcheck // we should use context from request here
 		span := trace.FromContext(ctx)
 
 		r.mu.Lock()
 		defer r.mu.Unlock()
+
 		r.registry[span.SpanContext().TraceID.String()] = new(SilentContext)
 	case *web.OnFinishEvent:
 		ctx := typed.Request.Request().Context()
+
+		//nolint:contextcheck // we should use context from request here
 		span := trace.FromContext(ctx)
 
 		r.mu.Lock()
 		defer r.mu.Unlock()
+
 		delete(r.registry, span.SpanContext().TraceID.String())
 	}
 }

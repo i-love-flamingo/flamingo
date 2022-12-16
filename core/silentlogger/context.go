@@ -20,6 +20,7 @@ type (
 	}
 )
 
+//nolint:unparam // taking zap into account we should have possibilities to store fields
 func (c *SilentContext) store(entry *zapcore.CheckedEntry, fields ...zap.Field) {
 	if c == nil {
 		return
@@ -39,6 +40,7 @@ func (c *SilentContext) store(entry *zapcore.CheckedEntry, fields ...zap.Field) 
 	}()
 }
 
+// get returns stored entries and allows direct writing
 func (c *SilentContext) get() []storedEntry {
 	if c == nil {
 		return nil
@@ -46,7 +48,9 @@ func (c *SilentContext) get() []storedEntry {
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	c.willWrite = true
+
 	return c.storedEntries
 }
 
@@ -57,5 +61,6 @@ func (c *SilentContext) isWritingAllowed() bool {
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
 	return c.willWrite
 }

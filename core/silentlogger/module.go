@@ -10,18 +10,7 @@ import (
 
 type (
 	// Module for Silent ZAP logging
-	Module struct {
-		area               string
-		json               bool
-		logLevel           string
-		coloredOutput      bool
-		developmentMode    bool
-		samplingEnabled    bool
-		samplingInitial    float64
-		samplingThereafter float64
-		fieldMap           map[string]string
-		logSession         bool
-	}
+	Module struct{}
 
 	shutdownEventSubscriber struct {
 		logger flamingo.Logger
@@ -49,6 +38,7 @@ func (subscriber *shutdownEventSubscriber) Inject(logger flamingo.Logger) {
 func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flamingo.Event) {
 	if _, ok := event.(*flamingo.ShutdownEvent); ok {
 		if logger, ok := subscriber.logger.(*SilentLogger); ok {
+			//nolint:contextcheck //no need for context here
 			logger.Debug("Silent Zap Logger shutdown event")
 			_ = logger.Sync()
 		}

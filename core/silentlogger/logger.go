@@ -89,13 +89,45 @@ func getSilentLogger(
 		encoder = zapcore.CapitalColorLevelEncoder
 	}
 
-	cfg := zap.Config{
+	cfg := makeZapConfig(level, config.DevelopmentMode, samplingConfig, output, encoder)
+
+	logger, err := cfg.Build(zap.AddCallerSkip(1))
+	if err != nil {
+		panic(err)
+	}
+
+	fieldMap := makeFieldMap(config.FieldMap)
+
+	silentLogger := &SilentLogger{
+		Logger:          logger,
+		fieldMap:        fieldMap,
+		logSession:      config.LogSession,
+		configArea:      config.Area,
+		loggingRegistry: loggingRegistry,
+	}
+
+	silentLogger, ok = silentLogger.WithField(flamingo.LogKeyArea, config.Area).(*SilentLogger)
+	if !ok {
+		panic("getSilentLogger just tried to create logger of different type")
+	}
+
+	return silentLogger
+}
+
+func makeZapConfig(
+	level zapcore.Level,
+	developmentMode bool,
+	samplingConfig *zap.SamplingConfig,
+	encoding string,
+	encoder zapcore.LevelEncoder,
+) zap.Config {
+	return zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
-		Development:       config.DevelopmentMode,
+		Development:       developmentMode,
 		DisableCaller:     false,
 		DisableStacktrace: false,
 		Sampling:          samplingConfig,
-		Encoding:          output,
+		Encoding:          encoding,
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey:     string(flamingo.LogKeyMessage),
 			LevelKey:       string(flamingo.LogKeyLevel),
@@ -114,31 +146,18 @@ func getSilentLogger(
 		ErrorOutputPaths: []string{"stderr"},
 		InitialFields:    nil,
 	}
+}
 
-	logger, err := cfg.Build(zap.AddCallerSkip(1))
-	if err != nil {
-		panic(err)
-	}
+func makeFieldMap(configFieldMap config.Map) map[string]string {
+	fieldMap := make(map[string]string, len(configFieldMap))
 
-	var fieldMap map[string]string
-	if config.FieldMap != nil {
-		fieldMap = make(map[string]string, len(config.FieldMap))
-		for k, v := range config.FieldMap {
-			if v, ok := v.(string); ok {
-				fieldMap[k] = v
-			}
+	for k, v := range configFieldMap {
+		if v, ok := v.(string); ok {
+			fieldMap[k] = v
 		}
 	}
 
-	l := &SilentLogger{
-		Logger:          logger,
-		fieldMap:        fieldMap,
-		logSession:      config.LogSession,
-		configArea:      config.Area,
-		loggingRegistry: loggingRegistry,
-	}
-
-	return l.WithField(flamingo.LogKeyArea, config.Area).(*SilentLogger)
+	return fieldMap
 }
 
 func (l *SilentLogger) record(level string) {
@@ -283,13 +302,14 @@ func (l *SilentLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamin
 	area := l.configArea
 	traceId := l.traceID
 	i := 0
+
 	for key, value := range fields {
 		if key == flamingo.LogKeyArea {
-			area = value.(string)
+			area, _ = value.(string)
 		}
 
 		if key == flamingo.LogKeyTraceID {
-			traceId = value.(string)
+			traceId, _ = value.(string)
 		}
 
 		if alias, ok := l.fieldMap[string(key)]; ok {
@@ -321,11 +341,11 @@ func (l *SilentLogger) WithField(key flamingo.LogKey, value interface{}) flaming
 
 	area := l.configArea
 	if key == flamingo.LogKeyArea {
-		area = value.(string)
+		area, _ = value.(string)
 	}
 
 	if key == flamingo.LogKeyTraceID {
-		traceId = value.(string)
+		traceId, _ = value.(string)
 	}
 
 	if alias, ok := l.fieldMap[string(key)]; ok {
@@ -350,5 +370,5 @@ func (l *SilentLogger) WithField(key flamingo.LogKey, value interface{}) flaming
 // Flush is used by buffered loggers and triggers the actual writing. It is a good habit to call Flush before
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *SilentLogger) Flush() {
-	l.Logger.Sync()
+	_ = l.Logger.Sync()
 }

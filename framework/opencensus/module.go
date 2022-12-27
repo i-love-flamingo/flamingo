@@ -46,10 +46,9 @@ type correlationIDInjector struct {
 
 // RoundTrip a request
 func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, error) {
-	if span := trace.FromContext(req.Context()); span != nil {
+	if span := trace.FromContext(req.Context()); span != nil && len(req.Header.Values("X-Correlation-ID")) == 0 {
 		req.Header.Add("X-Correlation-ID", span.SpanContext().TraceID.String())
 	}
-
 	return rt.next.RoundTrip(req)
 }
 

@@ -47,6 +47,7 @@ func (m *mockCallbackErrorHandler) Handle(_ context.Context, _ string, _ *web.Re
 	m.SuppliedErrorDescription = errDesc
 
 	target, _ := url.Parse("https://example.com/callback-error-handler")
+
 	return &web.URLRedirectResponse{URL: target}
 }
 
@@ -139,6 +140,7 @@ func (p *testOidcProvider) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 func TestOidcCallback(t *testing.T) {
 	t.Run("Test Callback", func(t *testing.T) {
+		t.Parallel()
 		provider := &testOidcProvider{}
 		testserver := httptest.NewServer(provider)
 		defer testserver.Close()
@@ -191,6 +193,7 @@ func TestOidcCallback(t *testing.T) {
 	})
 
 	t.Run("Test optional callback error handler", func(t *testing.T) {
+		t.Parallel()
 		provider := &testOidcProvider{}
 		testserver := httptest.NewServer(provider)
 		defer testserver.Close()

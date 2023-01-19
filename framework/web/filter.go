@@ -60,6 +60,7 @@ func (fc *FilterChain) Next(ctx context.Context, req *Request, w http.ResponseWr
 
 	next := fc.filters[0]
 	fc.filters = fc.filters[1:]
+
 	return next.Filter(ctx, req, w, fc)
 }
 
@@ -74,18 +75,18 @@ func (sf sortableFilers) Len() int {
 }
 
 // Less supports implementation for sort.Interface
-func (sf sortableFilers) Less(i, j int) bool {
+func (sf sortableFilers) Less(indexLeft, indexRight int) bool {
 	firstPriority := 0
-	if filter, ok := sf[i].filter.(PrioritizedFilter); ok {
+	if filter, ok := sf[indexLeft].filter.(PrioritizedFilter); ok {
 		firstPriority = filter.Priority()
 	}
 
 	secondPriority := 0
-	if filter, ok := sf[j].filter.(PrioritizedFilter); ok {
+	if filter, ok := sf[indexRight].filter.(PrioritizedFilter); ok {
 		secondPriority = filter.Priority()
 	}
 
-	return firstPriority < secondPriority || (firstPriority == secondPriority && sf[i].index > sf[j].index)
+	return firstPriority < secondPriority || (firstPriority == secondPriority && sf[indexLeft].index > sf[indexRight].index)
 }
 
 // Swap supports implementation for sort.Interface

@@ -67,19 +67,21 @@ func (e *panicError) Unwrap() error {
 	return e.err
 }
 
-func (e *panicError) Format(s fmt.State, verb rune) {
+func (e *panicError) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
-		if s.Flag('+') {
-			_, _ = io.WriteString(s, e.err.Error())
-			_, _ = fmt.Fprintf(s, "\n%s", e.stack)
+		if state.Flag('+') {
+			_, _ = io.WriteString(state, e.err.Error())
+			_, _ = fmt.Fprintf(state, "\n%s", e.stack)
+
 			return
 		}
+
 		fallthrough
 	case 's':
-		_, _ = io.WriteString(s, e.err.Error())
+		_, _ = io.WriteString(state, e.err.Error())
 	case 'q':
-		_, _ = fmt.Fprintf(s, "%q", e.err)
+		_, _ = fmt.Fprintf(state, "%q", e.err)
 	}
 }
 
@@ -91,7 +93,7 @@ func panicToError(p interface{}) error {
 	var err error
 	switch errIface := p.(type) {
 	case error:
-		//err = fmt.Errorf("controller panic: %w", errIface)
+		// err = fmt.Errorf("controller panic: %w", errIface)
 		err = &panicError{err: fmt.Errorf("controller panic: %w", errIface), stack: debug.Stack()}
 	case string:
 		err = &panicError{err: fmt.Errorf("controller panic: %s", errIface), stack: debug.Stack()}
@@ -123,6 +125,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		ctx, _ = tag.New(ctx, tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Insert(opencensus.KeyArea, "-"))
 		httpRequest = httpRequest.WithContext(ctx)
 		start := time.Now()
+
 		defer func() {
 			stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
 		}()
@@ -151,26 +154,26 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	chain := &FilterChain{
 		filters: h.filter,
-		final: func(ctx context.Context, r *Request, rw http.ResponseWriter) (response Result) {
+		final: func(ctx context.Context, r *Request, writer http.ResponseWriter) (response Result) {
 			ctx, span := trace.StartSpan(ctx, "router/controller")
 			defer span.End()
 
 			defer func() {
 				if err := panicToError(recover()); err != nil {
-					response = h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, err), r)
+					response = h.routerRegistry.handler[FlamingoError].anyAction(context.WithValue(ctx, RouterError, err), r)
 					span.SetStatus(trace.Status{Code: trace.StatusCodeAborted, Message: "controller panic"})
 				}
 			}()
 
-			defer h.eventRouter.Dispatch(ctx, &OnResponseEvent{OnRequestEvent{req, rw}, response})
+			defer h.eventRouter.Dispatch(ctx, &OnResponseEvent{OnRequestEvent{req, writer}, response})
 
 			if c, ok := controller.method[req.Request().Method]; ok && c != nil {
 				response = c(ctx, r)
-			} else if controller.any != nil {
-				response = controller.any(ctx, r)
+			} else if controller.anyAction != nil {
+				response = controller.anyAction(ctx, r)
 			} else {
 				err := fmt.Errorf("action for method %q not found and no \"any\" fallback", req.Request().Method)
-				response = h.routerRegistry.handler[FlamingoNotfound].any(context.WithValue(ctx, RouterError, err), r)
+				response = h.routerRegistry.handler[FlamingoNotfound].anyAction(context.WithValue(ctx, RouterError, err), r)
 				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
 			}
 
@@ -187,16 +190,18 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	}
 
 	var finalErr error
+
 	if result != nil {
 		ctx, span := trace.StartSpan(ctx, "router/responseApply")
 
 		func() {
-			//catch panic in Apply only
+			// catch panic in Apply only
 			defer func() {
 				if err := panicToError(recover()); err != nil {
 					finalErr = err
 				}
 			}()
+
 			finalErr = result.Apply(ctx, rw)
 		}()
 
@@ -212,23 +217,28 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		cb(finalErr, result)
 	}
 
-	if finalErr != nil {
-		finishErr = finalErr
-		defer func() {
-			if err := panicToError(recover()); err != nil {
-				if errors.Is(err, context.Canceled) {
-					h.logger.WithContext(ctx).Debug(err)
-				} else {
-					h.logger.WithContext(ctx).Error(err)
-				}
-				finishErr = err
-				rw.WriteHeader(http.StatusInternalServerError)
-				_, _ = fmt.Fprintf(rw, "%+v", err)
-			}
-		}()
+	if finalErr == nil {
+		return
+	}
 
-		if err := h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, finalErr), req).Apply(ctx, rw); err != nil {
-			panic(err)
+	finishErr = finalErr
+
+	defer func() {
+		if err := panicToError(recover()); err != nil {
+			if errors.Is(err, context.Canceled) {
+				h.logger.WithContext(ctx).Debug(err)
+			} else {
+				h.logger.WithContext(ctx).Error(err)
+			}
+
+			finishErr = err
+
+			rw.WriteHeader(http.StatusInternalServerError)
+			_, _ = fmt.Fprintf(rw, "%+v", err)
 		}
+	}()
+
+	if err := h.routerRegistry.handler[FlamingoError].anyAction(context.WithValue(ctx, RouterError, finalErr), req).Apply(ctx, rw); err != nil {
+		panic(err)
 	}
 }

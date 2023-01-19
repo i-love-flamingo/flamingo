@@ -58,7 +58,7 @@ func (s *SessionStore) LoadByRequest(ctx context.Context, req *http.Request) (*S
 
 	span.AddAttributes(trace.StringAttribute(string(flamingo.LogKeySession), hashID(gs.ID)))
 
-	return &Session{s: gs, sessionSaveMode: s.sessionSaveMode}, err
+	return &Session{s: gs, sessionSaveMode: s.sessionSaveMode}, fmt.Errorf("unable to create new session: %w", err)
 }
 
 // LoadByID loads a Session from a provided session id
@@ -112,7 +112,7 @@ func (s *SessionStore) Save(ctx context.Context, session *Session) (http.Header,
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
-	gs := session.s
+	gorillaSession := session.s
 
 	// copy dirty values to new instance and move Values to original session
 	if s.sessionSaveMode != sessionSaveAlways && !session.dirtyAll && session.s.ID != "" {
@@ -127,20 +127,20 @@ func (s *SessionStore) Save(ctx context.Context, session *Session) (http.Header,
 		}
 		var ok bool
 		for k := range session.dirty {
-			newGs.s.Values[k], ok = gs.Values[k]
+			newGs.s.Values[k], ok = gorillaSession.Values[k]
 			if !ok {
 				delete(newGs.s.Values, k)
 			}
 		}
-		gs.Values = newGs.s.Values
+		gorillaSession.Values = newGs.s.Values
 		session.dirty = nil
 	}
 
 	_, span := trace.StartSpan(ctx, "flamingo/web/session/save")
 	defer span.End()
 	rw := headerResponseWriter(make(http.Header))
-	if err := s.sessionStore.Save(s.requestFromID(session.s.ID), rw, gs); err != nil {
-		return nil, err
+	if err := s.sessionStore.Save(s.requestFromID(session.s.ID), rw, gorillaSession); err != nil {
+		return nil, fmt.Errorf("unable to save session: %w", err)
 	}
 
 	return rw.Header(), nil

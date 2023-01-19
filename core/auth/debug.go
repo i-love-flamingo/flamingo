@@ -24,7 +24,7 @@ func (c *debugController) Inject(responder *web.Responder, identityService *WebI
 }
 
 var tpl = template.Must(template.New("debug").Parse(
-	//language=gohtml
+	// language=gohtml
 	`
 <h1>Auth Debug</h1><hr/>
 <h2>Registered RequestIdentifier:</h2>

@@ -8,6 +8,7 @@ import (
 )
 
 func TestURLTitle(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "test_a-123-name-test", URLTitle("test/a 123 name % / _ - _ test"))
 }
 

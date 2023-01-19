@@ -56,9 +56,9 @@ func dumpConfigArea(a *Area) {
 	fmt.Println("**************************")
 	fmt.Println("Area: ", a.Name)
 	fmt.Println("**************************")
-	if false { //cuedump {
+	if false { // cuedump {
 		// build a cue runtime to verify the config
-		//cueRuntime := new(cue.Runtime)
+		// cueRuntime := new(cue.Runtime)
 		//ci, err := cueRuntime.Build(a.cueBuildInstance)
 		//if err != nil {
 		//	panic(err)
@@ -71,7 +71,7 @@ func dumpConfigArea(a *Area) {
 			fmt.Println("")
 		}
 
-		//d, _ := format.Node(ci.Value().Syntax(), format.Simplify())
+		// d, _ := format.Node(ci.Value().Syntax(), format.Simplify())
 		//fmt.Println(string(d))
 	} else {
 		x, _ := json.MarshalIndent(a.Configuration, "", "  ")

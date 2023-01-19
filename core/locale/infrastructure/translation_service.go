@@ -61,17 +61,17 @@ func (ts *TranslationService) TranslateLabel(label domain.Label) string {
 	ts.reloadFilesIfNecessary()
 	translatedString, err := ts.translateWithLib(label.GetLocaleCode(), label.GetKey(), label.GetCount(), label.GetTranslationArguments())
 
-	//while there is an error check fallBacks
+	// while there is an error check fallBacks
 	for _, fallbackLocale := range label.GetFallbackLocaleCodes() {
 		if err != nil {
 			translatedString, err = ts.translateWithLib(fallbackLocale, label.GetKey(), label.GetCount(), label.GetTranslationArguments())
 		}
 	}
 	if err != nil {
-		//default to key (=untranslated) if still an error
+		// default to key (=untranslated) if still an error
 		translatedString = label.GetKey()
 	}
-	//Fallback if label was not translated
+	// Fallback if label was not translated
 	if translatedString == label.GetKey() && label.GetDefaultLabel() != "" {
 		return ts.parseDefaultLabel(label.GetDefaultLabel(), label.GetKey(), label.GetTranslationArguments())
 	}
@@ -84,11 +84,11 @@ func (ts *TranslationService) Translate(key string, defaultLabel string, localeC
 	label, err := ts.translateWithLib(localeCode, key, count, translationArguments)
 
 	if err != nil {
-		//default to key (=untranslated) on error
+		// default to key (=untranslated) on error
 		label = key
 	}
 
-	//Fallback if label was not translated
+	// Fallback if label was not translated
 	if label == key && defaultLabel != "" {
 		return ts.parseDefaultLabel(defaultLabel, key, translationArguments)
 	}

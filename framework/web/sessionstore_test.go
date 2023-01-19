@@ -91,7 +91,7 @@ func TestSessionSaveOnRead(t *testing.T) {
 	assert.Equal(t, map[interface{}]interface{}{
 		"key1": "val0", // from session2
 		"key2": "val1", // from session1
-		//"key3": nil,    // deleted
+		// "key3": nil,    // deleted
 		"key4": "val2", // from session2
 		"key5": "val0", // from session2 read
 		// no flashes because session2 did not touch it, the deletion from session1 wins
@@ -127,7 +127,7 @@ func TestSessionSaveOnWrite(t *testing.T) {
 	assert.Equal(t, map[interface{}]interface{}{
 		"key1": "val2", // from session2
 		"key2": "val1", // from session1
-		//"key3": nil,    // deleted
+		// "key3": nil,    // deleted
 		// no flashes because session2 did not touch it, the deletion from session1 wins
 	}, session.s.Values)
 }

@@ -181,8 +181,8 @@ func (r *Router) relative(to string, params map[string]string) (string, error) {
 }
 
 // Relative returns a root-relative URL, starting with `/`
-func (r *Router) Relative(to string, params map[string]string) (*url.URL, error) {
-	if to == "" {
+func (r *Router) Relative(target string, params map[string]string) (*url.URL, error) {
+	if target == "" {
 		relativePath := r.Base().Path
 		if r.external != nil {
 			relativePath = r.external.Path
@@ -193,7 +193,7 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 		}, nil
 	}
 
-	p, err := r.relative(to, params)
+	p, err := r.relative(target, params)
 	if err != nil {
 		return nil, err
 	}
@@ -208,10 +208,10 @@ func (r *Router) Relative(to string, params map[string]string) (*url.URL, error)
 
 // Absolute returns an absolute URL, with scheme and host.
 // It takes the request to construct as many information as possible
-func (r *Router) Absolute(req *Request, to string, params map[string]string) (*url.URL, error) {
+func (r *Router) Absolute(req *Request, target string, params map[string]string) (*url.URL, error) {
 	if r.external != nil {
 		e := *r.external
-		p, err := r.relative(to, params)
+		p, err := r.relative(target, params)
 		if err != nil {
 			return nil, err
 		}
@@ -234,7 +234,7 @@ func (r *Router) Absolute(req *Request, to string, params map[string]string) (*u
 		host = req.request.Host
 	}
 
-	u, err := r.Relative(to, params)
+	u, err := r.Relative(target, params)
 	if err != nil {
 		return u, err
 	}
@@ -269,6 +269,7 @@ func dataParams(params map[interface{}]interface{}) RequestParams {
 func (r *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
 	ctx, span := trace.StartSpan(ctx, "flamingo/router/data")
 	span.Annotate(nil, handler)
+
 	defer span.End()
 
 	req := RequestFromContext(ctx)

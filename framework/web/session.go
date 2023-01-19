@@ -66,6 +66,7 @@ func (s *Session) Load(key interface{}) (data interface{}, ok bool) {
 	defer s.mu.Unlock()
 
 	data, ok = s.s.Values[key]
+
 	if s.sessionSaveMode <= sessionSaveOnRead {
 		s.markDirty(key)
 	}

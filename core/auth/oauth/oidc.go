@@ -30,6 +30,11 @@ type (
 		IDTokenClaims(into interface{}) error
 	}
 
+	// CallbackErrorHandler can be used to handle errors in the Callback e.g. to cover prompt=none cases
+	CallbackErrorHandler interface {
+		Handle(ctx context.Context, broker string, request *web.Request, errString string, errDetails string) web.Result
+	}
+
 	oidcIdentity struct {
 		broker            string
 		subject           string
@@ -51,6 +56,7 @@ type (
 		eventRouter              flamingo.EventRouter
 		oidcConfig               oidcConfig
 		verifierConfigurator     []func(*oidc.Config)
+		callbackErrorHandler     CallbackErrorHandler
 	}
 
 	sessionData struct {
@@ -181,11 +187,18 @@ func (i *openIDIdentifier) Inject(
 	reverseRouter web.ReverseRouter,
 	eventRouter flamingo.EventRouter,
 	authCodeOptionerProvider authCodeOptionerProvider,
+	optionals *struct {
+		CallbackErrorHandler CallbackErrorHandler `inject:"optional"`
+	},
 ) {
 	i.responder = responder
 	i.reverseRouter = reverseRouter
 	i.eventRouter = eventRouter
 	i.authCodeOptionerProvider = authCodeOptionerProvider
+
+	if optionals != nil && optionals.CallbackErrorHandler != nil {
+		i.callbackErrorHandler = optionals.CallbackErrorHandler
+	}
 }
 
 // Identify an incoming request
@@ -409,6 +422,12 @@ func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Reques
 func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, returnTo func(request *web.Request) *url.URL) web.Result {
 	if errString, err := request.Query1("error"); err == nil {
 		errDetails, _ := request.Query1("error_description")
+		if i.callbackErrorHandler != nil {
+			if result := i.callbackErrorHandler.Handle(ctx, i.broker, request, errString, errDetails); result != nil {
+				return result
+			}
+		}
+
 		return i.responder.ServerError(fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
 	}
 
@@ -465,7 +484,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	if len(accessTokenParts) >= 2 {
 		decoded, _ := base64.RawURLEncoding.DecodeString(accessTokenParts[1])
 		var cs map[string]interface{}
-		json.NewDecoder(bytes.NewBuffer(decoded)).Decode(&cs)
+		_ = json.NewDecoder(bytes.NewBuffer(decoded)).Decode(&cs)
 		if cs != nil {
 			for k, v := range i.oidcConfig.Claims.AccessToken {
 				accessTokenClaims[k] = cs[v]

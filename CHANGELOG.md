@@ -1,5 +1,29 @@
 # Changelog
 
+## Version v3.5.0 (2023-01-26)
+
+### Features
+
+- **core/auth/oauth:** Add optional OIDC callback error handler (4fe0f89e)
+
+### Fixes
+
+- **cache:** do not rewrite trace id (#306) (b1a5918a)
+- **framework/opencensus:** x-correlation-id condition (#310) (5909a729)
+
+### Chores and tidying
+
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.5.0 (#313) (372b7b45)
+- **deps:** update module golang.org/x/oauth2 to v0.4.0 (bd3ae5d3)
+- **deps:** update module github.com/hashicorp/golang-lru to v0.6.0 (9c62154e)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v4.4.3 (7189aed3)
+- **deps:** update module contrib.go.opencensus.io/exporter/prometheus to v0.4.2 (cb8d1a5d)
+- make linter happy (3017d8ab)
+- **deps:** update module go.opencensus.io to v0.24.0 (#302) (6e915e2a)
+- **deps:** update module flamingo.me/dingo to v0.2.10 (#299) (0aace54a)
+- **deps:** update module github.com/gofrs/uuid to v4.3.1+incompatible (#295) (1fe7e9c4)
+- **deps:** update module golang.org/x/oauth2 to v0.2.0 (#296) (0ad70578)
+
 ## Version v3.4.0 (2022-11-03)
 
 ### Features

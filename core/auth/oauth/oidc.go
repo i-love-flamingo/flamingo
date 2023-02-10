@@ -32,7 +32,7 @@ type (
 
 	// CallbackErrorHandler can be used to handle errors in the Callback e.g. to cover prompt=none cases
 	CallbackErrorHandler interface {
-		Handle(ctx context.Context, broker string, request *web.Request, errString string, errDetails string) web.Result
+		Handle(ctx context.Context, broker string, request *web.Request, originalReturnTo func(request *web.Request) *url.URL, errString string, errDetails string) web.Result
 	}
 
 	oidcIdentity struct {
@@ -188,7 +188,7 @@ func (i *openIDIdentifier) Inject(
 	eventRouter flamingo.EventRouter,
 	authCodeOptionerProvider authCodeOptionerProvider,
 	optionals *struct {
-		CallbackErrorHandler CallbackErrorHandler `inject:"optional"`
+		CallbackErrorHandler CallbackErrorHandler `inject:",optional"`
 	},
 ) {
 	i.responder = responder
@@ -423,7 +423,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	if errString, err := request.Query1("error"); err == nil {
 		errDetails, _ := request.Query1("error_description")
 		if i.callbackErrorHandler != nil {
-			if result := i.callbackErrorHandler.Handle(ctx, i.broker, request, errString, errDetails); result != nil {
+			if result := i.callbackErrorHandler.Handle(ctx, i.broker, request, returnTo, errString, errDetails); result != nil {
 				return result
 			}
 		}

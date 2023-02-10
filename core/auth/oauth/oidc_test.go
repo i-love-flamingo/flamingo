@@ -41,7 +41,7 @@ type mockCallbackErrorHandler struct {
 	SuppliedErrorDescription string
 }
 
-func (m *mockCallbackErrorHandler) Handle(_ context.Context, _ string, _ *web.Request, err string, errDesc string) web.Result {
+func (m *mockCallbackErrorHandler) Handle(_ context.Context, _ string, _ *web.Request, _ func(request *web.Request) *url.URL, err string, errDesc string) web.Result {
 	m.Called = true
 	m.SuppliedError = err
 	m.SuppliedErrorDescription = errDesc

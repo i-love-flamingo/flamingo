@@ -165,7 +165,7 @@ and read the documentation under [docs.flamingo.me](https://docs.flamingo.me/)
 # Getting Help
 
 If you need help you can:
-* join our gitter chat: https://gitter.im/i-love-flamingo/community
+* join our discord chat: https://discord.gg/hmHgm3pYNn
 * or ask in stackoverflow (we try to keep track of new questions)
 * write us an email: flamingo@aoe.com
 * Or open an issue in github if you think you found a bug

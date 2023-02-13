@@ -8,7 +8,7 @@
 [![Tests](https://github.com/i-love-flamingo/flamingo/workflows/Tests/badge.svg?branch=master)](https://github.com/i-love-flamingo/flamingo/actions?query=branch%3Amaster+workflow%3ATests)
 [![Release](https://img.shields.io/github/release/i-love-flamingo/flamingo?style=flat-square)](https://github.com/i-love-flamingo/flamingo/releases)
 [![TODOs](https://badgen.net/https/api.tickgit.com/badgen/github.com/i-love-flamingo/flamingo)](https://www.tickgit.com/browse?repo=github.com/i-love-flamingo/flamingo)
-[![Join the chat at https://gitter.im/i-love-flamingo/community](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/i-love-flamingo/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://discord.gg/hmHgm3pYNn](https://img.shields.io/badge/Discord-%235865F2.svg?style=plasticsquare&logo=appveyor&label=join&nbsp;us&nbsp;at)](https://discord.gg/hmHgm3pYNn)
 
 
 Flamingo is a web framework based on Go.  
@@ -165,7 +165,7 @@ and read the documentation under [docs.flamingo.me](https://docs.flamingo.me/)
 # Getting Help
 
 If you need help you can:
-* join our gitter chat: https://gitter.im/i-love-flamingo/community
+* join our discord chat: https://discord.gg/hmHgm3pYNn
 * or ask in stackoverflow (we try to keep track of new questions)
 * write us an email: flamingo@aoe.com
 * Or open an issue in github if you think you found a bug

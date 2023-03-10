@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 	"runtime/debug"
+	"sync"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
@@ -20,6 +21,7 @@ type (
 		logger          flamingo.Logger
 		serviceAddress  string
 		server          *http.Server
+		mu              sync.Mutex
 	}
 )
 
@@ -59,13 +61,13 @@ func (s *SystemServer) Start() {
 	}
 
 	serveMux.HandleFunc("/version", func(writer http.ResponseWriter, _ *http.Request) {
-		fmt.Fprintf(writer, "version: %s\n", flamingo.AppVersion())
-		fmt.Fprintf(writer, "go: %s\n", runtime.Version())
+		_, _ = fmt.Fprintf(writer, "version: %s\n", flamingo.AppVersion())
+		_, _ = fmt.Fprintf(writer, "go: %s\n", runtime.Version())
 		if info, ok := debug.ReadBuildInfo(); ok {
-			fmt.Fprintf(writer, "path: %s\n", info.Path)
+			_, _ = fmt.Fprintf(writer, "path: %s\n", info.Path)
 			for _, module := range info.Deps {
 				if module.Path == "flamingo.me/flamingo/v3" {
-					fmt.Fprintf(writer, "flamingo: %s\n", module.Version)
+					_, _ = fmt.Fprintf(writer, "flamingo: %s\n", module.Version)
 				}
 			}
 		}
@@ -76,7 +78,9 @@ func (s *SystemServer) Start() {
 		s.logger.Fatal(err)
 	}
 
+	s.mu.Lock()
 	s.server = &http.Server{Handler: serveMux}
+	s.mu.Unlock()
 	go func() {
 		s.logger.Info("Starting HTTP Server (systemendpoint) at ", listener.Addr())
 		err := s.server.Serve(listener)
@@ -87,6 +91,8 @@ func (s *SystemServer) Start() {
 }
 
 func (s *SystemServer) shutdown() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if s.server != nil {
 		s.logger.Info("systemendpoint: shutdown")
 		_ = s.server.Shutdown(context.Background())

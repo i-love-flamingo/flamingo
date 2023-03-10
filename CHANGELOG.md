@@ -1,5 +1,22 @@
 # Changelog
 
+## Version v3.5.1 (2023-03-10)
+
+### Fixes
+
+- **systemendpoint:** prevent data race on server (#324) (0d094a24)
+- updating community join url to discord (#320) (7947dfd5)
+- **core/auth/oauth:** Properly mark OIDC callback error handler as optional (#318) (f45a90c1)
+
+### Documentation
+
+- introduce slack channel (#323) (23a68460)
+
+### Chores and tidying
+
+- **deps:** bump golang.org/x/net from 0.5.0 to 0.7.0 (59000bde)
+- **deps:** update mockery golangci-lint and  (#325) (4fd9102d)
+
 ## Version v3.5.0 (2023-01-26)
 
 ### Features

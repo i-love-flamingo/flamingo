@@ -17,7 +17,7 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 
 	"flamingo.me/flamingo/v3/core/runtime"
-	"flamingo.me/flamingo/v3/core/silentlogger"
+	"flamingo.me/flamingo/v3/core/zap"
 	"flamingo.me/flamingo/v3/framework"
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -34,6 +34,7 @@ type (
 		area            *config.Area
 		args            []string
 		routesModules   []web.RoutesModule
+		loggerModule    dingo.Module
 		defaultContext  string
 		eagerSingletons bool
 		flagset         *flag.FlagSet
@@ -85,6 +86,13 @@ func WithRoutes(routesModule web.RoutesModule) ApplicationOption {
 	}
 }
 
+// WithCustomLogger allows to use custom logger modules for flamingo app, if nothing available default will be used
+func WithCustomLogger(logger dingo.Module) ApplicationOption {
+	return func(config *Application) {
+		config.loggerModule = logger
+	}
+}
+
 type eventRouterProvider func() flamingo.EventRouter
 
 type arrayFlags []string
@@ -104,6 +112,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		configDir:      "config",
 		args:           os.Args[1:],
 		defaultContext: "root",
+		loggerModule:   new(zap.Module),
 	}
 
 	for _, option := range options {
@@ -129,7 +138,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	modules = append([]dingo.Module{
 		new(framework.InitModule),
-		new(silentlogger.Module),
+		app.loggerModule,
 		new(runtime.Module),
 		new(cmd.Module),
 	}, modules...)

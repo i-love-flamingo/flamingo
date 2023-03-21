@@ -1,4 +1,4 @@
-package silentlogger
+package silentzap
 
 import (
 	"sync"

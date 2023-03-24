@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
-	"flamingo.me/flamingo/v3/framework/web"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 var (

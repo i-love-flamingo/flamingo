@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 var rt = stats.Int64("flamingo/prefixrouter/requesttimes", "prefixrouter request times", stats.UnitMilliseconds)

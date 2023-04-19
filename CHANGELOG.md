@@ -1,5 +1,16 @@
 # Changelog
 
+## Version v3.6.0 (2023-04-19)
+
+### Features
+
+- **zap:** silent zap logging (#308) (c91a24b3)
+
+### Chores and tidying
+
+- **deps:** update module github.com/go-redis/redis/v8 to v9 (#333) (d5741fd9)
+- add regex to detect go run/install commands (dc92fff0)
+
 ## Version v3.5.1 (2023-03-10)
 
 ### Fixes

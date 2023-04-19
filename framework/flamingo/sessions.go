@@ -15,9 +15,9 @@ import (
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
-	"github.com/go-redis/redis/v8"
 	"github.com/gorilla/sessions"
-	"github.com/rbcervilla/redisstore/v8"
+	"github.com/rbcervilla/redisstore/v9"
+	"github.com/redis/go-redis/v9"
 	"github.com/zemirco/memorystore"
 )
 

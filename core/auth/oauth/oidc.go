@@ -12,13 +12,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/gofrs/uuid"
+	"golang.org/x/oauth2"
+
 	"flamingo.me/flamingo/v3/core/auth"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/gofrs/uuid"
-	"golang.org/x/oauth2"
 )
 
 type (
@@ -215,8 +216,13 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 		configurator(verifierConfig)
 	}
 
+	authConfig := i.config(request)
+	if authConfig == nil {
+		return nil, errors.New("failed to create config")
+	}
+
 	identity := &oidcIdentity{
-		token:             token{tokenSource: i.config(request).TokenSource(ctx, sessiondata.Token)},
+		token:             token{tokenSource: authConfig.TokenSource(ctx, sessiondata.Token)},
 		broker:            i.broker,
 		subject:           sessiondata.Subject,
 		verifier:          i.provider.Verifier(verifierConfig),
@@ -339,7 +345,11 @@ func (i *openIDIdentifier) Broker() string {
 
 func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
 	oauth2Config := *i.oauth2Config
-	u, _ := i.reverseRouter.Absolute(request, "core.auth.callback", map[string]string{"broker": i.broker})
+	u, err := i.reverseRouter.Absolute(request, "core.auth.callback", map[string]string{"broker": i.broker})
+	if err != nil {
+		return nil
+	}
+
 	oauth2Config.RedirectURL = u.String()
 	return &oauth2Config
 }

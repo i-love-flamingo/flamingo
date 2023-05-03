@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -304,6 +305,9 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 
 // Reverse builds the path from a named route with params
 func (registry *RouterRegistry) Reverse(name string, params map[string]string) (string, error) {
+	if registry == nil {
+		return "", errors.New("registry is nil")
+	}
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler
 		if params == nil {

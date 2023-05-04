@@ -1,5 +1,16 @@
 # Changelog
 
+## Version v3.6.1 (2023-05-04)
+
+### Fixes
+
+- **web:** auth config return nil (d2407eaf)
+- **web:** handle reverse router being nil (2b79ba7d)
+
+### Chores and tidying
+
+- **deps:** update module github.com/spf13/cobra to v1.7.0 (#252) (5ac51fbd)
+
 ## Version v3.6.0 (2023-04-19)
 
 ### Features

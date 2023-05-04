@@ -58,6 +58,10 @@ type (
 	}
 )
 
+var (
+	errNilRegistry = errors.New("registry is nil")
+)
+
 // BindRoutes is a convenience helper to multi-bind router modules
 func BindRoutes(injector *dingo.Injector, m RoutesModule) {
 	injector.BindMulti(new(RoutesModule)).To(m)
@@ -306,7 +310,7 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 // Reverse builds the path from a named route with params
 func (registry *RouterRegistry) Reverse(name string, params map[string]string) (string, error) {
 	if registry == nil {
-		return "", errors.New("registry is nil")
+		return "", errNilRegistry
 	}
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler

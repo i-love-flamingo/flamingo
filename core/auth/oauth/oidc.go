@@ -216,9 +216,9 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 		configurator(verifierConfig)
 	}
 
-	authConfig := i.config(request)
-	if authConfig == nil {
-		return nil, errors.New("failed to create config")
+	authConfig, err := i.config(request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to identify a reuqest: %w", err)
 	}
 
 	identity := &oidcIdentity{
@@ -343,15 +343,17 @@ func (i *openIDIdentifier) Broker() string {
 	return i.broker
 }
 
-func (i *openIDIdentifier) config(request *web.Request) *oauth2.Config {
+func (i *openIDIdentifier) config(request *web.Request) (*oauth2.Config, error) {
 	oauth2Config := *i.oauth2Config
+
 	u, err := i.reverseRouter.Absolute(request, "core.auth.callback", map[string]string{"broker": i.broker})
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to get oauth config: %w", err)
 	}
 
 	oauth2Config.RedirectURL = u.String()
-	return &oauth2Config
+
+	return &oauth2Config, nil
 }
 
 // StateEntry stores entries of recent states during login (oidc states)
@@ -420,7 +422,13 @@ func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Reques
 	for _, o := range i.authCodeOptionerProvider() {
 		options = append(options, o.Options(ctx, i.Broker(), request)...)
 	}
-	u, err := url.Parse(i.config(request).AuthCodeURL(state, options...))
+
+	authConfig, err := i.config(request)
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	u, err := url.Parse(authConfig.AuthCodeURL(state, options...))
 	if err != nil {
 		return i.responder.ServerError(err)
 	}
@@ -454,7 +462,12 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(err)
 	}
 
-	oauth2Token, err := i.config(request).Exchange(ctx, code)
+	oauthConfig, err := i.config(request)
+	if err != nil {
+		return i.responder.ServerError(err)
+	}
+
+	oauth2Token, err := oauthConfig.Exchange(ctx, code)
 	if err != nil {
 		return i.responder.ServerError(err)
 	}

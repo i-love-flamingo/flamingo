@@ -4,7 +4,6 @@
 
 ### Fixes
 
-- **web:** auth config return nil (d2407eaf)
 - **web:** handle reverse router being nil (2b79ba7d)
 
 ### Chores and tidying

@@ -11,12 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"flamingo.me/flamingo/v3/core/auth"
-	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
+
+	"flamingo.me/flamingo/v3/core/auth"
+	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type mockRouter struct {
@@ -138,6 +139,12 @@ func (p *testOidcProvider) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type testAuthCodeOptioner struct{}
+
+func (*testAuthCodeOptioner) Options(_ context.Context, _ string, req *web.Request) []oauth2.AuthCodeOption {
+	return []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("redirect_uri", "foobar123test")}
+}
+
 func TestOidcCallback(t *testing.T) {
 	t.Run("Test Callback", func(t *testing.T) {
 		t.Parallel()
@@ -232,6 +239,66 @@ func TestOidcCallback(t *testing.T) {
 		assert.Equal(t, mockCallback.SuppliedErrorDescription, "The User is not logged in", "the error callback handler was not called")
 		expectedURL, _ := url.Parse("https://example.com/callback-error-handler")
 		assert.Equal(t, result, &web.URLRedirectResponse{URL: expectedURL}, "Result of callback handler was ignored")
+	})
+
+	t.Run("Test add auth code option to exchange token call", func(t *testing.T) {
+		t.Parallel()
+
+		testServer := httptest.NewUnstartedServer(nil)
+		tokenCalled := false
+
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch strings.Trim(r.URL.Path, "/") {
+			case "token":
+				{
+					_ = r.ParseForm()
+					redirectURI := r.PostForm.Get("redirect_uri")
+
+					assert.Equal(t, redirectURI, "foobar123test")
+					tokenCalled = true
+
+					w.Header().Set("Content-type", "application/json")
+					return
+				}
+			case ".well-known/openid-configuration":
+				_, _ = fmt.Fprintf(w, `{
+				"issuer": "%s",
+				"token_endpoint": "%s/token",
+				"jwks_uri": "%s/certs"
+			}`, testServer.URL, testServer.URL, testServer.URL)
+			}
+		})
+
+		testServer.Config.Handler = handler
+		testServer.Start()
+		defer testServer.Close()
+
+		identifier := new(openIDIdentifier)
+		identifier.reverseRouter = new(mockRouter)
+		identifier.responder = new(web.Responder)
+
+		identifier.authCodeOptionerProvider = func() []AuthCodeOptioner {
+			return []AuthCodeOptioner{new(testAuthCodeOptioner)}
+		}
+
+		var err error
+		identifier.provider, err = oidc.NewProvider(context.Background(), testServer.URL)
+		assert.NoError(t, err)
+		identifier.oauth2Config = &oauth2.Config{
+			Endpoint: oauth2.Endpoint{AuthURL: "", TokenURL: testServer.URL + "/token"},
+		}
+
+		session := web.EmptySession()
+		request := web.CreateRequest(nil, session)
+
+		identifier.createSessionCode(request, "test-callback-state")
+
+		request.Request().URL.RawQuery = "state=test-callback-state&code=test-callback-code"
+		identifier.Callback(context.Background(), request, func(request *web.Request) *url.URL {
+			return new(url.URL)
+		})
+
+		assert.True(t, tokenCalled)
 	})
 }
 

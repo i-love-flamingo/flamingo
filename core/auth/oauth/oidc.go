@@ -467,7 +467,15 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(err)
 	}
 
-	oauth2Token, err := oauthConfig.Exchange(ctx, code)
+	options := make([]oauth2.AuthCodeOption, 0)
+
+	if i.authCodeOptionerProvider != nil {
+		for _, o := range i.authCodeOptionerProvider() {
+			options = append(options, o.Options(ctx, i.Broker(), request)...)
+		}
+	}
+
+	oauth2Token, err := oauthConfig.Exchange(ctx, code, options...)
 	if err != nil {
 		return i.responder.ServerError(err)
 	}

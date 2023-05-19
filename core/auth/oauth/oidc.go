@@ -467,7 +467,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		return i.responder.ServerError(err)
 	}
 
-	options := make([]oauth2.AuthCodeOption, 0, len(i.authcodeOptions))
+	options := make([]oauth2.AuthCodeOption, 0)
 
 	if i.authCodeOptionerProvider != nil {
 		for _, o := range i.authCodeOptionerProvider() {

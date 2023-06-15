@@ -17,7 +17,7 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/hashicorp/golang-lru v0.6.0
-	github.com/leekchan/accounting v0.0.0-20191104051123-0b9b0bd19c36
+	github.com/leekchan/accounting v1.0.0
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/openzipkin/zipkin-go v0.4.1
 	github.com/pact-foundation/pact-go v0.0.13

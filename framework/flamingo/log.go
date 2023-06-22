@@ -62,6 +62,30 @@ type (
 	}
 )
 
+func LogFunc(l Logger, fields map[LogKey]any) func(f func(l Logger, args ...any), args ...any) {
+	if l == nil {
+		l = new(NullLogger)
+	}
+	return func(f func(n Logger, args ...any), args ...any) {
+		if f == nil {
+			f = Logger.Info
+		}
+		f(l.WithFields(fields), args...)
+	}
+}
+
+func LogFuncWithContext(l Logger, fields map[LogKey]any) func(ctx context.Context, f func(l Logger, args ...any), args ...any) {
+	if l == nil {
+		l = new(NullLogger)
+	}
+	return func(ctx context.Context, f func(n Logger, args ...any), args ...any) {
+		if f == nil {
+			f = Logger.Info
+		}
+		f(l.WithContext(ctx).WithFields(fields), args...)
+	}
+}
+
 var _ Logger = new(NullLogger)
 var _ Logger = new(StdLogger)
 
@@ -94,6 +118,7 @@ func (l *StdLogger) Panic(args ...interface{}) {
 
 // Debug logs output
 func (l *StdLogger) Debug(args ...interface{}) {
+	args = append([]any{"debug: "}, args...)
 	if isLoggerNil(l) {
 		log.Print(args...)
 		return
@@ -114,7 +139,8 @@ func (l *StdLogger) Debugf(f string, args ...interface{}) {
 
 // Info log output
 func (l *StdLogger) Info(args ...interface{}) {
-	if l == nil {
+	args = append([]any{"info: "}, args...)
+	if isLoggerNil(l) {
 		log.Print(args...)
 		return
 	}
@@ -124,6 +150,7 @@ func (l *StdLogger) Info(args ...interface{}) {
 
 // Warn log output
 func (l *StdLogger) Warn(args ...interface{}) {
+	args = append([]any{"warn: "}, args...)
 	if isLoggerNil(l) {
 		log.Print(args...)
 		return
@@ -139,18 +166,31 @@ func (l *StdLogger) WithContext(_ context.Context) Logger {
 
 // WithField currently logs the field
 func (l *StdLogger) WithField(key LogKey, value interface{}) Logger {
-	log.Println("WithField", key, value)
+	if isLoggerNil(l) {
+		log.Println("WithField", key, value)
+		return l
+	}
+
+	l.Logger.Println("WithField", key, value)
+
 	return l
 }
 
 // WithFields currently logs the fields
 func (l *StdLogger) WithFields(fields map[LogKey]interface{}) Logger {
-	log.Println("WithFields", fields)
+	if isLoggerNil(l) {
+		log.Println("WithFields", fields)
+		return l
+	}
+
+	l.Logger.Println("WithFields", fields)
+
 	return l
 }
 
 // Error log
 func (l *StdLogger) Error(args ...interface{}) {
+	args = append([]any{"error: "}, args...)
 	if isLoggerNil(l) {
 		log.Print(args...)
 		return

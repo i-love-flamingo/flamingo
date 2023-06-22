@@ -66,10 +66,12 @@ func LogFunc(l Logger, fields map[LogKey]any) func(f func(l Logger, args ...any)
 	if l == nil {
 		l = new(NullLogger)
 	}
+
 	return func(f func(n Logger, args ...any), args ...any) {
 		if f == nil {
 			f = Logger.Info
 		}
+
 		f(l.WithFields(fields), args...)
 	}
 }
@@ -78,10 +80,12 @@ func LogFuncWithContext(l Logger, fields map[LogKey]any) func(ctx context.Contex
 	if l == nil {
 		l = new(NullLogger)
 	}
+
 	return func(ctx context.Context, f func(n Logger, args ...any), args ...any) {
 		if f == nil {
 			f = Logger.Info
 		}
+
 		f(l.WithContext(ctx).WithFields(fields), args...)
 	}
 }

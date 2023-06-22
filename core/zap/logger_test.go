@@ -79,5 +79,4 @@ func BenchmarkLogger(b *testing.B) {
 			}
 		}
 	})
-
 }

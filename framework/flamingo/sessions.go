@@ -196,6 +196,7 @@ func (*SessionModule) CueConfig() string {
 flamingo: session: {
 	backend: *"memory" | "redis" | "file"
 	secret: string | *"flamingosecret"
+	healthcheck: book | *true
 	file: string | *"/sessions"
 	store: length: float | int | *(1024 * 1024)
 	max: age: float | int | *(60 * 60 * 24 * 30)
@@ -233,6 +234,7 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 		"session.redis.password":         "flamingo.session.redis.password",
 		"session.redis.idle.connections": "flamingo.session.redis.idle.connections",
 		"core.healthcheck.checkSession":  "flamingo.session.healthcheck",
+		"healthcheck.checkSession":       "flamingo.session.healthcheck",
 	}
 }
 

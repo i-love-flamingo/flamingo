@@ -59,7 +59,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 func (m *Module) CueConfig() string {
 	return `
 core healthcheck: {
-	checkSession: bool | *true
 	checkAuth: bool | *false
 	checkPath: string | *"/status/healthcheck"
 	pingPath: string | *"/status/ping"
@@ -70,10 +69,9 @@ core healthcheck: {
 // FlamingoLegacyConfigAlias mapping
 func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	return map[string]string{
-		"healthcheck.checkSession": "core.healthcheck.checkSession",
-		"healthcheck.checkAuth":    "core.healthcheck.checkAuth",
-		"healthcheck.checkPath":    "core.healthcheck.checkPath",
-		"healthcheck.pingPath":     "core.healthcheck.pingPath",
+		"healthcheck.checkAuth": "core.healthcheck.checkAuth",
+		"healthcheck.checkPath": "core.healthcheck.checkPath",
+		"healthcheck.pingPath":  "core.healthcheck.pingPath",
 	}
 }
 

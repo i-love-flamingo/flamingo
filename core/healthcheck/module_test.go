@@ -8,7 +8,7 @@ import (
 )
 
 func TestModule_Configure(t *testing.T) {
-	if err := config.TryModules(config.Map{"flamingo.session.backend": "memory"}, new(healthcheck.Module)); err != nil {
+	if err := config.TryModules(nil, new(healthcheck.Module)); err != nil {
 		t.Error(err)
 	}
 }

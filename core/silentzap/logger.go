@@ -161,6 +161,10 @@ func makeFieldMap(configFieldMap config.Map) map[string]string {
 }
 
 func (l *SilentLogger) record(level string) {
+	if !l.Core().Enabled(logLevels[level]) {
+		return
+	}
+
 	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, l.configArea), tag.Upsert(keyLevel, level))
 	stats.Record(ctx, logCount.M(1))
 }

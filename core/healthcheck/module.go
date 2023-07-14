@@ -57,7 +57,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 
 // CueConfig schema and configuration
 func (m *Module) CueConfig() string {
-	//language=cue
+	// language=cue
 	return `
 core: healthcheck: {
 	checkAuth: bool | *false

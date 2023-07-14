@@ -192,7 +192,7 @@ func (m *SessionModule) setSessionstoreOptions(options *sessions.Options) {
 
 // CueConfig defines the session config scheme
 func (*SessionModule) CueConfig() string {
-	//language=cue
+	// language=cue
 	return `
 flamingo: session: {
 	backend: *"memory" | "redis" | "file"

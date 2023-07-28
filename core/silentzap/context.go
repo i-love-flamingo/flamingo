@@ -3,7 +3,6 @@ package silentzap
 import (
 	"sync"
 
-	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -16,12 +15,10 @@ type (
 
 	storedEntry struct {
 		CheckedLogEntry *zapcore.CheckedEntry
-		Fields          []zap.Field
 	}
 )
 
-//nolint:unparam // taking zap into account we should have possibilities to store fields
-func (c *SilentContext) store(entry *zapcore.CheckedEntry, fields ...zap.Field) {
+func (c *SilentContext) store(entry *zapcore.CheckedEntry) {
 	if c == nil {
 		return
 	}
@@ -34,7 +31,6 @@ func (c *SilentContext) store(entry *zapcore.CheckedEntry, fields ...zap.Field) 
 			c.storedEntries,
 			storedEntry{
 				CheckedLogEntry: entry,
-				Fields:          fields,
 			},
 		)
 	}()

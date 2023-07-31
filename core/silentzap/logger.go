@@ -251,7 +251,7 @@ func (l *SilentLogger) Fatal(args ...interface{}) {
 	if !logContext.isWritingAllowed() {
 		currentEntries := logContext.get()
 		for _, entry := range currentEntries {
-			entry.CheckedLogEntry.Write()
+			entry.CheckedLogEntry.Write(l.fields...)
 		}
 	}
 
@@ -268,7 +268,7 @@ func (l *SilentLogger) Panic(args ...interface{}) {
 	if !logContext.isWritingAllowed() {
 		currentEntries := logContext.get()
 		for _, entry := range currentEntries {
-			entry.CheckedLogEntry.Write()
+			entry.CheckedLogEntry.Write(l.fields...)
 		}
 	}
 

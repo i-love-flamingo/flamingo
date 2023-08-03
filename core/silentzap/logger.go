@@ -23,6 +23,7 @@ type (
 		*zap.Logger
 		configArea      string
 		fieldMap        map[string]string
+		fields          []zapcore.Field
 		logSession      bool
 		loggingRegistry *LoggingContextRegistry
 		traceID         string
@@ -175,7 +176,7 @@ func (l *SilentLogger) Debug(args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.Logger.Debug(fmt.Sprint(args...))
+		l.writeLog((*zap.Logger).Debug, fmt.Sprint(args...))
 		return
 	}
 
@@ -189,7 +190,7 @@ func (l *SilentLogger) Debugf(log string, args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.Logger.Debug(fmt.Sprintf(log, args...))
+		l.writeLog((*zap.Logger).Debug, fmt.Sprintf(log, args...))
 		return
 	}
 
@@ -203,7 +204,7 @@ func (l *SilentLogger) Info(args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.Logger.Info(fmt.Sprint(args...))
+		l.writeLog((*zap.Logger).Info, fmt.Sprint(args...))
 		return
 	}
 
@@ -217,7 +218,7 @@ func (l *SilentLogger) Warn(args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.Logger.Warn(fmt.Sprint(args...))
+		l.writeLog((*zap.Logger).Warn, fmt.Sprint(args...))
 		return
 	}
 
@@ -233,11 +234,11 @@ func (l *SilentLogger) Error(args ...interface{}) {
 	if !logContext.isWritingAllowed() {
 		currentEntries := logContext.get()
 		for _, entry := range currentEntries {
-			entry.CheckedLogEntry.Write()
+			entry.CheckedLogEntry.Write(l.fields...)
 		}
 	}
 
-	l.Logger.Error(fmt.Sprint(args...))
+	l.writeLog((*zap.Logger).Error, fmt.Sprint(args...))
 }
 
 // Fatal logs a message at fatal level
@@ -250,11 +251,11 @@ func (l *SilentLogger) Fatal(args ...interface{}) {
 	if !logContext.isWritingAllowed() {
 		currentEntries := logContext.get()
 		for _, entry := range currentEntries {
-			entry.CheckedLogEntry.Write()
+			entry.CheckedLogEntry.Write(l.fields...)
 		}
 	}
 
-	l.Logger.Fatal(fmt.Sprint(args...))
+	l.writeLog((*zap.Logger).Fatal, fmt.Sprint(args...))
 }
 
 // Panic logs a message at panic level
@@ -267,11 +268,11 @@ func (l *SilentLogger) Panic(args ...interface{}) {
 	if !logContext.isWritingAllowed() {
 		currentEntries := logContext.get()
 		for _, entry := range currentEntries {
-			entry.CheckedLogEntry.Write()
+			entry.CheckedLogEntry.Write(l.fields...)
 		}
 	}
 
-	l.Logger.Panic(fmt.Sprint(args...))
+	l.writeLog((*zap.Logger).Panic, fmt.Sprint(args...))
 }
 
 func (l *SilentLogger) WithContext(ctx context.Context) flamingo.Logger {
@@ -302,10 +303,11 @@ func (l *SilentLogger) WithContext(ctx context.Context) flamingo.Logger {
 
 // WithFields creates a child logger and adds structured context to it.
 func (l *SilentLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
-	zapFields := make([]zapcore.Field, len(fields))
+	newFields := make([]zap.Field, len(l.fields), len(l.fields)+len(fields))
+	copy(newFields, l.fields)
+
 	area := l.configArea
 	traceId := l.traceID
-	i := 0
 
 	for key, value := range fields {
 		if key == flamingo.LogKeyArea {
@@ -325,14 +327,14 @@ func (l *SilentLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamin
 			key = flamingo.LogKey(alias)
 		}
 
-		zapFields[i] = zap.Any(string(key), value)
-		i++
+		newFields = append(newFields, zap.Any(string(key), value))
 	}
 
 	return &SilentLogger{
-		Logger:          l.Logger.With(zapFields[:i]...),
+		Logger:          l.Logger,
 		configArea:      area,
 		fieldMap:        l.fieldMap,
+		fields:          newFields,
 		logSession:      l.logSession,
 		loggingRegistry: l.loggingRegistry,
 		traceID:         traceId,
@@ -361,14 +363,23 @@ func (l *SilentLogger) WithField(key flamingo.LogKey, value interface{}) flaming
 		key = flamingo.LogKey(alias)
 	}
 
+	fields := make([]zapcore.Field, len(l.fields)+1)
+	copy(fields, l.fields)
+	fields[len(fields)-1] = zap.Any(string(key), value)
+
 	return &SilentLogger{
-		Logger:          l.Logger.With(zap.Any(string(key), value)),
+		Logger:          l.Logger,
 		configArea:      area,
 		fieldMap:        l.fieldMap,
+		fields:          fields,
 		logSession:      l.logSession,
 		loggingRegistry: l.loggingRegistry,
 		traceID:         traceId,
 	}
+}
+
+func (l *SilentLogger) writeLog(logFunc func(zl *zap.Logger, msg string, fields ...zapcore.Field), msg string) {
+	logFunc(l.Logger, msg, l.fields...)
 }
 
 // Flush is used by buffered loggers and triggers the actual writing. It is a good habit to call Flush before

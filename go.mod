@@ -29,7 +29,7 @@ require (
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6
 	go.opencensus.io v0.24.0
 	go.uber.org/automaxprocs v1.5.2
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.25.0
 	golang.org/x/oauth2 v0.6.0
 )
 
@@ -61,7 +61,7 @@ require (
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect

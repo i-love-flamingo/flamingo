@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"bytes"
 	"encoding/gob"
 	"flag"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"testing"
 
 	"flamingo.me/flamingo/v3/core/cache"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type (
@@ -87,7 +88,7 @@ func TestFileBackendGet(t *testing.T) {
 
 			if *update && tt.wantFound {
 				t.Log("update file")
-				f.Set(tt.args.key, tt.wantEntry)
+				_ = f.Set(tt.args.key, tt.wantEntry)
 			}
 
 			gotEntry, gotFound := f.Get(tt.args.key)
@@ -141,7 +142,9 @@ func TestFileBackendSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			expectedCacheFileName := filepath.Join("testdata", "file_backend", tt.args.key)
-			defer func() { os.Remove(expectedCacheFileName) }()
+			t.Cleanup(func() {
+				_ = os.Remove(expectedCacheFileName)
+			})
 
 			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
 			err := f.Set(tt.args.key, tt.args.entry)
@@ -149,23 +152,14 @@ func TestFileBackendSet(t *testing.T) {
 				t.Errorf("FileBackend.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			written, err := os.ReadFile(expectedCacheFileName)
+			_, err = os.ReadFile(expectedCacheFileName)
 			if err != nil {
 				t.Fatal("cache entry not written")
 			}
 
-			if *update {
-				t.Log("update golden file")
-				f.Set(tt.args.key+".golden", tt.args.entry)
-			}
-
-			golden, err := os.ReadFile(expectedCacheFileName + ".golden")
-			if err != nil {
-				t.Fatalf("failed reading .golden: %s", err)
-			}
-			if !bytes.Equal(written, golden) {
-				t.Errorf("saved entry does not match .golden file")
-			}
+			actual, found := f.Get(tt.args.key)
+			assert.True(t, found)
+			assert.Equal(t, tt.args.entry, actual)
 		})
 	}
 }
@@ -189,17 +183,24 @@ func TestFileBackendPurge(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			expectedCacheFileName := filepath.Join("testdata", "file_backend", tt.args.key)
+
 			f := cache.NewFileBackend(filepath.Join("testdata", "file_backend"))
-			f.Set(tt.args.key, &cache.Entry{
+			require.NoError(t, f.Set(tt.args.key, &cache.Entry{
 				Meta: cache.Meta{},
 				Data: "bar",
+			}), "test setup failed")
+
+			t.Cleanup(func() {
+				_ = os.Remove(expectedCacheFileName)
 			})
+
 			err := f.Purge(tt.args.key)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FileBackend.Purge() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
-			if _, err := os.Stat(filepath.Join("testdata", "file_backend", tt.args.key)); err == nil {
+			if _, err := os.Stat(expectedCacheFileName); err == nil {
 				t.Error("cache entry was not deleted")
 			}
 		})

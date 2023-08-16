@@ -16,6 +16,8 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
+type Option func(*Logger)
+
 var (
 	logCount    = stats.Int64("flamingo/zap/logs", "Count of logs", stats.UnitDimensionless)
 	keyLevel, _ = tag.NewKey("level")
@@ -37,6 +39,18 @@ type (
 		logSession bool
 	}
 )
+
+func NewLogger(logger *zap.Logger, options ...Option) *Logger {
+	l := &Logger{
+		Logger: logger,
+	}
+
+	for _, option := range options {
+		option(l)
+	}
+
+	return l
+}
 
 // WithContext returns a logger with fields filled from the context
 // businessId:    From Header X-Business-ID
@@ -67,6 +81,7 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 			fields[flamingo.LogKeySession] = session.IDHash()
 		}
 	}
+
 	return l.WithFields(fields)
 }
 
@@ -158,6 +173,7 @@ func (l *Logger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Log
 	copy(newFields, l.fields)
 
 	area := l.configArea
+
 	for key, value := range fields {
 		if key == flamingo.LogKeyArea {
 			area = value.(string)

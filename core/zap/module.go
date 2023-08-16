@@ -62,8 +62,10 @@ func (m *Module) Inject(config *struct {
 	m.samplingInitial = config.SamplingInitial
 	m.samplingThereafter = config.SamplingThereafter
 	m.logSession = config.LogSession
+
 	if config.FieldMap != nil {
 		m.fieldMap = make(map[string]string, len(config.FieldMap))
+
 		for k, v := range config.FieldMap {
 			if v, ok := v.(string); ok {
 				m.fieldMap[k] = v
@@ -72,8 +74,13 @@ func (m *Module) Inject(config *struct {
 	}
 }
 
-// Configure the logrus logger as flamingo.Logger (in JSON mode kibana compatible)
+// Configure the zap logger as flamingo.Logger (in JSON mode kibana compatible)
 func (m *Module) Configure(injector *dingo.Injector) {
+	injector.Bind(new(flamingo.Logger)).ToInstance(m.createLoggerInstance())
+	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
+}
+
+func (m *Module) createLoggerInstance() *Logger {
 	level, ok := logLevels[m.logLevel]
 	if !ok {
 		// if nothing is configured user ErrorLevel
@@ -93,10 +100,12 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	if m.json {
 		output = "json"
 	}
+
 	encoder := zapcore.CapitalLevelEncoder
 	if m.coloredOutput {
 		encoder = zapcore.CapitalColorLevelEncoder
 	}
+
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
 		Development:       m.developmentMode,
@@ -128,17 +137,16 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		panic(err)
 	}
 
-	zapLogger := &Logger{
-		Logger:     logger,
-		fieldMap:   m.fieldMap,
-		logSession: m.logSession,
-		configArea: m.area,
-	}
+	zapLogger := NewLogger(
+		logger,
+		WithFieldMap(m.fieldMap),
+		WithLogSession(m.logSession),
+		WithArea(m.area),
+	)
 
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)
 
-	injector.Bind(new(flamingo.Logger)).ToInstance(zapLogger)
-	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
+	return zapLogger
 }
 
 // Inject dependencies
@@ -160,12 +168,19 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 func (m *Module) CueConfig() string {
 	// language=cue
 	return `
-core zap: {
+core: zap: {
 	loglevel: *"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
 	sampling: {
 		enabled: bool | *true
 		initial: int | *100 
 		thereafter: int | *100
+	}
+	json: bool | *false
+	colored: bool | *false
+	devmode: bool | *false
+	logsession: bool | *false
+	fieldmap: {
+		[string]: string
 	}
 }
 `

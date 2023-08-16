@@ -9,7 +9,10 @@ The modules should come with a documentation which configurations/feature-flags 
 ## Basics
 Configurations are yml files located in `config` folder.
 
-The configuration syntax is to specify sections either with `.` or as yaml maps:
+The configuration can either be done with yaml or cue.
+The configuration is hierarchical.
+
+In yaml the different sections can either be seperated with `.` or as yaml maps:
 
 ```yaml
 foo:
@@ -28,7 +31,7 @@ Configuration values can also be read from environment variables during the load
 auth.secret: '%%ENV:KEYCLOAK_SECRET%%'
 ```
 
-or 
+or
 
 ```yaml
 auth.secret: '%%ENV:KEYCLOAK_SECRET%%default_value%%'
@@ -36,11 +39,21 @@ auth.secret: '%%ENV:KEYCLOAK_SECRET%%default_value%%'
 
 In the second case, Flamingo falls back to `default_value` if the environment variable is not set or empty.
 
-
-Configuration can be used:
-
-* either by the `config()` templatefunction in your template
-* or via dependency injection from Dingo
+Configurations are normally read inside your application by using dependency injection.
+```go
+// Inject dependencies
+func (m *Foo) Inject(
+	cfg *struct {
+	Flag           bool       `inject:"config:mymodule.flag"`
+},
+) *Module {
+	if cfg != nil {
+		m.flag = cfg.Flag
+	}
+	return m
+}
+```
+There is also a templatefunction `config()` that you can use in your template (if you use a template engine in your application).
 
 ## Loaded Configuration files
 The following configuration files will be loaded from `config` folder:
@@ -53,6 +66,7 @@ The following configuration files will be loaded from `config` folder:
 * routes_local.yml
 
 You can set different contexts with the environment variable `CONTEXT` and this will cause Flamingo to load additional configuration files.
+Multiple `CONTEXT` values can be seperated with ":". For example starting flamingo with the environmentvariable `CONTEXT=CONTEXT=dev:test` would also load the related additional configuration files `config_dev.yml` and `config_test.yml`.
 
 e.g. starting Flamingo with
 ```bash

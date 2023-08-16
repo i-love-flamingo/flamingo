@@ -1,6 +1,16 @@
 # Security module
 
-Used to handle permissions for handlers defined in controllers.
+The security module provides a way to check and handle permissions for actions inside a web application that used a regular session.
+
+The implemented security concept uses "Roles". Roles are returned by "RoleProviders".
+A "Role" need to return "Permission". Based on the "Permissions" Security Voters decide if access should be granted or not.
+
+That module can be used with the provided middleware during binding of routes.
+It can of course also used by the provided "SecurityService".
+
+The "auth" module provides a RoleProvider - so this security module can be used together with the auth nodule.
+
+You can register your very own "RoleProvider" if required.
 
 ## Security Middleware
 

@@ -1,0 +1,23 @@
+flamingo.debug.mode: true
+
+core.auth.web.broker:
+  - 
+    broker: "google"
+    claims: 
+      idToken:
+        email: email
+        email_verified: email_verified
+        given_name: given_name
+      userInfo:
+        email: email
+        email_verified: email_verified
+        given_name: given_name
+    clientID: 447471420712-fdfmg20tlp57cdbv3qmmp6p2ikjv3so7.apps.googleusercontent.com
+    clientSecret: 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
+    enableEndSessionEndpoint: true
+    enableOfflineToken: false
+    endpoint: "https://accounts.google.com"
+    typ: "oidc"
+
+
+flamingo.session.cookie.secure: false

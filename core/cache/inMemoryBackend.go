@@ -8,6 +8,7 @@ import (
 )
 
 const lurkerPeriod = 1 * time.Minute
+const cacheSize = 100
 
 type (
 	inMemoryCache struct {
@@ -22,12 +23,13 @@ type (
 
 // NewInMemoryCache creates a new lru TwoQueue backed cache backend
 func NewInMemoryCache() Backend {
-	cache, _ := lru.New2Q[string, inMemoryCacheEntry](100)
+	cache, _ := lru.New2Q[string, inMemoryCacheEntry](cacheSize)
 
 	m := &inMemoryCache{
 		pool: cache,
 	}
 	go m.lurker()
+
 	return m
 }
 
@@ -37,7 +39,10 @@ func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	if !ok {
 		return nil, ok
 	}
-	return entry.data.(*Entry), ok
+
+	e, ok := entry.data.(*Entry)
+
+	return e, ok
 }
 
 // Set a cache entry with a key
@@ -59,6 +64,7 @@ func (m *inMemoryCache) Purge(key string) error {
 
 // PurgeTags purges all entries with matching tags from the cache
 func (m *inMemoryCache) PurgeTags(_ []string) error {
+	//nolint:goerr113 // not worth introducing a dedicated error
 	return errors.New("not implemented")
 }
 

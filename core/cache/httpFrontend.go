@@ -128,6 +128,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 				if err2, ok := err.(error); ok {
 					resultErr = fmt.Errorf("httpfrontend load: %w", err2)
 				} else {
+					//nolint:goerr113 // not worth introducing a dedicated error for this edge case
 					resultErr = fmt.Errorf("httpfrontend load: %v", err)
 				}
 			}

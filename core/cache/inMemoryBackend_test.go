@@ -9,6 +9,8 @@ import (
 )
 
 func Test_inMemoryCache_Flush(t *testing.T) {
+	t.Parallel()
+
 	inMemoryCache := cache.NewInMemoryCache()
 
 	err := inMemoryCache.Set("foo", &cache.Entry{
@@ -46,6 +48,8 @@ func Test_inMemoryCache_Flush(t *testing.T) {
 }
 
 func Test_inMemoryCache_Purge(t *testing.T) {
+	t.Parallel()
+
 	inMemoryCache := cache.NewInMemoryCache()
 
 	err := inMemoryCache.Set("foo", &cache.Entry{
@@ -69,6 +73,8 @@ func Test_inMemoryCache_Purge(t *testing.T) {
 }
 
 func Test_inMemoryCache_SetGet(t *testing.T) {
+	t.Parallel()
+
 	inMemoryCache := cache.NewInMemoryCache()
 
 	err := inMemoryCache.Set("foo", &cache.Entry{
@@ -90,5 +96,4 @@ func Test_inMemoryCache_SetGet(t *testing.T) {
 		Lifetime:  5 * time.Second,
 		Gracetime: 10 * time.Second,
 	}, entry.Meta)
-
 }

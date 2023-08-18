@@ -22,8 +22,8 @@ core: auth: web: broker: [
 	AuthHttp1,
 	core.auth.oidc & {broker: "oidc2", clientID: "client2", clientSecret: "client2", "endpoint": "http://127.0.0.1:3352/dex"},
 	AuthHttp2,
-	core.auth.oidc & {broker: "kc1", clientID: "client1", clientSecret: "", "endpoint": "http://127.0.0.1:3353/auth/realms/Realm1", enableOfflineToken: false},
-	core.auth.oidc & {broker: "kc2", clientID: "client2", clientSecret: "", "endpoint": "http://127.0.0.1:3354/auth/realms/Realm2", enableOfflineToken: false},
+	core.auth.oidc & {broker: "kc1", clientID: "client1", clientSecret: "", "endpoint": "http://127.0.0.1:3353/realms/Realm1", enableOfflineToken: false},
+	core.auth.oidc & {broker: "kc2", clientID: "client2", clientSecret: "", "endpoint": "http://127.0.0.1:3354/realms/Realm2", enableOfflineToken: false},
     customOidcBroker,
 	StaticAuthBroker & {broker: "static1", users: ["user1", "user2"]},
 

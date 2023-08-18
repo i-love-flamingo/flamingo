@@ -13,6 +13,7 @@ func RunWithDetachedContext(origCtx context.Context, fnc func(ctx context.Contex
 
 	request := RequestFromContext(origCtx)
 	session := SessionFromContext(origCtx)
+
 	if request != nil && session == nil {
 		session = request.Session()
 	}
@@ -20,5 +21,6 @@ func RunWithDetachedContext(origCtx context.Context, fnc func(ctx context.Contex
 	ctx := ContextWithRequest(trace.NewContext(context.Background(), span), request)
 	ctx = ContextWithSession(ctx, session)
 
+	//nolint:contextcheck // we want a new context here
 	fnc(ctx)
 }

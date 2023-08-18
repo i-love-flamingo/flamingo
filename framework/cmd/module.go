@@ -67,7 +67,7 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				},
 				Example: `Run with -h or -help to see global debug flags`,
 			}
-			//rootCmd.SetHelpTemplate()
+			// rootCmd.SetHelpTemplate()
 			rootCmd.FParseErrWhitelist.UnknownFlags = true
 			for _, set := range flagSetProvider() {
 				rootCmd.PersistentFlags().AddFlagSet(set)

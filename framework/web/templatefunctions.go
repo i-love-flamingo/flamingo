@@ -20,19 +20,24 @@ const ctxKey partialDataContextKey = "partialData"
 // Func getter to bind the context
 func (*SetPartialDataFunc) Func(c context.Context) interface{} {
 	return func(key string, val interface{}) interface{} {
-		r := RequestFromContext(c)
-		if r == nil {
+		request := RequestFromContext(c)
+		if request == nil {
 			return nil
 		}
 
-		data, ok := r.Values.Load(ctxKey)
+		data, ok := request.Values.Load(ctxKey)
 		if !ok || data == nil {
 			data = make(map[string]interface{})
 		}
 
-		data.(map[string]interface{})[key] = val
+		rawData, ok := data.(map[string]interface{})
+		if !ok {
+			rawData = make(map[string]interface{})
+		}
 
-		r.Values.Store(ctxKey, data)
+		rawData[key] = val
+
+		request.Values.Store(ctxKey, rawData)
 
 		return nil
 	}
@@ -51,7 +56,11 @@ func (*GetPartialDataFunc) Func(c context.Context) interface{} {
 			return nil
 		}
 
-		return data.(map[string]interface{})
+		rawData, ok := data.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return rawData
 	}
 }
 

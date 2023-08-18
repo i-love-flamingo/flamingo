@@ -24,7 +24,7 @@ type (
 	Backend interface {
 		Get(key string) (entry *Entry, found bool) // Get a cache entry
 		Set(key string, entry *Entry) error        // Set a cache entry
-		//Peek(key string) (entry *CacheEntry, found bool) // Peek for a cache entry, this should not trigger key-updates or weight/priorities to be changed
+		// Peek(key string) (entry *CacheEntry, found bool) // Peek for a cache entry, this should not trigger key-updates or weight/priorities to be changed
 		Purge(key string) error
 		PurgeTags(tags []string) error
 		Flush() error

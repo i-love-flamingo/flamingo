@@ -34,9 +34,9 @@ type (
 	}
 
 	handlerAction struct {
-		method map[string]Action
-		any    Action
-		data   DataAction
+		method    map[string]Action
+		anyAction Action
+		data      DataAction
 	}
 
 	matchedHandler struct {
@@ -82,8 +82,8 @@ func (ha *handlerAction) set(method string, action Action) {
 	ha.method[method] = action
 }
 
-func (ha *handlerAction) setAny(any Action) {
-	ha.any = any
+func (ha *handlerAction) setAny(anyAction Action) {
+	ha.anyAction = anyAction
 }
 
 func (ha *handlerAction) setData(data DataAction) {
@@ -92,7 +92,7 @@ func (ha *handlerAction) setData(data DataAction) {
 
 func (mh matchedHandlers) getHandleAny() *matchedHandler {
 	for _, matched := range mh {
-		if matched.handlerAction.any != nil {
+		if matched.handlerAction.anyAction != nil {
 			return matched
 		}
 	}
@@ -171,7 +171,7 @@ func (registry *RouterRegistry) Has(method, name string) bool {
 // HasAny checks if an any handler is set for a given name
 func (registry *RouterRegistry) HasAny(name string) bool {
 	la, ok := registry.handler[name]
-	return ok && la.any != nil
+	return ok && la.anyAction != nil
 }
 
 // HasData checks if a data handler is set for a given name
@@ -195,20 +195,20 @@ func (registry *RouterRegistry) MustRoute(path, handler string) *Handler {
 
 // Route assigns a route to a Handler
 func (registry *RouterRegistry) Route(path, handler string) (*Handler, error) {
-	var h = parseHandler(handler)
 	var err error
 
-	h.path, err = NewPath(path)
+	parsedHandler := parseHandler(handler)
+	parsedHandler.path, err = NewPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(h.params) == 0 {
-		h.params, h.catchall = parseParams(strings.Join(h.path.params, ", "))
+	if len(parsedHandler.params) == 0 {
+		parsedHandler.params, parsedHandler.catchall = parseParams(strings.Join(parsedHandler.path.params, ", "))
 	}
 
-	registry.routes = append(registry.routes, h)
-	return h, nil
+	registry.routes = append(registry.routes, parsedHandler)
+	return parsedHandler, nil
 }
 
 // GetRoutes returns registered Routes
@@ -242,10 +242,12 @@ func parseParams(list string) (params map[string]*param, catchall bool) {
 	// try to get enough space for the list
 	params = make(map[string]*param, strings.Count(list, ","))
 
-	var name, val string
-	var optional bool
-	var quote byte
-	var readto = &name
+	var (
+		name, val string
+		optional  bool
+		quote     byte
+	)
+	readto := &name
 
 	for i := 0; i < len(list); i++ {
 		if list[i] != quote && quote != 0 {
@@ -314,16 +316,18 @@ func (registry *RouterRegistry) Reverse(name string, params map[string]string) (
 	}
 	if alias, ok := registry.alias[name]; ok {
 		name = alias.handler
+
 		if params == nil {
 			params = make(map[string]string, len(alias.params))
 		}
+
 		for name, param := range alias.params {
 			params[name] = param.value
 		}
 	}
 
-	var keys = make([]string, len(params))
-	var i = 0
+	keys := make([]string, len(params))
+	i := 0
 	for k := range params {
 		keys[i] = k
 		i++
@@ -421,6 +425,7 @@ func (registry *RouterRegistry) match(path string) (handler handlerAction, param
 		if match := route.path.Match(path); match != nil {
 			handler = registry.handler[route.handler]
 			params = make(map[string]string)
+
 			for k, param := range route.params {
 				params[k] = param.value
 			}

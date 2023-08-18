@@ -2,6 +2,7 @@ package flamingo
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -119,12 +120,13 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		option(app)
 	}
 
+	var flamingoConfig arrayFlags
+
 	app.flagset = flag.NewFlagSet("flamingo", flag.ContinueOnError)
 	dingoTraceCircular := app.flagset.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
 	flamingoConfigLog := app.flagset.Bool("flamingo-config-log", false, "enable flamingo config logging")
 	flamingoConfigCueDebug := app.flagset.String("flamingo-config-cue-debug", "", "query the flamingo cue config loader (use . for root)")
 	flamingoContext := app.flagset.String("flamingo-context", app.defaultContext, "set flamingo execution context")
-	var flamingoConfig arrayFlags
 	app.flagset.Var(&flamingoConfig, "flamingo-config", "add additional flamingo yaml config")
 	dingoInspect := app.flagset.Bool("dingo-inspect", false, "inspect dingo")
 
@@ -228,52 +230,54 @@ func (app *Application) Run() error {
 		return fmt.Errorf("get initialized injector: %w", err)
 	}
 
-	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
+	instance, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
 		return fmt.Errorf("app: get flamingo cobra.Command: %w", err)
 	}
 
-	rootCmd := i.(*cobra.Command)
+	rootCmd := instance.(*cobra.Command)
 	rootCmd.SetArgs(app.flagset.Args())
 
-	i, err = injector.GetInstance(new(eventRouterProvider))
+	instance, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
 		return fmt.Errorf("app: get eventRouterProvider: %w", err)
 	}
-	i.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
+	instance.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
 	return rootCmd.Execute()
 }
 
-func typeName(of reflect.Type) string {
+func typeName(target reflect.Type) string {
 	var name string
 
-	for of.Kind() == reflect.Ptr {
-		of = of.Elem()
+	for target.Kind() == reflect.Ptr {
+		target = target.Elem()
 	}
 
-	if of.Kind() == reflect.Slice {
+	if target.Kind() == reflect.Slice {
 		name += "[]"
-		of = of.Elem()
+		target = target.Elem()
 	}
 
-	if of.Kind() == reflect.Ptr {
+	if target.Kind() == reflect.Ptr {
 		name += "*"
-		of = of.Elem()
+		target = target.Elem()
 	}
 
-	if of.PkgPath() != "" {
-		name += of.PkgPath() + "."
+	if target.PkgPath() != "" {
+		name += target.PkgPath() + "."
 	}
 
-	name += of.Name()
+	name += target.Name()
 
 	return name
 }
 
+const truncMax = 25
+
 func trunc(s string) string {
-	if len(s) > 25 {
-		return s[:25] + "..."
+	if len(s) > truncMax {
+		return s[:truncMax] + "..."
 	}
 	return s
 }
@@ -307,7 +311,7 @@ func inspect(injector *dingo.Injector) {
 	fmt.Println("\nMultiBindings:")
 	injector.Inspect(dingo.Inspector{
 		InspectMultiBinding: func(of reflect.Type, index int, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
-			//fmt.Printf("%d: ", index)
+			// fmt.Printf("%d: ", index)
 			printBinding(of, annotation, to, provider, instance, in)
 		},
 	})
@@ -315,7 +319,7 @@ func inspect(injector *dingo.Injector) {
 	fmt.Println("\nMapBindings:")
 	injector.Inspect(dingo.Inspector{
 		InspectMapBinding: func(of reflect.Type, key string, annotation string, to reflect.Type, provider, instance *reflect.Value, in dingo.Scope) {
-			//fmt.Printf("%s: ", key)
+			// fmt.Printf("%s: ", key)
 			printBinding(of, annotation, to, provider, instance, in)
 		},
 	})
@@ -351,7 +355,8 @@ func (a *servemodule) Inject(
 	a.eventRouter = eventRouter
 	a.logger = logger
 	a.server = &http.Server{
-		Addr: fmt.Sprintf(":%d", cfg.Port),
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 	a.configuredSampler = configuredSampler
 	a.publicEndpoint = cfg.PublicEndpoint
@@ -371,16 +376,16 @@ func (a *servemodule) CueConfig() string {
 	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
-func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
+func serveProvider(serveModule *servemodule, logger flamingo.Logger) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: a.publicEndpoint, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
+			serveModule.server.Handler = &ochttp.Handler{IsPublicEndpoint: serveModule.publicEndpoint, Handler: serveModule.router.Handler(), GetStartOptions: serveModule.configuredSampler.GetStartOptions()}
 
-			err := a.listenAndServe()
+			err := serveModule.listenAndServe()
 			if err != nil {
-				if err == http.ErrServerClosed {
+				if errors.Is(err, http.ErrServerClosed) {
 					logger.Info(err)
 				} else {
 					logger.Fatal("unexpected error in serving:", err)
@@ -388,9 +393,9 @@ func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
 			}
 		},
 	}
-	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", a.server.Addr, "addr on which flamingo runs")
-	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
-	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&serveModule.server.Addr, "addr", "a", serveModule.server.Addr, "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&serveModule.certFile, "certFile", "c", "", "certFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&serveModule.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
 	return serveCmd
 }

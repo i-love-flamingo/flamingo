@@ -3,6 +3,7 @@ package web
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -45,6 +46,7 @@ func CreateRequest(r *http.Request, s *Session) *Request {
 		r, _ := http.NewRequest(http.MethodGet, "", nil)
 		req.request = *r
 	}
+
 	if s != nil {
 		req.session.s = s.s
 	} else {
@@ -85,7 +87,6 @@ func (r *Request) RemoteAddress() []string {
 		for _, ip := range ips {
 			remoteAddress = append(remoteAddress, strings.TrimSpace(ip))
 		}
-
 	}
 
 	remoteAddress = append(remoteAddress, strings.TrimSpace(r.request.RemoteAddr))
@@ -112,6 +113,7 @@ func (r *Request) Form1(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if len(f) > 0 {
 		return f[0], nil
 	}
@@ -121,8 +123,10 @@ func (r *Request) Form1(name string) (string, error) {
 
 // FormAll get all POST values
 func (r *Request) FormAll() (map[string][]string, error) {
-	err := r.Request().ParseForm()
-	return r.Request().Form, err
+	if err := r.Request().ParseForm(); err != nil {
+		return nil, fmt.Errorf("unable to parse request form: %w", err)
+	}
+	return r.Request().Form, nil
 }
 
 // Query looks up Raw Query map for Param

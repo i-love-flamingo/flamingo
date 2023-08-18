@@ -130,7 +130,7 @@ func TestMapMapInto(t *testing.T) {
 		}
 	}
 
-	//fill the config map according to the resultType struct
+	// fill the config map according to the resultType struct
 	m := make(Map)
 
 	assert.NoError(t, m.Add(Map{

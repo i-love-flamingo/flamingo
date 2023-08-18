@@ -180,7 +180,7 @@ func (r *Response) Apply(_ context.Context, responseWriter http.ResponseWriter) 
 }
 
 // SetNoCache helper
-// deprecated: use CacheControlHeader instead
+// Deprecated: use CacheControlHeader instead
 func (r *Response) SetNoCache() *Response {
 	r.CacheDirective = CacheDirectiveBuilder{IsReusable: false}.Build()
 	return r
@@ -200,7 +200,7 @@ func (r *Responder) RouteRedirect(to string, data map[string]string) *RouteRedir
 }
 
 // Apply response
-func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (r *RouteRedirectResponse) Apply(ctx context.Context, w http.ResponseWriter) error {
 	if r.router == nil {
 		return errors.New("no reverserouter available")
 	}
@@ -211,7 +211,7 @@ func (r *RouteRedirectResponse) Apply(c context.Context, w http.ResponseWriter) 
 	}
 	to.Fragment = r.fragment
 	w.Header().Set("Location", to.String())
-	return r.Response.Apply(c, w)
+	return r.Response.Apply(ctx, w)
 }
 
 // Fragment adds a fragment to the resulting URL, argument must be given without '#'
@@ -281,12 +281,13 @@ func (r *Responder) Data(data interface{}) *DataResponse {
 func (r *DataResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(r.Data); err != nil {
-		return err
+		return fmt.Errorf("unable to encode response: %w", err)
 	}
 	r.Body = buf
 	if r.Response.Header == nil {
 		r.Response.Header = make(http.Header)
 	}
+
 	r.Response.Header.Set("Content-Type", "application/json; charset=utf-8")
 	return r.Response.Apply(c, w)
 }
@@ -330,48 +331,49 @@ func (r *Responder) Render(tpl string, data interface{}) *RenderResponse {
 }
 
 // Apply response
-func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
+func (response *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	var err error
 
-	if r.engine == nil {
-		return r.DataResponse.Apply(c, w)
+	if response.engine == nil {
+		return response.DataResponse.Apply(c, w)
 	}
-	if req := RequestFromContext(c); req != nil && r.engine != nil {
-		partialRenderer, ok := r.engine.(flamingo.PartialTemplateEngine)
+	if req := RequestFromContext(c); req != nil && response.engine != nil {
+		partialRenderer, ok := response.engine.(flamingo.PartialTemplateEngine)
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
-			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
+			content, err := partialRenderer.RenderPartials(c, response.Template, response.Data, strings.Split(partials, ","))
 			if err != nil {
-				return err
+				return fmt.Errorf("unable to render partials: %w", err)
 			}
 
 			result := make(map[string]string, len(content))
 			for k, v := range content {
 				buf, err := io.ReadAll(v)
 				if err != nil {
-					return err
+					return fmt.Errorf("unabelt to read partial: %w", err)
 				}
 				result[k] = string(buf)
 			}
 
 			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
 			if err != nil {
-				return err
+				return fmt.Errorf("unable to marshal response body: %w", err)
 			}
-			r.Body = bytes.NewBuffer(body)
-			r.Header.Set("Content-Type", "application/json; charset=utf-8")
-			return r.Response.Apply(c, w)
+			response.Body = bytes.NewBuffer(body)
+			response.Header.Set("Content-Type", "application/json; charset=utf-8")
+			return response.Response.Apply(c, w)
 		}
 	}
 
-	if r.Header == nil {
-		r.Header = make(http.Header)
+	if response.Header == nil {
+		response.Header = make(http.Header)
 	}
-	r.Header.Set("Content-Type", "text/html; charset=utf-8")
-	r.Body, err = r.engine.Render(c, r.Template, r.Data)
+
+	response.Header.Set("Content-Type", "text/html; charset=utf-8")
+	response.Body, err = response.engine.Render(c, response.Template, response.Data)
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to render response: %w", err)
 	}
-	return r.Response.Apply(c, w)
+	return response.Response.Apply(c, w)
 }
 
 // SetNoCache helper

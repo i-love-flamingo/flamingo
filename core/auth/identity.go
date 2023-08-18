@@ -34,7 +34,7 @@ func (p *securityRoleProvider) All(ctx context.Context, _ *web.Session) []domain
 	for _, identity := range p.service.IdentifyAll(ctx, request) {
 		_ = identity
 		identified = true
-		//if roler, ok := identity.(hasRoles); ok {
+		// if roler, ok := identity.(hasRoles); ok {
 		//roles = append(roles, roler.Roles()...)
 		//}
 	}

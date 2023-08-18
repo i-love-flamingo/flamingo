@@ -16,7 +16,7 @@ import (
 const (
 	// ReferrerRedirectStrategy strategy to redirect to the supplied referrer
 	ReferrerRedirectStrategy = "referrer"
-	//PathRedirectStrategy strategy to redirect to the supplied path
+	// PathRedirectStrategy strategy to redirect to the supplied path
 	PathRedirectStrategy = "path"
 )
 

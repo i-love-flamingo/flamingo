@@ -50,7 +50,7 @@ func (dts *DateTimeService) Inject(
 
 // GetDateTimeFormatterFromIsoString Need string in format ISO: "2017-11-25T06:30:00Z"
 func (dts *DateTimeService) GetDateTimeFormatterFromIsoString(dateTimeString string) (*domain.DateTimeFormatter, error) {
-	timeResult, err := time.Parse(time.RFC3339, dateTimeString) //"2006-01-02T15:04:05Z"
+	timeResult, err := time.Parse(time.RFC3339, dateTimeString) // "2006-01-02T15:04:05Z"
 	if err != nil {
 		return nil, fmt.Errorf("could not parse date in defined format: %v: %w", dateTimeString, err)
 	}

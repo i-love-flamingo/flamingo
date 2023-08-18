@@ -83,7 +83,6 @@ linters:
 issues:
   new: false
   fix: false
-  new-from-rev: 2399c75fbd6c738c4cddf38a3ad7f5f97367e5ec
   exclude-rules:
     - path: _test\.go
       linters:

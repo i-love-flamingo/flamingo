@@ -1,4 +1,7 @@
+**DEPRECATED:** We refactored the caching of HTTP requests, added more backends and moved it into a separate module: [flamingo.me/httpcache](https://flamingo.me/httpcache)
+
 # Cache module
+
 The Cache module provides an easy interface to cache things in flamingo.
 
 The basic concept is, that there is a so called "cache frontend" - that offers an interface to cache certain types, and a "cache backend" that takes care about storing(persiting) the cache entry.

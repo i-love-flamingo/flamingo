@@ -1,16 +1,17 @@
 package cache
 
 import (
+	"errors"
 	"time"
 
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 )
 
 const lurkerPeriod = 1 * time.Minute
 
 type (
 	inMemoryCache struct {
-		pool *lru.TwoQueueCache
+		pool *lru.TwoQueueCache[string, inMemoryCacheEntry]
 	}
 
 	inMemoryCacheEntry struct {
@@ -21,7 +22,7 @@ type (
 
 // NewInMemoryCache creates a new lru TwoQueue backed cache backend
 func NewInMemoryCache() Backend {
-	cache, _ := lru.New2Q(100)
+	cache, _ := lru.New2Q[string, inMemoryCacheEntry](100)
 
 	m := &inMemoryCache{
 		pool: cache,
@@ -36,7 +37,7 @@ func (m *inMemoryCache) Get(key string) (*Entry, bool) {
 	if !ok {
 		return nil, ok
 	}
-	return entry.(inMemoryCacheEntry).data.(*Entry), ok
+	return entry.data.(*Entry), ok
 }
 
 // Set a cache entry with a key
@@ -57,8 +58,8 @@ func (m *inMemoryCache) Purge(key string) error {
 }
 
 // PurgeTags purges all entries with matching tags from the cache
-func (m *inMemoryCache) PurgeTags(tags []string) error {
-	panic("implement me")
+func (m *inMemoryCache) PurgeTags(_ []string) error {
+	return errors.New("not implemented")
 }
 
 // Flush purges all entries in the cache
@@ -72,7 +73,7 @@ func (m *inMemoryCache) lurker() {
 	for range time.Tick(lurkerPeriod) {
 		for _, key := range m.pool.Keys() {
 			item, ok := m.pool.Peek(key)
-			if ok && item.(inMemoryCacheEntry).valid.Before(time.Now()) {
+			if ok && item.valid.Before(time.Now()) {
 				m.pool.Remove(key)
 				break
 			}

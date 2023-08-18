@@ -16,7 +16,6 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
-	github.com/hashicorp/golang-lru v0.5.1
 	github.com/hashicorp/golang-lru/v2 v2.0.5
 	github.com/leekchan/accounting v0.3.1
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
@@ -61,7 +60,6 @@ require (
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
-	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect

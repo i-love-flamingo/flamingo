@@ -20,6 +20,7 @@ type (
 	HTTPLoader func(context.Context) (*http.Response, *Meta, error)
 
 	// HTTPFrontend stores and caches http responses
+	// Deprecated: Please use the dedicated httpcache flamingo module, see here: flamingo.me/httpcache
 	HTTPFrontend struct {
 		singleflight.Group
 		backend Backend
@@ -198,11 +199,6 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 
 	span.AddAttributes(trace.StringAttribute("parenttrace", response.span.TraceID.String()))
 	span.AddAttributes(trace.StringAttribute("parentspan", response.span.SpanID.String()))
-	//span.AddLink(trace.Link{
-	//	SpanID:  data.(loaderResponse).span.SpanID,
-	//	TraceID: data.(loaderResponse).span.TraceID,
-	//	Type:    trace.LinkTypeChild,
-	//})
 
 	return cached, err
 }

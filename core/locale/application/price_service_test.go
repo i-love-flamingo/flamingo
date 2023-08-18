@@ -6,7 +6,6 @@ import (
 	"flamingo.me/flamingo/v3/core/locale/domain"
 	"flamingo.me/flamingo/v3/core/locale/infrastructure/fake"
 	"flamingo.me/flamingo/v3/framework/config"
-	"github.com/leekchan/accounting"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -88,11 +87,8 @@ func TestPriceService_FormatPrice(t *testing.T) {
 	// get empty
 	service := &PriceService{}
 	service.Inject(labelService, nil, nil)
-	acc := &accounting.Accounting{
-		Symbol:    "currency",
-		Precision: 2,
-	}
-	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency"))
+	assert.Equal(t, "currency10,000.50", service.FormatPrice(10000.5, "currency"))
+	assert.Equal(t, "currency0.00", service.FormatPrice(0, "currency"))
 
 	// get default
 	service = &PriceService{}
@@ -109,16 +105,8 @@ func TestPriceService_FormatPrice(t *testing.T) {
 			},
 		},
 	})
-
-	acc = &accounting.Accounting{
-		Symbol:     "currency",
-		Precision:  2,
-		Decimal:    ".",
-		Thousand:   ",",
-		FormatZero: "%s 0.00",
-		Format:     "%s %v",
-	}
-	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency"))
+	assert.Equal(t, "currency 10,000.50", service.FormatPrice(10000.5, "currency"))
+	assert.Equal(t, "currency 0.00", service.FormatPrice(0, "currency"))
 
 	// get default and specific
 	service = &PriceService{}
@@ -129,36 +117,24 @@ func TestPriceService_FormatPrice(t *testing.T) {
 			"default": config.Map{
 				"decimal":    ".",
 				"thousand":   ",",
-				"formatZero": "%s 0.00",
+				"formatZero": "0.00 %s",
 				"format":     "%s %v",
 				"formatLong": "%v %v",
 			},
 			"currency1": config.Map{
 				"decimal":    ",",
 				"thousand":   ".",
-				"formatZero": "%s 0.00",
+				"formatZero": "%s 0,0",
 				"format":     "%s %v",
 				"formatLong": "%v %v",
 			},
 		},
 	})
 
-	acc = &accounting.Accounting{
-		Symbol:     "currency1",
-		Precision:  2,
-		Decimal:    ",",
-		Thousand:   ".",
-		FormatZero: "%s 0.00",
-		Format:     "%s %v",
-	}
-	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency1"))
-	acc = &accounting.Accounting{
-		Symbol:     "currency2",
-		Precision:  2,
-		Decimal:    ".",
-		Thousand:   ",",
-		FormatZero: "%s 0.00",
-		Format:     "%s %v",
-	}
-	assert.Equal(t, acc.FormatMoney(10000.5), service.FormatPrice(10000.5, "currency2"))
+	assert.Equal(t, "currency1 10.000,50", service.FormatPrice(10000.5, "currency1"))
+	assert.Equal(t, "currency1 0,0", service.FormatPrice(0, "currency1"))
+
+	// unknown currency should take default:
+	assert.Equal(t, "currency2 10,000.50", service.FormatPrice(10000.5, "currency2"))
+	assert.Equal(t, "0.00 currency2", service.FormatPrice(0, "currency2"))
 }

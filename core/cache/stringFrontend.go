@@ -3,8 +3,8 @@ package cache
 import (
 	"time"
 
-	"github.com/golang/groupcache/singleflight"
 	"go.opencensus.io/trace"
+	"golang.org/x/sync/singleflight"
 )
 
 type (
@@ -40,7 +40,7 @@ func (sf *StringFrontend) Get(key string, loader StringLoader) (string, error) {
 }
 
 func (sf *StringFrontend) load(key string, loader StringLoader) (string, error) {
-	data, err := sf.Do(key, func() (interface{}, error) {
+	data, err, _ := sf.Do(key, func() (interface{}, error) {
 		data, meta, err := loader()
 		if meta == nil {
 			meta = &Meta{

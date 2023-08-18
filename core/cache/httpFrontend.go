@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang/groupcache/singleflight"
 	"go.opencensus.io/trace"
+	"golang.org/x/sync/singleflight"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -118,7 +118,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	span.Annotate(nil, key)
 	defer span.End()
 
-	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
+	data, err, _ := hf.Do(key, func() (res interface{}, resultErr error) {
 		ctx, fetchRoutineSpan := trace.StartSpan(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.Annotate(nil, key)
 		defer fetchRoutineSpan.End()
@@ -128,7 +128,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 				if err2, ok := err.(error); ok {
 					resultErr = fmt.Errorf("httpfrontend load: %w", err2)
 				} else {
-					resultErr = fmt.Errorf("httpfrontend load: %v", err2)
+					resultErr = fmt.Errorf("httpfrontend load: %v", err)
 				}
 			}
 		}()

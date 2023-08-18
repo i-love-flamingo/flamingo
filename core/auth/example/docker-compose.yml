@@ -15,7 +15,7 @@ services:
     ports:
       - 3352:3352
   keycloak1:
-    image: quay.io/keycloak/keycloak:8.0.2
+    image: quay.io/keycloak/keycloak:22.0.1
     environment:
       DB_VENDOR: h2
       KEYCLOAK_USER: admin
@@ -26,7 +26,7 @@ services:
     ports:
       - 3353:8080
   keycloak2:
-    image: quay.io/keycloak/keycloak:8.0.2
+    image: quay.io/keycloak/keycloak:22.0.1
     environment:
       DB_VENDOR: h2
       KEYCLOAK_USER: admin

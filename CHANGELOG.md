@@ -1,5 +1,43 @@
 # Changelog
 
+## Version v3.7.0 (2023-08-21)
+
+### Features
+
+- **log:** enhance memory efficiency for the zap logger with fields (#340) (f977f5f7)
+- **core/auth/oidc:** Add support of `AuthCodeOption` in the token exchange during callback (#338) (b2453bab)
+
+### Fixes
+
+- **silentlogger:** remove unnecessary fields (#347) (63a53c88)
+- **zap:** only record log metrics when we actually log something (#341) (b0dca2b3)
+
+### Refactoring
+
+- **core/zap:** clean up zap module and add tests (a7f94766)
+
+### Ops and CI/CD
+
+- force on latest go version &amp; cleanup jobs (#353) (69507dd2)
+
+### Chores and tidying
+
+- **deps:** update module golang.org/x/oauth2 to v0.11.0 (#331) (9d3adbd6)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v22 (#352) (98f5a027)
+- **deps:** update module github.com/leekchan/accounting to v0.3.1 (#250) (63c33cd2)
+- **deps:** update module go.uber.org/automaxprocs to v1.5.3 (#350) (7a7bf310)
+- **deps:** update module github.com/openzipkin/zipkin-go to v0.4.2 (#348) (9cea11d2)
+- **deps:** update module go.uber.org/zap to v1.25.0 (2ab0354b)
+- **go:** bump go version to 1.20 (#349) (d63caa90)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.32.4 (#328) (38460154)
+- **session:** health check config cleanup (#342) (41f0c480)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.0.5 (#343) (f616b5ea)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.6.0 (#344) (94a60a28)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v4.5.0 (#322) (e6d8895d)
+- **deps:** update module go.uber.org/automaxprocs to v1.5.2 (#330) (62c67564)
+- **deps:** update actions/setup-go action to v4 (#332) (bec3e4cc)
+- **deps:** update module github.com/stretchr/testify to v1.8.4 (#329) (063732d9)
+
 ## Version v3.6.1 (2023-05-04)
 
 ### Fixes

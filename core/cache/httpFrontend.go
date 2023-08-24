@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang/groupcache/singleflight"
 	"go.opencensus.io/trace"
+	"golang.org/x/sync/singleflight"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -20,6 +20,7 @@ type (
 	HTTPLoader func(context.Context) (*http.Response, *Meta, error)
 
 	// HTTPFrontend stores and caches http responses
+	// Deprecated: Please use the dedicated httpcache flamingo module, see here: flamingo.me/httpcache
 	HTTPFrontend struct {
 		singleflight.Group
 		backend Backend
@@ -117,7 +118,7 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	span.Annotate(nil, key)
 	defer span.End()
 
-	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
+	data, err, _ := hf.Do(key, func() (res interface{}, resultErr error) {
 		ctx, fetchRoutineSpan := trace.StartSpan(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.Annotate(nil, key)
 		defer fetchRoutineSpan.End()
@@ -127,7 +128,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 				if err2, ok := err.(error); ok {
 					resultErr = fmt.Errorf("httpfrontend load: %w", err2)
 				} else {
-					resultErr = fmt.Errorf("httpfrontend load: %v", err2)
+					//nolint:goerr113 // not worth introducing a dedicated error for this edge case
+					resultErr = fmt.Errorf("httpfrontend load: %v", err)
 				}
 			}
 		}()
@@ -198,11 +200,6 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 
 	span.AddAttributes(trace.StringAttribute("parenttrace", response.span.TraceID.String()))
 	span.AddAttributes(trace.StringAttribute("parentspan", response.span.SpanID.String()))
-	//span.AddLink(trace.Link{
-	//	SpanID:  data.(loaderResponse).span.SpanID,
-	//	TraceID: data.(loaderResponse).span.TraceID,
-	//	Type:    trace.LinkTypeChild,
-	//})
 
 	return cached, err
 }

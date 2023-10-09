@@ -6,13 +6,10 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"flamingo.me/flamingo/v3/framework/web"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -21,14 +18,14 @@ import (
 type Option func(*Logger)
 
 var (
-	logCount syncint64.Counter
+	logCount metric.Int64Counter
 	keyLevel attribute.Key = "level"
 )
 
 func init() {
 	var err error
-	logCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/zap/logs",
-		instrument.WithDescription("Count of logs"), instrument.WithUnit(unit.Dimensionless))
+	logCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/zap/logs",
+		metric.WithDescription("Count of logs"))
 	if err != nil {
 		panic(err)
 	}
@@ -95,8 +92,7 @@ func (l *Logger) record(level string) {
 		return
 	}
 
-	logCount.Add(context.Background(), 1, attribute.String(opentelemetry.KeyArea.Key(), l.configArea),
-		keyLevel.String(level))
+	logCount.Add(context.Background(), 1, metric.WithAttributes(attribute.String(opentelemetry.KeyArea.Key(), l.configArea), keyLevel.String(level)))
 }
 
 // Debug logs a message at debug level

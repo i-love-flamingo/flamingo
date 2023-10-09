@@ -6,15 +6,12 @@ import (
 	"fmt"
 	"net/url"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
-
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"flamingo.me/flamingo/v3/framework/web"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type (
@@ -35,20 +32,20 @@ type (
 
 var (
 	// loginFailedCount counts the failed login attempts
-	loginFailedCount syncint64.Counter
+	loginFailedCount metric.Int64Counter
 	// loginSucceededCount counts the successful login attempts
-	loginSucceededCount syncint64.Counter
+	loginSucceededCount metric.Int64Counter
 )
 
 func init() {
 	var err error
-	loginFailedCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/oauth/login_failed",
-		instrument.WithDescription("Count of failed login attempts"), instrument.WithUnit(unit.Dimensionless))
+	loginFailedCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/oauth/login_failed",
+		metric.WithDescription("Count of failed login attempts"))
 	if err != nil {
 		panic(err)
 	}
-	loginSucceededCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/oauth/login_succeeded",
-		instrument.WithDescription("Count of succeeded login attempts"), instrument.WithUnit(unit.Dimensionless))
+	loginSucceededCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/oauth/login_succeeded",
+		metric.WithDescription("Count of succeeded login attempts"))
 	if err != nil {
 		panic(err)
 	}

@@ -9,17 +9,15 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
+	"go.opentelemetry.io/otel/metric"
 )
 
-var rtHistogram syncint64.Histogram
+var rtHistogram metric.Int64Histogram
 
 func init() {
 	var err error
-	rtHistogram, err = opentelemetry.GetMeter().SyncInt64().Histogram("flamingo/prefixrouter/requesttimes",
-		instrument.WithDescription("prefixrouter request times"), instrument.WithUnit(unit.Milliseconds))
+	rtHistogram, err = opentelemetry.GetMeter().Int64Histogram("flamingo/prefixrouter/requesttimes",
+		metric.WithDescription("prefixrouter request times"), metric.WithUnit("ms"))
 	if err != nil {
 		panic(err)
 	}

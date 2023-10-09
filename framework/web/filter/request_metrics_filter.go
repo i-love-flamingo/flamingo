@@ -8,9 +8,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
+	"go.opentelemetry.io/otel/metric"
 
 	"flamingo.me/flamingo/v3/framework/web"
 )
@@ -32,23 +30,22 @@ type (
 
 var (
 	// responseBytesCount counts the total number of bytes served by the application
-	responseBytesCount syncint64.Counter
-
+	responseBytesCount metric.Int64Counter
 	// responseCount count the number of responses served by the application
-	responsesCount syncint64.Counter
+	responsesCount metric.Int64Counter
 	// keyHTTPStatus defines response http status code
 	keyHTTPStatus attribute.Key = "status_code"
 )
 
 func init() {
 	var err error
-	responseBytesCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/response/bytes_count",
-		instrument.WithDescription("Count of responses number of bytes"), instrument.WithUnit(unit.Bytes))
+	responseBytesCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/response/bytes_count",
+		metric.WithDescription("Count of responses number of bytes"), metric.WithUnit("By"))
 	if err != nil {
 		panic(err)
 	}
-	responsesCount, err = opentelemetry.GetMeter().SyncInt64().Counter("flamingo/response/count",
-		instrument.WithDescription("Count of number of responses"), instrument.WithUnit(unit.Dimensionless))
+	responsesCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/response/count",
+		metric.WithDescription("Count of number of responses"))
 	if err != nil {
 		panic(err)
 	}
@@ -84,8 +81,8 @@ func (r responseMetrics) Apply(ctx context.Context, rw http.ResponseWriter) erro
 	}
 
 	statusAttribute := keyHTTPStatus.String(strconv.Itoa(responseWriter.status/100) + "xx")
-	responseBytesCount.Add(ctx, responseWriter.bytes, statusAttribute)
-	responsesCount.Add(ctx, 1, statusAttribute)
+	responseBytesCount.Add(ctx, responseWriter.bytes, metric.WithAttributes(statusAttribute))
+	responsesCount.Add(ctx, 1, metric.WithAttributes(statusAttribute))
 
 	return err
 }

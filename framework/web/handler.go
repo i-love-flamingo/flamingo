@@ -13,9 +13,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncint64"
-	"go.opentelemetry.io/otel/metric/unit"
+	"go.opentelemetry.io/otel/metric"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/gorilla/securecookie"
@@ -47,13 +45,13 @@ var (
 
 	// RouterError defines error value for issues appearing during routing process
 	RouterError contextKeyType = "error"
-	rtHistogram syncint64.Histogram
+	rtHistogram metric.Int64Histogram
 )
 
 func init() {
 	var err error
-	rtHistogram, err = opentelemetry.GetMeter().SyncInt64().Histogram("flamingo/router/controller",
-		instrument.WithDescription("controller request times"), instrument.WithUnit(unit.Milliseconds))
+	rtHistogram, err = opentelemetry.GetMeter().Int64Histogram("flamingo/router/controller",
+		metric.WithDescription("controller request times"), metric.WithUnit("ms"))
 	if err != nil {
 		panic(err)
 	}

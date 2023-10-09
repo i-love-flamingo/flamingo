@@ -9,11 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
-	"go.opentelemetry.io/otel/attribute"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"github.com/golang/groupcache/singleflight"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -113,14 +112,14 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 }
 
 func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader, keepExistingEntry bool) (cachedResponse, error) {
-	oldSpan := trace.FromContext(ctx)
-	newContext := trace.NewContext(context.Background(), oldSpan)
+	oldSpan := trace.SpanFromContext(ctx)
+	newContext := trace.ContextWithSpan(context.Background(), oldSpan)
 
 	newContextWithSpan, span := opentelemetry.GetTracer().Start(newContext, "flamingo/cache/httpFrontend/load")
 	span.AddEvent(key)
 	defer span.End()
 
-	data, err, _ := hf.Do(key, func() (res interface{}, resultErr error) {
+	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
 		ctx, fetchRoutineSpan := opentelemetry.GetTracer().Start(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.AddEvent(key)
 		defer fetchRoutineSpan.End()

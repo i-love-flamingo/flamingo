@@ -8,10 +8,8 @@ import (
 	"go.opentelemetry.io/otel/baggage"
 
 	runtimemetrics "go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/otel/sdk/metric/aggregator/histogram"
-	"go.opentelemetry.io/otel/sdk/metric/export/aggregation"
-
 	"go.opentelemetry.io/otel/metric"
+	sdkMetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"flamingo.me/dingo"
@@ -24,11 +22,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/exporters/zipkin"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
-	controller "go.opentelemetry.io/otel/sdk/metric/controller/basic"
-	processor "go.opentelemetry.io/otel/sdk/metric/processor/basic"
-	selector "go.opentelemetry.io/otel/sdk/metric/selector/simple"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 )
@@ -111,27 +105,19 @@ func (m *Module) Configure(injector *dingo.Injector) {
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	// metrics
-	config := prometheus.Config{
-		DefaultHistogramBoundaries: []float64{1, 2, 5, 10, 20, 50},
-	}
-	c := controller.New(
-		processor.NewFactory(
-			selector.NewWithHistogramDistribution(
-				histogram.WithExplicitBoundaries(config.DefaultHistogramBoundaries),
-			),
-			aggregation.CumulativeTemporalitySelector(),
-			processor.WithMemory(true),
-		),
-		controller.WithResource(resource.NewWithAttributes(
-			schemaURL,
-			attribute.String("service.name", m.serviceName),
-		)),
-	)
-	exp, err := prometheus.New(config, c)
+
+	// DefaultHistogramBoundaries: []float64{1, 2, 5, 10, 20, 50},
+	// aggregation.CumulativeTemporalitySelector(),
+	// processor.WithMemory(true),
+	// controller.WithResource(resource.NewWithAttributes(schemaURL, attribute.String("service.name", m.serviceName))),
+
+	exp, err := prometheus.New()
 	if err != nil {
 		log.Fatalf("Failed to initialize Prometheus exporter: %v", err)
 	}
-	global.SetMeterProvider(exp.MeterProvider())
+
+	meterProvider := sdkMetric.NewMeterProvider(sdkMetric.WithReader(exp))
+	otel.SetMeterProvider(meterProvider)
 	if err := runtimemetrics.Start(); err != nil {
 		log.Fatal(err)
 	}
@@ -172,7 +158,7 @@ func GetTracer() trace.Tracer {
 
 func GetMeter() metric.Meter {
 	createMeterOnce.Do(func() {
-		mp := global.MeterProvider()
+		mp := otel.GetMeterProvider()
 		meter = mp.Meter(name, metric.WithInstrumentationVersion(SemVersion()))
 	})
 	return meter

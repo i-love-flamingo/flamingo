@@ -94,7 +94,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		assert.EqualError(t, errResp.Error, "state mismatch")
 	})
 
-	t.Run("test timeshift", func(t *testing.T) {
+	t.Run("test default time shift", func(t *testing.T) {
 		resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
 		state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
 
@@ -106,6 +106,24 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
 		errResp := resp.(*web.ServerErrorResponse)
 		assert.EqualError(t, errResp.Error, "state mismatch")
+
+		now = time.Now
+	})
+
+	t.Run("test custom time shift", func(t *testing.T) {
+		resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
+		state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
+		oneHour := time.Hour
+		identifier.stateTimeout = &oneHour
+
+		now = func() time.Time {
+			return time.Now().Add(35 * time.Minute)
+		}
+
+		request.URL.RawQuery = url.Values{"state": []string{state1}}.Encode()
+		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
+		errResp := resp.(*web.ServerErrorResponse)
+		assert.NotContains(t, errResp.Error.Error(), "state mismatch")
 
 		now = time.Now
 	})

@@ -58,6 +58,7 @@ type (
 		oidcConfig               oidcConfig
 		verifierConfigurator     []func(*oidc.Config)
 		callbackErrorHandler     CallbackErrorHandler
+		stateTimeout             *time.Duration
 	}
 
 	sessionData struct {
@@ -85,6 +86,7 @@ type (
 		} `json:"claims"`
 		EnableEndSessionEndpoint bool   `json:"enableEndSessionEndpoint"`
 		OverrideIssuerURL        string `json:"overrideIssuerURL"`
+		StateLifeTime            string `json:"stateLifeTime"`
 	}
 )
 
@@ -140,6 +142,13 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		authCodeOptions = append(authCodeOptions, oauth2AuthCodeOption{authCodeOption: authCodeOption})
 	}
 
+	stateTimeout := defaultStateTimeout
+	if oidcConfig.StateLifeTime != "" {
+		if duration, err := time.ParseDuration(oidcConfig.StateLifeTime); err == nil {
+			stateTimeout = duration
+		}
+	}
+
 	return &openIDIdentifier{
 		oauth2Config: &oauth2.Config{
 			ClientID:     oidcConfig.ClientID,
@@ -152,6 +161,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 		provider:        provider,
 		authcodeOptions: authCodeOptions,
 		oidcConfig:      oidcConfig,
+		stateTimeout:    &stateTimeout,
 	}, nil
 }
 
@@ -362,7 +372,7 @@ type StateEntry struct {
 	TS    time.Time
 }
 
-const stateTimeout = time.Minute * 30
+const defaultStateTimeout = time.Minute * 30
 
 func init() {
 	gob.Register([]StateEntry(nil))
@@ -374,6 +384,12 @@ const sessionStatesKey = "states"
 var now = time.Now
 
 func (i *openIDIdentifier) validateSessionCode(request *web.Request, code string) bool {
+	stateTimeout := defaultStateTimeout
+
+	if i.stateTimeout != nil {
+		stateTimeout = *i.stateTimeout
+	}
+
 	sessionStates, ok := request.Session().Load(i.sessionCode(sessionStatesKey))
 	if !ok {
 		return false

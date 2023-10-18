@@ -55,8 +55,8 @@ func (m *mockCallbackErrorHandler) Handle(_ context.Context, _ string, _ *web.Re
 var _ CallbackErrorHandler = &mockCallbackErrorHandler{}
 
 func TestParallelStateRaceConditions(t *testing.T) {
+	//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 	t.Run("test states", func(t *testing.T) {
-		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
 			oauth2Config:             &oauth2.Config{},
@@ -71,7 +71,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		resp = identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
 		state2 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
 
-		request, err := http.NewRequest(http.MethodGet, "http://example.com/callback", nil)
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
 		assert.NoError(t, err)
 
 		request.URL.RawQuery = url.Values{"state": []string{"invalid-state"}}.Encode()
@@ -96,8 +96,6 @@ func TestParallelStateRaceConditions(t *testing.T) {
 	})
 
 	t.Run("test default time shift", func(t *testing.T) {
-		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
-
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
 			oauth2Config:             &oauth2.Config{},
@@ -105,7 +103,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 			responder:                &web.Responder{},
 		}
 
-		request, err := http.NewRequest(http.MethodGet, "http://example.com/callback", nil)
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
 		assert.NoError(t, err)
 
 		session := web.EmptySession()
@@ -126,8 +124,6 @@ func TestParallelStateRaceConditions(t *testing.T) {
 	})
 
 	t.Run("test custom time shift", func(t *testing.T) {
-		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
-
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
 			oauth2Config:             &oauth2.Config{},
@@ -135,7 +131,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 			responder:                &web.Responder{},
 		}
 
-		request, err := http.NewRequest(http.MethodGet, "http://example.com/callback", nil)
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
 		assert.NoError(t, err)
 
 		session := web.EmptySession()

@@ -143,6 +143,7 @@ func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
 	}
 
 	stateTimeout := defaultStateTimeout
+
 	if oidcConfig.StateLifeTime != "" {
 		if duration, err := time.ParseDuration(oidcConfig.StateLifeTime); err == nil {
 			stateTimeout = duration

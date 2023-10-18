@@ -56,8 +56,7 @@ var _ CallbackErrorHandler = &mockCallbackErrorHandler{}
 
 func TestParallelStateRaceConditions(t *testing.T) {
 	t.Run("test states", func(t *testing.T) {
-		t.Parallel()
-
+		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
 			oauth2Config:             &oauth2.Config{},
@@ -97,7 +96,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 	})
 
 	t.Run("test default time shift", func(t *testing.T) {
-		t.Parallel()
+		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
@@ -127,7 +126,7 @@ func TestParallelStateRaceConditions(t *testing.T) {
 	})
 
 	t.Run("test custom time shift", func(t *testing.T) {
-		t.Parallel()
+		//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 
 		identifier := &openIDIdentifier{
 			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },

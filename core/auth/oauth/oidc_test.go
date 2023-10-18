@@ -54,25 +54,27 @@ func (m *mockCallbackErrorHandler) Handle(_ context.Context, _ string, _ *web.Re
 
 var _ CallbackErrorHandler = &mockCallbackErrorHandler{}
 
+//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 func TestParallelStateRaceConditions(t *testing.T) {
-	identifier := &openIDIdentifier{
-		authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
-		oauth2Config:             &oauth2.Config{},
-		reverseRouter:            new(mockRouter),
-		responder:                &web.Responder{},
-	}
-
-	session := web.EmptySession()
-
-	resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
-	state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
-	resp = identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
-	state2 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
-
-	request, err := http.NewRequest(http.MethodGet, "http://example.com/callback", nil)
-	assert.NoError(t, err)
-
+	//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
 	t.Run("test states", func(t *testing.T) {
+		identifier := &openIDIdentifier{
+			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
+			oauth2Config:             &oauth2.Config{},
+			reverseRouter:            new(mockRouter),
+			responder:                &web.Responder{},
+		}
+
+		session := web.EmptySession()
+
+		resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
+		state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
+		resp = identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
+		state2 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
+
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
+		assert.NoError(t, err)
+
 		request.URL.RawQuery = url.Values{"state": []string{"invalid-state"}}.Encode()
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
 		errResp := resp.(*web.ServerErrorResponse)
@@ -94,7 +96,20 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		assert.EqualError(t, errResp.Error, "state mismatch")
 	})
 
-	t.Run("test timeshift", func(t *testing.T) {
+	//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
+	t.Run("test default time shift", func(t *testing.T) {
+		identifier := &openIDIdentifier{
+			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
+			oauth2Config:             &oauth2.Config{},
+			reverseRouter:            new(mockRouter),
+			responder:                &web.Responder{},
+		}
+
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
+		assert.NoError(t, err)
+
+		session := web.EmptySession()
+
 		resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
 		state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
 
@@ -106,6 +121,37 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
 		errResp := resp.(*web.ServerErrorResponse)
 		assert.EqualError(t, errResp.Error, "state mismatch")
+
+		now = time.Now
+	})
+
+	//nolint:paralleltest // time.Now lives in global var `now` running this parallel will cause race cond
+	t.Run("test custom time shift", func(t *testing.T) {
+		identifier := &openIDIdentifier{
+			authCodeOptionerProvider: func() []AuthCodeOptioner { return nil },
+			oauth2Config:             &oauth2.Config{},
+			reverseRouter:            new(mockRouter),
+			responder:                &web.Responder{},
+		}
+
+		request, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "http://example.com/callback", nil)
+		assert.NoError(t, err)
+
+		session := web.EmptySession()
+
+		resp := identifier.Authenticate(context.Background(), web.CreateRequest(nil, session))
+		state1 := resp.(*web.URLRedirectResponse).URL.Query().Get("state")
+		oneHour := time.Hour
+		identifier.stateTimeout = &oneHour
+
+		now = func() time.Time {
+			return time.Now().Add(35 * time.Minute)
+		}
+
+		request.URL.RawQuery = url.Values{"state": []string{state1}}.Encode()
+		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
+		errResp := resp.(*web.ServerErrorResponse)
+		assert.NotContains(t, errResp.Error.Error(), "state mismatch")
 
 		now = time.Now
 	})
@@ -303,6 +349,8 @@ func TestOidcCallback(t *testing.T) {
 }
 
 func Test_openIDIdentifier_RefreshIdentity(t *testing.T) {
+	t.Parallel()
+
 	var identifier auth.RequestIdentifier = &openIDIdentifier{broker: "broker"}
 	session := web.EmptySession()
 	session.Store("core.auth.oidc.broker.sessiondata", sessionData{

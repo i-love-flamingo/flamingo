@@ -46,6 +46,7 @@ core: auth: {
 		}
 		enableEndSessionEndpoint: bool | *true
 		overrideIssuerURL: string | *""
+		stateLifeTime: string | *"30m"
 	}
 }
 `

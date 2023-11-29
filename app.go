@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"flamingo.me/opentelemetry"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"flamingo.me/dingo"

@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"sync"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
-
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -32,7 +30,7 @@ func TryDo(ctx context.Context, r *web.Request, task func(ctx context.Context, r
 		wg.Add(1)
 
 		go func() {
-			ctx, span := opentelemetry.GetTracer().Start(ctx, "requestTask")
+			ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "requestTask")
 			task(ctx, r)
 			span.End()
 			wg.Done()

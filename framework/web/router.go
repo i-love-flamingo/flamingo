@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"strings"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
-
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
@@ -268,7 +266,7 @@ func dataParams(params map[interface{}]interface{}) RequestParams {
 
 // Data calls a flamingo data controller
 func (r *Router) Data(ctx context.Context, handler string, params map[interface{}]interface{}) interface{} {
-	ctx, span := opentelemetry.GetTracer().Start(ctx, "flamingo/router/data")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "flamingo/router/data")
 	span.AddEvent(handler)
 	defer span.End()
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"flamingo.me/flamingo/v3/framework/web"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
@@ -24,7 +24,7 @@ var (
 
 func init() {
 	var err error
-	logCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/zap/logs",
+	logCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/zap/logs",
 		metric.WithDescription("Count of logs"))
 	if err != nil {
 		panic(err)
@@ -92,7 +92,7 @@ func (l *Logger) record(level string) {
 		return
 	}
 
-	logCount.Add(context.Background(), 1, metric.WithAttributes(attribute.String(opentelemetry.KeyArea.Key(), l.configArea), keyLevel.String(level)))
+	logCount.Add(context.Background(), 1, metric.WithAttributes(attribute.String(web.AreaKey.Key(), l.configArea), keyLevel.String(level)))
 }
 
 // Debug logs a message at debug level

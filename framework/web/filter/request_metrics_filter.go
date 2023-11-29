@@ -7,7 +7,6 @@ import (
 
 	"go.opentelemetry.io/otel/attribute"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"go.opentelemetry.io/otel/metric"
 
 	"flamingo.me/flamingo/v3/framework/web"
@@ -39,12 +38,12 @@ var (
 
 func init() {
 	var err error
-	responseBytesCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/response/bytes_count",
+	responseBytesCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/response/bytes_count",
 		metric.WithDescription("Count of responses number of bytes"), metric.WithUnit("By"))
 	if err != nil {
 		panic(err)
 	}
-	responsesCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/response/count",
+	responsesCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/response/count",
 		metric.WithDescription("Count of number of responses"))
 	if err != nil {
 		panic(err)

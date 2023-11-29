@@ -9,7 +9,6 @@ import (
 	"flamingo.me/flamingo/v3/core/oauth/application"
 	"flamingo.me/flamingo/v3/core/oauth/domain"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"flamingo.me/flamingo/v3/framework/web"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -39,12 +38,12 @@ var (
 
 func init() {
 	var err error
-	loginFailedCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/oauth/login_failed",
+	loginFailedCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/oauth/login_failed",
 		metric.WithDescription("Count of failed login attempts"))
 	if err != nil {
 		panic(err)
 	}
-	loginSucceededCount, err = opentelemetry.GetMeter().Int64Counter("flamingo/oauth/login_succeeded",
+	loginSucceededCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/oauth/login_succeeded",
 		metric.WithDescription("Count of succeeded login attempts"))
 	if err != nil {
 		panic(err)

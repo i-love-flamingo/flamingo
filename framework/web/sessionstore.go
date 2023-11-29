@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -52,7 +52,7 @@ func (s *SessionStore) LoadByRequest(ctx context.Context, req *http.Request) (*S
 		return EmptySession(), nil
 	}
 
-	_, span := opentelemetry.GetTracer().Start(ctx, "flamingo/web/session/load")
+	_, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "flamingo/web/session/load")
 	defer span.End()
 	gs, err := s.sessionStore.New(req, s.sessionName)
 
@@ -136,7 +136,7 @@ func (s *SessionStore) Save(ctx context.Context, session *Session) (http.Header,
 		session.dirty = nil
 	}
 
-	_, span := opentelemetry.GetTracer().Start(ctx, "flamingo/web/session/save")
+	_, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "flamingo/web/session/save")
 	defer span.End()
 	rw := headerResponseWriter(make(http.Header))
 	if err := s.sessionStore.Save(s.requestFromID(session.s.ID), rw, gs); err != nil {

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
 	"github.com/golang/groupcache/singleflight"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -80,7 +79,7 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 		return nil, errors.New("NO backend in Cache")
 	}
 
-	ctx, span := opentelemetry.GetTracer().Start(ctx, "flamingo/cache/httpFrontend/Get")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "flamingo/cache/httpFrontend/Get")
 	span.AddEvent(key)
 	defer span.End()
 
@@ -115,12 +114,12 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	oldSpan := trace.SpanFromContext(ctx)
 	newContext := trace.ContextWithSpan(context.Background(), oldSpan)
 
-	newContextWithSpan, span := opentelemetry.GetTracer().Start(newContext, "flamingo/cache/httpFrontend/load")
+	newContextWithSpan, span := otel.Tracer("flamingo.me/opentelemetry").Start(newContext, "flamingo/cache/httpFrontend/load")
 	span.AddEvent(key)
 	defer span.End()
 
 	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
-		ctx, fetchRoutineSpan := opentelemetry.GetTracer().Start(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
+		ctx, fetchRoutineSpan := otel.Tracer("flamingo.me/opentelemetry").Start(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
 		fetchRoutineSpan.AddEvent(key)
 		defer fetchRoutineSpan.End()
 

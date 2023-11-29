@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"flamingo.me/flamingo/v3/framework/web"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/metric"
 )
@@ -16,7 +17,7 @@ var rtHistogram metric.Int64Histogram
 
 func init() {
 	var err error
-	rtHistogram, err = opentelemetry.GetMeter().Int64Histogram("flamingo/prefixrouter/requesttimes",
+	rtHistogram, err = otel.Meter("flamingo.me/opentelemetry").Int64Histogram("flamingo/prefixrouter/requesttimes",
 		metric.WithDescription("prefixrouter request times"), metric.WithUnit("ms"))
 	if err != nil {
 		panic(err)
@@ -86,7 +87,7 @@ func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
 
 // ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), "-")
+	areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), "-")
 	bagg := baggage.FromContext(req.Context())
 	afterDeletionBagg := bagg.DeleteMember(areaBaggage.Key())
 	if afterDeletionBagg.Len() == bagg.Len() {
@@ -100,7 +101,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		rtHistogram.Record(req.Context(), time.Since(start).Nanoseconds()/1000000)
 	}()
 
-	ctx, span := opentelemetry.GetTracer().Start(req.Context(), "prefixrouter/ServeHTTP")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(req.Context(), "prefixrouter/ServeHTTP")
 	req = req.WithContext(ctx)
 	defer span.End()
 
@@ -131,7 +132,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		router := fr.router[prefix]
 
 		bagg := baggage.FromContext(req.Context())
-		areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), router.area)
+		areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), router.area)
 		bagg, _ = bagg.SetMember(areaBaggage)
 		c := baggage.ContextWithBaggage(req.Context(), bagg)
 		req = req.WithContext(c)
@@ -162,7 +163,7 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		router := fr.router[prefix]
 
 		bagg := baggage.FromContext(req.Context())
-		areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), router.area)
+		areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), router.area)
 		bagg, _ = bagg.SetMember(areaBaggage)
 		c := baggage.ContextWithBaggage(req.Context(), bagg)
 		req = req.WithContext(c)

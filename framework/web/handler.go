@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"flamingo.me/flamingo/v3/framework/opentelemetry"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
@@ -42,6 +42,7 @@ type (
 var (
 	// ControllerKey exposes the current controller/handler key
 	ControllerKey, _ = baggage.NewKeyProperty("controller")
+	AreaKey, _       = baggage.NewKeyProperty("area")
 
 	// RouterError defines error value for issues appearing during routing process
 	RouterError contextKeyType = "error"
@@ -50,7 +51,7 @@ var (
 
 func init() {
 	var err error
-	rtHistogram, err = opentelemetry.GetMeter().Int64Histogram("flamingo/router/controller",
+	rtHistogram, err = otel.Meter("flamingo.me/opentelemetry").Int64Histogram("flamingo/router/controller",
 		metric.WithDescription("controller request times"), metric.WithUnit("ms"))
 	if err != nil {
 		panic(err)
@@ -105,7 +106,7 @@ func panicToError(p interface{}) error {
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	httpRequest.URL.Path = strings.TrimPrefix(httpRequest.URL.Path, h.prefix)
-	ctx, span := opentelemetry.GetTracer().Start(httpRequest.Context(), "router/ServeHTTP")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(httpRequest.Context(), "router/ServeHTTP")
 	defer span.End()
 
 	session, err := h.sessionStore.LoadByRequest(ctx, httpRequest)
@@ -117,13 +118,13 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		}
 	}
 
-	_, span = opentelemetry.GetTracer().Start(ctx, "router/matchRequest")
+	_, span = otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/matchRequest")
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
 
 	if handler != nil {
 		bagg := baggage.FromContext(ctx)
 		ctrBaggage, _ := baggage.NewMember(ControllerKey.Key(), handler.GetHandlerName())
-		areaBaggage, _ := baggage.NewMember(opentelemetry.KeyArea.Key(), "-")
+		areaBaggage, _ := baggage.NewMember(AreaKey.Key(), "-")
 		bagg, _ = bagg.SetMember(ctrBaggage)
 		afterDeletionBagg := bagg.DeleteMember(areaBaggage.Key())
 		if afterDeletionBagg.Len() == bagg.Len() {
@@ -155,13 +156,13 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	span.End() // router/matchRequest
 
-	ctx, span = opentelemetry.GetTracer().Start(ctx, "router/request")
+	ctx, span = otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/request")
 	defer span.End()
 
 	chain := &FilterChain{
 		filters: h.filter,
 		final: func(ctx context.Context, r *Request, rw http.ResponseWriter) (response Result) {
-			ctx, span := opentelemetry.GetTracer().Start(ctx, "router/controller")
+			ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/controller")
 			defer span.End()
 
 			defer func() {
@@ -197,7 +198,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	var finalErr error
 	if result != nil {
-		ctx, span := opentelemetry.GetTracer().Start(ctx, "router/responseApply")
+		ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/responseApply")
 
 		func() {
 			//catch panic in Apply only

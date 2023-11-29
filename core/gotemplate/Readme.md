@@ -42,7 +42,7 @@ Here `index.html` resembles an example template. For our purposes, it contains t
 </html>
 ```
 
-You can refer to the [html/template documentation](golang.org/pkg/html/template/) for further information on how to fill your template.
+You can refer to the [html/template documentation](https://pkg.go.dev/html/template) for further information on how to fill your template.
 
 To render `index.html` in your controller, just call
 

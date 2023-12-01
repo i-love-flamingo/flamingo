@@ -1,5 +1,7 @@
 # Opencensus
 
+> **This module is deprecated and will likely be removed in future versions of flamingo. Please use the [OpenTelemetry module](https://github.com/i-love-flamingo/opentelemetry) instead.**
+
 ## General usage
 
 First, if you're not sure what opencensus is, please visit [https://opencensus.io/](https://opencensus.io/) to learn more about it.

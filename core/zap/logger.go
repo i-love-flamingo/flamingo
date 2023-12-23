@@ -4,27 +4,29 @@ import (
 	"context"
 	"fmt"
 
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
+	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type Option func(*Logger)
 
 var (
-	logCount    = stats.Int64("flamingo/zap/logs", "Count of logs", stats.UnitDimensionless)
-	keyLevel, _ = tag.NewKey("level")
+	logCount metric.Int64Counter
+	keyLevel attribute.Key = "level"
 )
 
 func init() {
-	if err := opencensus.View("flamingo/zap/logs", logCount, view.Count(), keyLevel); err != nil {
+	var err error
+	logCount, err = otel.Meter("flamingo.me/opentelemetry").Int64Counter("flamingo/zap/logs",
+		metric.WithDescription("Count of logs"))
+	if err != nil {
 		panic(err)
 	}
 }
@@ -61,10 +63,10 @@ func NewLogger(logger *zap.Logger, options ...Option) *Logger {
 // referer:       referer from request
 // request:       received payload from request
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
-	span := trace.FromContext(ctx)
+	span := trace.SpanFromContext(ctx)
 	fields := map[flamingo.LogKey]interface{}{
-		flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
-		flamingo.LogKeySpanID:  span.SpanContext().SpanID.String(),
+		flamingo.LogKeyTraceID: span.SpanContext().TraceID().String(),
+		flamingo.LogKeySpanID:  span.SpanContext().SpanID().String(),
 	}
 
 	req := web.RequestFromContext(ctx)
@@ -90,8 +92,7 @@ func (l *Logger) record(level string) {
 		return
 	}
 
-	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, l.configArea), tag.Upsert(keyLevel, level))
-	stats.Record(ctx, logCount.M(1))
+	logCount.Add(context.Background(), 1, metric.WithAttributes(attribute.String(web.AreaKey.Key(), l.configArea), keyLevel.String(level)))
 }
 
 // Debug logs a message at debug level

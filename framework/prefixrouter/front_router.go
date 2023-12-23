@@ -7,26 +7,19 @@ import (
 	"strings"
 	"time"
 
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
-
-	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/web"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/metric"
 )
 
-var rt = stats.Int64("flamingo/prefixrouter/requesttimes", "prefixrouter request times", stats.UnitMilliseconds)
+var rtHistogram metric.Int64Histogram
 
 func init() {
-	if err := view.Register(
-		&view.View{
-			Name:        "flamingo/prefixrouter/requests",
-			Description: "request times",
-			Aggregation: view.Distribution(10, 100, 500, 1000, 2500, 5000, 10000),
-			Measure:     rt,
-			TagKeys:     []tag.Key{opencensus.KeyArea},
-		},
-	); err != nil {
+	var err error
+	rtHistogram, err = otel.Meter("flamingo.me/opentelemetry").Int64Histogram("flamingo/prefixrouter/requesttimes",
+		metric.WithDescription("prefixrouter request times"), metric.WithUnit("ms"))
+	if err != nil {
 		panic(err)
 	}
 }
@@ -94,15 +87,21 @@ func (fr *FrontRouter) SetPrimaryHandlers(handlers []OptionalHandler) {
 
 // ServeHTTP gets Router for Request and lets it handle it
 func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r, _ := tag.New(req.Context(), tag.Insert(opencensus.KeyArea, "-"))
-	req = req.WithContext(r)
+	areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), "-")
+	bagg := baggage.FromContext(req.Context())
+	afterDeletionBagg := bagg.DeleteMember(areaBaggage.Key())
+	if afterDeletionBagg.Len() == bagg.Len() {
+		bagg, _ = bagg.SetMember(areaBaggage)
+	}
+	c := baggage.ContextWithBaggage(req.Context(), bagg)
+	req = req.WithContext(c)
 
 	start := time.Now()
 	defer func() {
-		stats.Record(req.Context(), rt.M(time.Since(start).Nanoseconds()/1000000))
+		rtHistogram.Record(req.Context(), time.Since(start).Nanoseconds()/1000000)
 	}()
 
-	ctx, span := trace.StartSpan(req.Context(), "prefixrouter/ServeHTTP")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(req.Context(), "prefixrouter/ServeHTTP")
 	req = req.WithContext(ctx)
 	defer span.End()
 
@@ -132,8 +131,11 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		prefix := longest(matchedPrefixes)
 		router := fr.router[prefix]
 
-		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
-		req = req.WithContext(r)
+		bagg := baggage.FromContext(req.Context())
+		areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), router.area)
+		bagg, _ = bagg.SetMember(areaBaggage)
+		c := baggage.ContextWithBaggage(req.Context(), bagg)
+		req = req.WithContext(c)
 
 		var err error
 		req.URL, err = url.Parse(path[len(prefix)-len(host):])
@@ -159,8 +161,12 @@ func (fr *FrontRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if len(matchedPrefixes) > 0 {
 		prefix := longest(matchedPrefixes)
 		router := fr.router[prefix]
-		r, _ := tag.New(req.Context(), tag.Upsert(opencensus.KeyArea, router.area))
-		req = req.WithContext(r)
+
+		bagg := baggage.FromContext(req.Context())
+		areaBaggage, _ := baggage.NewMember(web.AreaKey.Key(), router.area)
+		bagg, _ = bagg.SetMember(areaBaggage)
+		c := baggage.ContextWithBaggage(req.Context(), bagg)
+		req = req.WithContext(c)
 
 		var err error
 		req.URL, err = url.Parse(path[len(prefix):])

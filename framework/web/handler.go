@@ -10,14 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/securecookie"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
+	"github.com/gorilla/securecookie"
 )
 
 type (
@@ -41,16 +40,20 @@ type (
 )
 
 var (
-	rt = stats.Int64("flamingo/router/controller", "controller request times", stats.UnitMilliseconds)
 	// ControllerKey exposes the current controller/handler key
-	ControllerKey, _ = tag.NewKey("controller")
+	ControllerKey, _ = baggage.NewKeyProperty("controller")
+	AreaKey, _       = baggage.NewKeyProperty("area")
 
 	// RouterError defines error value for issues appearing during routing process
 	RouterError contextKeyType = "error"
+	rtHistogram metric.Int64Histogram
 )
 
 func init() {
-	if err := opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey); err != nil {
+	var err error
+	rtHistogram, err = otel.Meter("flamingo.me/opentelemetry").Int64Histogram("flamingo/router/controller",
+		metric.WithDescription("controller request times"), metric.WithUnit("ms"))
+	if err != nil {
 		panic(err)
 	}
 }
@@ -103,8 +106,7 @@ func panicToError(p interface{}) error {
 
 func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	httpRequest.URL.Path = strings.TrimPrefix(httpRequest.URL.Path, h.prefix)
-
-	ctx, span := trace.StartSpan(httpRequest.Context(), "router/ServeHTTP")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(httpRequest.Context(), "router/ServeHTTP")
 	defer span.End()
 
 	session, err := h.sessionStore.LoadByRequest(ctx, httpRequest)
@@ -116,15 +118,23 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 		}
 	}
 
-	_, span = trace.StartSpan(ctx, "router/matchRequest")
+	_, span = otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/matchRequest")
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
 
 	if handler != nil {
-		ctx, _ = tag.New(ctx, tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Insert(opencensus.KeyArea, "-"))
+		bagg := baggage.FromContext(ctx)
+		ctrBaggage, _ := baggage.NewMember(ControllerKey.Key(), handler.GetHandlerName())
+		areaBaggage, _ := baggage.NewMember(AreaKey.Key(), "-")
+		bagg, _ = bagg.SetMember(ctrBaggage)
+		afterDeletionBagg := bagg.DeleteMember(areaBaggage.Key())
+		if afterDeletionBagg.Len() == bagg.Len() {
+			bagg, _ = bagg.SetMember(areaBaggage)
+		}
+		ctx = baggage.ContextWithBaggage(ctx, bagg)
 		httpRequest = httpRequest.WithContext(ctx)
 		start := time.Now()
 		defer func() {
-			stats.Record(ctx, rt.M(time.Since(start).Nanoseconds()/1000000))
+			rtHistogram.Record(ctx, time.Since(start).Nanoseconds()/1000000)
 		}()
 	}
 
@@ -146,19 +156,19 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	span.End() // router/matchRequest
 
-	ctx, span = trace.StartSpan(ctx, "router/request")
+	ctx, span = otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/request")
 	defer span.End()
 
 	chain := &FilterChain{
 		filters: h.filter,
 		final: func(ctx context.Context, r *Request, rw http.ResponseWriter) (response Result) {
-			ctx, span := trace.StartSpan(ctx, "router/controller")
+			ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/controller")
 			defer span.End()
 
 			defer func() {
 				if err := panicToError(recover()); err != nil {
 					response = h.routerRegistry.handler[FlamingoError].any(context.WithValue(ctx, RouterError, err), r)
-					span.SetStatus(trace.Status{Code: trace.StatusCodeAborted, Message: "controller panic"})
+					span.SetStatus(codes.Error, "controller panic")
 				}
 			}()
 
@@ -171,7 +181,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 			} else {
 				err := fmt.Errorf("action for method %q not found and no \"any\" fallback", req.Request().Method)
 				response = h.routerRegistry.handler[FlamingoNotfound].any(context.WithValue(ctx, RouterError, err), r)
-				span.SetStatus(trace.Status{Code: trace.StatusCodeNotFound, Message: "action not found"})
+				span.SetStatus(codes.Error, "action not found")
 			}
 
 			return h.responder.completeResult(response)
@@ -188,7 +198,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 
 	var finalErr error
 	if result != nil {
-		ctx, span := trace.StartSpan(ctx, "router/responseApply")
+		ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "router/responseApply")
 
 		func() {
 			//catch panic in Apply only

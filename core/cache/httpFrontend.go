@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"go.opencensus.io/trace"
-	"golang.org/x/sync/singleflight"
-
 	"flamingo.me/flamingo/v3/framework/flamingo"
+	"github.com/golang/groupcache/singleflight"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type (
@@ -79,8 +79,8 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 		return nil, errors.New("NO backend in Cache")
 	}
 
-	ctx, span := trace.StartSpan(ctx, "flamingo/cache/httpFrontend/Get")
-	span.Annotate(nil, key)
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "flamingo/cache/httpFrontend/Get")
+	span.AddEvent(key)
 	defer span.End()
 
 	if entry, ok := hf.backend.Get(key); ok {
@@ -111,16 +111,16 @@ func (hf *HTTPFrontend) Get(ctx context.Context, key string, loader HTTPLoader) 
 }
 
 func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader, keepExistingEntry bool) (cachedResponse, error) {
-	oldSpan := trace.FromContext(ctx)
-	newContext := trace.NewContext(context.Background(), oldSpan)
+	oldSpan := trace.SpanFromContext(ctx)
+	newContext := trace.ContextWithSpan(context.Background(), oldSpan)
 
-	newContextWithSpan, span := trace.StartSpan(newContext, "flamingo/cache/httpFrontend/load")
-	span.Annotate(nil, key)
+	newContextWithSpan, span := otel.Tracer("flamingo.me/opentelemetry").Start(newContext, "flamingo/cache/httpFrontend/load")
+	span.AddEvent(key)
 	defer span.End()
 
-	data, err, _ := hf.Do(key, func() (res interface{}, resultErr error) {
-		ctx, fetchRoutineSpan := trace.StartSpan(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
-		fetchRoutineSpan.Annotate(nil, key)
+	data, err := hf.Do(key, func() (res interface{}, resultErr error) {
+		ctx, fetchRoutineSpan := otel.Tracer("flamingo.me/opentelemetry").Start(newContextWithSpan, "flamingo/cache/httpFrontend/fetchRoutine")
+		fetchRoutineSpan.AddEvent(key)
 		defer fetchRoutineSpan.End()
 
 		defer func() {
@@ -198,8 +198,8 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 		})
 	}
 
-	span.AddAttributes(trace.StringAttribute("parenttrace", response.span.TraceID.String()))
-	span.AddAttributes(trace.StringAttribute("parentspan", response.span.SpanID.String()))
+	span.SetAttributes(attribute.String("parenttrace", response.span.TraceID().String()))
+	span.SetAttributes(attribute.String("parentspan", response.span.SpanID().String()))
 
 	return cached, err
 }

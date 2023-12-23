@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"flamingo.me/opentelemetry"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 // Module for core/prefix_router
@@ -34,7 +35,7 @@ func (m *Module) Inject(
 	logger flamingo.Logger,
 	config *struct {
 		EnableRootRedirectHandler bool `inject:"config:flamingo.prefixrouter.rootRedirectHandler.enabled,optional"`
-		PublicEndpoint            bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
+		PublicEndpoint            bool `inject:"config:flamingo.opentelemetry.publicEndpoint,optional"`
 	},
 ) {
 	m.eventRouter = eventRouter
@@ -76,7 +77,7 @@ type serveCmdConfig struct {
 	FallbackHandlers []OptionalHandler `inject:"fallback,optional"`        // Optional Register a FallbackHandlers which is passed to the FrontendRouter
 }
 
-func (m *Module) serveCmd(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler, config *serveCmdConfig) *cobra.Command {
+func (m *Module) serveCmd(area *config.Area, defaultmux *http.ServeMux, configuredURLPrefixSampler *opentelemetry.ConfiguredURLPrefixSampler, config *serveCmdConfig) *cobra.Command {
 	var addr string
 
 	cmd := &cobra.Command{
@@ -96,7 +97,7 @@ func (m *Module) serve(
 	root *config.Area,
 	defaultRouter *http.ServeMux,
 	addr *string,
-	configuredURLPrefixSampler *opencensus.ConfiguredURLPrefixSampler,
+	configuredURLPrefixSampler *opentelemetry.ConfiguredURLPrefixSampler,
 	primaryHandlers []OptionalHandler,
 	fallbackHandlers []OptionalHandler,
 ) func(cmd *cobra.Command, args []string) {
@@ -161,13 +162,17 @@ func (m *Module) serve(
 			}
 		}
 
+		options := []otelhttp.Option{
+			otelhttp.WithFilter(opentelemetry.URLPrefixSampler(whitelist, blacklist,
+				configuredURLPrefixSampler.AllowParentTrace)),
+		}
+		if m.publicEndpoint {
+			options = append(options, otelhttp.WithPublicEndpoint())
+		}
+
 		m.server = &http.Server{
-			Addr: *addr,
-			Handler: &ochttp.Handler{
-				IsPublicEndpoint: m.publicEndpoint,
-				Handler:          frontRouter,
-				GetStartOptions:  opencensus.URLPrefixSampler(whitelist, blacklist, configuredURLPrefixSampler.AllowParentTrace),
-			},
+			Addr:    *addr,
+			Handler: otelhttp.NewHandler(frontRouter, "server", options...),
 		}
 
 		e := m.listenAndServe()

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"go.opencensus.io/trace"
 )
 
 const pathSeparatorString = string(os.PathSeparator)
@@ -60,7 +59,7 @@ func (e *engine) Inject(
 }
 
 func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.Reader, error) {
-	ctx, span := trace.StartSpan(ctx, "gotemplate/Render")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "gotemplate/Render")
 	defer span.End()
 
 	lock.Lock()
@@ -73,7 +72,7 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 	}
 	lock.Unlock()
 
-	_, span = trace.StartSpan(ctx, "gotemplate/Execute")
+	_, span = otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "gotemplate/Execute")
 	buf := &bytes.Buffer{}
 
 	if _, ok := e.templates[name+".html"]; !ok {
@@ -98,7 +97,7 @@ func (e *engine) Render(ctx context.Context, name string, data interface{}) (io.
 }
 
 func (e *engine) loadTemplates(ctx context.Context) error {
-	ctx, span := trace.StartSpan(ctx, "gotemplate/loadTemplates")
+	ctx, span := otel.Tracer("flamingo.me/opentelemetry").Start(ctx, "gotemplate/loadTemplates")
 	defer span.End()
 
 	e.templates = make(map[string]*template.Template, 0)

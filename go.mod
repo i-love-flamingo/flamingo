@@ -13,8 +13,8 @@ require (
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.5.9
-	github.com/gorilla/securecookie v1.1.1
-	github.com/gorilla/sessions v1.2.1
+	github.com/gorilla/securecookie v1.1.2
+	github.com/gorilla/sessions v1.2.2
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/leekchan/accounting v0.3.1
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da

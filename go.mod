@@ -23,7 +23,7 @@ require (
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/rbcervilla/redisstore/v9 v9.0.0
 	github.com/redis/go-redis/v9 v9.4.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
 	github.com/zemirco/memorystore v0.0.0-20160308183530-ecd57e5134f6

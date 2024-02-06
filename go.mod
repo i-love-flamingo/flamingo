@@ -20,7 +20,8 @@ require (
 	github.com/leekchan/accounting v0.3.1
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
 	github.com/openzipkin/zipkin-go v0.4.2
-	github.com/pact-foundation/pact-go v0.0.13
+	github.com/pact-foundation/pact-go v1.8.0
+	github.com/pact-foundation/pact-go/v2 v2.0.2
 	github.com/rbcervilla/redisstore/v9 v9.0.0
 	github.com/redis/go-redis/v9 v9.4.0
 	github.com/spf13/cobra v1.7.0
@@ -46,6 +47,7 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
@@ -67,8 +69,8 @@ require (
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
-	google.golang.org/api v0.84.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
+	google.golang.org/api v0.130.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -23,7 +23,7 @@ func (os *OauthService) Inject(config *struct {
 }
 
 // GetConfig returns an oauth config object
-func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, GrantType string) clientcredentials.Config {
+func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, _ string) clientcredentials.Config {
 	return clientcredentials.Config{
 		ClientID:       ClientID,
 		ClientSecret:   ClientSecret,

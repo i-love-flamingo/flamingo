@@ -10,7 +10,7 @@ require (
 	flamingo.me/dingo v0.2.10
 	github.com/coreos/go-oidc/v3 v3.9.0
 	github.com/ghodss/yaml v1.0.0
-	github.com/gofrs/uuid v4.3.1+incompatible
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/securecookie v1.1.2

@@ -13,7 +13,7 @@ require (
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/sessions v1.2.2
 	github.com/hashicorp/golang-lru/v2 v2.0.7

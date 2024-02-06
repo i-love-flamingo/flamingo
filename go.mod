@@ -31,7 +31,7 @@ require (
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/zap v1.26.0
 	golang.org/x/oauth2 v0.16.0
-	golang.org/x/sync v0.3.0
+	golang.org/x/sync v0.6.0
 )
 
 require (

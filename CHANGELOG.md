@@ -1,5 +1,39 @@
 # Changelog
 
+## Version v3.8.0 (2024-02-07)
+
+### Features
+
+- **oidc:** Make state timeout duration configurable to support long taking sign ins (#362) (f4107584)
+
+### Chores and tidying
+
+- **dep:** update go to 1.21 (#380) (65f3f924)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v5 (#377) (f9ef8155)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v23 (#378) (79074598)
+- **deps:** update module golang.org/x/sync to v0.6.0 (#375) (72d07ff3)
+- **deps:** update actions/setup-go action to v5 (#376) (09552898)
+- **deps:** update module go.uber.org/zap to v1.26.0 (#374) (ffa968ef)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.40.1 (#354) (1acc174f)
+- **deps:** update module github.com/google/go-cmp to v0.6.0 (#372) (7f0687d8)
+- **deps:** update module github.com/spf13/cobra to v1.8.0 (#373) (710a409c)
+- **deps:** update module github.com/golang-jwt/jwt/v4 to v5 (#345) (867154a6)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.4.0 (#351) (8271981c)
+- **deps:** update module github.com/gofrs/uuid to v4.4.0+incompatible (#317) (14bc5586)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.9.0 (#371) (8f993a76)
+- **deps:** update module github.com/gorilla/sessions to v1.2.2 (#370) (3e62d69d)
+- **deps:** update module golang.org/x/oauth2 to v0.16.0 (#358) (5162059d)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v22.0.5 (#359) (5067e9a9)
+- **deps:** update module github.com/hashicorp/golang-lru/v2 to v2.0.7 (#360) (bf357e3b)
+- **deps:** bump github.com/go-jose/go-jose/v3 from 3.0.0 to 3.0.1 (#363) (de2f7138)
+- **deps:** bump golang.org/x/crypto from 0.12.0 to 0.17.0 (#367) (f57d291c)
+- **docs:** fix link to opentelemetry (#366) (9e7dbb47)
+- **docs:** Small documentation updates for docs.flamingo.me (#365) (9eb5e0fe)
+- **opencensus:** deprecate opencensus module (#364) (8a2b30c4)
+- **deps:** update actions/checkout action to v4 (#357) (258bd2d6)
+- **deps:** update module github.com/hashicorp/golang-lru/v2 to v2.0.6 (#356) (d56a090a)
+- **deps:** update module github.com/hashicorp/golang-lru to v2 (#314) (29db3cf4)
+
 ## Version v3.7.0 (2023-08-21)
 
 ### Features

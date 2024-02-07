@@ -23,11 +23,11 @@ func (os *OauthService) Inject(config *struct {
 }
 
 // GetConfig returns an oauth config object
-func (os *OauthService) GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, _ string) clientcredentials.Config {
+func (os *OauthService) GetConfig(tokenEndpointPath string, clientID string, clientSecret string, _ string) clientcredentials.Config {
 	return clientcredentials.Config{
-		ClientID:       ClientID,
-		ClientSecret:   ClientSecret,
-		TokenURL:       strings.TrimRight(os.baseURL, "/") + "/" + strings.TrimLeft(TokenEndpointPath, "/"),
+		ClientID:       clientID,
+		ClientSecret:   clientSecret,
+		TokenURL:       strings.TrimRight(os.baseURL, "/") + "/" + strings.TrimLeft(tokenEndpointPath, "/"),
 		EndpointParams: url.Values{},
 	}
 }

@@ -11,7 +11,7 @@ import (
 // InternalAuthService interface for internal oauth clients
 // todo necessary?
 type InternalAuthService interface {
-	GetConfig(TokenEndpointPath string, ClientID string, ClientSecret string, GrantType string) clientcredentials.Config
+	GetConfig(tokenEndpointPath string, clientID string, clientSecret string, grantType string) clientcredentials.Config
 	GetOauthToken(ctx context.Context, config *clientcredentials.Config) (*oauth2.Token, error)
 	GetClaimsFromToken(tokenString string) jwt.MapClaims
 }

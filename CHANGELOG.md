@@ -1,5 +1,14 @@
 # Changelog
 
+## Version v3.8.1 (2024-03-14)
+
+### Chores and tidying
+
+- **deps:** bump github.com/go-jose/go-jose/v3 from 3.0.1 to 3.0.3 (#391) (268a07bd)
+- **deps:** bump google.golang.org/protobuf from 1.31.0 to 1.33.0 (#392) (0533567e)
+- **deps:** update module github.com/stretchr/testify to v1.9.0 (#389) (352dec7c)
+- fix linter errors (#381) (f2405d33)
+
 ## Version v3.8.0 (2024-02-07)
 
 ### Features

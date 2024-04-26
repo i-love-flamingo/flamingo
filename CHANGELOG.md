@@ -1,5 +1,33 @@
 # Changelog
 
+## Version v3.8.1 (2024-04-26)
+
+### Ops and CI/CD
+
+- fix version matrix (#398) (9a3f8230)
+
+### Chores and tidying
+
+- **deps:** update quay.io/keycloak/keycloak docker tag to v24 (#397) (e769812c)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.42.3 (#399) (ca1ae56b)
+- **deps:** update golangci/golangci-lint-action action to v5 (#400) (9b17e2f9)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.10.0 (#393) (b00c8146)
+- **dep:** update go to 1.22.0 (#379) (64cddb8a)
+- **deps:** update module golang.org/x/sync to v0.7.0 (#396) (ed02827e)
+- **deps:** bump golang.org/x/net from 0.22.0 to 0.23.0 (#395) (4cb80063)
+- **deps:** update module golang.org/x/oauth2 to v0.19.0 (#394) (bcc53161)
+- **deps:** update module github.com/golang-jwt/jwt/v5 to v5.2.1 (#390) (9037a18f)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v23.0.7 (#388) (157b02d5)
+- **deps:** update module go.uber.org/zap to v1.27.0 (#387) (6f7f4fff)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.5.1 (#386) (4f32b254)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.42.2 (#384) (81b575b3)
+- **deps:** update golangci/golangci-lint-action action to v4 (#385) (28304163)
+- **deps:** update module golang.org/x/oauth2 to v0.18.0 (#383) (b2a64b45)
+- **deps:** bump github.com/go-jose/go-jose/v3 from 3.0.1 to 3.0.3 (#391) (268a07bd)
+- **deps:** bump google.golang.org/protobuf from 1.31.0 to 1.33.0 (#392) (0533567e)
+- **deps:** update module github.com/stretchr/testify to v1.9.0 (#389) (352dec7c)
+- fix linter errors (#381) (f2405d33)
+
 ## Version v3.8.0 (2024-02-07)
 
 ### Features

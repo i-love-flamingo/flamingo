@@ -32,6 +32,7 @@ type (
 		debug  bool
 
 		templateForbidden     string
+		templateBadRequest    string
 		templateNotFound      string
 		templateUnavailable   string
 		templateErrorWithCode string
@@ -127,6 +128,7 @@ const (
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	Engine                flamingo.TemplateEngine `inject:",optional"`
 	Debug                 bool                    `inject:"config:flamingo.debug.mode"`
+	TemplateBadRequest    string                  `inject:"config:flamingo.template.err400"`
 	TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
 	TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
 	TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`
@@ -135,6 +137,7 @@ func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	r.engine = cfg.Engine
 	r.router = router
 	r.templateForbidden = cfg.TemplateForbidden
+	r.templateBadRequest = cfg.TemplateBadRequest
 	r.templateNotFound = cfg.TemplateNotFound
 	r.templateUnavailable = cfg.TemplateUnavailable
 	r.templateErrorWithCode = cfg.TemplateErrorWithCode
@@ -429,10 +432,15 @@ func (r *Responder) ServerErrorWithCodeAndTemplate(err error, tpl string, status
 
 // ServerError creates a 500 error response
 func (r *Responder) ServerError(err error) *ServerErrorResponse {
+	return r.ServerErrorWithContext(context.Background(), err)
+}
+
+// ServerErrorWithContext creates a 500 error response and uses the provided context for enhanced logging
+func (r *Responder) ServerErrorWithContext(ctx context.Context, err error) *ServerErrorResponse {
 	if errors.Is(err, context.Canceled) {
-		r.getLogger().Debug(fmt.Sprintf("%+v\n", err))
+		r.getLogger().WithContext(ctx).Debug(fmt.Sprintf("%+v\n", err))
 	} else {
-		r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+		r.getLogger().WithContext(ctx).Error(fmt.Sprintf("%+v\n", err))
 	}
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateErrorWithCode, http.StatusInternalServerError)
@@ -440,23 +448,45 @@ func (r *Responder) ServerError(err error) *ServerErrorResponse {
 
 // Unavailable creates a 503 error response
 func (r *Responder) Unavailable(err error) *ServerErrorResponse {
-	r.getLogger().Error(fmt.Sprintf("%+v\n", err))
+	return r.UnavailableWithContext(context.Background(), err)
+}
+
+// UnavailableWithContext creates a 503 error response and uses the provided context for enhanced logging
+func (r *Responder) UnavailableWithContext(ctx context.Context, err error) *ServerErrorResponse {
+	r.getLogger().WithContext(ctx).Error(fmt.Sprintf("%+v\n", err))
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateUnavailable, http.StatusServiceUnavailable)
 }
 
 // NotFound creates a 404 error response
 func (r *Responder) NotFound(err error) *ServerErrorResponse {
-	r.getLogger().Warn(err)
+	return r.NotFoundWithContext(context.Background(), err)
+}
+
+// NotFoundWithContext creates a 404 error response and uses the provided context for enhanced logging
+func (r *Responder) NotFoundWithContext(ctx context.Context, err error) *ServerErrorResponse {
+	r.getLogger().WithContext(ctx).Warn(err)
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateNotFound, http.StatusNotFound)
 }
 
 // Forbidden creates a 403 error response
 func (r *Responder) Forbidden(err error) *ServerErrorResponse {
-	r.getLogger().Warn(err)
+	return r.ForbiddenWithContext(context.Background(), err)
+}
+
+// ForbiddenWithContext creates a 403 error response and uses the provided context for enhanced logging
+func (r *Responder) ForbiddenWithContext(ctx context.Context, err error) *ServerErrorResponse {
+	r.getLogger().WithContext(ctx).Warn(err)
 
 	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusForbidden)
+}
+
+// BadRequestWithContext creates a 400 error response and uses the provided context for enhanced logging
+func (r *Responder) BadRequestWithContext(ctx context.Context, err error) *ServerErrorResponse {
+	r.getLogger().WithContext(ctx).Info(err)
+
+	return r.ServerErrorWithCodeAndTemplate(err, r.templateForbidden, http.StatusBadRequest)
 }
 
 // SetNoCache helper

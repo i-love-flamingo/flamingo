@@ -104,6 +104,7 @@ flamingo: {
 		path?: string
 	}
 	template: {
+		err400: string | *"error/400"
 		err403: string | *"error/403"
 		err404: string | *"error/404"
 		errWithCode: string | *"error/withCode"

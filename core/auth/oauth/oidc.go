@@ -109,6 +109,11 @@ var (
 
 		return ok
 	}
+
+	errNoStateInRequest = errors.New("no state in request")
+	errStateMismatch    = errors.New("state mismatch")
+	errNoIDTokenClaim   = errors.New("claim id_token missing")
+	errGeneric          = errors.New("OpenID Connect error")
 )
 
 func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
@@ -464,16 +469,16 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 			}
 		}
 
-		return i.responder.ServerErrorWithContext(ctx, fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
+		return i.responder.ServerErrorWithContext(ctx, fmt.Errorf("%w: %q (%q)", errGeneric, errString, errDetails))
 	}
 
 	queryState, err := request.Query1("state")
 	if err != nil {
-		return i.responder.BadRequestWithContext(ctx, errors.New("no state in request"))
+		return i.responder.BadRequestWithContext(ctx, errNoStateInRequest)
 	}
 
 	if !i.validateSessionCode(request, queryState) {
-		return i.responder.BadRequestWithContext(ctx, errors.New("state mismatch"))
+		return i.responder.BadRequestWithContext(ctx, errStateMismatch)
 	}
 
 	code, err := request.Query1("code")
@@ -502,7 +507,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return i.responder.ServerErrorWithContext(ctx, errors.New("claim id_token missing"))
+		return i.responder.ServerErrorWithContext(ctx, errNoIDTokenClaim)
 	}
 
 	verifierConfig := &oidc.Config{ClientID: i.oauth2Config.ClientID}

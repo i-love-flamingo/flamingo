@@ -443,12 +443,12 @@ func (i *openIDIdentifier) Authenticate(ctx context.Context, request *web.Reques
 
 	authConfig, err := i.config(request)
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	u, err := url.Parse(authConfig.AuthCodeURL(state, options...))
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	return i.responder.URLRedirect(u)
@@ -464,25 +464,26 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 			}
 		}
 
-		return i.responder.ServerError(fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
+		return i.responder.ServerErrorWithContext(ctx, fmt.Errorf("OpenID Connect error: %q (%q)", errString, errDetails))
 	}
 
 	queryState, err := request.Query1("state")
 	if err != nil {
-		return i.responder.ServerError(errors.New("no state in request"))
+		return i.responder.BadRequestWithContext(ctx, errors.New("no state in request"))
 	}
+
 	if !i.validateSessionCode(request, queryState) {
-		return i.responder.ServerError(errors.New("state mismatch"))
+		return i.responder.BadRequestWithContext(ctx, errors.New("state mismatch"))
 	}
 
 	code, err := request.Query1("code")
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.BadRequestWithContext(ctx, fmt.Errorf("%w: code", err))
 	}
 
 	oauthConfig, err := i.config(request)
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	options := make([]oauth2.AuthCodeOption, 0)
@@ -495,13 +496,13 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 
 	oauth2Token, err := oauthConfig.Exchange(ctx, code, options...)
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	// Extract the ID Token from OAuth2 token.
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return i.responder.ServerError(errors.New("claim id_token missing"))
+		return i.responder.ServerErrorWithContext(ctx, errors.New("claim id_token missing"))
 	}
 
 	verifierConfig := &oidc.Config{ClientID: i.oauth2Config.ClientID}
@@ -513,7 +514,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	// Parse and verify ID Token payload.
 	idToken, err := verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	var (
@@ -523,7 +524,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	)
 
 	if err := idToken.Claims(&tempIDTokenClaims); err != nil {
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 	for k, v := range i.oidcConfig.Claims.IDToken {
 		idTokenClaims[k] = tempIDTokenClaims[v]
@@ -561,7 +562,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	identity, err := i.Identify(ctx, request)
 	if err != nil {
 		i.Logout(ctx, request)
-		return i.responder.ServerError(err)
+		return i.responder.ServerErrorWithContext(ctx, err)
 	}
 
 	i.eventRouter.Dispatch(ctx, &auth.WebLoginEvent{Broker: i.broker, Request: request, Identity: identity})

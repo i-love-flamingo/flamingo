@@ -30,12 +30,13 @@ func TestLogger(t *testing.T) {
 	request.Request().Header.Set("Referer", "https://example.com/")
 
 	responder := new(web.Responder).Inject(&web.Router{}, flamingo.NullLogger{}, &struct {
-		Engine                flamingo.TemplateEngine "inject:\",optional\""
-		Debug                 bool                    "inject:\"config:flamingo.debug.mode\""
-		TemplateForbidden     string                  "inject:\"config:flamingo.template.err403\""
-		TemplateNotFound      string                  "inject:\"config:flamingo.template.err404\""
-		TemplateUnavailable   string                  "inject:\"config:flamingo.template.err503\""
-		TemplateErrorWithCode string                  "inject:\"config:flamingo.template.errWithCode\""
+		Engine                flamingo.TemplateEngine `inject:",optional"`
+		Debug                 bool                    `inject:"config:flamingo.debug.mode"`
+		TemplateBadRequest    string                  `inject:"config:flamingo.template.err400"`
+		TemplateForbidden     string                  `inject:"config:flamingo.template.err403"`
+		TemplateNotFound      string                  `inject:"config:flamingo.template.err404"`
+		TemplateUnavailable   string                  `inject:"config:flamingo.template.err503"`
+		TemplateErrorWithCode string                  `inject:"config:flamingo.template.errWithCode"`
 	}{})
 
 	tests := []struct {

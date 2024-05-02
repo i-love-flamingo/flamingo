@@ -83,12 +83,12 @@ func TestParallelStateRaceConditions(t *testing.T) {
 		request.URL.RawQuery = url.Values{"state": []string{state2}}.Encode()
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
 		errResp = resp.(*web.ServerErrorResponse)
-		assert.EqualError(t, errResp.Error, "query value not found")
+		assert.EqualError(t, errResp.Error, "query value not found: code")
 
 		request.URL.RawQuery = url.Values{"state": []string{state1}}.Encode()
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)
 		errResp = resp.(*web.ServerErrorResponse)
-		assert.EqualError(t, errResp.Error, "query value not found")
+		assert.EqualError(t, errResp.Error, "query value not found: code")
 
 		request.URL.RawQuery = url.Values{"state": []string{state1}}.Encode()
 		resp = identifier.Callback(context.Background(), web.CreateRequest(request, session), nil)

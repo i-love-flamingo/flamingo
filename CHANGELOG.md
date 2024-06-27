@@ -1,5 +1,16 @@
 # Changelog
 
+## Version v3.9.0 (2024-06-27)
+
+### Features
+
+- **auth/oidc:** Use BadRequest response for state mismatches, enhance logging with context (#403) (85bcd6fe)
+
+### Chores and tidying
+
+- **deps:** update module github.com/spf13/cobra to v1.8.1 (#410) (87a97fc0)
+- **deps:** update golangci/golangci-lint-action action to v6 (#406) (3840ede5)
+
 ## Version v3.8.1 (2024-04-26)
 
 ### Ops and CI/CD

@@ -177,7 +177,10 @@ func (l *SilentLogger) Trace(args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.writeLog((*zap.Logger).Debug, fmt.Sprint(args...)) // TODO: fix level
+		l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+			zl.Log(logLevels["Trace"], msg, fields...)
+		}, fmt.Sprint(args...))
+
 		return
 	}
 
@@ -191,7 +194,10 @@ func (l *SilentLogger) Tracef(log string, args ...interface{}) {
 
 	logContext := l.loggingRegistry.Get(l.traceID)
 	if logContext.isWritingAllowed() {
-		l.writeLog((*zap.Logger).Debug, fmt.Sprintf(log, args...)) // TODO: fix level
+		l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+			zl.Log(logLevels["Trace"], msg, fields...)
+		}, fmt.Sprintf(log, args...))
+
 		return
 	}
 

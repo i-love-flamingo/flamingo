@@ -31,6 +31,7 @@ type (
 )
 
 var logLevels = map[string]zapcore.Level{
+	"Trace":  zapcore.Level(-2), // does not exist by default
 	"Debug":  zap.DebugLevel,
 	"Info":   zap.InfoLevel,
 	"Warn":   zap.WarnLevel,

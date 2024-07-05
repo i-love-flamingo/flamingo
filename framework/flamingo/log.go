@@ -46,6 +46,7 @@ type (
 	Logger interface {
 		WithContext(ctx context.Context) Logger
 
+		Trace(args ...interface{})
 		Debug(args ...interface{})
 		Info(args ...interface{})
 		Warn(args ...interface{})
@@ -53,6 +54,7 @@ type (
 		Fatal(args ...interface{})
 		Panic(args ...interface{})
 
+		Tracef(log string, args ...interface{})
 		Debugf(log string, args ...interface{})
 
 		WithField(key LogKey, value interface{}) Logger
@@ -118,6 +120,27 @@ func (l *StdLogger) Panic(args ...interface{}) {
 	}
 
 	l.Logger.Panic(args...)
+}
+
+// Trace logs output
+func (l *StdLogger) Trace(args ...interface{}) {
+	args = append([]any{"trace: "}, args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
+}
+
+// Tracef outputs the formatted trace string
+func (l *StdLogger) Tracef(f string, args ...interface{}) {
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Printf(f, args...)
 }
 
 // Debug logs output
@@ -217,6 +240,12 @@ func (n NullLogger) WithField(_ LogKey, _ interface{}) Logger { return n }
 
 // WithFields null-implementation
 func (n NullLogger) WithFields(_ map[LogKey]interface{}) Logger { return n }
+
+// Trace null-implementation
+func (NullLogger) Trace(_ ...interface{}) {}
+
+// Tracef null-implementation
+func (NullLogger) Tracef(_ string, _ ...interface{}) {}
 
 // Debug null-implementation
 func (NullLogger) Debug(_ ...interface{}) {}

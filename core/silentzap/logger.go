@@ -35,6 +35,7 @@ var (
 	keyLevel, _ = tag.NewKey("level")
 
 	logLevels = map[string]zapcore.Level{
+		"Trace":  zapcore.Level(-2), // does not exist by default
 		"Debug":  zap.DebugLevel,
 		"Info":   zap.InfoLevel,
 		"Warn":   zap.WarnLevel,
@@ -168,6 +169,34 @@ func (l *SilentLogger) record(level string) {
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, l.configArea), tag.Upsert(keyLevel, level))
 	stats.Record(ctx, logCount.M(1))
+}
+
+// Trace logs a message at trace level
+func (l *SilentLogger) Trace(args ...interface{}) {
+	l.record("Trace")
+
+	logContext := l.loggingRegistry.Get(l.traceID)
+	if logContext.isWritingAllowed() {
+		l.writeLog((*zap.Logger).Debug, fmt.Sprint(args...)) // TODO: fix level
+		return
+	}
+
+	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprint(args...))
+	logContext.store(checkedEntry)
+}
+
+// Debugf logs a message at debug level with format string
+func (l *SilentLogger) Tracef(log string, args ...interface{}) {
+	l.record("Trace")
+
+	logContext := l.loggingRegistry.Get(l.traceID)
+	if logContext.isWritingAllowed() {
+		l.writeLog((*zap.Logger).Debug, fmt.Sprintf(log, args...)) // TODO: fix level
+		return
+	}
+
+	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprintf(log, args...))
+	logContext.store(checkedEntry)
 }
 
 // Debug logs a message at debug level

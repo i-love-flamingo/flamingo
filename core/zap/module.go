@@ -170,7 +170,7 @@ func (m *Module) CueConfig() string {
 	// language=cue
 	return `
 core: zap: {
-	loglevel: *"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
+	loglevel: *"Trace" | "Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
 	sampling: {
 		enabled: bool | *true
 		initial: int | *100 

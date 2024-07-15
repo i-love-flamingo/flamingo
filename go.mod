@@ -8,7 +8,7 @@ require (
 	contrib.go.opencensus.io/exporter/zipkin v0.1.2
 	cuelang.org/go v0.0.15
 	flamingo.me/dingo v0.2.10
-	github.com/coreos/go-oidc/v3 v3.10.0
+	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -41,7 +41,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -63,10 +63,10 @@ require (
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
+	golang.org/x/net v0.27.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
 	google.golang.org/api v0.84.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

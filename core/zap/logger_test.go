@@ -298,7 +298,7 @@ func TestLogger_WithFields(t *testing.T) {
 func TestLogger_Trace(t *testing.T) {
 	t.Parallel()
 
-	core, observedLogs := observer.New(zapcore.Level(-2)) // trace level
+	core, observedLogs := observer.New(uberZap.DebugLevel - 1) // trace level
 	l := zap.NewLogger(uberZap.New(core, uberZap.WithFatalHook(zapcore.WriteThenNoop)))
 
 	l.Trace("test")
@@ -310,7 +310,7 @@ func TestLogger_Trace(t *testing.T) {
 func TestLogger_Tracef(t *testing.T) {
 	t.Parallel()
 
-	core, observedLogs := observer.New(zapcore.Level(-2)) // trace level
+	core, observedLogs := observer.New(uberZap.DebugLevel - 1) // trace level
 	l := zap.NewLogger(uberZap.New(core, uberZap.WithFatalHook(zapcore.WriteThenNoop)))
 
 	l.Tracef("test %s", "logger")

@@ -86,7 +86,12 @@ func getSilentLogger(
 		output = "json"
 	}
 
-	encoder := makeLevelEncoder(config.ColoredOutput)
+	// Capital encoder with trace addition
+	encoder := capitalLevelEncoder
+	if config.ColoredOutput {
+		// Capital color encoder with trace addition
+		encoder = capitalColorLevelEncoder
+	}
 
 	cfg := makeZapConfig(level, config.DevelopmentMode, samplingConfig, output, encoder)
 
@@ -145,16 +150,6 @@ func makeZapConfig(
 		ErrorOutputPaths: []string{"stderr"},
 		InitialFields:    nil,
 	}
-}
-
-func makeLevelEncoder(coloredOutput bool) zapcore.LevelEncoder {
-	if coloredOutput {
-		// Capital color encoder with trace addition
-		return capitalColorLevelEncoder
-	}
-
-	// Capital encoder with trace addition
-	return capitalLevelEncoder
 }
 
 func makeFieldMap(configFieldMap config.Map) map[string]string {

@@ -103,7 +103,12 @@ func (m *Module) createLoggerInstance() *Logger {
 		output = "json"
 	}
 
-	encoder := makeLevelEncoder(m.coloredOutput)
+	// Capital encoder with trace addition
+	encoder := capitalLevelEncoder
+	if m.coloredOutput {
+		// Capital color encoder with trace addition
+		encoder = capitalColorLevelEncoder
+	}
 
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
@@ -146,16 +151,6 @@ func (m *Module) createLoggerInstance() *Logger {
 	zapLogger = zapLogger.WithField(flamingo.LogKeyArea, m.area).(*Logger)
 
 	return zapLogger
-}
-
-func makeLevelEncoder(coloredOutput bool) zapcore.LevelEncoder {
-	if coloredOutput {
-		// Capital color encoder with trace addition
-		return capitalColorLevelEncoder
-	}
-
-	// Capital encoder with trace addition
-	return capitalLevelEncoder
 }
 
 // Inject dependencies

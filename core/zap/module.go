@@ -2,6 +2,7 @@ package zap
 
 import (
 	"context"
+	"fmt"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -31,7 +32,7 @@ type (
 )
 
 var logLevels = map[string]zapcore.Level{
-	"Trace":  zapcore.Level(-2), // does not exist by default
+	"Trace":  zap.DebugLevel - 1, // does not exist in zap by default
 	"Debug":  zap.DebugLevel,
 	"Info":   zap.InfoLevel,
 	"Warn":   zap.WarnLevel,
@@ -102,10 +103,7 @@ func (m *Module) createLoggerInstance() *Logger {
 		output = "json"
 	}
 
-	encoder := zapcore.CapitalLevelEncoder
-	if m.coloredOutput {
-		encoder = zapcore.CapitalColorLevelEncoder
-	}
+	encoder := makeLevelEncoder(m.coloredOutput)
 
 	cfg := zap.Config{
 		Level:             zap.NewAtomicLevelAt(level),
@@ -150,6 +148,16 @@ func (m *Module) createLoggerInstance() *Logger {
 	return zapLogger
 }
 
+func makeLevelEncoder(coloredOutput bool) zapcore.LevelEncoder {
+	if coloredOutput {
+		// Capital color encoder with trace addition
+		return capitalColorLevelEncoder
+	}
+
+	// Capital encoder with trace addition
+	return capitalLevelEncoder
+}
+
 // Inject dependencies
 func (subscriber *shutdownEventSubscriber) Inject(logger flamingo.Logger) {
 	subscriber.logger = logger
@@ -168,9 +176,9 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 // CueConfig Schema
 func (m *Module) CueConfig() string {
 	// language=cue
-	return `
+	return fmt.Sprintf(`
 core: zap: {
-	loglevel: *"Trace" | "Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
+	loglevel: %s
 	sampling: {
 		enabled: bool | *true
 		initial: int | *100 
@@ -184,7 +192,7 @@ core: zap: {
 		[string]: string
 	}
 }
-`
+`, allowedLevels())
 }
 
 // FlamingoLegacyConfigAlias mapping

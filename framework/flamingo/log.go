@@ -41,27 +41,6 @@ const (
 type (
 	// LogKey is a logging key constant
 	LogKey string
-
-	// Logger defines a standard Flamingo logger interfaces
-	Logger interface {
-		WithContext(ctx context.Context) Logger
-
-		Trace(args ...interface{})
-		Debug(args ...interface{})
-		Info(args ...interface{})
-		Warn(args ...interface{})
-		Error(args ...interface{})
-		Fatal(args ...interface{})
-		Panic(args ...interface{})
-
-		Tracef(log string, args ...interface{})
-		Debugf(log string, args ...interface{})
-
-		WithField(key LogKey, value interface{}) Logger
-		WithFields(fields map[LogKey]interface{}) Logger
-
-		Flush()
-	}
 )
 
 func LogFunc(l Logger, fields map[LogKey]any) func(f func(l Logger, args ...any), args ...any) {

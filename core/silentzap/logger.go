@@ -35,7 +35,7 @@ var (
 	keyLevel, _ = tag.NewKey("level")
 
 	logLevels = map[string]zapcore.Level{
-		"Trace":  zapcore.Level(-2), // does not exist by default
+		"Trace":  zap.DebugLevel - 1, // does not exist in zap by default
 		"Debug":  zap.DebugLevel,
 		"Info":   zap.InfoLevel,
 		"Warn":   zap.WarnLevel,
@@ -86,10 +86,7 @@ func getSilentLogger(
 		output = "json"
 	}
 
-	encoder := zapcore.CapitalLevelEncoder
-	if config.ColoredOutput {
-		encoder = zapcore.CapitalColorLevelEncoder
-	}
+	encoder := makeLevelEncoder(config.ColoredOutput)
 
 	cfg := makeZapConfig(level, config.DevelopmentMode, samplingConfig, output, encoder)
 
@@ -148,6 +145,16 @@ func makeZapConfig(
 		ErrorOutputPaths: []string{"stderr"},
 		InitialFields:    nil,
 	}
+}
+
+func makeLevelEncoder(coloredOutput bool) zapcore.LevelEncoder {
+	if coloredOutput {
+		// Capital color encoder with trace addition
+		return capitalColorLevelEncoder
+	}
+
+	// Capital encoder with trace addition
+	return capitalLevelEncoder
 }
 
 func makeFieldMap(configFieldMap config.Map) map[string]string {

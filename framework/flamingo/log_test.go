@@ -42,7 +42,6 @@ func ExampleLogger() {
 	logger.Info("my", "log", "args")
 	logger.Warn("my", "log", "args")
 	logger.Debug("my", "log", "args")
-	logger.Trace("my", "log", "args")
 
 	fmt.Println(recorder.String())
 
@@ -52,7 +51,6 @@ func ExampleLogger() {
 	// TEST--info: mylogargs
 	// TEST--warn: mylogargs
 	// TEST--debug: mylogargs
-	// TEST--trace: mylogargs
 }
 
 func ExampleLogFunc() {
@@ -71,7 +69,6 @@ func ExampleLogFunc() {
 	logFunc(flamingo.Logger.Info, "my", "log", "args")
 	logFunc(flamingo.Logger.Warn, "my", "log", "args")
 	logFunc(flamingo.Logger.Debug, "my", "log", "args")
-	logFunc(flamingo.Logger.Trace, "my", "log", "args")
 	// if we do not give the level, it will be Info
 	logFunc(nil, "my", "log", "args")
 
@@ -84,8 +81,6 @@ func ExampleLogFunc() {
 	// TEST--warn: mylogargs
 	// TEST--WithFields map[businessId:example category:test]
 	// TEST--debug: mylogargs
-	// TEST--WithFields map[businessId:example category:test]
-	// TEST--trace: mylogargs
 	// TEST--WithFields map[businessId:example category:test]
 	// TEST--info: mylogargs
 }
@@ -111,7 +106,6 @@ func ExampleLogFuncWithContext() {
 	logFunc(ctx, flamingo.Logger.Info, "my", "log", "args")
 	logFunc(ctx, flamingo.Logger.Warn, "my", "log", "args")
 	logFunc(ctx, flamingo.Logger.Debug, "my", "log", "args")
-	logFunc(ctx, flamingo.Logger.Trace, "my", "log", "args")
 	// if we do not give the level, it will be Info
 	logFunc(ctx, nil, "my", "log", "args")
 
@@ -124,8 +118,6 @@ func ExampleLogFuncWithContext() {
 	// TEST--warn: mylogargs
 	// TEST--WithFields map[businessId:example]
 	// TEST--debug: mylogargs
-	// TEST--WithFields map[businessId:example]
-	// TEST--trace: mylogargs
 	// TEST--WithFields map[businessId:example]
 	// TEST--info: mylogargs
 }

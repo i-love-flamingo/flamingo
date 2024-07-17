@@ -58,7 +58,7 @@ core zap: {
 		thereafter: int | *100
 	}
 }
-`, allowedLevels())
+`, allowedLevels)
 }
 
 // FlamingoLegacyConfigAlias mapping

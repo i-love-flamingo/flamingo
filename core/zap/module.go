@@ -187,7 +187,7 @@ core: zap: {
 		[string]: string
 	}
 }
-`, allowedLevels())
+`, allowedLevels)
 }
 
 // FlamingoLegacyConfigAlias mapping

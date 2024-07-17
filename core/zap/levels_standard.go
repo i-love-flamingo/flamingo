@@ -3,6 +3,4 @@
 package zap
 
 // allowedLevels returns allowed levels for the standard logger.
-func allowedLevels() string {
-	return `*"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"`
-}
+const allowedLevels = `*"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"`

@@ -2,6 +2,7 @@ package zap
 
 import (
 	"context"
+	"fmt"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"
@@ -31,6 +32,7 @@ type (
 )
 
 var logLevels = map[string]zapcore.Level{
+	"Trace":  zap.DebugLevel - 1, // does not exist in zap by default
 	"Debug":  zap.DebugLevel,
 	"Info":   zap.InfoLevel,
 	"Warn":   zap.WarnLevel,
@@ -101,9 +103,11 @@ func (m *Module) createLoggerInstance() *Logger {
 		output = "json"
 	}
 
-	encoder := zapcore.CapitalLevelEncoder
+	// Capital encoder with trace addition
+	encoder := capitalLevelEncoder
 	if m.coloredOutput {
-		encoder = zapcore.CapitalColorLevelEncoder
+		// Capital color encoder with trace addition
+		encoder = capitalColorLevelEncoder
 	}
 
 	cfg := zap.Config{
@@ -167,9 +171,9 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 // CueConfig Schema
 func (m *Module) CueConfig() string {
 	// language=cue
-	return `
+	return fmt.Sprintf(`
 core: zap: {
-	loglevel: *"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
+	loglevel: %s
 	sampling: {
 		enabled: bool | *true
 		initial: int | *100 
@@ -183,7 +187,7 @@ core: zap: {
 		[string]: string
 	}
 }
-`
+`, allowedLevels)
 }
 
 // FlamingoLegacyConfigAlias mapping

@@ -35,6 +35,7 @@ var (
 	keyLevel, _ = tag.NewKey("level")
 
 	logLevels = map[string]zapcore.Level{
+		"Trace":  zap.DebugLevel - 1, // does not exist in zap by default
 		"Debug":  zap.DebugLevel,
 		"Info":   zap.InfoLevel,
 		"Warn":   zap.WarnLevel,
@@ -85,9 +86,11 @@ func getSilentLogger(
 		output = "json"
 	}
 
-	encoder := zapcore.CapitalLevelEncoder
+	// Capital encoder with trace addition
+	encoder := capitalLevelEncoder
 	if config.ColoredOutput {
-		encoder = zapcore.CapitalColorLevelEncoder
+		// Capital color encoder with trace addition
+		encoder = capitalColorLevelEncoder
 	}
 
 	cfg := makeZapConfig(level, config.DevelopmentMode, samplingConfig, output, encoder)
@@ -168,6 +171,40 @@ func (l *SilentLogger) record(level string) {
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(opencensus.KeyArea, l.configArea), tag.Upsert(keyLevel, level))
 	stats.Record(ctx, logCount.M(1))
+}
+
+// Trace logs a message at trace level
+func (l *SilentLogger) Trace(args ...interface{}) {
+	l.record("Trace")
+
+	logContext := l.loggingRegistry.Get(l.traceID)
+	if logContext.isWritingAllowed() {
+		l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+			zl.Log(logLevels["Trace"], msg, fields...)
+		}, fmt.Sprint(args...))
+
+		return
+	}
+
+	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprint(args...))
+	logContext.store(checkedEntry)
+}
+
+// Debugf logs a message at debug level with format string
+func (l *SilentLogger) Tracef(log string, args ...interface{}) {
+	l.record("Trace")
+
+	logContext := l.loggingRegistry.Get(l.traceID)
+	if logContext.isWritingAllowed() {
+		l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+			zl.Log(logLevels["Trace"], msg, fields...)
+		}, fmt.Sprintf(log, args...))
+
+		return
+	}
+
+	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprintf(log, args...))
+	logContext.store(checkedEntry)
 }
 
 // Debug logs a message at debug level

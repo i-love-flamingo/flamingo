@@ -2,6 +2,7 @@ package silentzap
 
 import (
 	"context"
+	"fmt"
 
 	"flamingo.me/dingo"
 
@@ -48,16 +49,16 @@ func (subscriber *shutdownEventSubscriber) Notify(_ context.Context, event flami
 // CueConfig Schema
 func (m *Module) CueConfig() string {
 	// language=cue
-	return `
+	return fmt.Sprintf(`
 core zap: {
-	loglevel: *"Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
+	loglevel: %s
 	sampling: {
 		enabled: bool | *true
 		initial: int | *100 
 		thereafter: int | *100
 	}
 }
-`
+`, allowedLevels)
 }
 
 // FlamingoLegacyConfigAlias mapping

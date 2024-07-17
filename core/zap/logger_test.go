@@ -295,6 +295,30 @@ func TestLogger_WithFields(t *testing.T) {
 	}
 }
 
+func TestLogger_Trace(t *testing.T) {
+	t.Parallel()
+
+	core, observedLogs := observer.New(uberZap.DebugLevel - 1) // trace level
+	l := zap.NewLogger(uberZap.New(core, uberZap.WithFatalHook(zapcore.WriteThenNoop)))
+
+	l.Trace("test")
+
+	require.Equal(t, observedLogs.Len(), 1)
+	assert.Equal(t, "test", observedLogs.All()[0].Message)
+}
+
+func TestLogger_Tracef(t *testing.T) {
+	t.Parallel()
+
+	core, observedLogs := observer.New(uberZap.DebugLevel - 1) // trace level
+	l := zap.NewLogger(uberZap.New(core, uberZap.WithFatalHook(zapcore.WriteThenNoop)))
+
+	l.Tracef("test %s", "logger")
+
+	require.Equal(t, observedLogs.Len(), 1)
+	assert.Equal(t, "test logger", observedLogs.All()[0].Message)
+}
+
 func TestLogger_Debug(t *testing.T) {
 	t.Parallel()
 

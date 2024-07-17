@@ -42,6 +42,7 @@ func ExampleLogger() {
 	logger.Info("my", "log", "args")
 	logger.Warn("my", "log", "args")
 	logger.Debug("my", "log", "args")
+	// logger.Trace("my", "log", "args") // this is possible with build tag `tracelog`
 
 	fmt.Println(recorder.String())
 
@@ -69,6 +70,7 @@ func ExampleLogFunc() {
 	logFunc(flamingo.Logger.Info, "my", "log", "args")
 	logFunc(flamingo.Logger.Warn, "my", "log", "args")
 	logFunc(flamingo.Logger.Debug, "my", "log", "args")
+	// logFunc(flamingo.Logger.Trace, "my", "log", "args") // this is possible with build tag `tracelog`
 	// if we do not give the level, it will be Info
 	logFunc(nil, "my", "log", "args")
 
@@ -106,6 +108,7 @@ func ExampleLogFuncWithContext() {
 	logFunc(ctx, flamingo.Logger.Info, "my", "log", "args")
 	logFunc(ctx, flamingo.Logger.Warn, "my", "log", "args")
 	logFunc(ctx, flamingo.Logger.Debug, "my", "log", "args")
+	// logFunc(ctx, flamingo.Logger.Trace, "my", "log", "args") // this is possible with build tag `tracelog`
 	// if we do not give the level, it will be Info
 	logFunc(ctx, nil, "my", "log", "args")
 

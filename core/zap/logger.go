@@ -94,6 +94,22 @@ func (l *Logger) record(level string) {
 	stats.Record(ctx, logCount.M(1))
 }
 
+// Trace logs a message at debug level
+func (l *Logger) Trace(args ...interface{}) {
+	l.record("Trace")
+	l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+		zl.Log(logLevels["Trace"], msg, fields...)
+	}, fmt.Sprint(args...))
+}
+
+// Tracef logs a message at trace level with format string
+func (l *Logger) Tracef(log string, args ...interface{}) {
+	l.record("Trace")
+	l.writeLog(func(zl *zap.Logger, msg string, fields ...zapcore.Field) {
+		zl.Log(logLevels["Trace"], msg, fields...)
+	}, fmt.Sprintf(log, args...))
+}
+
 // Debug logs a message at debug level
 func (l *Logger) Debug(args ...interface{}) {
 	l.record("Debug")

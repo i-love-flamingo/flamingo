@@ -41,25 +41,6 @@ const (
 type (
 	// LogKey is a logging key constant
 	LogKey string
-
-	// Logger defines a standard Flamingo logger interfaces
-	Logger interface {
-		WithContext(ctx context.Context) Logger
-
-		Debug(args ...interface{})
-		Info(args ...interface{})
-		Warn(args ...interface{})
-		Error(args ...interface{})
-		Fatal(args ...interface{})
-		Panic(args ...interface{})
-
-		Debugf(log string, args ...interface{})
-
-		WithField(key LogKey, value interface{}) Logger
-		WithFields(fields map[LogKey]interface{}) Logger
-
-		Flush()
-	}
 )
 
 func LogFunc(l Logger, fields map[LogKey]any) func(f func(l Logger, args ...any), args ...any) {
@@ -118,6 +99,27 @@ func (l *StdLogger) Panic(args ...interface{}) {
 	}
 
 	l.Logger.Panic(args...)
+}
+
+// Trace logs output
+func (l *StdLogger) Trace(args ...interface{}) {
+	args = append([]any{"trace: "}, args...)
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Print(args...)
+}
+
+// Tracef outputs the formatted trace string
+func (l *StdLogger) Tracef(f string, args ...interface{}) {
+	if isLoggerNil(l) {
+		log.Print(args...)
+		return
+	}
+
+	l.Logger.Printf(f, args...)
 }
 
 // Debug logs output
@@ -217,6 +219,12 @@ func (n NullLogger) WithField(_ LogKey, _ interface{}) Logger { return n }
 
 // WithFields null-implementation
 func (n NullLogger) WithFields(_ map[LogKey]interface{}) Logger { return n }
+
+// Trace null-implementation
+func (NullLogger) Trace(_ ...interface{}) {}
+
+// Tracef null-implementation
+func (NullLogger) Tracef(_ string, _ ...interface{}) {}
 
 // Debug null-implementation
 func (NullLogger) Debug(_ ...interface{}) {}

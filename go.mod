@@ -14,7 +14,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/gorilla/securecookie v1.1.2
-	github.com/gorilla/sessions v1.2.2
+	github.com/gorilla/sessions v1.3.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/leekchan/accounting v0.3.1
 	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da

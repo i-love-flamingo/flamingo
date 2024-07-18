@@ -1,3 +1,5 @@
+// Package testutil contains helper functions for PACT testing
+// Deprecated: PACT support will be dropped from Flamingo in v4
 package testutil
 
 import (
@@ -18,9 +20,11 @@ import (
 )
 
 // ErrNoPact error
+// Deprecated: PACT support will be dropped from Flamingo in v4
 var ErrNoPact = errors.New("no pact setup")
 
 // WithPact runs a test with a pact
+// Deprecated: PACT support will be dropped from Flamingo in v4
 func WithPact(t *testing.T, from, to string, fs ...func(*testing.T, *dsl.Pact)) {
 	if from == "" {
 		from = "flamingo"
@@ -108,6 +112,7 @@ func pactTeardown(pact *dsl.Pact) error {
 }
 
 // PactEncodeLike encodes a byte slice from json.Marshal or jsonpb into a pact type-like representation
+// Deprecated: PACT support will be dropped from Flamingo in v4
 func PactEncodeLike(model []byte) string {
 	var data interface{}
 	json.Unmarshal(model, &data)

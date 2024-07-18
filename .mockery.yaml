@@ -2,3 +2,4 @@ inpackage: False
 testonly: False
 with-expecter: True
 keeptree: True
+disable-version-string: true

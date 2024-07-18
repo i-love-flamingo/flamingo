@@ -1,5 +1,36 @@
 # Changelog
 
+## Version v3.9.0 (2024-07-18)
+
+### Features
+
+- **log:** Introduce Trace log level (#412) (9946e28b)
+- **auth/oidc:** Use BadRequest response for state mismatches, enhance logging with context (#403) (85bcd6fe)
+
+### Fixes
+
+- **opencensus:** rename to takeParentDecision (78fd979e)
+
+### Documentation
+
+- add missing headline (58b1962e)
+- add more information about the logger setup/usage (#414) (35f70ad6)
+
+### Chores and tidying
+
+- **testutil:** deprecate PACT support (#417) (5fd3f2c3)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25.0.2 (#416) (7afaa6a0)
+- **deps:** update module github.com/openzipkin/zipkin-go to v0.4.3 (#401) (6c780922)
+- disable mockery version string (#415) (e26c5f08)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.43.2 (#402) (cd8f56ad)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.5.2 (#408) (bf44c971)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25 (#409) (ec72db70)
+- **deps:** update module github.com/gorilla/sessions to v1.3.0 (#411) (9574cf75)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.11.0 (#413) (585ad1fa)
+- **deps:** update module golang.org/x/oauth2 to v0.21.0 (#405) (e3c774fc)
+- **deps:** update module github.com/spf13/cobra to v1.8.1 (#410) (87a97fc0)
+- **deps:** update golangci/golangci-lint-action action to v6 (#406) (3840ede5)
+
 ## Version v3.8.1 (2024-04-26)
 
 ### Ops and CI/CD

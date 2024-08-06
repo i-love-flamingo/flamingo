@@ -1,5 +1,14 @@
 # Changelog
 
+## Version v3.9.1 (2024-08-06)
+
+### Chores and tidying
+
+- **deps:** update module golang.org/x/oauth2 to v0.22.0 (#422) (727144f4)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.44.1 (#421) (651a4b78)
+- **deps:** update module golang.org/x/sync to v0.8.0 (#423) (b9d1a7b3)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.6.1 (#419) (2554e116)
+
 ## Version v3.9.0 (2024-07-18)
 
 ### Features

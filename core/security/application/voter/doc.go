@@ -1,3 +1,3 @@
 package voter
 
-//go:generate go run github.com/vektra/mockery/v2@v2.43.2 --all --case=underscore
+//go:generate go run github.com/vektra/mockery/v2@v2.44.1 --all --case=underscore

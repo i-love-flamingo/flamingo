@@ -229,6 +229,7 @@ flamingo: session: {
 		tls: bool | *false
 		clusterMode: bool | *false
 		timeout: string | *"5s"
+		keyPrefix?: string
 	}
 }
 `

@@ -79,8 +79,9 @@ func (m *SessionModule) Inject(config *struct {
 	m.redisClusterMode = config.RedisClusterMode
 	m.healthcheckSession = config.CheckSession
 
-	if strings.TrimSpace(config.RedisKeyPrefix) != "" {
-		m.redisKeyPrefix = &config.RedisKeyPrefix
+	trimmedRedisKeyPrefix := strings.TrimSpace(config.RedisKeyPrefix)
+	if trimmedRedisKeyPrefix != "" {
+		m.redisKeyPrefix = &trimmedRedisKeyPrefix
 	}
 
 	if config.RedisTimeout != "" {

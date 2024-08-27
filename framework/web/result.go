@@ -310,7 +310,7 @@ func (r *DataResponse) SetNoCache() *DataResponse {
 func (r *Responder) Download(data io.Reader, contentType string, fileName string, forceDownload bool) *Response {
 	contentDisposition := "inline"
 	if forceDownload {
-		contentDisposition = "attachement"
+		contentDisposition = "attachment"
 	}
 
 	return &Response{

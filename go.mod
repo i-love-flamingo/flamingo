@@ -1,6 +1,8 @@
 module flamingo.me/flamingo/v3
 
-go 1.21
+go 1.22
+
+toolchain go1.23.0
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.1
@@ -40,7 +42,6 @@ require (
 	github.com/cockroachdb/apd/v2 v2.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect

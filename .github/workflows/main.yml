@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.21', '1.x' ]
+        go: [ '1.22', '1.x' ]
     name: Tests
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.21 # fails with 1.22 due to https://github.com/vektra/mockery/issues/752
+          go-version: 1.x
           check-latest: true
       - name: Go Vet
         run: go vet ./...

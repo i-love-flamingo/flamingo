@@ -1,5 +1,25 @@
 # Changelog
 
+## Version v3.10.0 (2024-09-02)
+
+### Features
+
+- **flamingo:** add optional attribute to configure a session key prefix for REDIS (flamingo.session.redis.keyPrefix) (#424) (70a73751)
+
+### Fixes
+
+- **framework:** fix attachment content disposition typo (#431) (e78acf00)
+
+### Chores and tidying
+
+- bump minimum Go version to 1.22 (#429) (5d6d1a0a)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25.0.4 (#427) (8cb9ebe7)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.45.0 (#426) (9f959d7a)
+- **deps:** update module golang.org/x/oauth2 to v0.22.0 (#422) (727144f4)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.44.1 (#421) (651a4b78)
+- **deps:** update module golang.org/x/sync to v0.8.0 (#423) (b9d1a7b3)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.6.1 (#419) (2554e116)
+
 ## Version v3.9.0 (2024-07-18)
 
 ### Features

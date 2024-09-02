@@ -13,12 +13,13 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
-	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
 	"github.com/gorilla/sessions"
 	"github.com/rbcervilla/redisstore/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/zemirco/memorystore"
+
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	sessionhealthcheck "flamingo.me/flamingo/v3/framework/flamingo/healthcheck"
 )
 
 // SessionModule for session management
@@ -32,6 +33,7 @@ type SessionModule struct {
 	maxAge               int
 	path                 string
 	redisHost            string
+	redisKeyPrefix       *string
 	redisPassword        string
 	redisIdleConnections int
 	redisDatabase        int
@@ -55,6 +57,7 @@ func (m *SessionModule) Inject(config *struct {
 	Path                 string  `inject:"config:flamingo.session.cookie.path"`
 	RedisURL             string  `inject:"config:flamingo.session.redis.url"`
 	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
+	RedisKeyPrefix       string  `inject:"config:flamingo.session.redis.keyPrefix,optional"`
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
@@ -75,6 +78,11 @@ func (m *SessionModule) Inject(config *struct {
 	m.redisTLS = config.RedisTLS
 	m.redisClusterMode = config.RedisClusterMode
 	m.healthcheckSession = config.CheckSession
+
+	trimmedRedisKeyPrefix := strings.TrimSpace(config.RedisKeyPrefix)
+	if trimmedRedisKeyPrefix != "" {
+		m.redisKeyPrefix = &trimmedRedisKeyPrefix
+	}
 
 	if config.RedisTimeout != "" {
 		redisTimeout, err := time.ParseDuration(config.RedisTimeout)
@@ -135,6 +143,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 			panic(fmt.Errorf("failed on creating redis store: %w", err))
 		}
 
+		if m.redisKeyPrefix != nil {
+			sessionStore.KeyPrefix(*m.redisKeyPrefix)
+		}
+
 		sessionStore.Options(sessions.Options{
 			Path:     m.path,
 			MaxAge:   m.maxAge,
@@ -154,7 +166,10 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
 		}
 	case "file":
-		os.Mkdir(m.fileName, os.ModePerm)
+		err := os.Mkdir(m.fileName, os.ModePerm)
+		if err != nil {
+			panic(fmt.Errorf("failed on creating directory %q for file session store: %w", m.fileName, err))
+		}
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))
 
 		sessionStore.MaxLength(m.storeLength)
@@ -215,6 +230,7 @@ flamingo: session: {
 		tls: bool | *false
 		clusterMode: bool | *false
 		timeout: string | *"5s"
+		keyPrefix?: string
 	}
 }
 `

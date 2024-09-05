@@ -1,5 +1,15 @@
 # Changelog
 
+## Version v3.10.1 (2024-09-05)
+
+### Fixes
+
+- fix file session store creation, if directory exists (#433) (6469f207)
+
+### Chores and tidying
+
+- **deps:** update module golang.org/x/oauth2 to v0.23.0 (#435) (c4a1fe51)
+
 ## Version v3.10.0 (2024-09-02)
 
 ### Features

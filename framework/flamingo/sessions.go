@@ -167,7 +167,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		}
 	case "file":
 		err := os.Mkdir(m.fileName, os.ModePerm)
-		if err != nil {
+		if err != nil && !os.IsExist(err) {
 			panic(fmt.Errorf("failed on creating directory %q for file session store: %w", m.fileName, err))
 		}
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))

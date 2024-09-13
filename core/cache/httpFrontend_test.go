@@ -126,7 +126,7 @@ func loaderWithTimeout(ctx context.Context) (*http.Response, *Meta, error) {
 		time.Sleep(5 * time.Second)
 		w.WriteHeader(http.StatusOK)
 
-		w.Write([]byte("Test 123"))
+		_, _ = w.Write([]byte("Test 123"))
 	}))
 
 	defer server.Close()
@@ -303,6 +303,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 	}
 }
 
+// nolint: govet // response might be nil so we cannot close the body
 func TestContextDeadlineExceeded(t *testing.T) {
 	t.Parallel()
 
@@ -323,7 +324,8 @@ func TestContextDeadlineExceeded(t *testing.T) {
 			return nil
 		})
 
-		contextWithDeadline, _ := context.WithDeadline(context.Background(), time.Now().Add(4*time.Second))
+		contextWithDeadline, cancel := context.WithDeadline(context.Background(), time.Now().Add(4*time.Second))
+		t.Cleanup(cancel)
 
 		hf := new(HTTPFrontend).Inject(
 			backendMock,
@@ -353,7 +355,8 @@ func TestContextDeadlineExceeded(t *testing.T) {
 			return nil
 		})
 
-		contextWithDeadline, _ := context.WithDeadline(context.Background(), time.Now().Add(7*time.Second))
+		contextWithDeadline, cancel := context.WithDeadline(context.Background(), time.Now().Add(7*time.Second))
+		t.Cleanup(cancel)
 
 		hf := new(HTTPFrontend).Inject(
 			backendMock,

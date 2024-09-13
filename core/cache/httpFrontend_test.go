@@ -164,7 +164,6 @@ func TestHTTPFrontend_Get(t *testing.T) {
 		wantedCachedData []byte
 		// want Backend Set to be called
 		wantSet bool
-		ctx     context.Context
 	}{
 		{
 			name: "empty cache",

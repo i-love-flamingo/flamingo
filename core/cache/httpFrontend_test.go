@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -120,6 +121,27 @@ func createResponse(statusCode int, body string) *http.Response {
 	return response
 }
 
+func loaderWithTimeout(ctx context.Context) (*http.Response, *Meta, error) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(5 * time.Second)
+		w.WriteHeader(http.StatusOK)
+
+		w.Write([]byte("Test 123"))
+	}))
+
+	defer server.Close()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	return resp, nil, err
+}
+
 func TestHTTPFrontend_Get(t *testing.T) {
 	// wait channel top check async cache setting
 	cacheSetComplete := make(chan struct{}, 1)
@@ -142,6 +164,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 		wantedCachedData []byte
 		// want Backend Set to be called
 		wantSet bool
+		ctx     context.Context
 	}{
 		{
 			name: "empty cache",
@@ -278,4 +301,68 @@ func TestHTTPFrontend_Get(t *testing.T) {
 			assert.Equal(t, string(wantBody), string(gotBody))
 		})
 	}
+}
+
+func TestContextDeadlineExceeded(t *testing.T) {
+	t.Parallel()
+
+	t.Run("exceeded, throw error", func(t *testing.T) {
+		t.Parallel()
+
+		entry := &Entry{
+			Meta: Meta{
+				lifetime:  time.Now().Add(-24 * time.Hour),
+				gracetime: time.Now().Add(-24 * time.Hour),
+			},
+			Data: nil,
+		}
+
+		backendMock := &MockBackend{}
+		backendMock.On("Get", "test").Return(entry, true)
+		backendMock.On("Set", "test", mock.Anything).Return(func(string, *Entry) error {
+			return nil
+		})
+
+		contextWithDeadline, _ := context.WithDeadline(context.Background(), time.Now().Add(4*time.Second))
+
+		hf := new(HTTPFrontend).Inject(
+			backendMock,
+			&flamingo.NullLogger{},
+		)
+
+		got, err := hf.Get(contextWithDeadline, "test", loaderWithTimeout)
+
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Nil(t, got)
+	})
+
+	t.Run("did not exceed, no error", func(t *testing.T) {
+		t.Parallel()
+
+		entry := &Entry{
+			Meta: Meta{
+				lifetime:  time.Now().Add(-24 * time.Hour),
+				gracetime: time.Now().Add(-24 * time.Hour),
+			},
+			Data: nil,
+		}
+
+		backendMock := &MockBackend{}
+		backendMock.On("Get", "test").Return(entry, true)
+		backendMock.On("Set", "test", mock.Anything).Return(func(string, *Entry) error {
+			return nil
+		})
+
+		contextWithDeadline, _ := context.WithDeadline(context.Background(), time.Now().Add(7*time.Second))
+
+		hf := new(HTTPFrontend).Inject(
+			backendMock,
+			&flamingo.NullLogger{},
+		)
+
+		got, err := hf.Get(contextWithDeadline, "test", loaderWithTimeout)
+
+		assert.NoError(t, err)
+		assert.Equal(t, got.StatusCode, http.StatusOK)
+	})
 }

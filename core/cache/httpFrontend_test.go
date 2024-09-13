@@ -121,7 +121,7 @@ func createResponse(statusCode int, body string) *http.Response {
 	return response
 }
 
-func loaderWithTimeout(ctx context.Context) (*http.Response, *Meta, error) {
+func loaderWithWatingTime(ctx context.Context) (*http.Response, *Meta, error) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(5 * time.Second)
 		w.WriteHeader(http.StatusOK)
@@ -303,7 +303,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 	}
 }
 
-//nolint:govet // response might be nil so we cannot close the body
+//nolint:bodyclose // response might be nil so we cannot close the body
 func TestContextDeadlineExceeded(t *testing.T) {
 	t.Parallel()
 
@@ -332,7 +332,7 @@ func TestContextDeadlineExceeded(t *testing.T) {
 			&flamingo.NullLogger{},
 		)
 
-		got, err := hf.Get(contextWithDeadline, "test", loaderWithTimeout)
+		got, err := hf.Get(contextWithDeadline, "test", loaderWithWatingTime)
 
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
 		assert.Nil(t, got)
@@ -363,7 +363,7 @@ func TestContextDeadlineExceeded(t *testing.T) {
 			&flamingo.NullLogger{},
 		)
 
-		got, err := hf.Get(contextWithDeadline, "test", loaderWithTimeout)
+		got, err := hf.Get(contextWithDeadline, "test", loaderWithWatingTime)
 
 		assert.NoError(t, err)
 		assert.Equal(t, got.StatusCode, http.StatusOK)

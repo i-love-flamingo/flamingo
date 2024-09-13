@@ -303,7 +303,7 @@ func TestHTTPFrontend_Get(t *testing.T) {
 	}
 }
 
-// nolint: govet // response might be nil so we cannot close the body
+//nolint:govet // response might be nil so we cannot close the body
 func TestContextDeadlineExceeded(t *testing.T) {
 	t.Parallel()
 

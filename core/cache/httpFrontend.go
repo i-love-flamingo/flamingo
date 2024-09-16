@@ -114,6 +114,15 @@ func (hf *HTTPFrontend) load(ctx context.Context, key string, loader HTTPLoader,
 	oldSpan := trace.FromContext(ctx)
 	newContext := trace.NewContext(context.Background(), oldSpan)
 
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline {
+		var cancel context.CancelFunc
+
+		newContext, cancel = context.WithDeadline(newContext, deadline)
+
+		defer cancel()
+	}
+
 	newContextWithSpan, span := trace.StartSpan(newContext, "flamingo/cache/httpFrontend/load")
 	span.Annotate(nil, key)
 	defer span.End()

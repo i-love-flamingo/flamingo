@@ -2,6 +2,7 @@ package flamingo
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -14,7 +15,6 @@ import (
 
 	"flamingo.me/dingo"
 	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
 
 	"flamingo.me/flamingo/v3/core/runtime"
 	"flamingo.me/flamingo/v3/core/zap"
@@ -22,7 +22,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
+	flamingoHttp "flamingo.me/flamingo/v3/framework/http"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -331,7 +331,6 @@ type servemodule struct {
 	server            *http.Server
 	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler
 	certFile, keyFile string
 	publicEndpoint    bool
 }
@@ -341,7 +340,6 @@ func (a *servemodule) Inject(
 	router *web.Router,
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
 	cfg *struct {
 		Port           int  `inject:"config:core.serve.port"`
 		PublicEndpoint bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
@@ -353,7 +351,6 @@ func (a *servemodule) Inject(
 	a.server = &http.Server{
 		Addr: fmt.Sprintf(":%d", cfg.Port),
 	}
-	a.configuredSampler = configuredSampler
 	a.publicEndpoint = cfg.PublicEndpoint
 }
 
@@ -361,8 +358,10 @@ func (a *servemodule) Inject(
 func (a *servemodule) Configure(injector *dingo.Injector) {
 	flamingo.BindEventSubscriber(injector).ToInstance(a)
 
-	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
-		return serveProvider(a, a.logger)
+	injector.BindMulti(new(cobra.Command)).ToProvider(func(opts *struct {
+		Handler flamingoHttp.HandlerWrapper `inject:",optional"`
+	}) *cobra.Command {
+		return serveProvider(a, a.logger, opts.Handler)
 	})
 }
 
@@ -371,16 +370,19 @@ func (a *servemodule) CueConfig() string {
 	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
-func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
+func serveProvider(a *servemodule, logger flamingo.Logger, handlerWrapper flamingoHttp.HandlerWrapper) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: a.publicEndpoint, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
+			a.server.Handler = a.router.Handler()
+			if handlerWrapper != nil {
+				a.server.Handler = handlerWrapper(a.server.Handler)
+			}
 
 			err := a.listenAndServe()
 			if err != nil {
-				if err == http.ErrServerClosed {
+				if errors.Is(err, http.ErrServerClosed) {
 					logger.Info(err)
 				} else {
 					logger.Fatal("unexpected error in serving:", err)

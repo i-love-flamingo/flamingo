@@ -12,8 +12,6 @@ import (
 	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/zipkin"
 	"flamingo.me/dingo"
-	"flamingo.me/flamingo/v3/framework/systemendpoint"
-	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 	openzipkin "github.com/openzipkin/zipkin-go"
 	reporterHttp "github.com/openzipkin/zipkin-go/reporter/http"
 	"go.opencensus.io/plugin/ochttp"
@@ -22,6 +20,10 @@ import (
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"go.opencensus.io/trace"
+
+	flamingoHttp "flamingo.me/flamingo/v3/framework/http"
+	"flamingo.me/flamingo/v3/framework/systemendpoint"
+	"flamingo.me/flamingo/v3/framework/systemendpoint/domain"
 )
 
 var (
@@ -55,6 +57,7 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 // Module registers the opencensus module which in turn enables jaeger & co.
 // Deprecated: OpenCensus was discontinued in favor of OpenTelemetry, please use flamingo.me/opentelemetry instead.
 type Module struct {
+	publicEndpoint bool
 	endpoint       string
 	serviceName    string
 	serviceAddr    string
@@ -66,6 +69,7 @@ type Module struct {
 // Inject dependencies
 func (m *Module) Inject(
 	cfg *struct {
+		PublicEndpoint bool   `inject:"config:flamingo.opencensus.publicEndpoint"`
 		Endpoint       string `inject:"config:flamingo.opencensus.jaeger.endpoint"`
 		ServiceName    string `inject:"config:flamingo.opencensus.serviceName"`
 		ServiceAddr    string `inject:"config:flamingo.opencensus.serviceAddr"`
@@ -75,6 +79,7 @@ func (m *Module) Inject(
 	},
 ) *Module {
 	if cfg != nil {
+		m.publicEndpoint = cfg.PublicEndpoint
 		m.endpoint = cfg.Endpoint
 		m.serviceName = cfg.ServiceName
 		m.serviceAddr = cfg.ServiceAddr
@@ -116,6 +121,17 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		// For demoing purposes, always sample.
 		trace.ApplyConfig(trace.Config{DefaultSampler: trace.NeverSample()})
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
+
+		injector.Bind(new(flamingoHttp.HandlerWrapper)).ToProvider(func(configuredSampler *ConfiguredURLPrefixSampler) flamingoHttp.HandlerWrapper {
+
+			return func(handler http.Handler) http.Handler {
+				return &ochttp.Handler{
+					IsPublicEndpoint: m.publicEndpoint,
+					Handler:          handler,
+					GetStartOptions:  configuredSampler.GetStartOptions(),
+				}
+			}
+		})
 
 		if m.jaegerEnable {
 			// Register the Jaeger exporter to be able to retrieve

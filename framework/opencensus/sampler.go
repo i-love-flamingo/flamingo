@@ -93,6 +93,7 @@ func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace
 		hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
 
 		prefix := "/"
+
 		if pathSet {
 			pathStringed, _ := pathValue.(string)
 			prefix = path.Join("/", pathStringed, prefix, "/")

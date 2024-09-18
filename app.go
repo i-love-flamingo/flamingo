@@ -370,17 +370,17 @@ func (a *servemodule) CueConfig() string {
 	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
-func serveProvider(a *servemodule, logger flamingo.Logger, handlerWrapper flamingoHttp.HandlerWrapper) *cobra.Command {
+func serveProvider(module *servemodule, logger flamingo.Logger, handlerWrapper flamingoHttp.HandlerWrapper) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = a.router.Handler()
+			module.server.Handler = module.router.Handler()
 			if handlerWrapper != nil {
-				a.server.Handler = handlerWrapper(a.server.Handler)
+				module.server.Handler = handlerWrapper(module.server.Handler)
 			}
 
-			err := a.listenAndServe()
+			err := module.listenAndServe()
 			if err != nil {
 				if errors.Is(err, http.ErrServerClosed) {
 					logger.Info(err)
@@ -390,9 +390,9 @@ func serveProvider(a *servemodule, logger flamingo.Logger, handlerWrapper flamin
 			}
 		},
 	}
-	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", a.server.Addr, "addr on which flamingo runs")
-	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
-	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&module.server.Addr, "addr", "a", module.server.Addr, "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&module.certFile, "certFile", "c", "", "certFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&module.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
 	return serveCmd
 }

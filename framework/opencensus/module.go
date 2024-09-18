@@ -123,7 +123,6 @@ func (m *Module) Configure(injector *dingo.Injector) {
 		http.DefaultTransport = &correlationIDInjector{next: &ochttp.Transport{Base: http.DefaultTransport}}
 
 		injector.Bind(new(flamingoHttp.HandlerWrapper)).ToProvider(func(configuredSampler *ConfiguredURLPrefixSampler) flamingoHttp.HandlerWrapper {
-
 			return func(handler http.Handler) http.Handler {
 				return &ochttp.Handler{
 					IsPublicEndpoint: m.publicEndpoint,

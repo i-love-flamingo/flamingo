@@ -94,10 +94,13 @@ func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace
 
 		prefix := "/"
 		if pathSet {
-			prefix = path.Join("/", pathValue.(string), "/")
+			pathStringed, _ := pathValue.(string)
+			prefix = path.Join("/", pathStringed, prefix, "/")
 		}
+
 		if hostSet && hostValue != "" {
-			prefix = hostValue.(string) + prefix
+			hostStringed, _ := hostValue.(string)
+			prefix = hostStringed + prefix
 		}
 
 		prefixes = append(prefixes, prefix)
@@ -112,10 +115,13 @@ func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace
 	// prefixed routes
 	for _, prefix := range prefixes {
 		for _, p := range c.Whitelist {
-			allowed = append(allowed, prefix+p.(string))
+			pathStringed, _ := p.(string)
+			allowed = append(allowed, prefix+pathStringed)
 		}
+
 		for _, p := range c.Blacklist {
-			blocked = append(blocked, prefix+p.(string))
+			pathStringed, _ := p.(string)
+			blocked = append(blocked, prefix+pathStringed)
 		}
 	}
 

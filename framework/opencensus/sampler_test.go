@@ -5,19 +5,22 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"flamingo.me/flamingo/v3/framework/config"
-	"flamingo.me/flamingo/v3/framework/opencensus"
 	"github.com/stretchr/testify/assert"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 func TestURLPrefixSampler(t *testing.T) {
 	sampler := new(opencensus.ConfiguredURLPrefixSampler)
-	sampler.Inject(&struct {
-		Whitelist        config.Slice "inject:\"config:flamingo.opencensus.tracing.sampler.whitelist,optional\""
-		Blacklist        config.Slice "inject:\"config:flamingo.opencensus.tracing.sampler.blacklist,optional\""
-		AllowParentTrace bool         "inject:\"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional\""
-	}{})
+	sampler.Inject(
+		&config.Area{},
+		&struct {
+			Whitelist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.whitelist,optional"`
+			Blacklist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.blacklist,optional"`
+			AllowParentTrace bool         `inject:"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional"`
+		}{})
 	assert.NotNil(t, sampler.GetStartOptions())
 
 	assert.True(t, opencensus.URLPrefixSampler(nil, nil, false)(httptest.NewRequest(http.MethodGet, "/", nil)).Sampler(trace.SamplingParameters{}).Sample)

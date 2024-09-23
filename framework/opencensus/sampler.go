@@ -2,10 +2,12 @@ package opencensus
 
 import (
 	"net/http"
+	"path"
 	"strings"
 
-	"flamingo.me/flamingo/v3/framework/config"
 	"go.opencensus.io/trace"
+
+	"flamingo.me/flamingo/v3/framework/config"
 )
 
 // URLPrefixSampler creates a sampling getter for ochttp.Server.
@@ -60,16 +62,19 @@ type ConfiguredURLPrefixSampler struct {
 	Whitelist        config.Slice
 	Blacklist        config.Slice
 	AllowParentTrace bool
+	area             *config.Area
 }
 
 // Inject dependencies
 func (c *ConfiguredURLPrefixSampler) Inject(
+	area *config.Area,
 	cfg *struct {
 		Whitelist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.whitelist,optional"`
 		Blacklist        config.Slice `inject:"config:flamingo.opencensus.tracing.sampler.blacklist,optional"`
 		AllowParentTrace bool         `inject:"config:flamingo.opencensus.tracing.sampler.allowParentTrace,optional"`
 	},
 ) *ConfiguredURLPrefixSampler {
+	c.area = area
 	if cfg != nil {
 		c.Whitelist = cfg.Whitelist
 		c.Blacklist = cfg.Blacklist
@@ -80,9 +85,46 @@ func (c *ConfiguredURLPrefixSampler) Inject(
 
 // GetStartOptions constructor for ochttp.Server
 func (c *ConfiguredURLPrefixSampler) GetStartOptions() func(*http.Request) trace.StartOptions {
-	var allowed, blocked []string
+	areas, _ := c.area.GetFlatContexts()
+	prefixes := make([]string, 0, len(areas))
+
+	for _, area := range areas {
+		pathValue, pathSet := area.Configuration.Get("flamingo.router.path")
+		hostValue, hostSet := area.Configuration.Get("flamingo.router.host")
+
+		prefix := "/"
+
+		if pathSet {
+			pathStringed, _ := pathValue.(string)
+			prefix = path.Join("/", pathStringed, prefix, "/")
+		}
+
+		if hostSet && hostValue != "" {
+			hostStringed, _ := hostValue.(string)
+			prefix = hostStringed + prefix
+		}
+
+		prefixes = append(prefixes, prefix)
+	}
+
+	allowed := make([]string, 0, len(c.Whitelist)+len(prefixes)+1)
+	blocked := make([]string, 0, len(c.Blacklist)+len(prefixes)+1)
+
 	_ = c.Whitelist.MapInto(&allowed)
 	_ = c.Blacklist.MapInto(&blocked)
+
+	// prefixed routes
+	for _, prefix := range prefixes {
+		for _, p := range c.Whitelist {
+			pathStringed, _ := p.(string)
+			allowed = append(allowed, prefix+pathStringed)
+		}
+
+		for _, p := range c.Blacklist {
+			pathStringed, _ := p.(string)
+			blocked = append(blocked, prefix+pathStringed)
+		}
+	}
 
 	return URLPrefixSampler(allowed, blocked, c.AllowParentTrace)
 }

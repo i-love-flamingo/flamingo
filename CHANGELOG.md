@@ -1,5 +1,17 @@
 # Changelog
 
+## Version v3.12.0 (2024-09-30)
+
+### Features
+
+- **web/handler:** add http method to opencensus tag for flamingo_router_controller (#432) (7597e699)
+
+### Chores and tidying
+
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25.0.6 (#443) (be287200)
+- **deps:** update module go.uber.org/automaxprocs to v1.6.0 (#444) (9de9569f)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.46.1 (#445) (5158f5a6)
+
 ## Version v3.11.0 (2024-09-19)
 
 ### Features

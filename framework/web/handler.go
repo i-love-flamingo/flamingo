@@ -44,13 +44,15 @@ var (
 	rt = stats.Int64("flamingo/router/controller", "controller request times", stats.UnitMilliseconds)
 	// ControllerKey exposes the current controller/handler key
 	ControllerKey, _ = tag.NewKey("controller")
+	// MethodKey exposes the current http method received
+	MethodKey, _ = tag.NewKey("method")
 
 	// RouterError defines error value for issues appearing during routing process
 	RouterError contextKeyType = "error"
 )
 
 func init() {
-	if err := opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey); err != nil {
+	if err := opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey, MethodKey); err != nil { //nolint:gomnd // magic number is accepted here
 		panic(err)
 	}
 }
@@ -120,7 +122,7 @@ func (h *handler) ServeHTTP(rw http.ResponseWriter, httpRequest *http.Request) {
 	controller, params, handler := h.routerRegistry.matchRequest(httpRequest)
 
 	if handler != nil {
-		ctx, _ = tag.New(ctx, tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Insert(opencensus.KeyArea, "-"))
+		ctx, _ = tag.New(ctx, tag.Upsert(ControllerKey, handler.GetHandlerName()), tag.Insert(opencensus.KeyArea, "-"), tag.Upsert(MethodKey, httpRequest.Method))
 		httpRequest = httpRequest.WithContext(ctx)
 		start := time.Now()
 		defer func() {

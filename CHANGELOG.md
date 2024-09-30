@@ -1,5 +1,21 @@
 # Changelog
 
+## Version v3.11.0 (2024-09-19)
+
+### Features
+
+- decouple opencensus from core (#442) (95e83305)
+
+### Fixes
+
+- **cache:** pass deadline to context in load function (#440) (41c5fe24)
+
+### Chores and tidying
+
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25.0.5 (#439) (634092be)
+- **deps:** update dependency go to v1.23.1 (#437) (e9e669e0)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.46.0 (#438) (39733f67)
+
 ## Version v3.10.1 (2024-09-05)
 
 ### Fixes

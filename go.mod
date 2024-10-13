@@ -19,7 +19,8 @@ require (
 	github.com/gorilla/sessions v1.3.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/leekchan/accounting v0.3.1
-	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
+	github.com/nicksnyder/go-i18n v1.10.3
+	github.com/nicksnyder/go-i18n/v2 v2.4.1
 	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/rbcervilla/redisstore/v9 v9.0.0
@@ -68,7 +69,7 @@ require (
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.84.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

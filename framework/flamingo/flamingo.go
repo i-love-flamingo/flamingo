@@ -22,7 +22,7 @@ func AppVersion() string {
 	// in case no version is set with ldflags check executable build info (git commit hash is embedded by Go by default)
 	if info, ok := debug.ReadBuildInfo(); ok {
 		for _, setting := range info.Settings {
-			if setting.Key == vcsRevisionSettingKey {
+			if setting.Key == vcsRevisionSettingKey && len(setting.Value) > 8 {
 				return fmt.Sprintf("%s-%s", baseSemanticVersion, setting.Value[:8])
 			}
 		}

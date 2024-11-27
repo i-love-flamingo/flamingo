@@ -121,6 +121,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	app.flagset = flag.NewFlagSet("flamingo", flag.ContinueOnError)
 	dingoTraceCircular := app.flagset.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
+	dingoTraceInjections := app.flagset.Bool("dingo-trace-injections", false, "enable dingo injection tracing")
 	flamingoConfigLog := app.flagset.Bool("flamingo-config-log", false, "enable flamingo config logging")
 	flamingoConfigCueDebug := app.flagset.String("flamingo-config-cue-debug", "", "query the flamingo cue config loader (use . for root)")
 	flamingoContext := app.flagset.String("flamingo-context", app.defaultContext, "set flamingo execution context")
@@ -134,6 +135,10 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	if dingoTraceCircular != nil && *dingoTraceCircular {
 		dingo.EnableCircularTracing()
+	}
+
+	if dingoTraceInjections != nil && *dingoTraceInjections {
+		dingo.EnableInjectionTracing()
 	}
 
 	modules = append([]dingo.Module{

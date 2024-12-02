@@ -38,6 +38,7 @@ func GetAppInfo() AppInfo {
 
 	if info, ok := debug.ReadBuildInfo(); ok {
 		appInfo.MainPackagePath = info.Main.Path
+
 		for _, module := range info.Deps {
 			if module.Path == "flamingo.me/flamingo/v3" {
 				appInfo.FlamingoVersion = module.Version
@@ -52,7 +53,6 @@ func GetAppInfo() AppInfo {
 	}
 
 	return appInfo
-
 }
 
 // PrintAppInfo prints application info to the writer

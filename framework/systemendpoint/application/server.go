@@ -3,11 +3,8 @@ package application
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
-	"runtime"
-	"runtime/debug"
 	"sync"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
@@ -61,16 +58,8 @@ func (s *SystemServer) Start() {
 	}
 
 	serveMux.HandleFunc("/version", func(writer http.ResponseWriter, _ *http.Request) {
-		_, _ = fmt.Fprintf(writer, "version: %s\n", flamingo.AppVersion())
-		_, _ = fmt.Fprintf(writer, "go: %s\n", runtime.Version())
-		if info, ok := debug.ReadBuildInfo(); ok {
-			_, _ = fmt.Fprintf(writer, "path: %s\n", info.Path)
-			for _, module := range info.Deps {
-				if module.Path == "flamingo.me/flamingo/v3" {
-					_, _ = fmt.Fprintf(writer, "flamingo: %s\n", module.Version)
-				}
-			}
-		}
+		appInfo := flamingo.GetAppInfo()
+		flamingo.PrintAppInfo(writer, appInfo)
 	})
 
 	listener, err := net.Listen("tcp", s.serviceAddress)

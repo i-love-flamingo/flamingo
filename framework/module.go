@@ -43,6 +43,7 @@ func (*InitModule) Configure(injector *dingo.Injector) {
 	injector.BindMulti(new(cobra.Command)).ToProvider(web.HandlerCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(config.ModulesCmd)
 	injector.BindMulti(new(cobra.Command)).ToProvider(config.Cmd)
+	injector.BindMulti(new(cobra.Command)).ToProvider(flamingo.VersionCmd)
 
 	web.BindRoutes(injector, new(routes))
 

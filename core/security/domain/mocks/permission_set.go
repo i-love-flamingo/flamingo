@@ -17,7 +17,7 @@ func (_m *PermissionSet) EXPECT() *PermissionSet_Expecter {
 	return &PermissionSet_Expecter{mock: &_m.Mock}
 }
 
-// Permissions provides a mock function with given fields:
+// Permissions provides a mock function with no fields
 func (_m *PermissionSet) Permissions() []string {
 	ret := _m.Called()
 

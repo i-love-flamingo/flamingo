@@ -26,6 +26,8 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
+//go:generate go run github.com/vektra/mockery/v2@v2.50.0
+
 type (
 	// Application contains a main flamingo application
 	Application struct {

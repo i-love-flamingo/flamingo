@@ -34,6 +34,7 @@ linters:
     - contextcheck
     - cyclop
     - durationcheck
+    - err113
     - errcheck
     - errname
     - errorlint
@@ -44,9 +45,7 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    - goerr113
     - gofmt
-    - gomnd
     - gomoddirectives
     - gosec
     - gosimple
@@ -55,6 +54,7 @@ linters:
     - ineffassign
     - makezero
     - misspell
+    - mnd
     - nakedret
     - nestif
     - nilerr
@@ -90,12 +90,12 @@ issues:
         - containedctx
         - forcetypeassert
         - goconst
-        - goerr113
+        - err113
         - varnamelen
         - wrapcheck
 
 linters-settings:
-  gomnd:
+  mnd:
     ignored-functions:
       - context.WithTimeout
   nolintlint:

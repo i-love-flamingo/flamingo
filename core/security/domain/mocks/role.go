@@ -17,7 +17,7 @@ func (_m *Role) EXPECT() *Role_Expecter {
 	return &Role_Expecter{mock: &_m.Mock}
 }
 
-// Label provides a mock function with given fields:
+// Label provides a mock function with no fields
 func (_m *Role) Label() string {
 	ret := _m.Called()
 
@@ -62,7 +62,7 @@ func (_c *Role_Label_Call) RunAndReturn(run func() string) *Role_Label_Call {
 	return _c
 }
 
-// Permissions provides a mock function with given fields:
+// Permissions provides a mock function with no fields
 func (_m *Role) Permissions() []string {
 	ret := _m.Called()
 

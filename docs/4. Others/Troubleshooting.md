@@ -16,8 +16,8 @@ Flamingo leverages the native Go tool `flag.FlagSet` to manage command-line flag
 
 1. `--dingo-trace-circular` - helps by giving you more information about circular injections, which of course makes the complete execution of your app impossible.
 1. `--dingo-trace-injections` - prints what is getting injected and which field is getting set in real-time. May help you understand, what you possibly did wrong, so your application breaks during the injection phase.
-1. `--flamingo-config` - helps to set config location manually.
-1. `--flamingo-context` - sets a default execution context, ignoring ENVs values.
+1. `--flamingo-config` - helps to manually override config values, like `--flamingo.config "flamingo.session.name: foo" --flamingo.config "flamingo.otherConfig: bar"`.
+1. `--flamingo-context` - sets a default execution context using a full path, like `root/mainstore/en_GB`.
 1. `--flamingo-config-log` - helps to debug a configuration. During application startup, it will print all configuration compilation settings, like which configuration file is loaded in which order.
 1. `--flamingo-config-cue-debug` - prints what is set in a compiled cue configuration of the project. To print everything use `.`, or to print the exact place use an address like `flamingo.session`.
 1. `--dingo-inspect` - prints all the bindings that are present in a dingo injector. Can show you which values are assigned to which interface.

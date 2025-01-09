@@ -1,5 +1,37 @@
 # Changelog
 
+## Version v3.12.0 (2025-01-09)
+
+### Features
+
+- **app:** add dingo-trace-injections flag, which switches injection tracing (#455) (c25a60ee)
+- **web/handler:** add http method to opencensus tag for flamingo_router_controller (#432) (7597e699)
+
+### Chores and tidying
+
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.12.0 (#465) (e40d9eda)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.50.4 (#464) (7d2d7f05)
+- **deps:** update module golang.org/x/oauth2 to v0.25.0 (#466) (27262c8a)
+- **docs:** add troubleshooting information (#457) (8426b77e)
+- edit mockery configuration, remove scattered go:generate annotations, edited linter config (#463) (586b32ba)
+- **deps:** update dependency go to v1.23.4 (#459) (a307b167)
+- **deps:** bump golang.org/x/crypto from 0.25.0 to 0.31.0 (#462) (ad862f2d)
+- **deps:** update module golang.org/x/sync to v0.10.0 (#461) (e1b39ea6)
+- **deps:** update module golang.org/x/oauth2 to v0.24.0 (#452) (a90e42b2)
+- **deps:** update module golang.org/x/sync to v0.9.0 (#453) (acde3c2b)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.49.1 (#454) (af56c07a)
+- **deps:** update dependency go to v1.23.3 (#451) (77cf423b)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.7.0 (#450) (0569eadc)
+- **deps:** update dependency go to v1.23.2 (#447) (7d64c4e4)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.46.3 (#448) (2871fb36)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v25.0.6 (#443) (be287200)
+- **deps:** update module go.uber.org/automaxprocs to v1.6.0 (#444) (9de9569f)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.46.1 (#445) (5158f5a6)
+
+### Other
+
+- Add version command to the default framework CLI commands (#458) (7903a65b)
+
 ## Version v3.11.0 (2024-09-19)
 
 ### Features

@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.12.1 (2025-01-23)
+
+### Chores and tidying
+
+- **deps:** update module github.com/vektra/mockery/v2 to v2.51.1 (#468) (caa5d915)
+
 ## Version v3.12.0 (2025-01-09)
 
 ### Features

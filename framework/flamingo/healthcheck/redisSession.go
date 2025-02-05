@@ -3,8 +3,9 @@ package healthcheck
 import (
 	"context"
 
-	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"github.com/redis/go-redis/v9"
+
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 )
 
 // RedisSession status check

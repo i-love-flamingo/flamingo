@@ -30,7 +30,7 @@ Stores the sessions in the directory specified by the `flamingo.session.file` pa
 The files will be persisted across application restarts. 
 
 ##### redis
-Stores the session in an external instance of [redis](https://redis.io/). 
+Stores the session in an external instance of Redis-compatible cache ([Redis](https://redis.io/), [Valkey](https://valkey.io)). 
 Use the following parameters to configure the connection to redis. 
 
 ```yaml

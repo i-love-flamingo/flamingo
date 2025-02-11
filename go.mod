@@ -2,7 +2,7 @@ module flamingo.me/flamingo/v3
 
 go 1.22
 
-toolchain go1.23.4
+toolchain go1.24.0
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.1

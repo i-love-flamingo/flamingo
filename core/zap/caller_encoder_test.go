@@ -1,4 +1,4 @@
-package zap //nolint:testpackage whitebox test
+package zap //nolint:testpackage // explicit whitebox test
 
 import (
 	"testing"

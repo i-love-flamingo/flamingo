@@ -14,11 +14,12 @@ func short(file string) string {
 	file = ""
 
 	for i, part := range parts {
-		if i == len(parts)-1 || len(part) == 0 {
+		switch {
+		case i == len(parts)-1 || len(part) == 0:
 			file += part
-		} else if i == len(parts)-2 {
+		case i == len(parts)-2:
 			file += part + "/"
-		} else {
+		default:
 			file += string(part[0]) + "/"
 		}
 	}

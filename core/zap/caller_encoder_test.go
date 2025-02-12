@@ -1,4 +1,4 @@
-package zap
+package zap //nolint:testpackage whitebox test
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 )
 
 func TestShort(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "", short(""))
 	assert.Equal(t, "a/bbb/ccc.ddd.eee", short("aaa/bbb/ccc.ddd.eee"))
 }

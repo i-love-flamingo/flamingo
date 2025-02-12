@@ -192,6 +192,12 @@ func (m *Module) CueConfig() string {
 	// language=cue
 	return fmt.Sprintf(`
 core: zap: {
+	loglevel: %s
+	sampling: {
+		enabled: bool | *true
+		initial: int | *100 
+		thereafter: int | *100
+	}
 	json: bool | *false
 	colored: bool | *false
 	devmode: bool | *false
@@ -199,14 +205,6 @@ core: zap: {
 	fieldmap: {
 		[string]: string
 	}
-	
-	loglevel: %s
-	sampling: {
-		enabled: bool | *true
-		initial: int | *100 
-		thereafter: int | *100
-	}
-	
 	encoding: {
 		caller: *"%s" | "%s" | "%s"
 	}

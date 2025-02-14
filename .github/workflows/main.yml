@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.22', '1.x' ]
+        go: [ '1.23', '1.x' ]
     name: Tests
     steps:
       - uses: actions/checkout@v4

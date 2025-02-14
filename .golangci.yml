@@ -3,17 +3,15 @@ run:
   concurrency: 4
   timeout: 5m
   tests: true
-  # vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  skip-dirs-use-default: true
   modules-download-mode: readonly
   allow-parallel-runners: false
 
 # output configuration options
 output:
-  formats: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
-  uniq-by-line: true
   sort-results: true
 
 linters:
@@ -58,7 +56,6 @@ linters:
     - predeclared
     - revive
     - staticcheck
-    - tenv
     - testpackage
     - thelper
     - tparallel
@@ -67,6 +64,7 @@ linters:
     - unparam
     - unused
     - usestdlibvars
+    - usetesting
     - varnamelen
     - wrapcheck
     - wsl
@@ -75,6 +73,8 @@ issues:
   new: false
   fix: false
   new-from-rev: 2399c75fbd6c738c4cddf38a3ad7f5f97367e5ec
+  exclude-dirs-use-default: true
+  uniq-by-line: true
   exclude-rules:
     - path: _test\.go
       linters:

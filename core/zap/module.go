@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	// Module for logrus logging
+	// Module for zap logging
 	Module struct {
 		area               string
 		json               bool
@@ -24,11 +24,18 @@ type (
 		samplingThereafter float64
 		fieldMap           map[string]string
 		logSession         bool
+		callerEncoder      zapcore.CallerEncoder
 	}
 
 	shutdownEventSubscriber struct {
 		logger flamingo.Logger
 	}
+)
+
+const (
+	ZapCallerEncoderShort = "short"
+	ZapCallerEncoderSmart = "smart"
+	ZapCallerEncoderFull  = "full"
 )
 
 var logLevels = map[string]zapcore.Level{
@@ -40,6 +47,12 @@ var logLevels = map[string]zapcore.Level{
 	"DPanic": zap.DPanicLevel,
 	"Panic":  zap.PanicLevel,
 	"Fatal":  zap.FatalLevel,
+}
+
+var callerEncoders = map[string]zapcore.CallerEncoder{
+	ZapCallerEncoderSmart: smartCallerEncoder,
+	ZapCallerEncoderFull:  zapcore.FullCallerEncoder,
+	ZapCallerEncoderShort: zapcore.ShortCallerEncoder,
 }
 
 // Inject dependencies
@@ -54,6 +67,7 @@ func (m *Module) Inject(config *struct {
 	SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
 	FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
 	LogSession         bool       `inject:"config:core.zap.logsession,optional"`
+	CallerEncoder      string     `inject:"config:core.zap.encoding.caller,optional"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -64,6 +78,11 @@ func (m *Module) Inject(config *struct {
 	m.samplingInitial = config.SamplingInitial
 	m.samplingThereafter = config.SamplingThereafter
 	m.logSession = config.LogSession
+	m.callerEncoder = callerEncoders[ZapCallerEncoderShort]
+
+	if encoder, ok := callerEncoders[config.CallerEncoder]; ok {
+		m.callerEncoder = encoder
+	}
 
 	if config.FieldMap != nil {
 		m.fieldMap = make(map[string]string, len(config.FieldMap))
@@ -76,7 +95,7 @@ func (m *Module) Inject(config *struct {
 	}
 }
 
-// Configure the zap logger as flamingo.Logger (in JSON mode kibana compatible)
+// Configure the zap logger as flamingo.Logger
 func (m *Module) Configure(injector *dingo.Injector) {
 	injector.Bind(new(flamingo.Logger)).ToInstance(m.createLoggerInstance())
 	flamingo.BindEventSubscriber(injector).To(shutdownEventSubscriber{})
@@ -128,7 +147,7 @@ func (m *Module) createLoggerInstance() *Logger {
 			EncodeLevel:    encoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.ShortCallerEncoder,
+			EncodeCaller:   m.callerEncoder,
 			EncodeName:     zapcore.FullNameEncoder,
 		},
 		OutputPaths:      []string{"stderr"},
@@ -186,8 +205,11 @@ core: zap: {
 	fieldmap: {
 		[string]: string
 	}
+	encoding: {
+		caller: *"%s" | "%s" | "%s"
+	}
 }
-`, allowedLevels)
+`, allowedLevels, ZapCallerEncoderShort, ZapCallerEncoderSmart, ZapCallerEncoderFull)
 }
 
 // FlamingoLegacyConfigAlias mapping

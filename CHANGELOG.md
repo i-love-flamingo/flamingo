@@ -1,5 +1,22 @@
 # Changelog
 
+## Version v3.13.0 (2025-02-17)
+
+### Features
+
+- **core/zap:** Make caller encoder configurable, add additional one (#301) (fc037fce)
+
+### Chores and tidying
+
+- **deps:** update module github.com/spf13/cobra to v1.9.1 (#477) (5fad27fd)
+- **deps:** update module golang.org/x/sync to v0.11.0 (#474) (5800854f)
+- **deps:** update module golang.org/x/oauth2 to v0.26.0 (#473) (48e6b955)
+- **deps:** update module github.com/spf13/pflag to v1.0.6 (#471) (5667c5d3)
+- **deps:** bump golang.org/x/net from 0.27.0 to 0.33.0 (#467) (45c1368c)
+- bump go version with mockery and linter (#476) (98b92505)
+- edit description of sessions module (#475) (fe338e85)
+- **deps:** update module github.com/vektra/mockery/v2 to v2.51.1 (#468) (caa5d915)
+
 ## Version v3.12.0 (2025-01-09)
 
 ### Features

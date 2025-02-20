@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.13.1 (2025-02-20)
+
+### Chores and tidying
+
+- make post run script available for both Run and RunE functions (#478) (7bbfff73)
+
 ## Version v3.13.0 (2025-02-17)
 
 ### Features

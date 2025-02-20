@@ -58,6 +58,15 @@ func (m *Module) Configure(injector *dingo.Injector) {
 				Use:              config.Name,
 				Short:            "Flamingo " + config.Name,
 				TraverseChildren: true,
+				PersistentPostRunE: func(*cobra.Command, []string) error {
+					// shutdown through command that is finite (e.g. help command)
+					shutdownOnce.Do(func() {
+						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
+						<-shutdownComplete
+					})
+
+					return nil
+				},
 				PersistentPostRun: func(cmd *cobra.Command, args []string) {
 					// shutdown through command that is finite (e.g. help command)
 					shutdownOnce.Do(func() {

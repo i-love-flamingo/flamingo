@@ -1,6 +1,6 @@
 module flamingo.me/flamingo/v3
 
-go 1.23
+go 1.23.0
 
 toolchain go1.24.0
 
@@ -32,7 +32,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/oauth2 v0.26.0
-	golang.org/x/sync v0.11.0
+	golang.org/x/sync v0.12.0
 )
 
 require (

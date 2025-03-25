@@ -20,14 +20,16 @@ import (
 	framework "flamingo.me/flamingo/v3/framework/flamingo"
 )
 
-type NotifyFunc func(ctx context.Context, event framework.Event)
+type notifyFunc func(ctx context.Context, event framework.Event)
 
-func (nf NotifyFunc) Notify(ctx context.Context, event framework.Event) {
+func (nf notifyFunc) Notify(ctx context.Context, event framework.Event) {
 	nf(ctx, event)
 }
 
 func TestCmdEventsTriggeredProperly(t *testing.T) { //nolint:paralleltest // due to dingo.Singleton
-	assertStartupAndShutdownOnce := func(startupEventCount, shutdownEventCount int32) {
+	assertStartupAndShutdownOnce := func(t *testing.T, startupEventCount, shutdownEventCount int32) {
+		t.Helper()
+
 		assert.Equal(t, int32(1), startupEventCount, "startupEventCount should be 1")
 		assert.Equal(t, int32(1), shutdownEventCount, "shutdownEventCount should be 1")
 	}
@@ -35,7 +37,7 @@ func TestCmdEventsTriggeredProperly(t *testing.T) { //nolint:paralleltest // due
 	tests := []struct {
 		name string
 		args string
-		want func(startupEventCount, shutdownEventCount int32)
+		want func(t *testing.T, startupEventCount, shutdownEventCount int32)
 	}{
 		{
 			name: "command with Run: both startup and shutdown events are triggered",
@@ -80,7 +82,7 @@ func TestCmdEventsTriggeredProperly(t *testing.T) { //nolint:paralleltest // due
 					})
 				}),
 				dingo.ModuleFunc(func(injector *dingo.Injector) {
-					framework.BindEventSubscriber(injector).ToInstance(NotifyFunc(func(ctx context.Context, event framework.Event) {
+					framework.BindEventSubscriber(injector).ToInstance(notifyFunc(func(ctx context.Context, event framework.Event) {
 						switch event.(type) {
 						case *framework.StartupEvent:
 							startupEventCount.Add(1)
@@ -101,6 +103,8 @@ func TestCmdEventsTriggeredProperly(t *testing.T) { //nolint:paralleltest // due
 
 			err = app.Run()
 			require.NoError(t, err)
+
+			tt.want(t, startupEventCount.Load(), shutdownEventCount.Load())
 		})
 	}
 }
@@ -119,7 +123,9 @@ func buildSignalSender(t *testing.T) func() {
 }
 
 func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.Singleton
-	assertShutdownOnce := func(shutdownEventCount int32) {
+	assertShutdownOnce := func(t *testing.T, shutdownEventCount int32) {
+		t.Helper()
+
 		assert.Equal(t, int32(1), shutdownEventCount, "shutdownEventCount should be 1")
 	}
 
@@ -131,7 +137,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 		insideCommandRun    func(cmd *cobra.Command, args []string)
 		insideCommandRunE   func(cmd *cobra.Command, args []string) error
 		wantErr             assert.ErrorAssertionFunc
-		assertShutdownCount func(shutdownEventCount int32)
+		assertShutdownCount func(t *testing.T, shutdownEventCount int32)
 	}{
 		{
 			name:                "serve command interrupted by SIGINT triggers graceful shutdown",
@@ -221,7 +227,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 					framework.
 						BindEventSubscriber(injector).
 						ToInstance(
-							NotifyFunc(func(ctx context.Context, event framework.Event) {
+							notifyFunc(func(ctx context.Context, event framework.Event) {
 								switch ev := event.(type) {
 								case *framework.ServerStartEvent:
 									if _, err := net.Dial("tcp", fmt.Sprintf(":%s", ev.Port)); err != nil {
@@ -245,6 +251,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 
 			err = app.Run()
 			tt.wantErr(t, err)
+			tt.assertShutdownCount(t, shutdownEventCount.Load())
 		})
 	}
 }

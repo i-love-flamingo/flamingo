@@ -64,7 +64,7 @@ func (h *Healthcheck) Inject(provider statusProvider) {
 }
 
 // ServeHTTP responds to healthcheck requests
-func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *Healthcheck) ServeHTTP(responseWriter http.ResponseWriter, req *http.Request) {
 	var resp response
 	var allAlive = true
 
@@ -91,12 +91,12 @@ func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	respBody, err := json.Marshal(resp)
-	handleErr(err, w)
+	handleErr(err, responseWriter)
 
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_, err = w.Write(respBody)
-	handleErr(err, w)
+	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
+	responseWriter.WriteHeader(status)
+	_, err = responseWriter.Write(respBody)
+	handleErr(err, responseWriter)
 }
 
 // ServeHTTP responds to Ping requests

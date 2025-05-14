@@ -1,6 +1,13 @@
 package healthcheck
 
-// Status check interface
-type Status interface {
-	Status() (alive bool, details string)
-}
+type (
+	// Status check interface
+	Status interface {
+		Status() (alive bool, details string)
+	}
+
+	MeasuredStatus interface {
+		Status
+		ServiceName() string
+	}
+)

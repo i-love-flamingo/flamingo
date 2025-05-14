@@ -1,10 +1,16 @@
 package controllers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
+
 	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
+	"flamingo.me/flamingo/v3/framework/opencensus"
 )
 
 type (
@@ -29,19 +35,46 @@ type (
 	}
 )
 
+const (
+	statusMeasureChecksName   = "flamingo/status/checks"
+	statusMeasureFailuresName = "flamingo/status/failures"
+)
+
+var (
+	// healthcheckStatusFailureMeasure counts failures of status checks
+	healthcheckStatusChecksMeasure  = stats.Int64(statusMeasureChecksName, "Count of status checks.", stats.UnitDimensionless)
+	healthcheckStatusFailureMeasure = stats.Int64(statusMeasureFailuresName, "Count of status check failures.", stats.UnitDimensionless)
+
+	serviceName, _ = tag.NewKey("service_name")
+)
+
+func init() {
+	if err := opencensus.View(statusMeasureFailuresName, healthcheckStatusFailureMeasure, view.Count(), serviceName); err != nil {
+		panic(err)
+	}
+
+	if err := opencensus.View(statusMeasureChecksName, healthcheckStatusChecksMeasure, view.Count(), serviceName); err != nil {
+		panic(err)
+	}
+}
+
 // Inject Healthcheck dependencies
 func (h *Healthcheck) Inject(provider statusProvider) {
 	h.statusProvider = provider
 }
 
 // ServeHTTP responds to healthcheck requests
-func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *Healthcheck) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var resp response
 	var allAlive = true
 
 	for name, status := range h.statusProvider() {
+		increaseMeasureIfMeasuredStatus(req.Context(), status, healthcheckStatusChecksMeasure)
+
 		alive, details := status.Status()
 		if !alive {
+			increaseMeasureIfMeasuredStatus(req.Context(), status, healthcheckStatusFailureMeasure)
+
 			allAlive = false
 		}
 
@@ -88,5 +121,13 @@ func handleErr(err error, w http.ResponseWriter) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))
+	}
+}
+
+func increaseMeasureIfMeasuredStatus(ctx context.Context, status healthcheck.Status, measure *stats.Int64Measure) {
+	if measuredStatus, ok := status.(healthcheck.MeasuredStatus); ok {
+		recordContext, _ := tag.New(ctx, tag.Upsert(serviceName, measuredStatus.ServiceName()))
+
+		stats.Record(recordContext, measure.M(1))
 	}
 }

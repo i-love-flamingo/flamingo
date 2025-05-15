@@ -8,6 +8,6 @@ type (
 
 	MeasuredStatus interface {
 		Status
-		ServiceName() string
+		Name() string
 	}
 )

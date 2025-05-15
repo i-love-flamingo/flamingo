@@ -36,8 +36,8 @@ type (
 )
 
 const (
-	statusMeasureChecksName   = "flamingo/status/checks"
-	statusMeasureFailuresName = "flamingo/status/failures"
+	statusMeasureChecksName   = "flamingo/status/checks/total"
+	statusMeasureFailuresName = "flamingo/status/failures/total"
 )
 
 var (
@@ -45,15 +45,15 @@ var (
 	healthcheckStatusChecksMeasure  = stats.Int64(statusMeasureChecksName, "Count of status checks.", stats.UnitDimensionless)
 	healthcheckStatusFailureMeasure = stats.Int64(statusMeasureFailuresName, "Count of status check failures.", stats.UnitDimensionless)
 
-	serviceName, _ = tag.NewKey("service_name")
+	name, _ = tag.NewKey("name")
 )
 
 func init() {
-	if err := opencensus.View(statusMeasureFailuresName, healthcheckStatusFailureMeasure, view.Count(), serviceName); err != nil {
+	if err := opencensus.View(statusMeasureFailuresName, healthcheckStatusFailureMeasure, view.Count(), name); err != nil {
 		panic(err)
 	}
 
-	if err := opencensus.View(statusMeasureChecksName, healthcheckStatusChecksMeasure, view.Count(), serviceName); err != nil {
+	if err := opencensus.View(statusMeasureChecksName, healthcheckStatusChecksMeasure, view.Count(), name); err != nil {
 		panic(err)
 	}
 }
@@ -126,7 +126,7 @@ func handleErr(err error, w http.ResponseWriter) {
 
 func increaseMeasureIfMeasuredStatus(ctx context.Context, status healthcheck.Status, measure *stats.Int64Measure) {
 	if measuredStatus, ok := status.(healthcheck.MeasuredStatus); ok {
-		recordContext, _ := tag.New(ctx, tag.Upsert(serviceName, measuredStatus.ServiceName()))
+		recordContext, _ := tag.New(ctx, tag.Upsert(name, measuredStatus.Name()))
 
 		stats.Record(recordContext, measure.M(1))
 	}

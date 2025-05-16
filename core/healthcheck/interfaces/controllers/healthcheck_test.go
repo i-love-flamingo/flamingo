@@ -1,13 +1,15 @@
 package controllers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 	"github.com/stretchr/testify/assert"
+
+	"flamingo.me/flamingo/v3/core/healthcheck/domain/healthcheck"
 )
 
 type (
@@ -44,7 +46,7 @@ func TestController_Healthcheck(t *testing.T) {
 				},
 			},
 			args: args{
-				request: nil,
+				request: httptest.NewRequestWithContext(context.Background(), http.MethodGet, "http://localhost", nil),
 			},
 			want: "{\"services\":[{\"name\":\"test\",\"alive\":true,\"details\":\"alive\"}]}",
 		},
@@ -58,7 +60,7 @@ func TestController_Healthcheck(t *testing.T) {
 				},
 			},
 			args: args{
-				request: nil,
+				request: httptest.NewRequestWithContext(context.Background(), http.MethodGet, "http://localhost", nil),
 			},
 			want: "{\"services\":[{\"name\":\"test\",\"alive\":false,\"details\":\"not alive\"}]}",
 		},

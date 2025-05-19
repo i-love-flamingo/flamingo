@@ -1,5 +1,30 @@
 # Changelog
 
+## Version v3.14.0 (2025-05-19)
+
+### Features
+
+- **healthcheck:** add measured status healthcheck interface (#503) (69049df2)
+- **web:** support Flush on http responses (#494) (e83a8c62)
+
+### Chores and tidying
+
+- **deps:** update module github.com/gorilla/sessions to v1.4.0 (#428) (3cc8e206)
+- **deps:** update module golang.org/x/oauth2 to v0.30.0 (#498) (b3368bea)
+- **deps:** update module golang.org/x/sync to v0.14.0 (#499) (e017aa5b)
+- **deps:** bump golang.org/x/net from 0.37.0 to 0.38.0 (#500) (57ea554d)
+- **deps:** update dependency go to v1.24.1 (#486) (712321fc)
+- **deps:** update module github.com/google/go-cmp to v0.7.0 (#482) (85d60c90)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.13.0 (#489) (e5313988)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.7.3 [security] (#491) (cbc03189)
+- **deps:** bump github.com/golang-jwt/jwt/v5 from 5.2.1 to 5.2.2 (#493) (eabcfb91)
+- **deps:** bump github.com/go-jose/go-jose/v4 from 4.0.2 to 4.0.5 (#484) (a7e5d1d4)
+- make post run script available for both Run and RunE functions (#478) (7bbfff73)
+
+### Other
+
+- Add tests for event dispatch when running commands and graceful shutdown (#485) (875204d2)
+
 ## Version v3.13.0 (2025-02-17)
 
 ### Features

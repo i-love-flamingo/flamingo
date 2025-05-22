@@ -60,7 +60,9 @@ func TestLogger(t *testing.T) {
 			assert.NoError(t, logger.Filter(context.Background(), request, nil, web.NewFilterChain(func(ctx context.Context, req *web.Request, w http.ResponseWriter) web.Result {
 				return test.response
 			})).Apply(context.Background(), recorder))
+
 			logs := strings.Split(logSink.String(), "\n")
+
 			require.Len(t, logs, 3)
 			assert.Regexp(t, "^WithFields map\\[accesslog:1 businessId:business-id client_ip:192.0.2.1:1234 referer:https://example.com/ response_code:\\d+ response_time:\\d+(\\.\\d+)?..]$", logs[0])
 			assert.Regexp(t, test.regex, logs[1])

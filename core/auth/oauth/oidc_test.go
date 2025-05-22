@@ -194,9 +194,12 @@ func (*testAuthCodeOptioner) Options(_ context.Context, _ string, req *web.Reque
 func TestOidcCallback(t *testing.T) {
 	t.Run("Test Callback", func(t *testing.T) {
 		t.Parallel()
+
 		provider := &testOidcProvider{}
+
 		testserver := httptest.NewServer(provider)
 		defer testserver.Close()
+
 		provider.url = testserver.URL
 
 		identifier := new(openIDIdentifier)
@@ -216,10 +219,10 @@ func TestOidcCallback(t *testing.T) {
 		var err error
 		identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
 		assert.NoError(t, err)
+
 		identifier.oauth2Config = &oauth2.Config{
 			Endpoint: identifier.provider.Endpoint(),
 		}
-
 		session := web.EmptySession()
 		request := web.CreateRequest(nil, session)
 
@@ -227,6 +230,7 @@ func TestOidcCallback(t *testing.T) {
 
 		request.Request().URL.RawQuery = "state=test-callback-state&code=test-callback-code"
 		returnCalled := false
+
 		identifier.Callback(context.Background(), request, func(request *web.Request) *url.URL {
 			returnCalled = true
 			return new(url.URL)
@@ -240,6 +244,7 @@ func TestOidcCallback(t *testing.T) {
 			Claim1      string `json:"claim-1"`
 			LegacyClaim string `json:"legacy-claim"`
 		}
+
 		assert.NoError(t, identity.(Identity).AccessTokenClaims(&testClaims))
 		assert.Equal(t, "at-claim-1-value", testClaims.Claim1)
 		assert.Equal(t, "legacy-token-response-claim-value", testClaims.LegacyClaim)
@@ -247,9 +252,12 @@ func TestOidcCallback(t *testing.T) {
 
 	t.Run("Test optional callback error handler", func(t *testing.T) {
 		t.Parallel()
+
 		provider := &testOidcProvider{}
+
 		testserver := httptest.NewServer(provider)
 		defer testserver.Close()
+
 		provider.url = testserver.URL
 
 		identifier := new(openIDIdentifier)
@@ -269,6 +277,7 @@ func TestOidcCallback(t *testing.T) {
 		var err error
 		identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
 		assert.NoError(t, err)
+
 		identifier.oauth2Config = &oauth2.Config{
 			Endpoint: identifier.provider.Endpoint(),
 		}
@@ -280,9 +289,11 @@ func TestOidcCallback(t *testing.T) {
 		identifier.callbackErrorHandler = mockCallback
 
 		result := identifier.Callback(context.Background(), request, func(request *web.Request) *url.URL { return new(url.URL) })
+
 		assert.True(t, mockCallback.Called, "the error callback handler was not called")
 		assert.Equal(t, mockCallback.SuppliedError, "login_required", "the error was not passed to the callback")
 		assert.Equal(t, mockCallback.SuppliedErrorDescription, "The User is not logged in", "the error callback handler was not called")
+
 		expectedURL, _ := url.Parse("https://example.com/callback-error-handler")
 		assert.Equal(t, result, &web.URLRedirectResponse{URL: expectedURL}, "Result of callback handler was ignored")
 	})
@@ -301,9 +312,11 @@ func TestOidcCallback(t *testing.T) {
 					redirectURI := r.PostForm.Get("redirect_uri")
 
 					assert.Equal(t, redirectURI, "foobar123test")
+
 					tokenCalled = true
 
 					w.Header().Set("Content-type", "application/json")
+
 					return
 				}
 			case ".well-known/openid-configuration":
@@ -330,6 +343,7 @@ func TestOidcCallback(t *testing.T) {
 		var err error
 		identifier.provider, err = oidc.NewProvider(context.Background(), testServer.URL)
 		assert.NoError(t, err)
+
 		identifier.oauth2Config = &oauth2.Config{
 			Endpoint: oauth2.Endpoint{AuthURL: "", TokenURL: testServer.URL + "/token"},
 		}

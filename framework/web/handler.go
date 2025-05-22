@@ -52,7 +52,7 @@ var (
 )
 
 func init() {
-	if err := opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey, MethodKey); err != nil { //nolint:gomnd // magic number is accepted here
+	if err := opencensus.View("flamingo/router/controller", rt, view.Distribution(100, 500, 1000, 2500, 5000, 10000), ControllerKey, MethodKey); err != nil { //nolint:mnd // magic number is accepted here
 		panic(err)
 	}
 }

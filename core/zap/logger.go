@@ -175,7 +175,7 @@ func (l *Logger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logg
 	fields[len(fields)-1] = zap.Any(string(key), value)
 
 	return &Logger{
-		Logger:     l.Logger.With(),
+		Logger:     l.With(),
 		configArea: area,
 		fieldMap:   l.fieldMap,
 		fields:     fields,
@@ -223,5 +223,5 @@ func (l *Logger) writeLog(logFunc func(zl *zap.Logger, msg string, fields ...zap
 // Flush is used by buffered loggers and triggers the actual writing. It is a good habit to call Flush before
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *Logger) Flush() {
-	_ = l.Logger.Sync()
+	_ = l.Sync()
 }

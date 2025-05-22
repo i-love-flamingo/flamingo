@@ -1,21 +1,17 @@
-# Options for analysis running.
+version: "2"
 run:
   concurrency: 4
-  timeout: 5m
-  tests: true
   modules-download-mode: readonly
-  allow-parallel-runners: false
-
-# output configuration options
+  tests: true
+  allow-parallel-runners: true
 output:
   formats:
-    - format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-  sort-results: true
-
+    text:
+      path: stdout
+      print-linter-name: true
+      print-issued-lines: true
 linters:
-  disable-all: true
+  default: none
   enable:
     - bidichk
     - bodyclose
@@ -34,10 +30,8 @@ linters:
     - gocognit
     - goconst
     - gocritic
-    - gofmt
     - gomoddirectives
     - gosec
-    - gosimple
     - govet
     - grouper
     - ineffassign
@@ -59,7 +53,6 @@ linters:
     - testpackage
     - thelper
     - tparallel
-    - typecheck
     - unconvert
     - unparam
     - unused
@@ -68,41 +61,58 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
-
+  settings:
+    mnd:
+      ignored-functions:
+        - context.WithTimeout
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    revive:
+      rules:
+        - name: var-naming
+          disabled: true
+    varnamelen:
+      max-distance: 10
+      ignore-names:
+        - err
+        - id
+      ignore-type-assert-ok: true
+      ignore-map-index-ok: true
+      ignore-chan-recv-ok: true
+      ignore-decls:
+        - i int
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - err113
+          - forcetypeassert
+          - goconst
+          - varnamelen
+          - wrapcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
+  uniq-by-line: true
+  new-from-rev: 2399c75fbd6c738c4cddf38a3ad7f5f97367e5ec
   new: false
   fix: false
-  new-from-rev: 2399c75fbd6c738c4cddf38a3ad7f5f97367e5ec
-  exclude-dirs-use-default: true
-  uniq-by-line: true
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - forcetypeassert
-        - goconst
-        - err113
-        - varnamelen
-        - wrapcheck
-
-linters-settings:
-  mnd:
-    ignored-functions:
-      - context.WithTimeout
-  nolintlint:
-    require-specific: true
-    require-explanation: true
-  revive:
-    rules:
-      - name: var-naming
-        disabled: true
-  varnamelen:
-    max-distance: 10
-    ignore-type-assert-ok: true
-    ignore-map-index-ok: true
-    ignore-chan-recv-ok: true
-    ignore-names:
-      - err
-      - id
-    ignore-decls:
-      - i int
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

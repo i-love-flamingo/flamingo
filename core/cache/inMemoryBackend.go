@@ -64,7 +64,7 @@ func (m *inMemoryCache) Purge(key string) error {
 
 // PurgeTags purges all entries with matching tags from the cache
 func (m *inMemoryCache) PurgeTags(_ []string) error {
-	//nolint:goerr113 // not worth introducing a dedicated error
+	//nolint:err113 // not worth introducing a dedicated error
 	return errors.New("not implemented")
 }
 

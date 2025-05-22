@@ -186,7 +186,7 @@ func (l *SilentLogger) Trace(args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprint(args...))
+	checkedEntry := l.Check(logLevels["Trace"], fmt.Sprint(args...))
 	logContext.store(checkedEntry)
 }
 
@@ -203,7 +203,7 @@ func (l *SilentLogger) Tracef(log string, args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(logLevels["Trace"], fmt.Sprintf(log, args...))
+	checkedEntry := l.Check(logLevels["Trace"], fmt.Sprintf(log, args...))
 	logContext.store(checkedEntry)
 }
 
@@ -217,7 +217,7 @@ func (l *SilentLogger) Debug(args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(zapcore.DebugLevel, fmt.Sprint(args...))
+	checkedEntry := l.Check(zapcore.DebugLevel, fmt.Sprint(args...))
 	logContext.store(checkedEntry)
 }
 
@@ -231,7 +231,7 @@ func (l *SilentLogger) Debugf(log string, args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(zapcore.DebugLevel, fmt.Sprintf(log, args...))
+	checkedEntry := l.Check(zapcore.DebugLevel, fmt.Sprintf(log, args...))
 	logContext.store(checkedEntry)
 }
 
@@ -245,7 +245,7 @@ func (l *SilentLogger) Info(args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(zapcore.InfoLevel, fmt.Sprint(args...))
+	checkedEntry := l.Check(zapcore.InfoLevel, fmt.Sprint(args...))
 	logContext.store(checkedEntry)
 }
 
@@ -259,7 +259,7 @@ func (l *SilentLogger) Warn(args ...interface{}) {
 		return
 	}
 
-	checkedEntry := l.Logger.Check(zapcore.WarnLevel, fmt.Sprint(args...))
+	checkedEntry := l.Check(zapcore.WarnLevel, fmt.Sprint(args...))
 	logContext.store(checkedEntry)
 }
 
@@ -422,5 +422,5 @@ func (l *SilentLogger) writeLog(logFunc func(zl *zap.Logger, msg string, fields 
 // Flush is used by buffered loggers and triggers the actual writing. It is a good habit to call Flush before
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *SilentLogger) Flush() {
-	_ = l.Logger.Sync()
+	_ = l.Sync()
 }

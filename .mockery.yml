@@ -1,0 +1,25 @@
+dir: '{{.InterfaceDir}}/mocks'
+structname: '{{.InterfaceName}}'
+filename: "{{.InterfaceName | snakecase}}.go"
+pkgname: mocks
+template: testify
+template-data:
+  unroll-variadic: true
+packages:
+  flamingo.me/flamingo/v3/core/security/application:
+    interfaces:
+      SecurityService: {}
+  flamingo.me/flamingo/v3/core/security/application/role:
+    interfaces:
+      Provider: {}
+      Service: {}
+  flamingo.me/flamingo/v3/core/security/application/voter:
+    interfaces:
+      SecurityVoter: {}
+  flamingo.me/flamingo/v3/core/security/domain:
+    interfaces:
+      PermissionSet: {}
+      Role: {}
+  flamingo.me/flamingo/v3/core/security/interface/middleware:
+    interfaces:
+      RedirectURLMaker: {}

@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.14.1 (2025-06-03)
+
+### Chores and tidying
+
+- migrate golangci-lint to v2 (#506) (8e42afee)
+
 ## Version v3.14.0 (2025-05-19)
 
 ### Features

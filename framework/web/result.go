@@ -171,7 +171,7 @@ func (r *Response) Apply(_ context.Context, responseWriter http.ResponseWriter) 
 		r.Status = http.StatusOK
 	}
 
-	responseWriter.WriteHeader(int(r.Status))
+	responseWriter.WriteHeader(int(r.Status)) //nolint:gosec // should be fine
 
 	if r.Body == nil {
 		return nil

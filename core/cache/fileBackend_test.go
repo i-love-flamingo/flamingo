@@ -8,9 +8,10 @@ import (
 	"reflect"
 	"testing"
 
-	"flamingo.me/flamingo/v3/core/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"flamingo.me/flamingo/v3/core/cache"
 )
 
 type (
@@ -88,6 +89,7 @@ func TestFileBackendGet(t *testing.T) {
 
 			if *update && tt.wantFound {
 				t.Log("update file")
+
 				_ = f.Set(tt.args.key, tt.wantEntry)
 			}
 
@@ -142,6 +144,7 @@ func TestFileBackendSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			expectedCacheFileName := filepath.Join("testdata", "file_backend", tt.args.key)
+
 			t.Cleanup(func() {
 				_ = os.Remove(expectedCacheFileName)
 			})

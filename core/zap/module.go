@@ -217,7 +217,7 @@ core: zap: {
 	encoding: {
 		caller: *"%s" | "%s" | "%s"
 	}
-	callerskip: float64
+	callerskip: float64 | *1
 }
 `, allowedLevels, ZapCallerEncoderShort, ZapCallerEncoderSmart, ZapCallerEncoderFull)
 }

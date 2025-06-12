@@ -82,10 +82,10 @@ func (m *Module) Inject(config *struct {
 	m.logSession = config.LogSession
 	m.callerEncoder = callerEncoders[ZapCallerEncoderShort]
 
-	//if not provided set 1 as default
+	// if not provided set 1 as default
 	m.callerskip = 2
 	if config.CallerSkip > 1 {
-		//otherwise let user config override
+		// otherwise let user config override
 		m.callerskip = config.CallerSkip
 	}
 

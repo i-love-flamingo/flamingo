@@ -28,7 +28,7 @@ import (
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
-//go:generate go run github.com/vektra/mockery/v2@v2.52.2
+//go:generate go run github.com/vektra/mockery/v2@v2.53.4
 
 const (
 	// FailedShutdownExitCode is returned when application cannot accomplish graceful shutdown

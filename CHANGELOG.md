@@ -1,5 +1,21 @@
 # Changelog
 
+## Version v3.15.0 (2025-06-13)
+
+### Features
+
+- zap logger caller skip configurable (#512) (6494dc09)
+
+### Chores and tidying
+
+- **deps:** update module github.com/redis/go-redis/v9 to v9.10.0 (#501) (56776d36)
+- **deps:** update dependency go to v1.24.4 (#496) (3dd1f7d5)
+- **deps:** update module github.com/vektra/mockery/v3 to v3.3.6 (#513) (d6f1605b)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.14.1 (#497) (886be3a6)
+- **deps:** update module github.com/vektra/mockery/v2 to v3 (#508) (60afe694)
+- **deps:** update module golang.org/x/sync to v0.15.0 (#509) (dc9f9f88)
+- migrate golangci-lint to v2 (#506) (8e42afee)
+
 ## Version v3.14.0 (2025-05-19)
 
 ### Features

@@ -25,6 +25,7 @@ type (
 		fieldMap           map[string]string
 		logSession         bool
 		callerEncoder      zapcore.CallerEncoder
+		callerskip         float64
 	}
 
 	shutdownEventSubscriber struct {
@@ -68,6 +69,7 @@ func (m *Module) Inject(config *struct {
 	FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
 	LogSession         bool       `inject:"config:core.zap.logsession,optional"`
 	CallerEncoder      string     `inject:"config:core.zap.encoding.caller,optional"`
+	CallerSkip         float64    `inject:"config:core.zap.callerskip,optional"`
 }) {
 	m.area = config.Area
 	m.json = config.JSON
@@ -79,6 +81,13 @@ func (m *Module) Inject(config *struct {
 	m.samplingThereafter = config.SamplingThereafter
 	m.logSession = config.LogSession
 	m.callerEncoder = callerEncoders[ZapCallerEncoderShort]
+
+	// if not provided set 2 as default
+	m.callerskip = 2
+	if config.CallerSkip > 1 {
+		// otherwise let user config override
+		m.callerskip = config.CallerSkip
+	}
 
 	if encoder, ok := callerEncoders[config.CallerEncoder]; ok {
 		m.callerEncoder = encoder
@@ -155,7 +164,7 @@ func (m *Module) createLoggerInstance() *Logger {
 		InitialFields:    nil,
 	}
 
-	logger, err := cfg.Build(zap.AddCallerSkip(1))
+	logger, err := cfg.Build(zap.AddCallerSkip(int(m.callerskip)))
 	if err != nil {
 		panic(err)
 	}
@@ -208,6 +217,7 @@ core: zap: {
 	encoding: {
 		caller: *"%s" | "%s" | "%s"
 	}
+	callerskip: float64 | *2
 }
 `, allowedLevels, ZapCallerEncoderShort, ZapCallerEncoderSmart, ZapCallerEncoderFull)
 }

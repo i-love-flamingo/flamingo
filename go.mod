@@ -39,7 +39,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/brunoga/deep v1.2.4 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chigopher/pathlib v0.19.1 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -83,7 +82,6 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
-	github.com/spf13/afero v1.11.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/vektra/mockery/v3 v3.3.6 // indirect

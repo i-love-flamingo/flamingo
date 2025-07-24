@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.15.1 (2025-07-24)
+
+### Chores and tidying
+
+- **deps:** update module golang.org/x/sync to v0.16.0 (#519) (a6d3300e)
+
 ## Version v3.15.0 (2025-06-13)
 
 ### Features

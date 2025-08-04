@@ -34,6 +34,7 @@ type SessionModule struct {
 	path                 string
 	redisHost            string
 	redisKeyPrefix       *string
+	redisUsername        string
 	redisPassword        string
 	redisIdleConnections int
 	redisDatabase        int
@@ -58,6 +59,7 @@ func (m *SessionModule) Inject(config *struct {
 	RedisURL             string  `inject:"config:flamingo.session.redis.url"`
 	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
 	RedisKeyPrefix       string  `inject:"config:flamingo.session.redis.keyPrefix,optional"`
+	RedisUsername        string  `inject:"config:flamingo.session.redis.username,optional"`
 	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
@@ -73,7 +75,12 @@ func (m *SessionModule) Inject(config *struct {
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
+
+	m.redisHost = getRedisHost(config.RedisURL, config.RedisHost)
+	m.redisUsername = getRedisUsername(config.RedisURL, config.RedisUsername)
+	m.redisPassword = getRedisPassword(config.RedisURL, config.RedisPassword)
+	m.redisDatabase = getRedisDatabase(config.RedisURL, config.RedisDatabase)
+
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.redisTLS = config.RedisTLS
 	m.redisClusterMode = config.RedisClusterMode
@@ -118,6 +125,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		if m.redisClusterMode {
 			client = redis.NewClusterClient(&redis.ClusterOptions{
 				Addrs:     []string{m.redisHost},
+				Username:  m.redisUsername,
 				Password:  m.redisPassword,
 				PoolSize:  m.redisIdleConnections,
 				TLSConfig: tlsConfig,
@@ -125,6 +133,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		} else {
 			client = redis.NewClient(&redis.Options{
 				Addr:      m.redisHost,
+				Username:  m.redisUsername,
 				Password:  m.redisPassword,
 				DB:        m.redisDatabase,
 				PoolSize:  m.redisIdleConnections,
@@ -224,6 +233,7 @@ flamingo: session: {
 	redis: {
 		url: string | *""
 		host: string | *"redis"
+		username?: string & !=""
 		password: string | *""
 		idle: connections: float | int | *10
 		database: float | int | *0
@@ -255,24 +265,68 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, redisDatabase int) (string, string, int) {
+func getRedisUsername(redisURL string, redisUsername string) string {
 	if redisURL == "" {
-		return redisHost, redisPassword, redisDatabase
+		return redisUsername
 	}
 
 	parsedRedisURL, err := url.Parse(redisURL)
 	if err != nil {
-		return redisHost, redisPassword, redisDatabase
+		return redisUsername
 	}
 
-	redisHostFromURL := parsedRedisURL.Host
-	if redisHostFromURL != "" {
-		redisHost = redisHostFromURL
+	redisUsernameFromURL := parsedRedisURL.User.Username()
+	if redisUsernameFromURL != "" {
+		return redisUsernameFromURL
+	}
+
+	return redisUsername
+}
+
+func getRedisPassword(redisURL string, redisPassword string) string {
+	if redisURL == "" {
+		return redisPassword
+	}
+
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisPassword
 	}
 
 	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
 	if isRedisPasswordInURL {
-		redisPassword = redisPasswordFromURL
+		return redisPasswordFromURL
+	}
+
+	return redisPassword
+}
+
+func getRedisHost(redisURL string, redisHost string) string {
+	if redisURL == "" {
+		return redisHost
+	}
+
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisHost
+	}
+
+	redisHostFromURL := parsedRedisURL.Host
+	if redisHostFromURL != "" {
+		return redisHostFromURL
+	}
+
+	return redisHost
+}
+
+func getRedisDatabase(redisURL string, redisDatabase int) int {
+	if redisURL == "" {
+		return redisDatabase
+	}
+
+	parsedRedisURL, err := url.Parse(redisURL)
+	if err != nil {
+		return redisDatabase
 	}
 
 	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
@@ -289,7 +343,7 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, re
 		}
 	}
 
-	return redisHost, redisPassword, redisDatabase
+	return redisDatabase
 }
 
 type maxLengthSerializer struct {

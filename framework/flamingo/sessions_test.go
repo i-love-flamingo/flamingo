@@ -35,6 +35,8 @@ func TestModule_Configure(t *testing.T) {
 	})
 
 	t.Run("invalid empty username", func(t *testing.T) {
+		t.Parallel()
+
 		err := config.TryModules(config.Map{"flamingo.session.redis.username": ""}, new(SessionModule))
 		assert.Error(t, err)
 	})
@@ -356,6 +358,8 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			actualHost := getRedisHost(tt.args.redisURL, tt.args.redisHost)
 			actualUsername := getRedisUsername(tt.args.redisURL, tt.args.redisUsername)
 			actualPassword := getRedisPassword(tt.args.redisURL, tt.args.redisPassword)

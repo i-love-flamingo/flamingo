@@ -2,6 +2,7 @@ package flamingo
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,18 +10,6 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/config"
 )
-
-type testData struct {
-	redisURL              string
-	redisHost             string
-	redisUsername         string
-	redisPassword         string
-	redisDatabase         int
-	expectedRedisHost     string
-	expectedRedisUsername string
-	expectedRedisPassword string
-	expectedRedisDatabase int
-}
 
 func TestModule_Configure(t *testing.T) {
 	t.Run("empty additional configuration", func(t *testing.T) {
@@ -299,24 +288,6 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 			},
 		},
 		{
-			name: "wrong url",
-			args: args{
-				redisURL: "1231://redis_url",
-			},
-			want: struct {
-				redisUsername   string
-				redisPassword   string
-				redisHost       string
-				redisDatabase   int
-				panicsOnDBParse bool
-			}{
-				redisUsername: "",
-				redisPassword: "",
-				redisHost:     "",
-				redisDatabase: 0,
-			},
-		},
-		{
 			name: "broken db in url",
 			args: args{
 				redisURL: fmt.Sprintf("redis://%s:%s@%s/%s", redisURLUser, redisURLPassword, redisURLHost, "broken"),
@@ -360,9 +331,11 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			actualHost := getRedisHost(tt.args.redisURL, tt.args.redisHost)
-			actualUsername := getRedisUsername(tt.args.redisURL, tt.args.redisUsername)
-			actualPassword := getRedisPassword(tt.args.redisURL, tt.args.redisPassword)
+			parsedUrl, _ := url.Parse(tt.args.redisURL)
+
+			actualHost := getRedisHost(parsedUrl, tt.args.redisHost)
+			actualUsername := getRedisUsername(parsedUrl, tt.args.redisUsername)
+			actualPassword := getRedisPassword(parsedUrl, tt.args.redisPassword)
 
 			assert.Equal(t, tt.want.redisHost, actualHost)
 			assert.Equal(t, tt.want.redisUsername, actualUsername)
@@ -370,14 +343,14 @@ func TestGetRedisConnectionInformation(t *testing.T) {
 
 			if tt.want.panicsOnDBParse {
 				assert.Panics(t, func() {
-					getRedisDatabase(tt.args.redisURL, tt.args.redisDatabase)
+					getRedisDatabase(parsedUrl, tt.args.redisDatabase)
 				})
 			} else {
 				require.NotPanics(t, func() {
-					getRedisDatabase(tt.args.redisURL, tt.args.redisDatabase)
+					getRedisDatabase(parsedUrl, tt.args.redisDatabase)
 				})
 
-				actualDatabase := getRedisDatabase(tt.args.redisURL, tt.args.redisDatabase)
+				actualDatabase := getRedisDatabase(parsedUrl, tt.args.redisDatabase)
 
 				assert.Equal(t, tt.want.redisDatabase, actualDatabase)
 			}

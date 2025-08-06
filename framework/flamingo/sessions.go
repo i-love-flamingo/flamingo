@@ -68,6 +68,10 @@ func (m *SessionModule) Inject(config *struct {
 	RedisTimeout         string  `inject:"config:flamingo.session.redis.timeout,optional"`
 	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 }) {
+	if config == nil {
+		return
+	}
+
 	m.backend = config.Backend
 	m.secret = config.Secret
 	m.fileName = config.FileName
@@ -76,10 +80,15 @@ func (m *SessionModule) Inject(config *struct {
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
 
-	m.redisHost = getRedisHost(config.RedisURL, config.RedisHost)
-	m.redisUsername = getRedisUsername(config.RedisURL, config.RedisUsername)
-	m.redisPassword = getRedisPassword(config.RedisURL, config.RedisPassword)
-	m.redisDatabase = getRedisDatabase(config.RedisURL, config.RedisDatabase)
+	parsedRedisURL, err := url.Parse(config.RedisURL)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse redis URL from 'flamingo.session.redis.url:%q': %w", config.RedisURL, err))
+	}
+
+	m.redisHost = getRedisHost(parsedRedisURL, config.RedisHost)
+	m.redisUsername = getRedisUsername(parsedRedisURL, config.RedisUsername)
+	m.redisPassword = getRedisPassword(parsedRedisURL, config.RedisPassword)
+	m.redisDatabase = getRedisDatabase(parsedRedisURL, config.RedisDatabase)
 
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.redisTLS = config.RedisTLS
@@ -93,9 +102,11 @@ func (m *SessionModule) Inject(config *struct {
 
 	if config.RedisTimeout != "" {
 		redisTimeout, err := time.ParseDuration(config.RedisTimeout)
+
 		if err != nil {
 			panic(fmt.Errorf("invalid duration on %q: %q (%w)", "flamingo.session.redis.timeout", config.RedisTimeout, err))
 		}
+
 		m.redisTimeout = redisTimeout
 	}
 
@@ -265,17 +276,12 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisUsername(redisURL string, redisUsername string) string {
-	if redisURL == "" {
+func getRedisUsername(redisURL *url.URL, redisUsername string) string {
+	if redisURL == nil {
 		return redisUsername
 	}
 
-	parsedRedisURL, err := url.Parse(redisURL)
-	if err != nil {
-		return redisUsername
-	}
-
-	redisUsernameFromURL := parsedRedisURL.User.Username()
+	redisUsernameFromURL := redisURL.User.Username()
 	if redisUsernameFromURL != "" {
 		return redisUsernameFromURL
 	}
@@ -283,17 +289,12 @@ func getRedisUsername(redisURL string, redisUsername string) string {
 	return redisUsername
 }
 
-func getRedisPassword(redisURL string, redisPassword string) string {
-	if redisURL == "" {
+func getRedisPassword(redisURL *url.URL, redisPassword string) string {
+	if redisURL == nil {
 		return redisPassword
 	}
 
-	parsedRedisURL, err := url.Parse(redisURL)
-	if err != nil {
-		return redisPassword
-	}
-
-	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+	redisPasswordFromURL, isRedisPasswordInURL := redisURL.User.Password()
 	if isRedisPasswordInURL {
 		return redisPasswordFromURL
 	}
@@ -301,17 +302,12 @@ func getRedisPassword(redisURL string, redisPassword string) string {
 	return redisPassword
 }
 
-func getRedisHost(redisURL string, redisHost string) string {
-	if redisURL == "" {
+func getRedisHost(redisURL *url.URL, redisHost string) string {
+	if redisURL == nil {
 		return redisHost
 	}
 
-	parsedRedisURL, err := url.Parse(redisURL)
-	if err != nil {
-		return redisHost
-	}
-
-	redisHostFromURL := parsedRedisURL.Host
+	redisHostFromURL := redisURL.Host
 	if redisHostFromURL != "" {
 		return redisHostFromURL
 	}
@@ -319,18 +315,15 @@ func getRedisHost(redisURL string, redisHost string) string {
 	return redisHost
 }
 
-func getRedisDatabase(redisURL string, redisDatabase int) int {
-	if redisURL == "" {
+func getRedisDatabase(redisURL *url.URL, redisDatabase int) int {
+	if redisURL == nil {
 		return redisDatabase
 	}
 
-	parsedRedisURL, err := url.Parse(redisURL)
-	if err != nil {
-		return redisDatabase
-	}
+	var err error
 
-	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
-	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
+	redisDatabaseFromPath := strings.Trim(redisURL.Path, "/")
+	redisDatabaseFromQuery := redisURL.Query().Get("db")
 	if len(redisDatabaseFromPath) > 0 {
 		redisDatabase, err = strconv.Atoi(redisDatabaseFromPath)
 		if err != nil {

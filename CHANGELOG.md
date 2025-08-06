@@ -1,5 +1,17 @@
 # Changelog
 
+## Version v3.16.0 (2025-08-06)
+
+### Features
+
+- **session:** add username support for redis (#524) (d503f108)
+
+### Chores and tidying
+
+- **deps:** bump github.com/go-viper/mapstructure/v2 (#517) (168a4e63)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.15.0 (#523) (d68f6482)
+- **deps:** update module golang.org/x/sync to v0.16.0 (#519) (a6d3300e)
+
 ## Version v3.15.0 (2025-06-13)
 
 ### Features

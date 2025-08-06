@@ -34,8 +34,9 @@ Stores the session in an external instance of Redis-compatible cache ([Redis](ht
 Use the following parameters to configure the connection to redis. 
 
 ```yaml
-flamingo.session.redis.url: redis://:my-secret-password@my-redis/0    # full URL (can be used instead of host, password, database)
+flamingo.session.redis.url: redis://my-user:my-secret-password@my-redis/0    # full URL (can be used instead of host, username, password, database)
 flamingo.session.redis.host: my-redis                                 # hostname
+flamingo.session.redis.username: my-user                              # username
 flamingo.session.redis.password: my-secret-password                   # password
 flamingo.session.redis.database: 0                                    # database
 flamingo.session.redis.idle.connections: 10                           # maximum number of idle connections

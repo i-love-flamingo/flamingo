@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.16.1 (2025-08-07)
+
+### Chores and tidying
+
+- **deps:** update module github.com/spf13/pflag to v1.0.7 (#521) (c78205f1)
+
 ## Version v3.16.0 (2025-08-06)
 
 ### Features

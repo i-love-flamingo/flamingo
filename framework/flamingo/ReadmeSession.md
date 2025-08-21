@@ -46,9 +46,20 @@ flamingo.session.redis.keyPrefix: "my-session-key-prefix:"            # optional
 ```
 
 ##### custom
-You can create your own session backend by implementing the gorilla `sessions.Store` interface. 
+
+You can create your own session backend by implementing the gorilla `sessions.Store` interface.
 There is a list of existing implementation in the [gorilla/sessions repository](https://github.com/gorilla/sessions/#store-implementations).
+
+You may define a custom session store backend using either of two ways:
+
+##### Replacing `flamingo.SessionModule`
+
 To use them, just replace the default `flamingo.SessionModule` and bind your implementation to the `session.Store` interface via dingo.
+
+##### Providing Completely Custom Session Backend
+
+In case you for example run into the issue that you are using a different flamingo module that depends on the builtin `flamingo.SessionModule` and you do not want to replace this other module too, there is an alternative: 
+You can define your own custom session store backend that conforms with the `flamingo.CustomSessionBackend` interface and then bind it to it like in `injector.Bind(new(flamingo.CustomSessionBackend)).To(new(CustomStoreBackend))`.
 
 ### Authentication
 

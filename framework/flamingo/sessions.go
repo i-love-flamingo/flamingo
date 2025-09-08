@@ -47,7 +47,6 @@ type (
 
 	CustomSessionBackend interface {
 		SessionStore() sessions.Store
-		Healthcheck() *healthcheck.Status
 	}
 
 	backendType string
@@ -213,15 +212,6 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 
 		sessionStore := m.customBackend.SessionStore()
 		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
-
-		if m.healthcheckSession {
-			hc := m.customBackend.Healthcheck()
-			if hc == nil {
-				panic("custom session store backend with health check configured but no custom backend health check provided")
-			}
-
-			injector.BindMap(new(healthcheck.Status), "session").To(hc)
-		}
 	default: // memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.secret))
 

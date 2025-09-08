@@ -84,7 +84,7 @@ func (m *SessionModule) Inject(
 		CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
 	},
 	optionals *struct {
-		CustomBackends CustomSessionBackend `inject:",optional"`
+		CustomBackend CustomSessionBackend `inject:",optional"`
 	},
 ) {
 	m.backend = backendType(config.Backend)
@@ -125,7 +125,7 @@ func (m *SessionModule) Inject(
 	}
 
 	if optionals != nil {
-		m.customBackend = optionals.CustomBackends
+		m.customBackend = optionals.CustomBackend
 	}
 }
 

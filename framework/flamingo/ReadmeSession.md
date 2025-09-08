@@ -61,6 +61,12 @@ To use them, just replace the default `flamingo.SessionModule` and bind your imp
 In case you for example run into the issue that you are using a different flamingo module that depends on the builtin `flamingo.SessionModule` and you do not want to replace this other module too, there is an alternative: 
 You can define your own custom session store backend that conforms with the `flamingo.CustomSessionBackend` interface and then bind it to it like in `injector.Bind(new(flamingo.CustomSessionBackend)).To(new(CustomStoreBackend))`.
 
+If you want to supply a health check for your custom session backend, you can bind it to the key `session` on your own by either using the `.To` or the `.ToInstance` methods. For example:
+
+```go
+    injector.BindMap(new(healthcheck.Status), "session").To(new(db.Health))
+```
+
 ### Authentication
 
 Flamingo's [`core/auth`](../3. Core Modules/OAuth.md) module provides basic OpenID connect authentication.

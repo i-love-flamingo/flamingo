@@ -11,9 +11,9 @@ Use the method `.WithContext(ctx)` whenever you have a context, this will make s
 
 ## Configuration
 
-```
+```yaml
 zap:
-  loglevel: Info
+  loglevel: Info # "Debug" | "Info" | "Warn" | "Error" | "DPanic" | "Panic" | "Fatal"
   json: true
   colored: false
   devmode: false
@@ -24,7 +24,8 @@ zap:
     thereafter: 100
   fieldmap:
     key: value
-  
+  encoding: 
+    caller: "short" # short | smart | full
 ```
 
 ## More about Zap

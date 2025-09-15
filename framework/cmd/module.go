@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,15 +11,14 @@ import (
 	"syscall"
 	"time"
 
-	"flamingo.me/dingo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/sync/errgroup"
+
+	"flamingo.me/dingo"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 )
-
-var once = sync.Once{}
-var shutdownOnce = sync.Once{}
 
 type (
 	eventRouterProvider func() flamingo.EventRouter
@@ -28,56 +28,91 @@ type (
 	Module struct{}
 )
 
+var (
+	// ErrCmdRun is returned when an error occurs during CLI command execution
+	ErrCmdRun = errors.New("command execution error")
+
+	// ErrGracefulShutdown is returned when graceful shutdown of the application cannot finish cleanly due to timeout or another signal
+	ErrGracefulShutdown = errors.New("graceful shutdown error")
+
+	signals = []os.Signal{os.Interrupt, syscall.SIGTERM}
+)
+
 // Configure DI
 func (m *Module) Configure(injector *dingo.Injector) {
-	injector.Bind(new(cobra.Command)).AnnotatedWith("flamingo").ToProvider(
-		func(
-			commands []*cobra.Command,
-			eventRouterProvider eventRouterProvider,
-			logger flamingo.Logger,
-			flagSetProvider flagSetProvider,
-			config *struct {
-				Name string `inject:"config:flamingo.cmd.name"`
-			}) *cobra.Command {
-			signals := make(chan os.Signal, 1)
-			shutdownComplete := make(chan struct{}, 1)
-			signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	injector.Bind(new(cobra.Command)).
+		AnnotatedWith("flamingo").
+		ToProvider(RootCommandProvider).
+		In(dingo.Singleton)
+}
 
-			once.Do(func() {
-				go func() {
-					<-signals
-					// shutdown by signal for infinite running commands (e.g. serve command)
-					shutdownOnce.Do(func() {
-						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
-						<-shutdownComplete
-					})
-				}()
-			})
+// RootCommandProvider configures root cobra command to be used by the framework
+func RootCommandProvider(
+	commands []*cobra.Command,
+	eventRouterProvider eventRouterProvider,
+	logger flamingo.Logger,
+	flagSetProvider flagSetProvider,
+	config *struct {
+		Name string `inject:"config:flamingo.cmd.name"`
+	},
+) *cobra.Command {
+	var (
+		// declaring global context.CancelFunc and error to be used from both PersistentPreRun and PersistentPostRunE
+		stop             context.CancelFunc
+		err              error
+		execShutdownOnce = sync.OnceFunc(func() {
+			err = shutdown(logger, eventRouterProvider())
+		})
+	)
 
-			rootCmd := &cobra.Command{
-				Use:              config.Name,
-				Short:            "Flamingo " + config.Name,
-				TraverseChildren: true,
-				PersistentPostRun: func(cmd *cobra.Command, args []string) {
-					// shutdown through command that is finite (e.g. help command)
-					shutdownOnce.Do(func() {
-						shutdown(eventRouterProvider(), signals, shutdownComplete, logger)
-						<-shutdownComplete
-					})
-				},
-				Example: `Run with -h or -help to see global debug flags`,
-			}
-			//rootCmd.SetHelpTemplate()
-			rootCmd.FParseErrWhitelist.UnknownFlags = true
-			for _, set := range flagSetProvider() {
-				rootCmd.PersistentFlags().AddFlagSet(set)
-			}
+	rootCmd := &cobra.Command{
+		Use:              config.Name,
+		Short:            "Flamingo " + config.Name,
+		TraverseChildren: true,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var ctx context.Context
+			ctx, stop = signal.NotifyContext(cmd.Context(), signals...)
+			cmd.SetContext(ctx)
 
-			rootCmd.AddCommand(commands...)
+			go func() {
+				// if in the serve command wait for signal to come (context will be cancelled),
+				// then disable listening for signals (calling stop())
+				// then execute shutdown func
+				<-cmd.Context().Done()
 
-			return rootCmd
+				if stop != nil {
+					stop()
+				}
+
+				execShutdownOnce()
+			}()
 		},
-	).In(dingo.Singleton)
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			// on finished command execution
+			// stop listening for signals by calling stop()
+			// wait for context to be cancelled (should happen immediately after stop())
+			// execute shutdown func
+			if stop != nil {
+				stop()
+			}
+
+			<-cmd.Context().Done()
+
+			execShutdownOnce()
+
+			return err
+		},
+		Example: `Run with -h or -help to see global debug flags`,
+	}
+
+	rootCmd.FParseErrWhitelist.UnknownFlags = true
+	for _, set := range flagSetProvider() {
+		rootCmd.PersistentFlags().AddFlagSet(set)
+	}
+
+	rootCmd.AddCommand(commands...)
+
+	return rootCmd
 }
 
 // CueConfig specifies the command name
@@ -90,27 +125,52 @@ func (*Module) FlamingoLegacyConfigAlias() map[string]string {
 	return map[string]string{"cmd.name": "flamingo.cmd.name"}
 }
 
-func shutdown(eventRouter flamingo.EventRouter, signals <-chan os.Signal, complete chan<- struct{}, logger flamingo.Logger) {
+// shutdown wait for context ctx to be done and dispatches shutdown event
+func shutdown(logger flamingo.Logger, eventRouter flamingo.EventRouter) error {
 	logger.Info("start graceful shutdown")
 
-	stopper := make(chan struct{})
+	var (
+		group   *errgroup.Group
+		sigch   = make(chan os.Signal, 1)
+		stopper = make(chan struct{})
+		timeout = 30 * time.Second
+	)
 
-	go func() {
-		eventRouter.Dispatch(context.Background(), &flamingo.ShutdownEvent{})
-		close(stopper)
-	}()
+	signal.Notify(sigch, signals...)
 
-	select {
-	case <-signals:
-		logger.Info("second interrupt signal received, hard shutdown")
-		os.Exit(130)
-	case <-time.After(30 * time.Second):
-		logger.Info("time limit reached, hard shutdown")
-		os.Exit(130)
-	case <-stopper:
-		logger.Info("graceful shutdown complete")
-		complete <- struct{}{}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	group, ctx = errgroup.WithContext(ctx)
+
+	group.Go(func() error {
+		defer close(stopper)
+
+		eventRouter.Dispatch(ctx, &flamingo.ShutdownEvent{})
+
+		return nil
+	})
+
+	group.Go(func() error {
+		select {
+		case <-sigch:
+			logger.Info("second interrupt signal received, hard shutdown")
+			return fmt.Errorf("%w: signal received", ErrGracefulShutdown)
+		case <-ctx.Done():
+			logger.Info("time limit reached, hard shutdown")
+			return fmt.Errorf("%w: timed out", ErrGracefulShutdown)
+		case <-stopper:
+			logger.Info("graceful shutdown complete")
+			return nil
+		}
+	})
+
+	err := group.Wait()
+	if err != nil {
+		return fmt.Errorf("flamingo shutdown: %w", err)
 	}
+
+	return nil
 }
 
 // Run the root command
@@ -119,12 +179,23 @@ func Run(injector *dingo.Injector) error {
 	if err != nil {
 		return err
 	}
-	cmd := i.(*cobra.Command)
+
+	cmd, ok := i.(*cobra.Command)
+	if !ok {
+		return fmt.Errorf("%w: resolved instance does not have type *cobra.Command", ErrCmdRun)
+	}
+
 	i, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
 		return err
 	}
-	i.(eventRouterProvider)().Dispatch(context.Background(), &flamingo.StartupEvent{})
+
+	erp, ok := i.(eventRouterProvider)
+	if !ok {
+		return fmt.Errorf("%w: resolved instance does not have type eventRouterProvider", ErrCmdRun)
+	}
+
+	erp().Dispatch(cmd.Context(), &flamingo.StartupEvent{})
 
 	return cmd.Execute()
 }

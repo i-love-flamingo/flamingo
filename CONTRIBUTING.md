@@ -26,3 +26,4 @@ If possible include the affected module / part of flamingo:
 `chore: update dpendecy xyz`
 
 A commit message is supposed to tell what has changed.
+

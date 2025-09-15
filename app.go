@@ -2,6 +2,7 @@ package flamingo
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -10,11 +11,12 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
-	"flamingo.me/dingo"
 	"github.com/spf13/cobra"
-	"go.opencensus.io/plugin/ochttp"
+
+	"flamingo.me/dingo"
 
 	"flamingo.me/flamingo/v3/core/runtime"
 	"flamingo.me/flamingo/v3/core/zap"
@@ -22,8 +24,23 @@ import (
 	"flamingo.me/flamingo/v3/framework/cmd"
 	"flamingo.me/flamingo/v3/framework/config"
 	"flamingo.me/flamingo/v3/framework/flamingo"
-	"flamingo.me/flamingo/v3/framework/opencensus"
+	flamingoHttp "flamingo.me/flamingo/v3/framework/http"
 	"flamingo.me/flamingo/v3/framework/web"
+)
+
+//go:generate go tool mockery
+
+const (
+	// FailedShutdownExitCode is returned when application cannot accomplish graceful shutdown
+	FailedShutdownExitCode = 130
+
+	// ServerReadHeaderTimeout default timeout to read incoming request headers
+	ServerReadHeaderTimeout = 10 * time.Second
+)
+
+var (
+	// ErrAppRun is returned when an error occurs during app.Run()
+	ErrAppRun = errors.New("app run error")
 )
 
 type (
@@ -72,7 +89,7 @@ func SetEagerSingletons(enabled bool) ApplicationOption {
 	}
 }
 
-// WithArgs sets the initial arguments different than os.Args[1:]
+// WithArgs sets the initial arguments different from os.Args[1:]
 func WithArgs(args ...string) ApplicationOption {
 	return func(config *Application) {
 		config.args = args
@@ -121,6 +138,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 
 	app.flagset = flag.NewFlagSet("flamingo", flag.ContinueOnError)
 	dingoTraceCircular := app.flagset.Bool("dingo-trace-circular", false, "enable dingo circular tracing")
+	dingoTraceInjections := app.flagset.Bool("dingo-trace-injections", false, "enable dingo injection tracing")
 	flamingoConfigLog := app.flagset.Bool("flamingo-config-log", false, "enable flamingo config logging")
 	flamingoConfigCueDebug := app.flagset.String("flamingo-config-cue-debug", "", "query the flamingo cue config loader (use . for root)")
 	flamingoContext := app.flagset.String("flamingo-context", app.defaultContext, "set flamingo execution context")
@@ -128,12 +146,16 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	app.flagset.Var(&flamingoConfig, "flamingo-config", "add additional flamingo yaml config")
 	dingoInspect := app.flagset.Bool("dingo-inspect", false, "inspect dingo")
 
-	if err := app.flagset.Parse(app.args); err != nil && err != flag.ErrHelp {
+	if err := app.flagset.Parse(app.args); err != nil && !errors.Is(err, flag.ErrHelp) {
 		return nil, fmt.Errorf("app: parsing arguments: %w", err)
 	}
 
 	if dingoTraceCircular != nil && *dingoTraceCircular {
 		dingo.EnableCircularTracing()
+	}
+
+	if dingoTraceInjections != nil && *dingoTraceInjections {
+		dingo.EnableInjectionTracing()
 	}
 
 	modules = append([]dingo.Module{
@@ -217,32 +239,55 @@ func App(modules []dingo.Module, options ...ApplicationOption) {
 		log.Fatal(err)
 	}
 	if err := app.Run(); err != nil {
+		if errors.Is(err, cmd.ErrGracefulShutdown) {
+			os.Exit(FailedShutdownExitCode)
+		}
+
 		log.Fatal(err)
 	}
 }
 
 // Run runs the Root Cmd and triggers the standard event
 func (app *Application) Run() error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	injector, err := app.area.GetInitializedInjector()
 	if err != nil {
-		return fmt.Errorf("get initialized injector: %w", err)
+		return fmt.Errorf("%w: couldn't get initialized injector: %w", ErrAppRun, err)
 	}
 
 	i, err := injector.GetAnnotatedInstance(new(cobra.Command), "flamingo")
 	if err != nil {
-		return fmt.Errorf("app: get flamingo cobra.Command: %w", err)
+		return fmt.Errorf("%w: couldn't get flamingo cobra.Command: %w", ErrAppRun, err)
 	}
 
-	rootCmd := i.(*cobra.Command)
+	rootCmd, ok := i.(*cobra.Command)
+	if !ok {
+		return fmt.Errorf("%w: resolved type for root command is not *cobra.Command", ErrAppRun)
+	}
+
+	rootCmd.SetContext(ctx)
 	rootCmd.SetArgs(app.flagset.Args())
 
 	i, err = injector.GetInstance(new(eventRouterProvider))
 	if err != nil {
 		return fmt.Errorf("app: get eventRouterProvider: %w", err)
 	}
-	i.(eventRouterProvider)().Dispatch(context.Background(), new(flamingo.StartupEvent))
 
-	return rootCmd.Execute()
+	erp, ok := i.(eventRouterProvider)
+	if !ok {
+		return fmt.Errorf("%w: resolved type for event router provider is not eventRouterProvider", ErrAppRun)
+	}
+
+	erp().Dispatch(rootCmd.Context(), new(flamingo.StartupEvent))
+
+	err = rootCmd.Execute()
+	if err != nil {
+		return fmt.Errorf("%w: %w", ErrAppRun, err)
+	}
+
+	return nil
 }
 
 func typeName(of reflect.Type) string {
@@ -327,108 +372,135 @@ func inspect(injector *dingo.Injector) {
 }
 
 type servemodule struct {
+	mu                sync.Mutex
 	router            *web.Router
 	server            *http.Server
 	eventRouter       flamingo.EventRouter
 	logger            flamingo.Logger
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler
 	certFile, keyFile string
 	publicEndpoint    bool
 }
 
 // Inject basic application dependencies
-func (a *servemodule) Inject(
+func (sm *servemodule) Inject(
 	router *web.Router,
 	eventRouter flamingo.EventRouter,
 	logger flamingo.Logger,
-	configuredSampler *opencensus.ConfiguredURLPrefixSampler,
 	cfg *struct {
 		Port           int  `inject:"config:core.serve.port"`
 		PublicEndpoint bool `inject:"config:flamingo.opencensus.publicEndpoint,optional"`
 	},
 ) {
-	a.router = router
-	a.eventRouter = eventRouter
-	a.logger = logger
-	a.server = &http.Server{
-		Addr: fmt.Sprintf(":%d", cfg.Port),
+	sm.router = router
+	sm.eventRouter = eventRouter
+	sm.logger = logger
+	sm.server = &http.Server{
+		Addr:              fmt.Sprintf(":%d", cfg.Port),
+		ReadHeaderTimeout: ServerReadHeaderTimeout,
 	}
-	a.configuredSampler = configuredSampler
-	a.publicEndpoint = cfg.PublicEndpoint
+	sm.publicEndpoint = cfg.PublicEndpoint
 }
 
 // Configure dependency injection
-func (a *servemodule) Configure(injector *dingo.Injector) {
-	flamingo.BindEventSubscriber(injector).ToInstance(a)
+func (sm *servemodule) Configure(injector *dingo.Injector) {
+	flamingo.BindEventSubscriber(injector).ToInstance(sm)
 
-	injector.BindMulti(new(cobra.Command)).ToProvider(func() *cobra.Command {
-		return serveProvider(a, a.logger)
+	injector.BindMulti(new(cobra.Command)).ToProvider(func(opts *struct {
+		Handler flamingoHttp.HandlerWrapper `inject:",optional"`
+	}) *cobra.Command {
+		return sm.serveProvider(opts.Handler)
 	})
 }
 
 // CueConfig for the module
-func (a *servemodule) CueConfig() string {
+func (sm *servemodule) CueConfig() string {
 	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
-func serveProvider(a *servemodule, logger flamingo.Logger) *cobra.Command {
+func (sm *servemodule) serveProvider(handlerWrapper flamingoHttp.HandlerWrapper) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
 		Run: func(cmd *cobra.Command, args []string) {
-			a.server.Handler = &ochttp.Handler{IsPublicEndpoint: a.publicEndpoint, Handler: a.router.Handler(), GetStartOptions: a.configuredSampler.GetStartOptions()}
+			func() {
+				sm.mu.Lock()
+				defer sm.mu.Unlock()
 
-			err := a.listenAndServe()
+				sm.server.Handler = sm.router.Handler()
+				if handlerWrapper != nil {
+					sm.server.Handler = handlerWrapper(sm.server.Handler)
+				}
+			}()
+
+			err := sm.listenAndServe()
 			if err != nil {
-				if err == http.ErrServerClosed {
-					logger.Info(err)
+				if errors.Is(err, http.ErrServerClosed) {
+					sm.logger.Info(err)
 				} else {
-					logger.Fatal("unexpected error in serving:", err)
+					sm.logger.Fatal("unexpected error in serving:", err)
 				}
 			}
 		},
 	}
-	serveCmd.Flags().StringVarP(&a.server.Addr, "addr", "a", a.server.Addr, "addr on which flamingo runs")
-	serveCmd.Flags().StringVarP(&a.certFile, "certFile", "c", "", "certFile to enable HTTPS")
-	serveCmd.Flags().StringVarP(&a.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&sm.server.Addr, "addr", "a", sm.server.Addr, "addr on which flamingo runs")
+	serveCmd.Flags().StringVarP(&sm.certFile, "certFile", "c", "", "certFile to enable HTTPS")
+	serveCmd.Flags().StringVarP(&sm.keyFile, "keyFile", "k", "", "keyFile to enable HTTPS")
 
 	return serveCmd
 }
 
-func (a *servemodule) listenAndServe() error {
-	listener, err := net.Listen("tcp", a.server.Addr)
+func (sm *servemodule) listenAndServe() error {
+	listener, err := net.Listen("tcp", sm.server.Addr)
 	if err != nil {
-		return err
+		return fmt.Errorf("flamingo: failed to listen: %w", err)
 	}
 
 	addr := listener.Addr().String()
-	a.logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
+	sm.logger.Info(fmt.Sprintf("Starting HTTP Server at %s .....", addr))
 
 	port := addr[strings.LastIndex(addr, ":")+1:]
-	a.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: port})
-	defer a.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
 
-	if a.certFile != "" && a.keyFile != "" {
-		return a.server.ServeTLS(listener, a.certFile, a.keyFile)
+	sm.eventRouter.Dispatch(context.Background(), &flamingo.ServerStartEvent{Port: port})
+	defer sm.eventRouter.Dispatch(context.Background(), &flamingo.ServerShutdownEvent{})
+
+	if sm.certFile != "" && sm.keyFile != "" {
+		err := sm.server.ServeTLS(listener, sm.certFile, sm.keyFile)
+		if err != nil {
+			return fmt.Errorf("flamingo: failed to start HTTPS server: %w", err)
+		}
+
+		return nil
 	}
 
-	return a.server.Serve(listener)
+	err = sm.server.Serve(listener)
+	if err != nil {
+		return fmt.Errorf("flamingo: failed to start HTTP server: %w", err)
+	}
+
+	return nil
 }
 
 // Notify upon flamingo Shutdown event
-func (a *servemodule) Notify(ctx context.Context, event flamingo.Event) {
-	if _, ok := event.(*flamingo.ShutdownEvent); ok {
-		if a.server.Handler == nil {
-			// server not running, nothing to shut down
-			return
-		}
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-		a.logger.Info("Shutdown server on ", a.server.Addr)
+func (sm *servemodule) Notify(ctx context.Context, event flamingo.Event) {
+	if _, ok := event.(*flamingo.ShutdownEvent); !ok {
+		return
+	}
 
-		err := a.server.Shutdown(ctx)
-		if err != nil {
-			a.logger.Error("unexpected error on server shutdown: ", err)
-		}
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	if sm.server.Handler == nil {
+		// server not running, nothing to shut down
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	sm.logger.Info("Shutdown server on ", sm.server.Addr)
+
+	err := sm.server.Shutdown(ctx)
+	if err != nil {
+		sm.logger.Error("unexpected error on server shutdown: ", err)
 	}
 }

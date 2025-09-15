@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"flamingo.me/flamingo/v3/framework/opencensus"
-	"flamingo.me/flamingo/v3/framework/web"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
+
+	"flamingo.me/flamingo/v3/framework/opencensus"
+	"flamingo.me/flamingo/v3/framework/web"
 )
 
 type (
@@ -60,6 +61,13 @@ func (r *responseWriterMetrics) Write(b []byte) (int, error) {
 func (r *responseWriterMetrics) WriteHeader(statusCode int) {
 	r.status = statusCode
 	r.rw.WriteHeader(statusCode)
+}
+
+// Flush the inner response writer if supported, noop otherwise
+func (r *responseWriterMetrics) Flush() {
+	if f, ok := r.rw.(http.Flusher); ok {
+		f.Flush()
+	}
 }
 
 // Apply metricsFilter to request

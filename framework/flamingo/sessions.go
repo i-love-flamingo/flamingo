@@ -36,6 +36,7 @@ type (
 		path                 string
 		redisHost            string
 		redisKeyPrefix       *string
+		redisUsername        string
 		redisPassword        string
 		redisIdleConnections int
 		redisDatabase        int
@@ -74,6 +75,7 @@ func (m *SessionModule) Inject(
 		RedisURL             string  `inject:"config:flamingo.session.redis.url"`
 		RedisHost            string  `inject:"config:flamingo.session.redis.host"`
 		RedisKeyPrefix       string  `inject:"config:flamingo.session.redis.keyPrefix,optional"`
+		RedisUsername        string  `inject:"config:flamingo.session.redis.username,optional"`
 		RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
 		RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
 		RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
@@ -86,6 +88,10 @@ func (m *SessionModule) Inject(
 		CustomBackend CustomSessionBackend `inject:",optional"`
 	},
 ) {
+	if config == nil {
+		return
+	}
+
 	m.backend = backendType(config.Backend)
 	m.secret = config.Secret
 	m.fileName = config.FileName
@@ -93,7 +99,17 @@ func (m *SessionModule) Inject(
 	m.storeLength = int(config.StoreLength)
 	m.maxAge = int(config.MaxAge)
 	m.path = config.Path
-	m.redisHost, m.redisPassword, m.redisDatabase = getRedisConnectionInformation(config.RedisURL, config.RedisHost, config.RedisPassword, config.RedisDatabase)
+
+	parsedRedisURL, err := url.Parse(config.RedisURL)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse redis URL from 'flamingo.session.redis.url:%q': %w", config.RedisURL, err))
+	}
+
+	m.redisHost = getRedisHost(parsedRedisURL, config.RedisHost)
+	m.redisUsername = getRedisUsername(parsedRedisURL, config.RedisUsername)
+	m.redisPassword = getRedisPassword(parsedRedisURL, config.RedisPassword)
+	m.redisDatabase = getRedisDatabase(parsedRedisURL, config.RedisDatabase)
+
 	m.redisIdleConnections = int(config.RedisIdleConnections)
 	m.redisTLS = config.RedisTLS
 	m.redisClusterMode = config.RedisClusterMode
@@ -106,9 +122,11 @@ func (m *SessionModule) Inject(
 
 	if config.RedisTimeout != "" {
 		redisTimeout, err := time.ParseDuration(config.RedisTimeout)
+
 		if err != nil {
 			panic(fmt.Errorf("invalid duration on %q: %q (%w)", "flamingo.session.redis.timeout", config.RedisTimeout, err))
 		}
+
 		m.redisTimeout = redisTimeout
 	}
 
@@ -142,6 +160,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		if m.redisClusterMode {
 			client = redis.NewClusterClient(&redis.ClusterOptions{
 				Addrs:     []string{m.redisHost},
+				Username:  m.redisUsername,
 				Password:  m.redisPassword,
 				PoolSize:  m.redisIdleConnections,
 				TLSConfig: tlsConfig,
@@ -149,6 +168,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		} else {
 			client = redis.NewClient(&redis.Options{
 				Addr:      m.redisHost,
+				Username:  m.redisUsername,
 				Password:  m.redisPassword,
 				DB:        m.redisDatabase,
 				PoolSize:  m.redisIdleConnections,
@@ -191,7 +211,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		}
 	case backendFile:
 		err := os.Mkdir(m.fileName, os.ModePerm)
-		if err != nil {
+		if err != nil && !os.IsExist(err) {
 			panic(fmt.Errorf("failed on creating directory %q for file session store: %w", m.fileName, err))
 		}
 		sessionStore := sessions.NewFilesystemStore(m.fileName, []byte(m.secret))
@@ -255,6 +275,7 @@ flamingo: session: {
 	redis: {
 		url: string | *""
 		host: string | *"redis"
+		username?: string & !=""
 		password: string | *""
 		idle: connections: float | int | *10
 		database: float | int | *0
@@ -286,28 +307,54 @@ func (m *SessionModule) FlamingoLegacyConfigAlias() map[string]string {
 	}
 }
 
-func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, redisDatabase int) (string, string, int) {
-	if redisURL == "" {
-		return redisHost, redisPassword, redisDatabase
+func getRedisUsername(redisURL *url.URL, redisUsername string) string {
+	if redisURL == nil {
+		return redisUsername
 	}
 
-	parsedRedisURL, err := url.Parse(redisURL)
-	if err != nil {
-		return redisHost, redisPassword, redisDatabase
+	redisUsernameFromURL := redisURL.User.Username()
+	if redisUsernameFromURL != "" {
+		return redisUsernameFromURL
 	}
 
-	redisHostFromURL := parsedRedisURL.Host
-	if redisHostFromURL != "" {
-		redisHost = redisHostFromURL
+	return redisUsername
+}
+
+func getRedisPassword(redisURL *url.URL, redisPassword string) string {
+	if redisURL == nil {
+		return redisPassword
 	}
 
-	redisPasswordFromURL, isRedisPasswordInURL := parsedRedisURL.User.Password()
+	redisPasswordFromURL, isRedisPasswordInURL := redisURL.User.Password()
 	if isRedisPasswordInURL {
-		redisPassword = redisPasswordFromURL
+		return redisPasswordFromURL
 	}
 
-	redisDatabaseFromPath := strings.Trim(parsedRedisURL.Path, "/")
-	redisDatabaseFromQuery := parsedRedisURL.Query().Get("db")
+	return redisPassword
+}
+
+func getRedisHost(redisURL *url.URL, redisHost string) string {
+	if redisURL == nil {
+		return redisHost
+	}
+
+	redisHostFromURL := redisURL.Host
+	if redisHostFromURL != "" {
+		return redisHostFromURL
+	}
+
+	return redisHost
+}
+
+func getRedisDatabase(redisURL *url.URL, redisDatabase int) int {
+	if redisURL == nil {
+		return redisDatabase
+	}
+
+	var err error
+
+	redisDatabaseFromPath := strings.Trim(redisURL.Path, "/")
+	redisDatabaseFromQuery := redisURL.Query().Get("db")
 	if len(redisDatabaseFromPath) > 0 {
 		redisDatabase, err = strconv.Atoi(redisDatabaseFromPath)
 		if err != nil {
@@ -320,7 +367,7 @@ func getRedisConnectionInformation(redisURL, redisHost, redisPassword string, re
 		}
 	}
 
-	return redisHost, redisPassword, redisDatabase
+	return redisDatabase
 }
 
 type maxLengthSerializer struct {

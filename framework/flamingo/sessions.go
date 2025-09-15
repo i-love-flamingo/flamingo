@@ -130,19 +130,23 @@ func (m *SessionModule) Inject(
 		m.redisTimeout = redisTimeout
 	}
 
-	switch config.SameSite {
-	case "strict":
-		m.sameSite = http.SameSiteStrictMode
-	case "none":
-		m.sameSite = http.SameSiteNoneMode
-	case "lax":
-		m.sameSite = http.SameSiteLaxMode
-	default:
-		m.sameSite = http.SameSiteDefaultMode
-	}
+	m.sameSite = parseSameSite(config.SameSite)
 
 	if optionals != nil {
 		m.customBackend = optionals.CustomBackend
+	}
+}
+
+func parseSameSite(sameSite string) http.SameSite {
+	switch sameSite {
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	case "lax":
+		return http.SameSiteLaxMode
+	default:
+		return http.SameSiteDefaultMode
 	}
 }
 

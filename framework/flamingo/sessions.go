@@ -23,56 +23,76 @@ import (
 )
 
 // SessionModule for session management
-type SessionModule struct {
-	backend              string
-	secret               string
-	fileName             string
-	secure               bool
-	sameSite             http.SameSite
-	storeLength          int
-	maxAge               int
-	path                 string
-	redisHost            string
-	redisKeyPrefix       *string
-	redisUsername        string
-	redisPassword        string
-	redisIdleConnections int
-	redisDatabase        int
-	redisTLS             bool
-	redisClusterMode     bool
-	redisTimeout         time.Duration
-	healthcheckSession   bool
-}
+type (
+	SessionModule struct {
+		customBackend        CustomSessionBackend
+		backend              backendType
+		secret               string
+		fileName             string
+		secure               bool
+		sameSite             http.SameSite
+		storeLength          int
+		maxAge               int
+		path                 string
+		redisHost            string
+		redisKeyPrefix       *string
+		redisUsername        string
+		redisPassword        string
+		redisIdleConnections int
+		redisDatabase        int
+		redisTLS             bool
+		redisClusterMode     bool
+		redisTimeout         time.Duration
+		healthcheckSession   bool
+	}
+
+	CustomSessionBackend interface {
+		SessionStore() sessions.Store
+	}
+
+	backendType string
+)
+
+var (
+	backendRedis  backendType = "redis"
+	backendFile   backendType = "file"
+	backendCustom backendType = "custom"
+)
 
 // Inject dependencies
-func (m *SessionModule) Inject(config *struct {
-	// session config is optional to allow usage of the DefaultConfig
-	Backend  string `inject:"config:flamingo.session.backend"`
-	Secret   string `inject:"config:flamingo.session.secret"`
-	FileName string `inject:"config:flamingo.session.file"`
-	Secure   bool   `inject:"config:flamingo.session.cookie.secure"`
-	SameSite string `inject:"config:flamingo.session.cookie.sameSite"`
-	// float64 is used due to the injection as config from json - int is not possible on this
-	StoreLength          float64 `inject:"config:flamingo.session.store.length"`
-	MaxAge               float64 `inject:"config:flamingo.session.max.age"`
-	Path                 string  `inject:"config:flamingo.session.cookie.path"`
-	RedisURL             string  `inject:"config:flamingo.session.redis.url"`
-	RedisHost            string  `inject:"config:flamingo.session.redis.host"`
-	RedisKeyPrefix       string  `inject:"config:flamingo.session.redis.keyPrefix,optional"`
-	RedisUsername        string  `inject:"config:flamingo.session.redis.username,optional"`
-	RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
-	RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
-	RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
-	RedisTLS             bool    `inject:"config:flamingo.session.redis.tls,optional"`
-	RedisClusterMode     bool    `inject:"config:flamingo.session.redis.clusterMode,optional"`
-	RedisTimeout         string  `inject:"config:flamingo.session.redis.timeout,optional"`
-	CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
-}) {
+func (m *SessionModule) Inject(
+	config *struct {
+		// session config is optional to allow usage of the DefaultConfig
+		Backend  string `inject:"config:flamingo.session.backend"`
+		Secret   string `inject:"config:flamingo.session.secret"`
+		FileName string `inject:"config:flamingo.session.file"`
+		Secure   bool   `inject:"config:flamingo.session.cookie.secure"`
+		SameSite string `inject:"config:flamingo.session.cookie.sameSite"`
+		// float64 is used due to the injection as config from json - int is not possible on this
+		StoreLength          float64 `inject:"config:flamingo.session.store.length"`
+		MaxAge               float64 `inject:"config:flamingo.session.max.age"`
+		Path                 string  `inject:"config:flamingo.session.cookie.path"`
+		RedisURL             string  `inject:"config:flamingo.session.redis.url"`
+		RedisHost            string  `inject:"config:flamingo.session.redis.host"`
+		RedisKeyPrefix       string  `inject:"config:flamingo.session.redis.keyPrefix,optional"`
+		RedisUsername        string  `inject:"config:flamingo.session.redis.username,optional"`
+		RedisPassword        string  `inject:"config:flamingo.session.redis.password"`
+		RedisIdleConnections float64 `inject:"config:flamingo.session.redis.idle.connections"`
+		RedisDatabase        int     `inject:"config:flamingo.session.redis.database,optional"`
+		RedisTLS             bool    `inject:"config:flamingo.session.redis.tls,optional"`
+		RedisClusterMode     bool    `inject:"config:flamingo.session.redis.clusterMode,optional"`
+		RedisTimeout         string  `inject:"config:flamingo.session.redis.timeout,optional"`
+		CheckSession         bool    `inject:"config:flamingo.session.healthcheck,optional"`
+	},
+	optionals *struct {
+		CustomBackend CustomSessionBackend `inject:",optional"`
+	},
+) {
 	if config == nil {
 		return
 	}
 
-	m.backend = config.Backend
+	m.backend = backendType(config.Backend)
 	m.secret = config.Secret
 	m.fileName = config.FileName
 	m.secure = config.Secure
@@ -110,22 +130,30 @@ func (m *SessionModule) Inject(config *struct {
 		m.redisTimeout = redisTimeout
 	}
 
-	switch config.SameSite {
+	m.sameSite = parseSameSite(config.SameSite)
+
+	if optionals != nil {
+		m.customBackend = optionals.CustomBackend
+	}
+}
+
+func parseSameSite(sameSite string) http.SameSite {
+	switch sameSite {
 	case "strict":
-		m.sameSite = http.SameSiteStrictMode
+		return http.SameSiteStrictMode
 	case "none":
-		m.sameSite = http.SameSiteNoneMode
+		return http.SameSiteNoneMode
 	case "lax":
-		m.sameSite = http.SameSiteLaxMode
+		return http.SameSiteLaxMode
 	default:
-		m.sameSite = http.SameSiteDefaultMode
+		return http.SameSiteDefaultMode
 	}
 }
 
 // Configure DI
 func (m *SessionModule) Configure(injector *dingo.Injector) {
 	switch m.backend {
-	case "redis":
+	case backendRedis:
 		var client redis.UniversalClient
 
 		var tlsConfig *tls.Config
@@ -185,7 +213,7 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		if m.healthcheckSession {
 			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.RedisSession{})
 		}
-	case "file":
+	case backendFile:
 		err := os.Mkdir(m.fileName, os.ModePerm)
 		if err != nil && !os.IsExist(err) {
 			panic(fmt.Errorf("failed on creating directory %q for file session store: %w", m.fileName, err))
@@ -201,6 +229,13 @@ func (m *SessionModule) Configure(injector *dingo.Injector) {
 		if m.healthcheckSession {
 			injector.BindMap(new(healthcheck.Status), "session").To(sessionhealthcheck.FileSession{})
 		}
+	case backendCustom:
+		if m.customBackend == nil {
+			panic("custom session store backend configured but no custom backend provided")
+		}
+
+		sessionStore := m.customBackend.SessionStore()
+		injector.Bind(new(sessions.Store)).ToInstance(sessionStore)
 	default: // memory
 		sessionStore := memorystore.NewMemoryStore([]byte(m.secret))
 
@@ -230,7 +265,7 @@ func (*SessionModule) CueConfig() string {
 	// language=cue
 	return `
 flamingo: session: {
-	backend: *"memory" | "redis" | "file"
+	backend: *"memory" | "redis" | "file" | "custom"
 	secret: string | *"flamingosecret"
 	healthcheck: bool | *true
 	file: string | *"/sessions"

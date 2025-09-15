@@ -16,7 +16,7 @@ jobs:
         go: [ '1.23', '1.x' ]
     name: Tests
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Coverage Report
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Static checks
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup Go
         uses: actions/setup-go@v5
         with:

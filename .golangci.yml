@@ -60,7 +60,7 @@ linters:
     - usetesting
     - varnamelen
     - wrapcheck
-    - wsl
+    - wsl_v5
   settings:
     mnd:
       ignored-functions:
@@ -82,6 +82,10 @@ linters:
       ignore-chan-recv-ok: true
       ignore-decls:
         - i int
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 4
   exclusions:
     generated: lax
     presets:

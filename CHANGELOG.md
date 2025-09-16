@@ -1,5 +1,25 @@
 # Changelog
 
+## Version v3.17.0 (2025-09-16)
+
+### Features
+
+- **session:** add custom session store backend using binding to CustomSessionBackend (#527) (5cb20714)
+
+### Chores and tidying
+
+- **deps:** update linter and mockery (#535) (8bfa5dae)
+- **deps:** bump github.com/go-viper/mapstructure/v2 (#528) (6e59a9b6)
+- **deps:** update module github.com/golang-jwt/jwt/v5 to v5.3.0 (#520) (ede1e7b8)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.14.0 (#516) (3c6c2096)
+- **deps:** update module golang.org/x/sync to v0.17.0 (#533) (66fb1c3d)
+- **deps:** update module github.com/stretchr/testify to v1.11.1 (#529) (ceebbff0)
+- **deps:** update module golang.org/x/oauth2 to v0.31.0 (#532) (10c0db59)
+- **deps:** update module github.com/spf13/cobra to v1.10.1 (#531) (4b520bbb)
+- **deps:** update module github.com/spf13/pflag to v1.0.10 (#530) (284b112e)
+- **deps:** update actions/checkout action to v5 (#526) (e3334ca1)
+- **deps:** update module github.com/spf13/pflag to v1.0.7 (#521) (c78205f1)
+
 ## Version v3.16.0 (2025-08-06)
 
 ### Features

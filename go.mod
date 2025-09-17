@@ -19,7 +19,8 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/leekchan/accounting v0.3.1
-	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
+	github.com/nicksnyder/go-i18n v1.10.3
+	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/rbcervilla/redisstore/v9 v9.0.0

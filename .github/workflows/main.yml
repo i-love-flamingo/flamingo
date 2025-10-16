@@ -13,16 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.24', '1.x' ]
+        go: [ '1.23', '1.24', '1.x' ]
     name: Tests
     steps:
       - uses: actions/checkout@v5
       - name: Setup Go
         uses: actions/setup-go@v6
+        env:
+          GOTOOLCHAIN: 'go1.24.9+auto'
         with:
           go-version: ${{ matrix.go }}
           check-latest: true
       - name: Test
+        env:
+          GOTOOLCHAIN: 'go1.24.9+auto'
         run: CGO_ENABLED=1 go test -race ./...
   coverage:
     runs-on: ubuntu-latest

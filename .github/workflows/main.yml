@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.23', '1.x' ]
+        go: [ '1.24', '1.x' ]
     name: Tests
     steps:
       - uses: actions/checkout@v5
@@ -36,8 +36,8 @@ jobs:
           check-latest: true
       - name: Test
         run: |
-          CGO_ENABLED=1 go run gotest.tools/gotestsum@v1.7.0 --junitfile test.xml --format testname -- -coverprofile coverage.txt -race ./...
-          go run github.com/boumenot/gocover-cobertura@v1.2.0 -ignore-gen-files -by-files < coverage.txt > coverage.xml
+          CGO_ENABLED=1 go run gotest.tools/gotestsum@v1.13.0 --junitfile test.xml --format testname -- -coverprofile coverage.txt -race ./...
+          go run github.com/boumenot/gocover-cobertura@v1.4.0 -ignore-gen-files -by-files < coverage.txt > coverage.xml
       - name: Code Coverage Summary Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:

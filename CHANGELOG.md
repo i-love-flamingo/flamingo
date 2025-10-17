@@ -1,5 +1,14 @@
 # Changelog
 
+## Version v3.17.1 (2025-10-17)
+
+### Chores and tidying
+
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.16.0 (#536) (a2c11be8)
+- **deps:** update module golang.org/x/oauth2 to v0.32.0 (#538) (d1264567)
+- **deps:** update dependency go to v1.25.3 (#537) (39128908)
+- **deps:** update actions/setup-go action to v6 (#534) (ff47d8ca)
+
 ## Version v3.17.0 (2025-09-16)
 
 ### Features

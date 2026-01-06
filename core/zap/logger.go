@@ -70,12 +70,12 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 	if otelSpan != nil {
 		fields[flamingo.LogKeyTraceID] = otelSpan.SpanContext().TraceID().String()
 		fields[flamingo.LogKeySpanID] = otelSpan.SpanContext().SpanID().String()
-	} else {
-		censusSpan := openCensusTrace.FromContext(ctx)
-		if censusSpan != nil {
-			fields[flamingo.LogKeyTraceID] = censusSpan.SpanContext().TraceID.String()
-			fields[flamingo.LogKeySpanID] = censusSpan.SpanContext().SpanID.String()
-		}
+	}
+
+	censusSpan := openCensusTrace.FromContext(ctx)
+	if censusSpan != nil {
+		fields[flamingo.LogKeyTraceID] = censusSpan.SpanContext().TraceID.String()
+		fields[flamingo.LogKeySpanID] = censusSpan.SpanContext().SpanID.String()
 	}
 
 	req := web.RequestFromContext(ctx)

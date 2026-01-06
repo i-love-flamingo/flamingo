@@ -66,16 +66,33 @@ func NewLogger(logger *zap.Logger, options ...Option) *Logger {
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 	fields := make(map[flamingo.LogKey]interface{})
 
-	otelSpan := openTelemetryTrace.SpanFromContext(ctx)
-	if otelSpan != nil {
-		fields[flamingo.LogKeyTraceID] = otelSpan.SpanContext().TraceID().String()
-		fields[flamingo.LogKeySpanID] = otelSpan.SpanContext().SpanID().String()
-	}
+	var traceID string
+	var spanID string
 
+	// try to get trace data from opencensus
 	censusSpan := openCensusTrace.FromContext(ctx)
 	if censusSpan != nil {
-		fields[flamingo.LogKeyTraceID] = censusSpan.SpanContext().TraceID.String()
-		fields[flamingo.LogKeySpanID] = censusSpan.SpanContext().SpanID.String()
+		traceID = censusSpan.SpanContext().TraceID.String()
+		spanID = censusSpan.SpanContext().SpanID.String()
+	}
+
+	// traceID check if populated and not just consists of worthless default zeroes
+	if traceID == "" || allZero(traceID) {
+		// probably no opencensus trace in context, try open telemetry but don't create worthless noopSpanInstance
+		if ctx != nil {
+			otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+
+			traceID = otelSpan.SpanContext().TraceID().String()
+			spanID = otelSpan.SpanContext().SpanID().String()
+		}
+	}
+
+	if traceID != "" {
+		fields[flamingo.LogKeyTraceID] = traceID
+	}
+
+	if spanID != "" {
+		fields[flamingo.LogKeySpanID] = spanID
 	}
 
 	req := web.RequestFromContext(ctx)
@@ -235,4 +252,14 @@ func (l *Logger) writeLog(logFunc func(zl *zap.Logger, msg string, fields ...zap
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *Logger) Flush() {
 	_ = l.Sync()
+}
+
+// checks if input string is comprised only by zeroes
+func allZero(input string) bool {
+	for _, character := range input {
+		if string(character) != "0" {
+			return false
+		}
+	}
+	return true
 }

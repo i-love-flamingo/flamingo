@@ -58,17 +58,17 @@ func init() {
 func getSilentLogger(
 	loggingRegistry *LoggingContextRegistry,
 	config *struct {
-		Area               string     `inject:"config:area"`
-		JSON               bool       `inject:"config:core.zap.json,optional"`
-		LogLevel           string     `inject:"config:core.zap.loglevel,optional"`
-		ColoredOutput      bool       `inject:"config:core.zap.colored,optional"`
-		DevelopmentMode    bool       `inject:"config:core.zap.devmode,optional"`
-		SamplingEnabled    bool       `inject:"config:core.zap.sampling.enabled,optional"`
-		SamplingInitial    float64    `inject:"config:core.zap.sampling.initial,optional"`
-		SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
-		FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
-		LogSession         bool       `inject:"config:core.zap.logsession,optional"`
-	},
+	Area               string     `inject:"config:area"`
+	JSON               bool       `inject:"config:core.zap.json,optional"`
+	LogLevel           string     `inject:"config:core.zap.loglevel,optional"`
+	ColoredOutput      bool       `inject:"config:core.zap.colored,optional"`
+	DevelopmentMode    bool       `inject:"config:core.zap.devmode,optional"`
+	SamplingEnabled    bool       `inject:"config:core.zap.sampling.enabled,optional"`
+	SamplingInitial    float64    `inject:"config:core.zap.sampling.initial,optional"`
+	SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
+	FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
+	LogSession         bool       `inject:"config:core.zap.logsession,optional"`
+},
 ) *SilentLogger {
 	level, ok := logLevels[config.LogLevel]
 	if !ok {
@@ -318,16 +318,33 @@ func (l *SilentLogger) Panic(args ...interface{}) {
 func (l *SilentLogger) WithContext(ctx context.Context) flamingo.Logger {
 	fields := make(map[flamingo.LogKey]interface{})
 
-	otelSpan := openTelemetryTrace.SpanFromContext(ctx)
-	if otelSpan != nil {
-		fields[flamingo.LogKeyTraceID] = otelSpan.SpanContext().TraceID().String()
-		fields[flamingo.LogKeySpanID] = otelSpan.SpanContext().SpanID().String()
-	}
+	var traceID string
+	var spanID string
 
+	// try to get trace data from opencensus
 	censusSpan := openCensusTrace.FromContext(ctx)
 	if censusSpan != nil {
-		fields[flamingo.LogKeyTraceID] = censusSpan.SpanContext().TraceID.String()
-		fields[flamingo.LogKeySpanID] = censusSpan.SpanContext().SpanID.String()
+		traceID = censusSpan.SpanContext().TraceID.String()
+		spanID = censusSpan.SpanContext().SpanID.String()
+	}
+
+	// traceID check if populated and not just consists of worthless default zeroes
+	if traceID == "" || allZero(traceID) {
+		// probably no opencensus trace in context, try open telemetry but don't create worthless noopSpanInstance
+		if ctx != nil {
+			otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+
+			traceID = otelSpan.SpanContext().TraceID().String()
+			spanID = otelSpan.SpanContext().SpanID().String()
+		}
+	}
+
+	if traceID != "" {
+		fields[flamingo.LogKeyTraceID] = traceID
+	}
+
+	if spanID != "" {
+		fields[flamingo.LogKeySpanID] = spanID
 	}
 
 	req := web.RequestFromContext(ctx)
@@ -433,4 +450,14 @@ func (l *SilentLogger) writeLog(logFunc func(zl *zap.Logger, msg string, fields 
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *SilentLogger) Flush() {
 	_ = l.Sync()
+}
+
+// checks if input string is comprised only by zeroes
+func allZero(input string) bool {
+	for _, character := range input {
+		if string(character) != "0" {
+			return false
+		}
+	}
+	return true
 }

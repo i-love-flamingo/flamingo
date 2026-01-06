@@ -58,17 +58,17 @@ func init() {
 func getSilentLogger(
 	loggingRegistry *LoggingContextRegistry,
 	config *struct {
-	Area               string     `inject:"config:area"`
-	JSON               bool       `inject:"config:core.zap.json,optional"`
-	LogLevel           string     `inject:"config:core.zap.loglevel,optional"`
-	ColoredOutput      bool       `inject:"config:core.zap.colored,optional"`
-	DevelopmentMode    bool       `inject:"config:core.zap.devmode,optional"`
-	SamplingEnabled    bool       `inject:"config:core.zap.sampling.enabled,optional"`
-	SamplingInitial    float64    `inject:"config:core.zap.sampling.initial,optional"`
-	SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
-	FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
-	LogSession         bool       `inject:"config:core.zap.logsession,optional"`
-},
+		Area               string     `inject:"config:area"`
+		JSON               bool       `inject:"config:core.zap.json,optional"`
+		LogLevel           string     `inject:"config:core.zap.loglevel,optional"`
+		ColoredOutput      bool       `inject:"config:core.zap.colored,optional"`
+		DevelopmentMode    bool       `inject:"config:core.zap.devmode,optional"`
+		SamplingEnabled    bool       `inject:"config:core.zap.sampling.enabled,optional"`
+		SamplingInitial    float64    `inject:"config:core.zap.sampling.initial,optional"`
+		SamplingThereafter float64    `inject:"config:core.zap.sampling.thereafter,optional"`
+		FieldMap           config.Map `inject:"config:core.zap.fieldmap,optional"`
+		LogSession         bool       `inject:"config:core.zap.logsession,optional"`
+	},
 ) *SilentLogger {
 	level, ok := logLevels[config.LogLevel]
 	if !ok {

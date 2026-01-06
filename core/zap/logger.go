@@ -66,8 +66,7 @@ func NewLogger(logger *zap.Logger, options ...Option) *Logger {
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 	fields := make(map[flamingo.LogKey]interface{})
 
-	var traceID string
-	var spanID string
+	var traceID, spanID string
 
 	// try to get trace data from opencensus
 	censusSpan := openCensusTrace.FromContext(ctx)
@@ -261,5 +260,6 @@ func allZero(input string) bool {
 			return false
 		}
 	}
+
 	return true
 }

@@ -7,7 +7,10 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
+	openCensusTrace "go.opencensus.io/trace"
+
+	openTelemetryTrace "go.opentelemetry.io/otel/trace"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -61,10 +64,18 @@ func NewLogger(logger *zap.Logger, options ...Option) *Logger {
 // referer:       referer from request
 // request:       received payload from request
 func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
-	span := trace.FromContext(ctx)
-	fields := map[flamingo.LogKey]interface{}{
-		flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
-		flamingo.LogKeySpanID:  span.SpanContext().SpanID.String(),
+	fields := make(map[flamingo.LogKey]interface{})
+
+	otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+	if otelSpan != nil {
+		fields[flamingo.LogKeyTraceID] = otelSpan.SpanContext().TraceID().String()
+		fields[flamingo.LogKeySpanID] = otelSpan.SpanContext().SpanID().String()
+	} else {
+		censusSpan := openCensusTrace.FromContext(ctx)
+		if censusSpan != nil {
+			fields[flamingo.LogKeyTraceID] = censusSpan.SpanContext().TraceID.String()
+			fields[flamingo.LogKeySpanID] = censusSpan.SpanContext().SpanID.String()
+		}
 	}
 
 	req := web.RequestFromContext(ctx)

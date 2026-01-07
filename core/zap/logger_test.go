@@ -7,8 +7,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opencensus.io/trace"
+
+	openCensusTrace "go.opencensus.io/trace"
+
+	openTelemetryTrace "go.opentelemetry.io/otel/trace"
+
 	uberZap "go.uber.org/zap"
+
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 
@@ -25,16 +30,39 @@ func TestLogger_WithContext(t *testing.T) {
 		argAndWant func(t *testing.T) (context.Context, map[flamingo.LogKey]string)
 	}{
 		{
-			name: "trace and span id fields should be added",
+			name: "opencensus trace and span id fields should be added",
 			argAndWant: func(t *testing.T) (context.Context, map[flamingo.LogKey]string) {
 				t.Helper()
 
-				ctx, span := trace.StartSpan(context.Background(), "test")
+				ctx, span := openCensusTrace.StartSpan(context.Background(), "test")
 				t.Cleanup(span.End)
 
 				return ctx, map[flamingo.LogKey]string{
 					flamingo.LogKeyTraceID: span.SpanContext().TraceID.String(),
 					flamingo.LogKeySpanID:  span.SpanContext().SpanID.String(),
+				}
+			},
+		},
+		{
+			name: "opentelemetry trace and span id fields should be added",
+			argAndWant: func(t *testing.T) (context.Context, map[flamingo.LogKey]string) {
+				t.Helper()
+
+				traceID := openTelemetryTrace.TraceID([16]byte{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10})
+				spanID := openTelemetryTrace.SpanID([8]byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77})
+
+				ctx := openTelemetryTrace.ContextWithRemoteSpanContext(
+					context.Background(),
+					openTelemetryTrace.NewSpanContext(openTelemetryTrace.SpanContextConfig{
+						TraceID:    traceID,
+						SpanID:     spanID,
+						TraceFlags: openTelemetryTrace.FlagsSampled,
+					}),
+				)
+
+				return ctx, map[flamingo.LogKey]string{
+					flamingo.LogKeyTraceID: traceID.String(),
+					flamingo.LogKeySpanID:  spanID.String(),
 				}
 			},
 		},
@@ -55,7 +83,7 @@ func TestLogger_WithContext(t *testing.T) {
 			},
 		},
 		{
-			name: "sessoion id hash field should be added",
+			name: "session id hash field should be added",
 			argAndWant: func(t *testing.T) (context.Context, map[flamingo.LogKey]string) {
 				t.Helper()
 

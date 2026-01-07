@@ -68,21 +68,22 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 
 	var traceID, spanID string
 
-	// try to get trace data from opencensus
-	censusSpan := openCensusTrace.FromContext(ctx)
-	if censusSpan != nil {
-		traceID = censusSpan.SpanContext().TraceID.String()
-		spanID = censusSpan.SpanContext().SpanID.String()
+	// try to get trace data from opentelemetry
+	if ctx != nil {
+		otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+
+		traceID = otelSpan.SpanContext().TraceID().String()
+		spanID = otelSpan.SpanContext().SpanID().String()
 	}
 
-	// traceID check if populated and not just consists of worthless default zeroes
-	if traceID == "" || allZero(traceID) {
-		// probably no opencensus trace in context, try open telemetry but don't create worthless noopSpanInstance
-		if ctx != nil {
-			otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+	if traceID == "" || traceID == "00000000000000000000000000000000" {
+		// no valid trace id found, lets try opencensus
+		censusSpan := openCensusTrace.FromContext(ctx)
 
-			traceID = otelSpan.SpanContext().TraceID().String()
-			spanID = otelSpan.SpanContext().SpanID().String()
+		if censusSpan.SpanContext().TraceID.String() != "00000000000000000000000000000000" {
+			// only assign if trace was not defaulted to zeroes
+			traceID = censusSpan.SpanContext().TraceID.String()
+			spanID = censusSpan.SpanContext().SpanID.String()
 		}
 	}
 
@@ -251,15 +252,4 @@ func (l *Logger) writeLog(logFunc func(zl *zap.Logger, msg string, fields ...zap
 // letting the process exit. For the top level flamingo.Logger, this is called by the app itself.
 func (l *Logger) Flush() {
 	_ = l.Sync()
-}
-
-// checks if input string is comprised only by zeroes
-func allZero(input string) bool {
-	for _, character := range input {
-		if string(character) != "0" {
-			return false
-		}
-	}
-
-	return true
 }

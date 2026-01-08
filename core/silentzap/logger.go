@@ -7,7 +7,10 @@ import (
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
-	"go.opencensus.io/trace"
+	openCensusTrace "go.opencensus.io/trace"
+
+	openTelemetryTrace "go.opentelemetry.io/otel/trace"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -313,11 +316,35 @@ func (l *SilentLogger) Panic(args ...interface{}) {
 }
 
 func (l *SilentLogger) WithContext(ctx context.Context) flamingo.Logger {
-	span := trace.FromContext(ctx)
-	traceId := span.SpanContext().TraceID.String()
-	fields := map[flamingo.LogKey]interface{}{
-		flamingo.LogKeyTraceID: traceId,
-		flamingo.LogKeySpanID:  span.SpanContext().SpanID.String(),
+	fields := make(map[flamingo.LogKey]interface{})
+
+	var traceID, spanID string
+
+	// try to get trace data from opentelemetry
+	if ctx != nil {
+		otelSpan := openTelemetryTrace.SpanFromContext(ctx)
+
+		traceID = otelSpan.SpanContext().TraceID().String()
+		spanID = otelSpan.SpanContext().SpanID().String()
+	}
+
+	if traceID == "" || traceID == "00000000000000000000000000000000" {
+		// no valid trace id found, lets try opencensus
+		censusSpan := openCensusTrace.FromContext(ctx)
+
+		if censusSpan.SpanContext().TraceID.String() != "00000000000000000000000000000000" {
+			// only assign if trace was not defaulted to zeroes
+			traceID = censusSpan.SpanContext().TraceID.String()
+			spanID = censusSpan.SpanContext().SpanID.String()
+		}
+	}
+
+	if traceID != "" {
+		fields[flamingo.LogKeyTraceID] = traceID
+	}
+
+	if spanID != "" {
+		fields[flamingo.LogKeySpanID] = spanID
 	}
 
 	req := web.RequestFromContext(ctx)

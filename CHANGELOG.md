@@ -1,5 +1,31 @@
 # Changelog
 
+## Version v3.17.1 (2026-01-08)
+
+### Fixes
+
+- **core/zap:** context log trace for opentelemetry and opencensus (#549) (626ff65c)
+
+### Chores and tidying
+
+- **deps:** update module github.com/vektra/mockery/v3 to v3.6.1 (#514) (cd84219c)
+- **deps:** update dependency go to v1.25.5 (#541) (1556d08d)
+- **deps:** update golangci/golangci-lint-action action to v9 (#542) (c5b9b458)
+- **deps:** update module golang.org/x/oauth2 to v0.34.0 (#543) (6a31ed21)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.17.2 (#545) (34ee3b5d)
+- **deps:** update module golang.org/x/sync to v0.19.0 (#552) (0b5f4e7d)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.17.0 (#551) (fe8138c8)
+- **deps:** update module github.com/spf13/cobra to v1.10.2 (#550) (d18b092c)
+- **deps:** update actions/checkout action to v6 (#548) (cd69ce2c)
+- **deps:** update module go.uber.org/zap to v1.27.1 (#546) (8f263675)
+- **deps:** bump golang.org/x/crypto from 0.41.0 to 0.45.0 (#547) (53b2d8d8)
+- **deps:** update module golang.org/x/sync to v0.18.0 (#544) (c38d2e63)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.16.0 (#540) (3196a62c)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.16.0 (#536) (a2c11be8)
+- **deps:** update module golang.org/x/oauth2 to v0.32.0 (#538) (d1264567)
+- **deps:** update dependency go to v1.25.3 (#537) (39128908)
+- **deps:** update actions/setup-go action to v6 (#534) (ff47d8ca)
+
 ## Version v3.17.0 (2025-09-16)
 
 ### Features

@@ -19,7 +19,8 @@ require (
 	github.com/gorilla/sessions v1.4.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/leekchan/accounting v0.3.1
-	github.com/nicksnyder/go-i18n v0.0.0-20180814031359-04f547cc50da
+	github.com/nicksnyder/go-i18n v1.10.3
+	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/rbcervilla/redisstore/v9 v9.0.0
@@ -92,12 +93,12 @@ require (
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.152.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

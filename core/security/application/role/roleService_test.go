@@ -23,6 +23,9 @@ type (
 		context    context.Context
 		webSession *web.Session
 	}
+
+	// panicProvider is a Provider that always panics, used to test the defer/recover path.
+	panicProvider struct{}
 )
 
 func TestServiceImplTestSuite(t *testing.T) {
@@ -57,6 +60,36 @@ func (t *ServiceImplTestSuite) TearDownTest() {
 	t.thirdProvider.AssertExpectations(t.T())
 	t.thirdProvider = nil
 	t.service = nil
+}
+
+func (p *panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
+	panic("provider panic")
+}
+
+func (t *ServiceImplTestSuite) TestAll_ProviderPanicRecovery() {
+	firstRoles := []domain.Role{
+		domain.StringRole("Permission1"),
+	}
+	thirdRoles := []domain.Role{
+		domain.StringRole("Permission3"),
+	}
+
+	providers := []Provider{
+		t.firstProvider,
+		&panicProvider{},
+		t.thirdProvider,
+	}
+	t.service = &ServiceImpl{}
+	t.service.Inject(providers, &struct {
+		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
+	}{})
+
+	t.firstProvider.On("All", t.context, t.webSession).Return(firstRoles).Once()
+	t.thirdProvider.On("All", t.context, t.webSession).Return(thirdRoles).Once()
+
+	result := t.service.AllPermissions(t.context, t.webSession)
+
+	t.ElementsMatch([]string{"Permission1", "Permission3"}, result)
 }
 
 func (t *ServiceImplTestSuite) TestAll_RemoveDuplicates() {

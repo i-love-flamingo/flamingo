@@ -47,6 +47,11 @@ func (s *ServiceImpl) AllPermissions(ctx context.Context, session *web.Session) 
 
 	for index := range s.providers {
 		go func(p Provider) {
+			defer func() {
+				if r := recover(); r != nil {
+					rolesChan <- nil
+				}
+			}()
 			rolesChan <- p.All(ctx, session)
 		}(s.providers[index])
 	}

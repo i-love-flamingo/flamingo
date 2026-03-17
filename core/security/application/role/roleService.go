@@ -5,6 +5,7 @@ import (
 
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -23,14 +24,16 @@ type (
 	ServiceImpl struct {
 		providers           []Provider
 		permissionHierarchy map[string][]string
+		logger              flamingo.Logger
 	}
 )
 
 // Inject dependencies
-func (s *ServiceImpl) Inject(p []Provider, cfg *struct {
+func (s *ServiceImpl) Inject(p []Provider, logger flamingo.Logger, cfg *struct {
 	PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 }) {
 	s.providers = p
+	s.logger = logger
 
 	var permissionHierarchy map[string][]string
 	err := cfg.PermissionHierarchy.MapInto(&permissionHierarchy)
@@ -49,6 +52,7 @@ func (s *ServiceImpl) AllPermissions(ctx context.Context, session *web.Session) 
 		go func(p Provider) {
 			defer func() {
 				if r := recover(); r != nil {
+					s.logger.WithContext(ctx).Error("recovered panic in role provider: ", r)
 					rolesChan <- nil
 				}
 			}()

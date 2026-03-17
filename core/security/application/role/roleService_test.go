@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"flamingo.me/flamingo/v3/core/security/application/role/mocks"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -47,7 +49,7 @@ func (t *ServiceImplTestSuite) SetupTest() {
 		t.thirdProvider,
 	}
 	t.service = &ServiceImpl{}
-	t.service.Inject(providers, &struct {
+	t.service.Inject(providers, &flamingo.NullLogger{}, &struct {
 		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 	}{})
 }
@@ -80,7 +82,7 @@ func (t *ServiceImplTestSuite) TestAll_ProviderPanicRecovery() {
 		t.thirdProvider,
 	}
 	t.service = &ServiceImpl{}
-	t.service.Inject(providers, &struct {
+	t.service.Inject(providers, &flamingo.NullLogger{}, &struct {
 		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 	}{})
 

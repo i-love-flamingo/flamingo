@@ -64,7 +64,7 @@ func (t *ServiceImplTestSuite) TearDownTest() {
 	t.service = nil
 }
 
-func (p *panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
+func (*panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
 	panic("provider panic")
 }
 

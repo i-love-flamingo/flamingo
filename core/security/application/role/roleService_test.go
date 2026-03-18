@@ -4,11 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/suite"
+
 	"flamingo.me/flamingo/v3/core/security/application/role/mocks"
 	"flamingo.me/flamingo/v3/core/security/domain"
 	"flamingo.me/flamingo/v3/framework/config"
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
-	"github.com/stretchr/testify/suite"
 )
 
 type (
@@ -23,7 +25,14 @@ type (
 		context    context.Context
 		webSession *web.Session
 	}
+
+	// panicProvider is a Provider that always panics, used to test the defer/recover path.
+	panicProvider struct{}
 )
+
+func (*panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
+	panic("provider panic")
+}
 
 func TestServiceImplTestSuite(t *testing.T) {
 	suite.Run(t, &ServiceImplTestSuite{})
@@ -44,7 +53,7 @@ func (t *ServiceImplTestSuite) SetupTest() {
 		t.thirdProvider,
 	}
 	t.service = &ServiceImpl{}
-	t.service.Inject(providers, &struct {
+	t.service.Inject(providers, &flamingo.NullLogger{}, &struct {
 		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
 	}{})
 }
@@ -57,6 +66,32 @@ func (t *ServiceImplTestSuite) TearDownTest() {
 	t.thirdProvider.AssertExpectations(t.T())
 	t.thirdProvider = nil
 	t.service = nil
+}
+
+func (t *ServiceImplTestSuite) TestAll_ProviderPanicRecovery() {
+	firstRoles := []domain.Role{
+		domain.StringRole("Permission1"),
+	}
+	thirdRoles := []domain.Role{
+		domain.StringRole("Permission3"),
+	}
+
+	providers := []Provider{
+		t.firstProvider,
+		&panicProvider{},
+		t.thirdProvider,
+	}
+	t.service = &ServiceImpl{}
+	t.service.Inject(providers, &flamingo.NullLogger{}, &struct {
+		PermissionHierarchy config.Map `inject:"config:core.security.roles.permissionHierarchy"`
+	}{})
+
+	t.firstProvider.On("All", t.context, t.webSession).Return(firstRoles).Once()
+	t.thirdProvider.On("All", t.context, t.webSession).Return(thirdRoles).Once()
+
+	result := t.service.AllPermissions(t.context, t.webSession)
+
+	t.ElementsMatch([]string{"Permission1", "Permission3"}, result)
 }
 
 func (t *ServiceImplTestSuite) TestAll_RemoveDuplicates() {

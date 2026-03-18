@@ -1,5 +1,17 @@
 # Changelog
 
+## Version v3.17.2 (2026-03-18)
+
+### Fixes
+
+- **security:** add panic recovery in ServiceImpl.AllPermissions in core/security/application/role/roleService.go (#565) (bb9c4170)
+
+### Chores and tidying
+
+- **deps:** update dependency golangci/golangci-lint to v2.11.3 (#563) (061f958d)
+- **deps:** update dependency go to v1.25.7 (#560) (71378e4a)
+- **deps:** update dependency go to v1.25.6 (#554) (176806f3)
+
 ## Version v3.17.1 (2026-01-08)
 
 ### Fixes

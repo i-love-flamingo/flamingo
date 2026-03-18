@@ -30,6 +30,10 @@ type (
 	panicProvider struct{}
 )
 
+func (*panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
+	panic("provider panic")
+}
+
 func TestServiceImplTestSuite(t *testing.T) {
 	suite.Run(t, &ServiceImplTestSuite{})
 }
@@ -62,10 +66,6 @@ func (t *ServiceImplTestSuite) TearDownTest() {
 	t.thirdProvider.AssertExpectations(t.T())
 	t.thirdProvider = nil
 	t.service = nil
-}
-
-func (*panicProvider) All(_ context.Context, _ *web.Session) []domain.Role {
-	panic("provider panic")
 }
 
 func (t *ServiceImplTestSuite) TestAll_ProviderPanicRecovery() {

@@ -52,7 +52,7 @@ func (s *ServiceImpl) AllPermissions(ctx context.Context, session *web.Session) 
 		go func(p Provider) {
 			defer func() {
 				if r := recover(); r != nil {
-					s.logger.WithContext(ctx).Error("recovered panic in role provider: ", r)
+					s.logger.WithContext(ctx).Error("recovered panic in role provider with index ", index, ": ", r)
 					rolesChan <- nil
 				}
 			}()

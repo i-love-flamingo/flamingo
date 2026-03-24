@@ -4,12 +4,6 @@ run:
   modules-download-mode: readonly
   tests: true
   allow-parallel-runners: true
-output:
-  formats:
-    text:
-      path: stdout
-      print-linter-name: true
-      print-issued-lines: true
 linters:
   default: none
   enable:

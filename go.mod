@@ -1,6 +1,6 @@
 module flamingo.me/flamingo/v3
 
-go 1.24.0
+go 1.25.0
 
 toolchain go1.25.7
 
@@ -8,7 +8,7 @@ require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.1
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
 	contrib.go.opencensus.io/exporter/zipkin v0.1.2
-	cuelang.org/go v0.0.15
+	cuelang.org/go v0.16.0
 	flamingo.me/dingo v0.3.0
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/ghodss/yaml v1.0.0
@@ -32,7 +32,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.39.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/zap v1.27.1
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	golang.org/x/sync v0.19.0
 )
 
@@ -42,6 +42,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/structs v1.1.0 // indirect
@@ -92,12 +93,12 @@ require (
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/mod v0.33.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/term v0.40.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
+	golang.org/x/tools v0.42.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.152.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect

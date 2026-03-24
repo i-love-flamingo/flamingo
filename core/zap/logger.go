@@ -87,11 +87,11 @@ func (l *Logger) WithContext(ctx context.Context) flamingo.Logger {
 		}
 	}
 
-	if traceID != "" {
+	if traceID != "" && traceID != "00000000000000000000000000000000" {
 		fields[flamingo.LogKeyTraceID] = traceID
 	}
 
-	if spanID != "" {
+	if spanID != "" && spanID != "0000000000000000" {
 		fields[flamingo.LogKeySpanID] = spanID
 	}
 

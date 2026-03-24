@@ -65,6 +65,25 @@ func TestLogger_WithContext(t *testing.T) {
 					flamingo.LogKeySpanID:  spanID.String(),
 				}
 			},
+		}, {
+			name: "opentelemetry trace and span id fields should be skipped if 0 values",
+			argAndWant: func(t *testing.T) (context.Context, map[flamingo.LogKey]string) {
+				t.Helper()
+
+				traceID := openTelemetryTrace.TraceID([16]byte{})
+				spanID := openTelemetryTrace.SpanID([8]byte{})
+
+				ctx := openTelemetryTrace.ContextWithRemoteSpanContext(
+					context.Background(),
+					openTelemetryTrace.NewSpanContext(openTelemetryTrace.SpanContextConfig{
+						TraceID:    traceID,
+						SpanID:     spanID,
+						TraceFlags: openTelemetryTrace.FlagsSampled,
+					}),
+				)
+
+				return ctx, nil
+			},
 		},
 		{
 			name: "request method and path fields should be added",

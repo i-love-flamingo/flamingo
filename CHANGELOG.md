@@ -1,5 +1,23 @@
 # Changelog
 
+## Version v3.17.3 (2026-03-24)
+
+### Fixes
+
+- skip zero values for trace and span from loggin (#569) (cfa125e2)
+
+### Chores and tidying
+
+- **deps:** update module github.com/vektra/mockery/v3 to v3.7.0 (#553) (1dc61da2)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.18.0 (#556) (53e5b0b1)
+- **deps:** update module golang.org/x/oauth2 to v0.36.0 (#561) (70512f18)
+- **deps:** update module golang.org/x/sync to v0.20.0 (#564) (0f0a3e7b)
+- **deps:** update dependency golangci/golangci-lint to v2.11.4 (#568) (289bc5a1)
+- **config:** migrate config renovate.json (#571) (e590e951)
+- **go:** bump go version to 1.25 (#570) (03e6ac4c)
+- **deps:** update module github.com/golang-jwt/jwt/v5 to v5.3.1 (#558) (956a289e)
+- **deps:** update marocchino/sticky-pull-request-comment action to v3 (#566) (5a28a88a)
+
 ## Version v3.17.2 (2026-03-18)
 
 ### Fixes

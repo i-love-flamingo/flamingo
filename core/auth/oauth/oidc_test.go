@@ -217,6 +217,7 @@ func TestOidcCallback(t *testing.T) {
 		}
 
 		var err error
+
 		identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
 		assert.NoError(t, err)
 
@@ -275,6 +276,7 @@ func TestOidcCallback(t *testing.T) {
 		}
 
 		var err error
+
 		identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
 		assert.NoError(t, err)
 
@@ -308,6 +310,7 @@ func TestOidcCallback(t *testing.T) {
 			switch strings.Trim(r.URL.Path, "/") {
 			case "token":
 				{
+					r.Body = http.MaxBytesReader(w, r.Body, 1024)
 					_ = r.ParseForm()
 					redirectURI := r.PostForm.Get("redirect_uri")
 
@@ -329,6 +332,7 @@ func TestOidcCallback(t *testing.T) {
 		})
 
 		testServer.Config.Handler = handler
+
 		testServer.Start()
 		defer testServer.Close()
 
@@ -341,6 +345,7 @@ func TestOidcCallback(t *testing.T) {
 		}
 
 		var err error
+
 		identifier.provider, err = oidc.NewProvider(context.Background(), testServer.URL)
 		assert.NoError(t, err)
 

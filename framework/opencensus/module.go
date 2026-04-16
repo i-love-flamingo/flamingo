@@ -55,6 +55,7 @@ func (rt *correlationIDInjector) RoundTrip(req *http.Request) (*http.Response, e
 }
 
 // Module registers the opencensus module which in turn enables jaeger & co.
+//
 // Deprecated: OpenCensus was discontinued in favor of OpenTelemetry, please use flamingo.me/opentelemetry instead.
 type Module struct {
 	publicEndpoint bool

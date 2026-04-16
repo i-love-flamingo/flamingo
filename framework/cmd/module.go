@@ -71,6 +71,7 @@ func RootCommandProvider(
 		TraverseChildren: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var ctx context.Context
+
 			ctx, stop = signal.NotifyContext(cmd.Context(), signals...)
 			cmd.SetContext(ctx)
 

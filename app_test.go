@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -11,9 +13,11 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
 
 	"flamingo.me/flamingo/v3"
 	"flamingo.me/flamingo/v3/framework/cmd"
@@ -230,9 +234,15 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 							notifyFunc(func(ctx context.Context, event framework.Event) {
 								switch ev := event.(type) {
 								case *framework.ServerStartEvent:
-									if _, err := net.Dial("tcp", fmt.Sprintf(":%s", ev.Port)); err != nil {
+									dialCtx, cancel := context.WithTimeout(ctx, time.Second)
+									defer cancel()
+
+									conn, err := (&net.Dialer{}).DialContext(dialCtx, "tcp", fmt.Sprintf(":%s", ev.Port))
+									if err != nil {
 										t.Fatalf("failed to connect to server")
 									}
+
+									_ = conn.Close()
 
 									tt.onServerStartup()
 								case *framework.ShutdownEvent:
@@ -254,4 +264,91 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			tt.assertShutdownCount(t, shutdownEventCount.Load())
 		})
 	}
+}
+
+func TestHandler(t *testing.T) { //nolint:paralleltest // dingo singleton scopes are process-wide and shared between application tests
+	runConcurrentRequests := func(ctx context.Context, client *http.Client, requestURL string) error {
+		g, reqCtx := errgroup.WithContext(ctx)
+		g.SetLimit(8)
+
+		for range 32 {
+			g.Go(func() error {
+				req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, requestURL, nil)
+				if err != nil {
+					return err
+				}
+
+				response, err := client.Do(req)
+				if err != nil {
+					return err
+				}
+				defer response.Body.Close()
+
+				if response.StatusCode != http.StatusTeapot {
+					return fmt.Errorf("unexpected status code: got %d want %d", response.StatusCode, http.StatusTeapot)
+				}
+
+				return nil
+			})
+		}
+
+		return g.Wait()
+	}
+
+	t.Run("use helper method", func(t *testing.T) { //nolint:paralleltest // dingo singleton scopes are process-wide and shared between application tests
+		dingo.Singleton = dingo.NewSingletonScope()
+		dingo.ChildSingleton = dingo.NewChildSingletonScope()
+
+		modules := []dingo.Module{
+			dingo.ModuleFunc(func(injector *dingo.Injector) {
+				web.BindRoutes(injector, new(routes))
+			}),
+		}
+
+		app, err := flamingo.NewApplication(modules, flamingo.WithArgs(""))
+		require.NoError(t, err)
+
+		handler, err := app.HTTPHandler()
+		if assert.NoError(t, err) {
+			assert.NotNil(t, handler)
+		}
+
+		testServer := httptest.NewServer(handler)
+		defer testServer.Close()
+
+		requestURL := fmt.Sprintf("%s/hello", testServer.URL)
+		require.NoError(t, runConcurrentRequests(t.Context(), testServer.Client(), requestURL))
+	})
+
+	t.Run("use instance directly", func(t *testing.T) { //nolint:paralleltest // dingo singleton scopes are process-wide and shared between application tests
+		dingo.Singleton = dingo.NewSingletonScope()
+		dingo.ChildSingleton = dingo.NewChildSingletonScope()
+
+		modules := []dingo.Module{
+			dingo.ModuleFunc(func(injector *dingo.Injector) {
+				web.BindRoutes(injector, new(routes))
+			}),
+		}
+
+		app, err := flamingo.NewApplication(modules, flamingo.WithArgs(""))
+		require.NoError(t, err)
+
+		testServer := httptest.NewServer(app)
+		defer testServer.Close()
+
+		requestURL := fmt.Sprintf("%s/hello", testServer.URL)
+		require.NoError(t, runConcurrentRequests(t.Context(), testServer.Client(), requestURL))
+	})
+}
+
+type routes struct {
+}
+
+func (r *routes) Routes(registry *web.RouterRegistry) {
+	_, _ = registry.Route("/hello", "hello")
+	registry.HandleGet("hello", func(ctx context.Context, req *web.Request) web.Result {
+		return &web.Response{
+			Status: http.StatusTeapot,
+		}
+	})
 }

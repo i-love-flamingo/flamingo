@@ -12,6 +12,7 @@ import (
 
 func createLogger(recorder io.Writer) flamingo.Logger {
 	var l = new(flamingo.StdLogger)
+
 	l.Logger = *log.New(recorder, "TEST--", 0)
 
 	return l

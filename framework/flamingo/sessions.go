@@ -122,7 +122,6 @@ func (m *SessionModule) Inject(
 
 	if config.RedisTimeout != "" {
 		redisTimeout, err := time.ParseDuration(config.RedisTimeout)
-
 		if err != nil {
 			panic(fmt.Errorf("invalid duration on %q: %q (%w)", "flamingo.session.redis.timeout", config.RedisTimeout, err))
 		}
@@ -358,6 +357,7 @@ func getRedisDatabase(redisURL *url.URL, redisDatabase int) int {
 	var err error
 
 	redisDatabaseFromPath := strings.Trim(redisURL.Path, "/")
+
 	redisDatabaseFromQuery := redisURL.Query().Get("db")
 	if len(redisDatabaseFromPath) > 0 {
 		redisDatabase, err = strconv.Atoi(redisDatabaseFromPath)

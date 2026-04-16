@@ -41,6 +41,8 @@ const (
 var (
 	// ErrAppRun is returned when an error occurs during app.Run()
 	ErrAppRun = errors.New("app run error")
+
+	_ http.Handler = new(Application)
 )
 
 type (
@@ -55,6 +57,7 @@ type (
 		defaultContext  string
 		eagerSingletons bool
 		flagset         *flag.FlagSet
+		onceHandler     func() (http.Handler, error)
 	}
 
 	// ApplicationOption configures an Application
@@ -68,7 +71,7 @@ func ConfigDir(configdir string) ApplicationOption {
 	}
 }
 
-// ChildAreas allows to define additional config areas for roots
+// ChildAreas allows defining additional config areas for roots
 func ChildAreas(areas ...*config.Area) ApplicationOption {
 	return func(config *Application) {
 		config.childAreas = areas
@@ -82,7 +85,7 @@ func DefaultContext(name string) ApplicationOption {
 	}
 }
 
-// SetEagerSingletons controls if eager singletons will be created
+// SetEagerSingletons controls if eager singletons are created
 func SetEagerSingletons(enabled bool) ApplicationOption {
 	return func(config *Application) {
 		config.eagerSingletons = enabled
@@ -103,7 +106,7 @@ func WithRoutes(routesModule web.RoutesModule) ApplicationOption {
 	}
 }
 
-// WithCustomLogger allows to use custom logger modules for flamingo app, if nothing available default will be used
+// WithCustomLogger allows using custom logger modules for flamingo app, if nothing available default will be used
 func WithCustomLogger(logger dingo.Module) ApplicationOption {
 	return func(config *Application) {
 		config.loggerModule = logger
@@ -224,6 +227,8 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		}
 	}
 
+	app.onceHandler = sync.OnceValues(app.HTTPHandler)
+
 	return app, nil
 }
 
@@ -288,6 +293,40 @@ func (app *Application) Run() error {
 	}
 
 	return nil
+}
+
+// HTTPHandler returns an http.Handler with wired routes and handlers
+func (app *Application) HTTPHandler() (http.Handler, error) {
+	injector, err := app.area.GetInitializedInjector()
+	if err != nil {
+		return nil, fmt.Errorf("%w: couldn't get initialized injector: %w", ErrAppRun, err)
+	}
+
+	i, err := injector.GetInstance(new(http.Handler))
+	if err != nil {
+		return nil, fmt.Errorf("%w: couldn't get http.Handler: %w", ErrAppRun, err)
+	}
+
+	handler, ok := i.(http.Handler)
+	if !ok {
+		return nil, fmt.Errorf("%w: resolved type for a handler is not http.Handler", ErrAppRun)
+	}
+
+	return handler, nil
+}
+
+// ServeHTTP makes Application to a valid http.Handler
+func (app *Application) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if app == nil {
+		return
+	}
+
+	handler, err := app.onceHandler()
+	if err != nil {
+		return
+	}
+
+	handler.ServeHTTP(writer, request)
 }
 
 func typeName(of reflect.Type) string {
@@ -405,11 +444,13 @@ func (sm *servemodule) Inject(
 func (sm *servemodule) Configure(injector *dingo.Injector) {
 	flamingo.BindEventSubscriber(injector).ToInstance(sm)
 
-	injector.BindMulti(new(cobra.Command)).ToProvider(func(opts *struct {
+	injector.Bind(new(http.Handler)).ToProvider(func(opts *struct {
 		Handler flamingoHttp.HandlerWrapper `inject:",optional"`
-	}) *cobra.Command {
-		return sm.serveProvider(opts.Handler)
+	}) http.Handler {
+		return sm.handlerProvider(opts.Handler)
 	})
+
+	injector.BindMulti(new(cobra.Command)).ToProvider(sm.serveProvider)
 }
 
 // CueConfig for the module
@@ -417,7 +458,19 @@ func (sm *servemodule) CueConfig() string {
 	return `core: serve: port: >= 0 & <= 65535 | *3322`
 }
 
-func (sm *servemodule) serveProvider(handlerWrapper flamingoHttp.HandlerWrapper) *cobra.Command {
+func (sm *servemodule) handlerProvider(handlerWrapper flamingoHttp.HandlerWrapper) http.Handler {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	var handler = sm.router.Handler()
+	if handlerWrapper != nil {
+		handler = handlerWrapper(handler)
+	}
+
+	return handler
+}
+
+func (sm *servemodule) serveProvider(handler http.Handler) *cobra.Command {
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Default serve command - starts on Port 3322",
@@ -426,10 +479,7 @@ func (sm *servemodule) serveProvider(handlerWrapper flamingoHttp.HandlerWrapper)
 				sm.mu.Lock()
 				defer sm.mu.Unlock()
 
-				sm.server.Handler = sm.router.Handler()
-				if handlerWrapper != nil {
-					sm.server.Handler = handlerWrapper(sm.server.Handler)
-				}
+				sm.server.Handler = handler
 			}()
 
 			err := sm.listenAndServe()
@@ -450,7 +500,7 @@ func (sm *servemodule) serveProvider(handlerWrapper flamingoHttp.HandlerWrapper)
 }
 
 func (sm *servemodule) listenAndServe() error {
-	listener, err := net.Listen("tcp", sm.server.Addr)
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", sm.server.Addr)
 	if err != nil {
 		return fmt.Errorf("flamingo: failed to listen: %w", err)
 	}

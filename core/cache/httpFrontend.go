@@ -19,8 +19,9 @@ type (
 	// HTTPLoader returns a response. it will be cached unless there is an error. this means 400/500 responses are cached too!
 	HTTPLoader func(context.Context) (*http.Response, *Meta, error)
 
-	// HTTPFrontend stores and caches http responses
-	// Deprecated: Please use the dedicated httpcache flamingo module, see here: flamingo.me/httpcache
+	// HTTPFrontend stores and caches http responses.
+	//
+	// Deprecated: Please use the dedicated httpcache flamingo module, see here: flamingo.me/httpcache.
 	HTTPFrontend struct {
 		singleflight.Group
 		backend Backend

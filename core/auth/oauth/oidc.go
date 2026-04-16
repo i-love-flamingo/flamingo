@@ -539,6 +539,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 	if len(accessTokenParts) >= 2 {
 		decoded, _ := base64.RawURLEncoding.DecodeString(accessTokenParts[1])
 		var cs map[string]interface{}
+
 		_ = json.NewDecoder(bytes.NewBuffer(decoded)).Decode(&cs)
 		if cs != nil {
 			for k, v := range i.oidcConfig.Claims.AccessToken {

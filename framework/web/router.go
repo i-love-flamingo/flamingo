@@ -16,14 +16,14 @@ import (
 )
 
 type (
-	// ReverseRouter allows to retrieve urls for controller
+	// ReverseRouter allows retrieving URLs for a controller
 	ReverseRouter interface {
 		// Relative returns a root-relative URL, starting with `/`
-		// if to starts with "/" it will be used as the target, instead of resolving the URL
+		// if `to` starts with "/", it will be used as the target, instead of resolving the URL
 		Relative(to string, params map[string]string) (*url.URL, error)
 		// Absolute returns an absolute URL, with scheme and host.
-		// It takes the request to construct as many information as possible
-		// if to starts with "/" it will be used as the target, instead of resolving the URL
+		// It takes the request to construct as much information as possible
+		// if `to` starts with "/" it will be used as the target, instead of resolving the URL
 		Absolute(r *Request, to string, params map[string]string) (*url.URL, error)
 	}
 
@@ -31,7 +31,7 @@ type (
 	routesProvider    func() []RoutesModule
 	responderProvider func() *Responder
 
-	// Router represents actual implementation of ReverseRouter interface
+	// Router represents the actual implementation of ReverseRouter interface
 	Router struct {
 		base              *url.URL
 		external          *url.URL
@@ -102,7 +102,7 @@ func (r *Router) Inject(
 	r.responderProvider = responderProvider
 }
 
-// Handler creates and returns new instance of http.Handler interface
+// Handler creates and returns a new instance of http.Handler interface
 func (r *Router) Handler() http.Handler {
 	r.routerRegistry = NewRegistry()
 

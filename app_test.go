@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"flamingo.me/dingo"
+	"flamingo.me/flamingo/v3/framework/web"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -254,4 +257,43 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			tt.assertShutdownCount(t, shutdownEventCount.Load())
 		})
 	}
+}
+
+func TestHandler(t *testing.T) {
+	t.Parallel()
+
+	modules := []dingo.Module{
+		dingo.ModuleFunc(func(injector *dingo.Injector) {
+			web.BindRoutes(injector, new(routes))
+		}),
+	}
+
+	app, err := flamingo.NewApplication(modules, flamingo.WithArgs(""))
+	require.NoError(t, err)
+
+	handler, err := app.HTTPHandler()
+	if assert.NoError(t, err) {
+		assert.NotNil(t, handler)
+	}
+
+	testServer := httptest.NewServer(handler)
+	defer testServer.Close()
+
+	requestURL := fmt.Sprintf("%s/hello", testServer.URL)
+	response, err := testServer.Client().Get(requestURL)
+	if assert.NoError(t, err) {
+		assert.Equal(t, http.StatusTeapot, response.StatusCode)
+	}
+}
+
+type routes struct {
+}
+
+func (r *routes) Routes(registry *web.RouterRegistry) {
+	_, _ = registry.Route("/hello", "hello")
+	registry.HandleGet("hello", func(ctx context.Context, req *web.Request) web.Result {
+		return &web.Response{
+			Status: http.StatusTeapot,
+		}
+	})
 }

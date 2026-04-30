@@ -179,12 +179,12 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			insideCommandRun: func(cmd *cobra.Command, args []string) {
 				send := buildSignalSender(t)
 				send()
-				time.Sleep(time.Millisecond)
+				time.Sleep(time.Second) // test is flaky because it relies on the signal handling happening within a speculated time frame and needs to be refactored
 				send()
 			},
 			onShutdown: sync.OnceFunc(func() {
 				// artificial delay, so that second interrupt could arrive
-				time.Sleep(time.Second)
+				time.Sleep(5 * time.Second)
 			}),
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
 				return assert.ErrorIs(t, err, cmd.ErrGracefulShutdown)

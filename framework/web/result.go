@@ -124,6 +124,10 @@ const (
 	CacheVisibilityPublic = "public"
 )
 
+var (
+	ErrPartialRenderingFailed = fmt.Errorf("failed to render partials")
+)
+
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	Engine                flamingo.TemplateEngine `inject:",optional"`
@@ -346,7 +350,7 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 
-				return fmt.Errorf("failed to render partials")
+				return ErrPartialRenderingFailed
 			}
 
 			result := make(map[string]string, len(content))

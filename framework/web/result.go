@@ -344,7 +344,9 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
 			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
 			if err != nil {
-				return err
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return fmt.Errorf("failed to render partials")
 			}
 
 			result := make(map[string]string, len(content))

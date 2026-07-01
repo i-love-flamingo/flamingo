@@ -124,6 +124,10 @@ const (
 	CacheVisibilityPublic = "public"
 )
 
+var (
+	ErrPartialRenderingFailed = fmt.Errorf("failed to render partials")
+)
+
 // Inject Responder dependencies
 func (r *Responder) Inject(router *Router, logger flamingo.Logger, cfg *struct {
 	Engine                flamingo.TemplateEngine `inject:",optional"`
@@ -344,24 +348,32 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 		if partials := req.Request().Header.Get("X-Partial"); partials != "" && ok {
 			content, err := partialRenderer.RenderPartials(c, r.Template, r.Data, strings.Split(partials, ","))
 			if err != nil {
-				return err
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return ErrPartialRenderingFailed
 			}
 
 			result := make(map[string]string, len(content))
 			for k, v := range content {
 				buf, err := io.ReadAll(v)
 				if err != nil {
-					return err
+					w.WriteHeader(http.StatusInternalServerError)
+
+					return ErrPartialRenderingFailed
 				}
 				result[k] = string(buf)
 			}
 
 			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
 			if err != nil {
-				return err
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return ErrPartialRenderingFailed
 			}
+
 			r.Body = bytes.NewBuffer(body)
 			r.Header.Set("Content-Type", "application/json; charset=utf-8")
+
 			return r.Response.Apply(c, w)
 		}
 	}
@@ -369,11 +381,16 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
+
 	r.Header.Set("Content-Type", "text/html; charset=utf-8")
+
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
 		return err
 	}
+
 	return r.Response.Apply(c, w)
 }
 

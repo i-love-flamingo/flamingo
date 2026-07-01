@@ -1,5 +1,15 @@
 # Changelog
 
+## Version v3.17.4 (2026-07-01)
+
+### Fixes
+
+- **framework/web:** do not expose (partial) rendering errors (#587) (693d2c17)
+
+### Chores and tidying
+
+- **deps:** update module go.uber.org/zap to v1.28.0 (#578) (6d05dfbf)
+
 ## Version v3.17.3 (2026-03-24)
 
 ### Fixes

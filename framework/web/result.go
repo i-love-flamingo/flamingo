@@ -357,17 +357,23 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 			for k, v := range content {
 				buf, err := io.ReadAll(v)
 				if err != nil {
-					return err
+					w.WriteHeader(http.StatusInternalServerError)
+
+					return ErrPartialRenderingFailed
 				}
 				result[k] = string(buf)
 			}
 
 			body, err := json.Marshal(map[string]interface{}{"partials": result, "data": new(GetPartialDataFunc).Func(c).(func() map[string]interface{})()})
 			if err != nil {
-				return err
+				w.WriteHeader(http.StatusInternalServerError)
+
+				return ErrPartialRenderingFailed
 			}
+
 			r.Body = bytes.NewBuffer(body)
 			r.Header.Set("Content-Type", "application/json; charset=utf-8")
+
 			return r.Response.Apply(c, w)
 		}
 	}
@@ -375,11 +381,16 @@ func (r *RenderResponse) Apply(c context.Context, w http.ResponseWriter) error {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
+
 	r.Header.Set("Content-Type", "text/html; charset=utf-8")
+
 	r.Body, err = r.engine.Render(c, r.Template, r.Data)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
 		return err
 	}
+
 	return r.Response.Apply(c, w)
 }
 

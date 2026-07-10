@@ -62,7 +62,7 @@ type SecurityVoter_Vote_Call struct {
 //   - allAssignedPermissions []string
 //   - desiredPermission string
 //   - forObject interface{}
-func (_e *SecurityVoter_Expecter) Vote(allAssignedPermissions interface{}, desiredPermission interface{}, forObject interface{}) *SecurityVoter_Vote_Call {
+func (_e *SecurityVoter_Expecter) Vote(allAssignedPermissions any, desiredPermission any, forObject any) *SecurityVoter_Vote_Call {
 	return &SecurityVoter_Vote_Call{Call: _e.mock.On("Vote", allAssignedPermissions, desiredPermission, forObject)}
 }
 

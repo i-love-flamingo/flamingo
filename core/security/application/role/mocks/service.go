@@ -65,7 +65,7 @@ type Service_AllPermissions_Call struct {
 // AllPermissions is a helper method to define mock.On call
 //   - context1 context.Context
 //   - session *web.Session
-func (_e *Service_Expecter) AllPermissions(context1 interface{}, session interface{}) *Service_AllPermissions_Call {
+func (_e *Service_Expecter) AllPermissions(context1 any, session any) *Service_AllPermissions_Call {
 	return &Service_AllPermissions_Call{Call: _e.mock.On("AllPermissions", context1, session)}
 }
 

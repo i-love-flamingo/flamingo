@@ -65,7 +65,7 @@ type SecurityService_IsGranted_Call struct {
 //   - session *web.Session
 //   - s string
 //   - ifaceVal interface{}
-func (_e *SecurityService_Expecter) IsGranted(context1 interface{}, session interface{}, s interface{}, ifaceVal interface{}) *SecurityService_IsGranted_Call {
+func (_e *SecurityService_Expecter) IsGranted(context1 any, session any, s any, ifaceVal any) *SecurityService_IsGranted_Call {
 	return &SecurityService_IsGranted_Call{Call: _e.mock.On("IsGranted", context1, session, s, ifaceVal)}
 }
 
@@ -132,7 +132,7 @@ type SecurityService_IsLoggedIn_Call struct {
 // IsLoggedIn is a helper method to define mock.On call
 //   - context1 context.Context
 //   - session *web.Session
-func (_e *SecurityService_Expecter) IsLoggedIn(context1 interface{}, session interface{}) *SecurityService_IsLoggedIn_Call {
+func (_e *SecurityService_Expecter) IsLoggedIn(context1 any, session any) *SecurityService_IsLoggedIn_Call {
 	return &SecurityService_IsLoggedIn_Call{Call: _e.mock.On("IsLoggedIn", context1, session)}
 }
 
@@ -189,7 +189,7 @@ type SecurityService_IsLoggedOut_Call struct {
 // IsLoggedOut is a helper method to define mock.On call
 //   - context1 context.Context
 //   - session *web.Session
-func (_e *SecurityService_Expecter) IsLoggedOut(context1 interface{}, session interface{}) *SecurityService_IsLoggedOut_Call {
+func (_e *SecurityService_Expecter) IsLoggedOut(context1 any, session any) *SecurityService_IsLoggedOut_Call {
 	return &SecurityService_IsLoggedOut_Call{Call: _e.mock.On("IsLoggedOut", context1, session)}
 }
 

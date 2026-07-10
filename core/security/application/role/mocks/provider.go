@@ -66,7 +66,7 @@ type Provider_All_Call struct {
 // All is a helper method to define mock.On call
 //   - context1 context.Context
 //   - session *web.Session
-func (_e *Provider_Expecter) All(context1 interface{}, session interface{}) *Provider_All_Call {
+func (_e *Provider_Expecter) All(context1 any, session any) *Provider_All_Call {
 	return &Provider_All_Call{Call: _e.mock.On("All", context1, session)}
 }
 

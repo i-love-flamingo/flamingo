@@ -74,7 +74,7 @@ type RedirectURLMaker_URL_Call struct {
 // URL is a helper method to define mock.On call
 //   - context1 context.Context
 //   - s string
-func (_e *RedirectURLMaker_Expecter) URL(context1 interface{}, s interface{}) *RedirectURLMaker_URL_Call {
+func (_e *RedirectURLMaker_Expecter) URL(context1 any, s any) *RedirectURLMaker_URL_Call {
 	return &RedirectURLMaker_URL_Call{Call: _e.mock.On("URL", context1, s)}
 }
 

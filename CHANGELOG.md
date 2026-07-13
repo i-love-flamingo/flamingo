@@ -1,5 +1,25 @@
 # Changelog
 
+## Version v3.17.4 (2026-07-10)
+
+### Fixes
+
+- **framework/web:** do not expose (partial) rendering errors (#587) (693d2c17)
+
+### Chores and tidying
+
+- **deps:** update module go.opentelemetry.io/otel/trace to v1.44.0 (#589) (8e033c5d)
+- **deps:** update actions/checkout action to v7 (#590) (1ff21abe)
+- **deps:** bump golang.org/x/net from 0.50.0 to 0.55.0 (#588) (b189d0a7)
+- **deps:** update module github.com/vektra/mockery/v3 to v3.7.1 (#582) (3f662285)
+- **deps:** update module golang.org/x/sync to v0.22.0 (#581) (c143cc1e)
+- **deps:** update dependency golangci/golangci-lint to v2.12.2 (#580) (a8f3d177)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.21.0 (#579) (62c829ae)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.20.0 (#574) (526c9134)
+- **deps:** update go toolchain directive to v1.26.5 (#573) (fe10b5e9)
+- **deps:** bump github.com/go-jose/go-jose/v4 from 4.1.3 to 4.1.4 (#572) (402ffd15)
+- **deps:** update module go.uber.org/zap to v1.28.0 (#578) (6d05dfbf)
+
 ## Version v3.17.3 (2026-03-24)
 
 ### Fixes

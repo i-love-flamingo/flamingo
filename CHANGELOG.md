@@ -1,5 +1,12 @@
 # Changelog
 
+## Version v3.17.5 (2026-09-03)
+
+### Chores and tidying
+
+- **deps:** update dependency golangci/golangci-lint to v2.13.2 (#599) (2a249e3a)
+- **deps:** update actions/setup-go action to v7 (#591) (3271fafc)
+
 ## Version v3.17.4 (2026-07-10)
 
 ### Fixes

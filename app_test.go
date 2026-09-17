@@ -122,7 +122,21 @@ func buildSignalSender(t *testing.T) func() {
 	}
 }
 
+func sendSignalAndWaitForContext(t *testing.T, cmd *cobra.Command) {
+	t.Helper()
+
+	buildSignalSender(t)()
+
+	select {
+	case <-cmd.Context().Done():
+	case <-time.After(time.Second):
+		require.FailNow(t, "command context was not cancelled after SIGINT")
+	}
+}
+
 func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.Singleton
+	shutdownStarted := make(chan struct{})
+
 	assertShutdownOnce := func(t *testing.T, shutdownEventCount int32) {
 		t.Helper()
 
@@ -151,7 +165,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			name: "custom Run command interrupted by SIGINT triggers graceful shutdown",
 			args: "test_cmd_run",
 			insideCommandRun: func(cmd *cobra.Command, args []string) {
-				buildSignalSender(t)()
+				sendSignalAndWaitForContext(t, cmd)
 			},
 			onShutdown:          func() {},
 			wantErr:             assert.NoError,
@@ -161,7 +175,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			name: "custom RunE command interrupted by SIGINT triggers graceful shutdown",
 			args: "test_cmd_run_e",
 			insideCommandRunE: func(cmd *cobra.Command, args []string) error {
-				buildSignalSender(t)()
+				sendSignalAndWaitForContext(t, cmd)
 
 				return nil
 			},
@@ -173,13 +187,13 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			name: "graceful shutdown interrupted by SIGINT forces hard shutdown",
 			args: "test_cmd_run",
 			insideCommandRun: func(cmd *cobra.Command, args []string) {
-				send := buildSignalSender(t)
-				send()
-				time.Sleep(time.Millisecond)
-				send()
+				sendSignalAndWaitForContext(t, cmd)
+				<-shutdownStarted
+				buildSignalSender(t)()
 			},
 			onShutdown: sync.OnceFunc(func() {
-				// artificial delay, so that second interrupt could arrive
+				close(shutdownStarted)
+				// artificial delay, so that the second interrupt can abort shutdown
 				time.Sleep(time.Second)
 			}),
 			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
@@ -193,8 +207,7 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			name: "graceful shutdown timed out forces hard shutdown",
 			args: "test_cmd_run",
 			insideCommandRun: func(cmd *cobra.Command, args []string) {
-				send := buildSignalSender(t)
-				send()
+				sendSignalAndWaitForContext(t, cmd)
 			},
 			onShutdown: sync.OnceFunc(func() {
 				time.Sleep(35 * time.Second)

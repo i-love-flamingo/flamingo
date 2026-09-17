@@ -381,6 +381,16 @@ type servemodule struct {
 	publicEndpoint    bool
 }
 
+type serverErrorLogWriter struct {
+	logger flamingo.Logger
+}
+
+func (w serverErrorLogWriter) Write(message []byte) (int, error) {
+	w.logger.Error(strings.TrimSuffix(string(message), "\n"))
+
+	return len(message), nil
+}
+
 // Inject basic application dependencies
 func (sm *servemodule) Inject(
 	router *web.Router,
@@ -397,6 +407,7 @@ func (sm *servemodule) Inject(
 	sm.server = &http.Server{
 		Addr:              fmt.Sprintf(":%d", cfg.Port),
 		ReadHeaderTimeout: ServerReadHeaderTimeout,
+		ErrorLog:          log.New(serverErrorLogWriter{logger: logger}, "", 0),
 	}
 	sm.publicEndpoint = cfg.PublicEndpoint
 }

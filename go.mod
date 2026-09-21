@@ -1,6 +1,6 @@
 module flamingo.me/flamingo/v3
 
-go 1.25.8
+go 1.26.0
 
 toolchain go1.26.5
 
@@ -32,7 +32,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/zap v1.28.0
-	golang.org/x/oauth2 v0.36.0
+	golang.org/x/oauth2 v0.37.0
 	golang.org/x/sync v0.22.0
 )
 

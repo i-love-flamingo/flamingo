@@ -1,5 +1,23 @@
 # Changelog
 
+## Version v3.17.5 (2026-09-24)
+
+### Fixes
+
+- **app:** fix non json error log (#603) (e78f16cf)
+
+### Chores and tidying
+
+- **deps:** update module github.com/vektra/mockery/v3 to v3.8.0 (#593) (36e6efb6)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.22.0 (#594) (649585c0)
+- **deps:** update module flamingo.me/dingo to v0.4.1 (#586) (7d807815)
+- **deps:** update module golang.org/x/sync to v0.23.0 (#605) (79a55d62)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.21.0 (#602) (1a70b8ef)
+- **deps:** update module golang.org/x/oauth2 to v0.37.0 (#604) (898737b2)
+- **deps:** update module github.com/stretchr/testify to v1.12.1 (#598) (8c51d49f)
+- **deps:** update dependency golangci/golangci-lint to v2.13.2 (#599) (2a249e3a)
+- **deps:** update actions/setup-go action to v7 (#591) (3271fafc)
+
 ## Version v3.17.4 (2026-07-10)
 
 ### Fixes

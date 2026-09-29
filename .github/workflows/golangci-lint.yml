@@ -20,7 +20,6 @@ jobs:
           fetch-depth: '0'
       - uses: actions/setup-go@v7
         with:
-          # NOTE: use the go.mod version, golangci-lint fails on Go versions newer than the one it was built with.
           go-version-file: go.mod
           check-latest: true
       - name: golangci-lint

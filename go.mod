@@ -7,7 +7,7 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
 	contrib.go.opencensus.io/exporter/zipkin v0.1.2
 	cuelang.org/go v0.0.15
-	flamingo.me/dingo v0.4.1
+	flamingo.me/dingo v0.4.2-0.20261010121511-7542f6ce6231
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gofrs/uuid v4.4.0+incompatible

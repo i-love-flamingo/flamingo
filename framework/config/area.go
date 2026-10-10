@@ -312,9 +312,11 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		if area.Injector, err = dingo.NewInjector(); err != nil {
 			return nil, err
 		}
+
 		if area.dingoTraceCircular {
 			area.Injector.EnableCircularTracing()
 		}
+
 		if area.dingoTraceInjections {
 			area.Injector.EnableInjectionTracing()
 		}

@@ -35,6 +35,7 @@ type (
 		cueConfig            *ast.File
 		defaultConfig        Map
 		loadedConfig         Map
+		modulesExpanded      bool
 		dingoTraceCircular   bool
 		dingoTraceInjections bool
 	}
@@ -67,7 +68,8 @@ type (
 	}
 )
 
-// NewArea creates a new Area with optional childs
+// NewArea creates a new Area with optional childs.
+// Supply modules before loading configuration; each area expands them once.
 func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 	ctx := &Area{
 		Name:          name,
@@ -125,13 +127,6 @@ func cueError(err error) error {
 }
 
 func (area *Area) loadCueConfig() error {
-	modules, err := dingo.ExpandModules(area.Modules...)
-	if err != nil {
-		return fmt.Errorf("%s: %w", area.Name, err)
-	}
-
-	area.Modules = modules
-
 	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
 		return cueError(err)
 	}
@@ -159,13 +154,6 @@ func (area *Area) loadCueConfig() error {
 }
 
 func (area *Area) loadDefaultConfig() error {
-	modules, err := dingo.ExpandModules(area.Modules...)
-	if err != nil {
-		return fmt.Errorf("%s: %w", area.Name, err)
-	}
-
-	area.Modules = modules
-
 	area.defaultConfig = make(Map)
 
 	for _, module := range area.Modules {
@@ -217,6 +205,16 @@ func esc(s string) string {
 }
 
 func (area *Area) loadConfig(legacy, logLegacy bool) error {
+	if !area.modulesExpanded {
+		modules, err := dingo.ExpandModules(area.Modules...)
+		if err != nil {
+			return fmt.Errorf("%s: %w", area.Name, err)
+		}
+
+		area.Modules = modules
+		area.modulesExpanded = true
+	}
+
 	area.cueBuildInstance = build.NewContext().NewInstance(area.Name, nil)
 
 	if err := area.loadCueConfig(); err != nil {
@@ -345,7 +343,7 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		}
 	}
 
-	if err := area.Injector.InitModules(area.Modules...); err != nil {
+	if err := area.Injector.InitExpandedModules(area.Modules...); err != nil {
 		return nil, err
 	}
 	return area.Injector, nil // area.Injector.BuildEagerSingletons(false)
@@ -353,8 +351,7 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 
 func disableModule(input []dingo.Module, disabled string) []dingo.Module {
 	for i, module := range input {
-		tm := reflect.TypeOf(module).Elem()
-		if tm.PkgPath()+"."+tm.Name() == disabled {
+		if moduleName(module) == disabled {
 			return append(input[:i], input[i+1:]...)
 		}
 	}

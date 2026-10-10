@@ -30,11 +30,13 @@ type (
 		Configuration Map
 		LoadedConfig  Map // Deprecated: empty and should not be used anymore
 
-		cueBuildInstance *build.Instance
-		cueInstance      *cue.Instance
-		cueConfig        *ast.File
-		defaultConfig    Map
-		loadedConfig     Map
+		cueBuildInstance     *build.Instance
+		cueInstance          *cue.Instance
+		cueConfig            *ast.File
+		defaultConfig        Map
+		loadedConfig         Map
+		dingoTraceCircular   bool
+		dingoTraceInjections bool
 	}
 
 	// DefaultConfigModule is used to get a module's default configuration
@@ -99,33 +101,12 @@ func (area *Area) GetFlatContexts() ([]*Area, error) {
 	return result, nil
 }
 
-var typeOfModuleFunc = reflect.TypeOf(dingo.ModuleFunc(nil))
-
-// resolveDependencies tries to get a complete list of all modules, including all dependencies
-// known can be empty initially, and will then be used for subsequent recursive calls
-func resolveDependencies(modules []dingo.Module, known map[interface{}]struct{}) []dingo.Module {
-	final := make([]dingo.Module, 0, len(modules))
-
-	if known == nil {
-		known = make(map[interface{}]struct{})
-	}
-
-	for _, module := range modules {
-		var identity interface{} = reflect.TypeOf(module)
-		if identity == typeOfModuleFunc {
-			identity = reflect.ValueOf(module)
-		}
-		if _, ok := known[identity]; ok {
-			continue
-		}
-		known[identity] = struct{}{}
-		if depender, ok := module.(dingo.Depender); ok {
-			final = append(final, resolveDependencies(depender.Depends(), known)...)
-		}
-		final = append(final, module)
-	}
-
-	return final
+// SetDingoTracing enables dingo's circular-dependency and injection tracing
+// for this area's injector and every injector derived from it. Call it before
+// the injector is initialized, i.e. before config.Load.
+func (area *Area) SetDingoTracing(circular, injections bool) {
+	area.dingoTraceCircular = circular
+	area.dingoTraceInjections = injections
 }
 
 func moduleName(m dingo.Module) string {
@@ -144,7 +125,12 @@ func cueError(err error) error {
 }
 
 func (area *Area) loadCueConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
+	modules, err := dingo.ExpandModules(area.Modules...)
+	if err != nil {
+		return fmt.Errorf("%s: %w", area.Name, err)
+	}
+
+	area.Modules = modules
 
 	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
 		return cueError(err)
@@ -173,7 +159,13 @@ func (area *Area) loadCueConfig() error {
 }
 
 func (area *Area) loadDefaultConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
+	modules, err := dingo.ExpandModules(area.Modules...)
+	if err != nil {
+		return fmt.Errorf("%s: %w", area.Name, err)
+	}
+
+	area.Modules = modules
+
 	area.defaultConfig = make(Map)
 
 	for _, module := range area.Modules {
@@ -319,6 +311,12 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		var err error
 		if area.Injector, err = dingo.NewInjector(); err != nil {
 			return nil, err
+		}
+		if area.dingoTraceCircular {
+			area.Injector.EnableCircularTracing()
+		}
+		if area.dingoTraceInjections {
+			area.Injector.EnableInjectionTracing()
 		}
 	}
 	area.Injector.SetBuildEagerSingletons(false)

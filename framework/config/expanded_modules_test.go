@@ -178,6 +178,117 @@ func TestAreaKeepsNamedDependencyDisabledAfterClosure(t *testing.T) {
 	}
 }
 
+type retainedConfigDependency struct {
+	generation int
+	configured int
+}
+
+func (module *retainedConfigDependency) Configure(*dingo.Injector) { module.configured++ }
+
+func (module *retainedConfigDependency) CueConfig() string {
+	return fmt.Sprintf(`retained: cue: *"generation %d" | string`, module.generation)
+}
+
+func (module *retainedConfigDependency) DefaultConfig() config.Map {
+	return config.Map{
+		"retained.default": fmt.Sprintf("generation %d", module.generation),
+		"retained.old":     "legacy value",
+	}
+}
+
+func (*retainedConfigDependency) OverrideConfig(current config.Map) config.Map {
+	value, _ := current.Get("retained.default")
+	return config.Map{"retained.override": fmt.Sprintf("override %s", value)}
+}
+
+func (*retainedConfigDependency) FlamingoLegacyConfigAlias() map[string]string {
+	return map[string]string{"retained.old": "retained.alias"}
+}
+
+type retainedConfigModule struct {
+	dependsCalls int
+	closureCalls int
+	configured   int
+	value        int
+	dependency   *retainedConfigDependency
+}
+
+func (module *retainedConfigModule) Depends() []dingo.Module {
+	module.dependsCalls++
+	value := module.dependsCalls
+	module.dependency = &retainedConfigDependency{generation: value}
+
+	return []dingo.Module{
+		dingo.ModuleFunc(func(injector *dingo.Injector) {
+			module.closureCalls++
+
+			injector.Bind(new(int)).ToInstance(value)
+		}),
+		module.dependency,
+	}
+}
+
+func (module *retainedConfigModule) Inject(value int) { module.value = value }
+
+func (module *retainedConfigModule) Configure(*dingo.Injector) { module.configured++ }
+
+func TestAreaRetainsDisabledModuleConfigurationAcrossReloads(t *testing.T) {
+	t.Parallel()
+
+	module := &retainedConfigModule{}
+	area := config.NewArea("retained", []dingo.Module{module})
+	basedir := t.TempDir()
+	want := map[string]string{
+		"retained.cue":      "generation 1",
+		"retained.default":  "generation 1",
+		"retained.override": "override generation 1",
+		"retained.old":      "legacy value",
+		"retained.alias":    "legacy value",
+	}
+	assertConfiguration := func() {
+		for key, expected := range want {
+			value, ok := area.Config(key)
+			assert.True(t, ok, key)
+			assert.Equal(t, expected, value, key)
+		}
+	}
+
+	require.NoError(t, config.Load(area, basedir, config.AdditionalConfig([]string{
+		"flamingo.modules.disabled: [flamingo.me/flamingo/v3/framework/config_test.retainedConfigDependency]",
+	})))
+	assertConfiguration()
+
+	// MergeFrom returns a shallow copy; initializing one area must preserve the other's list.
+	copied := config.MergeFrom(*area, config.Area{})
+	dependency := module.dependency
+	injector, err := area.GetInitializedInjector()
+	require.NoError(t, err)
+	assertConfiguration()
+	require.Len(t, area.Modules, 2)
+	assert.NotContains(t, area.Modules, dependency)
+	assert.Same(t, module, area.Modules[1])
+	require.Len(t, copied.Modules, 3)
+	assert.Same(t, dependency, copied.Modules[1])
+	assert.Same(t, module, copied.Modules[2])
+
+	require.NoError(t, config.Load(area, basedir))
+	assertConfiguration()
+	require.Len(t, area.Modules, 2, "reload must preserve the filtered diagnostic list")
+	assert.NotContains(t, area.Modules, dependency)
+	assert.Same(t, dependency, copied.Modules[1])
+	assert.Equal(t, 1, module.dependsCalls)
+	assert.Equal(t, 1, module.closureCalls)
+	assert.Equal(t, 1, module.configured)
+	assert.Equal(t, 1, module.value)
+	assert.Zero(t, dependency.configured)
+
+	for key, expected := range want {
+		value, err := injector.GetAnnotatedInstance(new(string), "config:"+key)
+		require.NoError(t, err)
+		assert.Equal(t, expected, value, key)
+	}
+}
+
 type retryConfigModule struct {
 	cyclic       bool
 	dependsCalls int

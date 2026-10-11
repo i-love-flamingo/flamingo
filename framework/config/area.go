@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"cuelang.org/go/cue"
@@ -35,6 +36,7 @@ type (
 		cueConfig            *ast.File
 		defaultConfig        Map
 		loadedConfig         Map
+		configModules        []dingo.Module
 		modulesExpanded      bool
 		dingoTraceCircular   bool
 		dingoTraceInjections bool
@@ -131,7 +133,7 @@ func (area *Area) loadCueConfig() error {
 		return cueError(err)
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cuemodule, ok := module.(CueConfigModule); ok {
 			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
 				return fmt.Errorf("loading config for %s failed: %w", moduleName(module), cueError(err))
@@ -156,7 +158,7 @@ func (area *Area) loadCueConfig() error {
 func (area *Area) loadDefaultConfig() error {
 	area.defaultConfig = make(Map)
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
 			if err := area.defaultConfig.Add(cfgmodule.DefaultConfig()); err != nil {
 				return err
@@ -168,7 +170,7 @@ func (area *Area) loadDefaultConfig() error {
 }
 
 func (area *Area) checkLegacyConfig(warn bool) {
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(flamingoLegacyConfigAlias); ok {
 			for old, new := range cfgmodule.FlamingoLegacyConfigAlias() {
 				if oldval, ok := area.Configuration.Get(old); ok {
@@ -212,6 +214,7 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 		}
 
 		area.Modules = modules
+		area.configModules = modules
 		area.modulesExpanded = true
 	}
 
@@ -234,7 +237,7 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 		return err
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(OverrideConfigModule); ok {
 			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
 				return err
@@ -310,14 +313,14 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		if area.Injector, err = dingo.NewInjector(); err != nil {
 			return nil, err
 		}
+	}
 
-		if area.dingoTraceCircular {
-			area.Injector.EnableCircularTracing()
-		}
+	if area.dingoTraceCircular {
+		area.Injector.EnableCircularTracing()
+	}
 
-		if area.dingoTraceInjections {
-			area.Injector.EnableInjectionTracing()
-		}
+	if area.dingoTraceInjections {
+		area.Injector.EnableInjectionTracing()
 	}
 	area.Injector.SetBuildEagerSingletons(false)
 	area.Injector.Bind(Area{}).ToInstance(area)
@@ -338,6 +341,8 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 	}
 
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
+		// Filtering must preserve the configuration snapshot and shallow area copies.
+		area.Modules = slices.Clone(area.Modules)
 		for _, disabled := range config.(Slice) {
 			area.Modules = disableModule(area.Modules, disabled.(string))
 		}

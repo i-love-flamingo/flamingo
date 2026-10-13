@@ -78,6 +78,11 @@ jobs:
         run: |
           go run golang.org/x/tools/cmd/goimports@latest -w .
           git diff --quiet || (echo 'goimports requires code cleanup:' ; git diff ; exit 1)
+      - name: Setup Go for generation
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          check-latest: true
       - name: Go Generate
         run: |
           go generate ./...

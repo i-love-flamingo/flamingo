@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"flamingo.me/dingo"
 )
 
@@ -47,5 +49,10 @@ func TryModules(cm Map, modules ...dingo.Module) error {
 	if err := cfg.loadConfig(false, false); err != nil {
 		return err
 	}
-	return dingo.TryModule(append([]dingo.Module{&testModule{Module: Module{Map: cfg.Configuration}}}, cfg.Modules...)...)
+
+	if err := dingo.TryExpandedModules(append([]dingo.Module{&testModule{Module: Module{Map: cfg.Configuration}}}, cfg.Modules...)...); err != nil {
+		return fmt.Errorf("initializing test modules: %w", err)
+	}
+
+	return nil
 }

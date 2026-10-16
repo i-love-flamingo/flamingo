@@ -1,5 +1,32 @@
 # Changelog
 
+## Version v3.17.5 (2026-10-16)
+
+### Fixes
+
+- **app:** fix non json error log (#603) (e78f16cf)
+
+### Chores and tidying
+
+- **deps:** pin github.com/nicksnyder/go-i18n to v1.10.3 (#418) (2dc1d6de)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.23.0 (#614) (23982b65)
+- **deps:** update dependency golangci/golangci-lint to v2.15.0 (#618) (7607c082)
+- **deps:** update module golang.org/x/sync to v0.24.0 (#615) (81613a1b)
+- **deps:** update module github.com/vektra/mockery/v3 to v3.8.1 (#617) (15d4d400)
+- update otel trace, test on go.mod and latest Go, scan with govulncheck (#595) (e524f35f)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v26 (#449) (a5b10e9a)
+- **deps:** update go toolchain directive to v1.27.1 (#597) (8af4c1a3)
+- **deps:** update dependency golangci/golangci-lint to v2.14.0 (#606) (9aabd4ea)
+- **deps:** update module github.com/vektra/mockery/v3 to v3.8.0 (#593) (36e6efb6)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.22.0 (#594) (649585c0)
+- **deps:** update module flamingo.me/dingo to v0.4.1 (#586) (7d807815)
+- **deps:** update module golang.org/x/sync to v0.23.0 (#605) (79a55d62)
+- **deps:** update module github.com/coreos/go-oidc/v3 to v3.21.0 (#602) (1a70b8ef)
+- **deps:** update module golang.org/x/oauth2 to v0.37.0 (#604) (898737b2)
+- **deps:** update module github.com/stretchr/testify to v1.12.1 (#598) (8c51d49f)
+- **deps:** update dependency golangci/golangci-lint to v2.13.2 (#599) (2a249e3a)
+- **deps:** update actions/setup-go action to v7 (#591) (3271fafc)
+
 ## Version v3.17.4 (2026-07-10)
 
 ### Fixes

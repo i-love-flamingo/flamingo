@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/boj/redistore"

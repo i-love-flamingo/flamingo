@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 
 	"flamingo.me/flamingo/v3/framework/web"
 )

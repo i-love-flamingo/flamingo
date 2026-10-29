@@ -8,7 +8,7 @@ import (
 	"path"
 	"time"
 
-	"go.elastic.co/apm/module/apmhttp"
+	"go.elastic.co/apm/module/apmhttp/v2"
 
 	"flamingo.me/dingo"
 	"flamingo.me/flamingo/v3/framework/config"

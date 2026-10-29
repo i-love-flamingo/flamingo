@@ -3,7 +3,7 @@ package web
 import (
 	"context"
 
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 )
 
 // RunWithDetachedContext returns a context which is detached from the original deadlines, timeouts & co

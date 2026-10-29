@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"

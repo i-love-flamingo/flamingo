@@ -10,7 +10,7 @@ import (
 
 	"flamingo.me/flamingo/v3/framework/flamingo"
 	"github.com/dgrijalva/jwt-go"
-	"go.elastic.co/apm"
+	"go.elastic.co/apm/v2"
 )
 
 type (

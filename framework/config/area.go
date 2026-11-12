@@ -4,8 +4,10 @@ package config
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"cuelang.org/go/cue"
@@ -30,11 +32,15 @@ type (
 		Configuration Map
 		LoadedConfig  Map // Deprecated: empty and should not be used anymore
 
-		cueBuildInstance *build.Instance
-		cueInstance      *cue.Instance
-		cueConfig        *ast.File
-		defaultConfig    Map
-		loadedConfig     Map
+		cueBuildInstance     *build.Instance
+		cueInstance          *cue.Instance
+		cueConfig            *ast.File
+		defaultConfig        Map
+		loadedConfig         Map
+		configModules        []dingo.Module
+		modulesExpanded      bool
+		dingoTraceCircular   bool
+		dingoTraceInjections bool
 	}
 
 	// DefaultConfigModule is used to get a module's default configuration
@@ -65,7 +71,8 @@ type (
 	}
 )
 
-// NewArea creates a new Area with optional childs
+// NewArea creates a new Area with optional childs.
+// Supply modules before loading configuration; each area expands them once.
 func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 	ctx := &Area{
 		Name:          name,
@@ -99,33 +106,12 @@ func (area *Area) GetFlatContexts() ([]*Area, error) {
 	return result, nil
 }
 
-var typeOfModuleFunc = reflect.TypeOf(dingo.ModuleFunc(nil))
-
-// resolveDependencies tries to get a complete list of all modules, including all dependencies
-// known can be empty initially, and will then be used for subsequent recursive calls
-func resolveDependencies(modules []dingo.Module, known map[interface{}]struct{}) []dingo.Module {
-	final := make([]dingo.Module, 0, len(modules))
-
-	if known == nil {
-		known = make(map[interface{}]struct{})
-	}
-
-	for _, module := range modules {
-		var identity interface{} = reflect.TypeOf(module)
-		if identity == typeOfModuleFunc {
-			identity = reflect.ValueOf(module)
-		}
-		if _, ok := known[identity]; ok {
-			continue
-		}
-		known[identity] = struct{}{}
-		if depender, ok := module.(dingo.Depender); ok {
-			final = append(final, resolveDependencies(depender.Depends(), known)...)
-		}
-		final = append(final, module)
-	}
-
-	return final
+// SetDingoTracing enables dingo's circular-dependency and injection tracing
+// for this area's injector and every injector derived from it. Call it before
+// the injector is initialized, i.e. before config.Load.
+func (area *Area) SetDingoTracing(circular, injections bool) {
+	area.dingoTraceCircular = circular
+	area.dingoTraceInjections = injections
 }
 
 func moduleName(m dingo.Module) string {
@@ -144,13 +130,11 @@ func cueError(err error) error {
 }
 
 func (area *Area) loadCueConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
-
 	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
 		return cueError(err)
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cuemodule, ok := module.(CueConfigModule); ok {
 			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
 				return fmt.Errorf("loading config for %s failed: %w", moduleName(module), cueError(err))
@@ -173,10 +157,9 @@ func (area *Area) loadCueConfig() error {
 }
 
 func (area *Area) loadDefaultConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
 	area.defaultConfig = make(Map)
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
 			if err := area.defaultConfig.Add(cfgmodule.DefaultConfig()); err != nil {
 				return err
@@ -188,7 +171,7 @@ func (area *Area) loadDefaultConfig() error {
 }
 
 func (area *Area) checkLegacyConfig(warn bool) {
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(flamingoLegacyConfigAlias); ok {
 			for old, new := range cfgmodule.FlamingoLegacyConfigAlias() {
 				if oldval, ok := area.Configuration.Get(old); ok {
@@ -225,6 +208,17 @@ func esc(s string) string {
 }
 
 func (area *Area) loadConfig(legacy, logLegacy bool) error {
+	if !area.modulesExpanded {
+		modules, err := dingo.ExpandModules(area.Modules...)
+		if err != nil {
+			return fmt.Errorf("%s: %w", area.Name, err)
+		}
+
+		area.Modules = modules
+		area.configModules = modules
+		area.modulesExpanded = true
+	}
+
 	area.cueBuildInstance = build.NewContext().NewInstance(area.Name, nil)
 
 	if err := area.loadCueConfig(); err != nil {
@@ -244,7 +238,7 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 		return err
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(OverrideConfigModule); ok {
 			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
 				return err
@@ -321,6 +315,14 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 			return nil, err
 		}
 	}
+
+	if area.dingoTraceCircular {
+		area.Injector.EnableCircularTracing()
+	}
+
+	if area.dingoTraceInjections {
+		area.Injector.EnableInjectionTracing()
+	}
 	area.Injector.SetBuildEagerSingletons(false)
 	area.Injector.Bind(Area{}).ToInstance(area)
 
@@ -339,26 +341,72 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 		}
 	}
 
+	removedNames := make(map[string]struct{})
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
+		// Filtering must preserve the configuration snapshot and shallow area copies.
+		area.Modules = slices.Clone(area.Modules)
 		for _, disabled := range config.(Slice) {
-			area.Modules = disableModule(area.Modules, disabled.(string))
+			name, _ := disabled.(string)
+
+			var removed bool
+			if area.Modules, removed = disableModule(area.Modules, name); removed {
+				removedNames[name] = struct{}{}
+			}
 		}
 	}
 
-	if err := area.Injector.InitModules(area.Modules...); err != nil {
+	err := area.Injector.InitExpandedModules(area.Modules...)
+
+	// After initialization, so the extra Depends calls cannot affect what was configured.
+	// Also when it failed: a missing binding from a disabled module can be the cause.
+	warnDisabledDependencies(area.Name, area.Modules, removedNames)
+
+	if err != nil {
 		return nil, err
 	}
+
 	return area.Injector, nil // area.Injector.BuildEagerSingletons(false)
 }
 
-func disableModule(input []dingo.Module, disabled string) []dingo.Module {
-	for i, module := range input {
-		tm := reflect.TypeOf(module).Elem()
-		if tm.PkgPath()+"."+tm.Name() == disabled {
-			return append(input[:i], input[i+1:]...)
+// warnDisabledDependencies logs each enabled module that depends on a removed
+// module. The removed module stays out of initialization, so bindings the
+// dependent expects from it are missing. It calls Depends once more on enabled
+// modules, only when something was removed, and does not configure the result.
+// A Depends method that stores state would see that state replaced.
+func warnDisabledDependencies(areaName string, enabled []dingo.Module, removed map[string]struct{}) {
+	if len(removed) == 0 {
+		return
+	}
+
+	for _, module := range enabled {
+		depender, ok := module.(dingo.Depender)
+		if !ok {
+			continue
+		}
+
+		for _, dependency := range depender.Depends() {
+			if dependency == nil {
+				continue
+			}
+
+			name := moduleName(dependency)
+			if _, ok := removed[name]; ok {
+				slog.Warn("disabled module is a dependency of an enabled module; its bindings are missing",
+					"area", areaName, "disabled", name, "dependent", moduleName(module))
+			}
 		}
 	}
-	return input
+}
+
+// disableModule removes the first module with the given name and reports whether it found one.
+func disableModule(input []dingo.Module, disabled string) ([]dingo.Module, bool) {
+	for i, module := range input {
+		if moduleName(module) == disabled {
+			return append(input[:i], input[i+1:]...), true
+		}
+	}
+
+	return input, false
 }
 
 // Flat returns a map of name->*Area of contexts, were all values have been inherited (yet overridden) of the parent context tree.

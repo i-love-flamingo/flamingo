@@ -25,6 +25,19 @@ jobs:
           check-latest: true
       - name: Test
         run: CGO_ENABLED=1 go test -race ./...
+  released-dependencies:
+    runs-on: ubuntu-latest
+    name: Released flamingo.me dependencies
+    steps:
+      - uses: actions/checkout@v7
+      - name: Reject unreleased flamingo.me pins
+        run: |
+          # A pseudo-version (unreleased commit) or a replace of any flamingo.me module.
+          pseudo='^[[:space:]]*(require[[:space:]]+)?flamingo\.me/[^[:space:]]+[[:space:]]+v[^[:space:]]*[0-9]{14}-[0-9a-f]{12}'
+          replace='^[[:space:]]*(replace[[:space:]]+)?flamingo\.me/[^[:space:]]+([[:space:]]+v[^[:space:]]+)?[[:space:]]+=>'
+          # grep exits 1 when nothing matches; any other failure fails the step.
+          pins=$(grep -E "$pseudo|$replace" go.mod) || [ $? -eq 1 ]
+          test -z "$pins" || (echo "go.mod uses unreleased flamingo.me code; pin a release tag before merging:" ; echo "$pins" ; exit 1)
   coverage:
     runs-on: ubuntu-latest
     name: Coverage Report
@@ -78,6 +91,11 @@ jobs:
         run: |
           go run golang.org/x/tools/cmd/goimports@latest -w .
           git diff --quiet || (echo 'goimports requires code cleanup:' ; git diff ; exit 1)
+      - name: Setup Go for generation
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          check-latest: true
       - name: Go Generate
         run: |
           go generate ./...

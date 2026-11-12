@@ -24,8 +24,8 @@ services:
     image: quay.io/keycloak/keycloak:26.7.4
     environment:
       DB_VENDOR: h2
-      KEYCLOAK_ADMIN : admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KEYCLOAK_IMPORT: /tmp/realm.json
     volumes:
       - ./realm1.json:/opt/keycloak/data/import/realm.json
@@ -36,8 +36,8 @@ services:
     image: quay.io/keycloak/keycloak:26.7.4
     environment:
       DB_VENDOR: h2
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KEYCLOAK_IMPORT: /tmp/realm.json
     volumes:
       - ./realm2.json:/opt/keycloak/data/import/realm.json

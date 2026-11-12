@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.17.6 (2026-11-12)
+
+### Chores and tidying
+
+- **deps:** bump github.com/go-jose/go-jose/v4 from 4.1.4 to 4.1.6 (#622) (6cec8ec5)
+
 ## Version v3.17.5 (2026-10-21)
 
 Minimum Go version is now 1.26.0 (was 1.25.8). go.mod no longer sets a toolchain.

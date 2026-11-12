@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -392,4 +393,249 @@ func Test_openIDIdentifier_RefreshIdentity(t *testing.T) {
 	assert.True(t, ok)
 	assert.Empty(t, sessiondata.Token.AccessToken)
 	assert.Equal(t, "refresh-token", sessiondata.Token.RefreshToken)
+}
+
+// recordingLogger records the fields and the Warn and Debug calls, all other levels are discarded
+type recordingLogger struct {
+	flamingo.NullLogger
+	fields map[flamingo.LogKey]interface{}
+	warns  []string
+	debugs []string
+}
+
+func (l *recordingLogger) WithContext(_ context.Context) flamingo.Logger { return l }
+
+func (l *recordingLogger) WithField(key flamingo.LogKey, value interface{}) flamingo.Logger {
+	l.fields[key] = value
+
+	return l
+}
+
+func (l *recordingLogger) WithFields(fields map[flamingo.LogKey]interface{}) flamingo.Logger {
+	for key, value := range fields {
+		l.fields[key] = value
+	}
+
+	return l
+}
+
+func (l *recordingLogger) Warn(args ...interface{}) {
+	l.warns = append(l.warns, fmt.Sprint(args...))
+}
+
+func (l *recordingLogger) Debug(args ...interface{}) {
+	l.debugs = append(l.debugs, fmt.Sprint(args...))
+}
+
+// newLoggingTestIdentifier returns an identifier with a recording logger. A non-nil tokenHandler replaces
+// the token endpoint of the test provider.
+func newLoggingTestIdentifier(t *testing.T, tokenHandler http.HandlerFunc) (*openIDIdentifier, *recordingLogger, *web.Request) {
+	t.Helper()
+
+	provider := &testOidcProvider{}
+	mux := http.NewServeMux()
+	mux.Handle("/", provider)
+
+	if tokenHandler != nil {
+		mux.Handle("/token", tokenHandler)
+	}
+
+	testserver := httptest.NewServer(mux)
+	t.Cleanup(testserver.Close)
+
+	provider.url = testserver.URL
+
+	logger := &recordingLogger{fields: map[flamingo.LogKey]interface{}{}}
+
+	identifier := new(openIDIdentifier)
+	identifier.broker = "test-broker"
+	identifier.logger = logger
+	identifier.reverseRouter = new(mockRouter)
+
+	var err error
+
+	identifier.provider, err = oidc.NewProvider(context.Background(), testserver.URL)
+	assert.NoError(t, err)
+
+	identifier.oauth2Config = &oauth2.Config{Endpoint: identifier.provider.Endpoint()}
+
+	return identifier, logger, web.CreateRequest(nil, web.EmptySession())
+}
+
+func TestOpenIDIdentifier_IdentifyLogsRemovedLogin(t *testing.T) {
+	t.Parallel()
+
+	t.Run("expired token without refresh token logs once and removes the login", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+		request.Session().Store(identifier.sessionCode("sessiondata"), sessionData{
+			Token: &oauth2.Token{AccessToken: "a", Expiry: time.Now().Add(-time.Hour)},
+		})
+
+		identity, err := identifier.Identify(context.Background(), request)
+		assert.Nil(t, identity)
+		assert.Error(t, err)
+
+		_, found := request.Session().Load(identifier.sessionCode("sessiondata"))
+		assert.False(t, found)
+		assert.Len(t, logger.warns, 1)
+		assert.Equal(t, "login removed from session: "+err.Error(), logger.warns[0])
+		assert.Equal(t, "test-broker", logger.fields["broker"])
+		assert.Equal(t, "oidc", logger.fields[flamingo.LogKeyCategory])
+	})
+
+	t.Run("no login in session logs nothing", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+
+		_, err := identifier.Identify(context.Background(), request)
+		assert.Error(t, err)
+		assert.Empty(t, logger.warns)
+	})
+
+	t.Run("broken session data logs once", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+		request.Session().Store(identifier.sessionCode("sessiondata"), "broken")
+
+		_, err := identifier.Identify(context.Background(), request)
+		assert.ErrorIs(t, err, errBrokenSessionData)
+
+		_, found := request.Session().Load(identifier.sessionCode("sessiondata"))
+		assert.False(t, found)
+		assert.Equal(t, []string{"login removed from session: broken sessiondata"}, logger.warns)
+	})
+
+	t.Run("broken session data in RefreshIdentity logs once", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+		request.Session().Store(identifier.sessionCode("sessiondata"), "broken")
+
+		err := identifier.RefreshIdentity(context.Background(), request)
+		assert.ErrorIs(t, err, errBrokenSessionData)
+		assert.Equal(t, []string{"login removed from session: broken sessiondata"}, logger.warns)
+	})
+
+	t.Run("logout of an expired login logs nothing", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+		request.Session().Store(identifier.sessionCode("sessiondata"), sessionData{
+			Token: &oauth2.Token{AccessToken: "a", Expiry: time.Now().Add(-time.Hour)},
+		})
+
+		assert.Nil(t, identifier.Logout(context.Background(), request))
+
+		_, found := request.Session().Load(identifier.sessionCode("sessiondata"))
+		assert.False(t, found)
+		assert.Empty(t, logger.warns)
+	})
+
+	t.Run("canceled request logs at debug level and removes the login", func(t *testing.T) {
+		t.Parallel()
+
+		identifier, logger, request := newLoggingTestIdentifier(t, nil)
+		request.Session().Store(identifier.sessionCode("sessiondata"), sessionData{
+			Token: &oauth2.Token{AccessToken: "a", RefreshToken: "r", Expiry: time.Now().Add(-time.Hour)},
+		})
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		_, err := identifier.Identify(ctx, request)
+		assert.ErrorIs(t, err, context.Canceled)
+
+		_, found := request.Session().Load(identifier.sessionCode("sessiondata"))
+		assert.False(t, found)
+		assert.Empty(t, logger.warns)
+		assert.Equal(t, []string{"login removed from session: " + err.Error()}, logger.debugs)
+	})
+
+	refreshFailures := []struct {
+		name        string
+		status      int
+		contentType string
+		body        string
+		want        string
+	}{
+		{
+			name:        "refresh rejected by the provider",
+			status:      http.StatusBadRequest,
+			contentType: "application/json",
+			body:        `{"error":"invalid_grant","error_description":"Token is not active"}`,
+			want:        `login removed from session: oauth2: cannot fetch token: 400 Bad Request, error "invalid_grant", description "Token is not active"`,
+		},
+		{
+			name:        "error page from a proxy",
+			status:      http.StatusBadGateway,
+			contentType: "text/html",
+			body:        "<html>\n<body>Bad Gateway</body>\n</html>",
+			want:        `login removed from session: oauth2: cannot fetch token: 502 Bad Gateway, error "", description ""`,
+		},
+	}
+
+	for _, tt := range refreshFailures {
+		t.Run(tt.name+" logs the status and error code without the response body", func(t *testing.T) {
+			t.Parallel()
+
+			identifier, logger, request := newLoggingTestIdentifier(t, func(rw http.ResponseWriter, _ *http.Request) {
+				rw.Header().Set("Content-Type", tt.contentType)
+				rw.WriteHeader(tt.status)
+				_, _ = fmt.Fprint(rw, tt.body)
+			})
+			request.Session().Store(identifier.sessionCode("sessiondata"), sessionData{
+				Token: &oauth2.Token{AccessToken: "a", RefreshToken: "r", Expiry: time.Now().Add(-time.Hour)},
+			})
+
+			_, err := identifier.Identify(context.Background(), request)
+
+			var retrieveErr *oauth2.RetrieveError
+			assert.ErrorAs(t, err, &retrieveErr)
+			assert.Equal(t, []string{tt.want}, logger.warns)
+		})
+	}
+}
+
+func TestLoginRemovedReason(t *testing.T) {
+	t.Parallel()
+
+	retrievePrefix := `oauth2: cannot fetch token: 400 Bad Request, error "invalid_request", description "`
+
+	tests := []struct {
+		name string
+		err  error
+		want string
+	}{
+		{
+			name: "line breaks, tabs and repeated spaces become single spaces",
+			err:  errors.New("oauth2: cannot fetch token\r\n\tResponse:   {}"),
+			want: "oauth2: cannot fetch token Response: {}",
+		},
+		{
+			name: "long error is cut on a rune boundary",
+			err:  errors.New(strings.Repeat("ä", 600)),
+			want: strings.Repeat("ä", maxLoginRemovedReasonLength) + "...",
+		},
+		{
+			name: "long oauth2 error description is cut",
+			err: &oauth2.RetrieveError{
+				Response:         &http.Response{Status: "400 Bad Request"},
+				ErrorCode:        "invalid_request",
+				ErrorDescription: strings.Repeat("x", 600),
+			},
+			want: retrievePrefix + strings.Repeat("x", maxLoginRemovedReasonLength-len(retrievePrefix)) + "...",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, loginRemovedReason(tt.err))
+		})
+	}
 }

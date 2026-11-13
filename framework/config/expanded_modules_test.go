@@ -1,11 +1,8 @@
 package config_test
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"log"
-	"log/slog"
 	"strings"
 	"testing"
 
@@ -215,17 +212,7 @@ func (module *warnOrderDependent) Depends() []dingo.Module {
 
 //nolint:paralleltest // Captures the process-wide slog logger.
 func TestAreaWarnsAboutDisabledDependencies(t *testing.T) {
-	var output bytes.Buffer
-
-	previousLogger, previousWriter, previousFlags := slog.Default(), log.Writer(), log.Flags()
-
-	slog.SetDefault(slog.New(slog.NewTextHandler(&output, nil)))
-	t.Cleanup(func() {
-		// SetDefault also redirects the log package; restore it too.
-		slog.SetDefault(previousLogger)
-		log.SetOutput(previousWriter)
-		log.SetFlags(previousFlags)
-	})
+	output := captureSlog(t)
 
 	const disabledName = "flamingo.me/flamingo/v3/framework/config_test.disabledConfigModule"
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## Version v3.17.6 (2026-11-25)
+
+### Chores and tidying
+
+- **deps:** update module github.com/vektra/mockery/v3 to v3.9.2 (#639) (04193574)
+- **deps:** update module github.com/spf13/pflag to v1.1.0 (#624) (42f27093)
+- **deps:** update module github.com/vektra/mockery/v3 to v3.9.1 (#620) (8cdc3e63)
+- **deps:** update module github.com/redis/go-redis/v9 to v9.24.0 (#637) (fd2ebeac)
+- **deps:** update module golang.org/x/sync to v0.25.0 (#627) (c74f3b1a)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v26.8.2 (#638) (02d3e36e)
+- **deps:** update quay.io/keycloak/keycloak docker tag to v26.8.1 (#611) (9a66be9a)
+- **deps:** update module go.opentelemetry.io/otel/trace to v1.47.0 [security] (#631) (017db112)
+- **deps:** bump github.com/go-jose/go-jose/v4 from 4.1.4 to 4.1.6 (#622) (6cec8ec5)
+
 ## Version v3.17.5 (2026-10-21)
 
 Minimum Go version is now 1.26.0 (was 1.25.8). go.mod no longer sets a toolchain.

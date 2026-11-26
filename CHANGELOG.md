@@ -1,5 +1,11 @@
 # Changelog
 
+## Version v3.17.7 (2026-11-26)
+
+### Chores and tidying
+
+- **deps:** update module golang.org/x/oauth2 to v0.38.0 (#626) (4f3c084d)
+
 ## Version v3.17.6 (2026-11-25)
 
 ### Chores and tidying

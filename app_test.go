@@ -1,8 +1,10 @@
 package flamingo_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"sync"
@@ -267,4 +269,16 @@ func TestGracefulShutdown(t *testing.T) { //nolint:paralleltest // due to dingo.
 			tt.assertShutdownCount(t, shutdownEventCount.Load())
 		})
 	}
+}
+
+func TestDingoTraceInjectionsFlag(t *testing.T) { //nolint:paralleltest // captures the global log output
+	output := new(bytes.Buffer)
+	previous := log.Writer()
+
+	log.SetOutput(output)
+	t.Cleanup(func() { log.SetOutput(previous) })
+
+	_, err := flamingo.NewApplication(nil, flamingo.WithArgs("--dingo-trace-injections"))
+	require.NoError(t, err)
+	assert.Contains(t, output.String(), "INJECTING: ")
 }

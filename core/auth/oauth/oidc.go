@@ -59,6 +59,7 @@ type (
 		verifierConfigurator     []func(*oidc.Config)
 		callbackErrorHandler     CallbackErrorHandler
 		stateTimeout             *time.Duration
+		logger                   flamingo.Logger
 	}
 
 	sessionData struct {
@@ -114,6 +115,8 @@ var (
 	errStateMismatch    = errors.New("state mismatch")
 	errNoIDTokenClaim   = errors.New("claim id_token missing")
 	errGeneric          = errors.New("OpenID Connect error")
+
+	errBrokenSessionData = errors.New("broken sessiondata")
 )
 
 func oidcFactory(cfg config.Map) (auth.RequestIdentifier, error) {
@@ -205,6 +208,7 @@ func (i *openIDIdentifier) Inject(
 	reverseRouter web.ReverseRouter,
 	eventRouter flamingo.EventRouter,
 	authCodeOptionerProvider authCodeOptionerProvider,
+	logger flamingo.Logger,
 	optionals *struct {
 		CallbackErrorHandler CallbackErrorHandler `inject:",optional"`
 	},
@@ -213,6 +217,7 @@ func (i *openIDIdentifier) Inject(
 	i.reverseRouter = reverseRouter
 	i.eventRouter = eventRouter
 	i.authCodeOptionerProvider = authCodeOptionerProvider
+	i.logger = logger.WithField(flamingo.LogKeyModule, "core.auth.oauth")
 
 	if optionals != nil && optionals.CallbackErrorHandler != nil {
 		i.callbackErrorHandler = optionals.CallbackErrorHandler
@@ -221,10 +226,19 @@ func (i *openIDIdentifier) Inject(
 
 // Identify an incoming request
 func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (auth.Identity, error) {
+	return i.identify(ctx, request, true)
+}
+
+// identify the request. With logRemoval, it logs when an existing login is removed from the session.
+func (i *openIDIdentifier) identify(ctx context.Context, request *web.Request, logRemoval bool) (auth.Identity, error) {
 	sessionCode := i.sessionCode("sessiondata")
 
 	sessiondata, err := i.sessionData(request, sessionCode)
 	if err != nil {
+		if logRemoval && errors.Is(err, errBrokenSessionData) {
+			i.logLoginRemoved(ctx, err)
+		}
+
 		return nil, err
 	}
 
@@ -250,6 +264,15 @@ func (i *openIDIdentifier) Identify(ctx context.Context, request *web.Request) (
 
 	token, idtoken, err := identity.tokens(ctx)
 	if err != nil {
+		if logRemoval {
+			secrets := []string{i.oauth2Config.ClientSecret}
+			if sessiondata.Token != nil {
+				secrets = append(secrets, sessiondata.Token.RefreshToken)
+			}
+
+			i.logLoginRemoved(ctx, err, secrets...)
+		}
+
 		request.Session().Delete(sessionCode)
 		return nil, err
 	}
@@ -274,19 +297,72 @@ func (i *openIDIdentifier) sessionData(request *web.Request, sessionCode string)
 	sessiondata, ok := data.(sessionData)
 	if !ok {
 		request.Session().Delete(sessionCode)
-		return sessionData{}, errors.New("broken sessiondata")
+
+		return sessionData{}, errBrokenSessionData
 	}
 
 	return sessiondata, nil
 }
 
+const maxLoginRemovedReasonLength = 512
+
+func (i *openIDIdentifier) logLoginRemoved(ctx context.Context, err error, secrets ...string) {
+	logger := i.logger.WithContext(ctx).
+		WithField(flamingo.LogKeyCategory, "oidc").
+		WithField("broker", i.broker)
+
+	message := "login removed from session: " + loginRemovedReason(err, secrets...)
+
+	// Check ctx, not err: go-oidc wraps a canceled key fetch with %v.
+	if errors.Is(ctx.Err(), context.Canceled) {
+		logger.Debug(message)
+
+		return
+	}
+
+	logger.Warn(message)
+}
+
+// loginRemovedReason returns err as one short line. For an oauth2.RetrieveError it leaves out the response body,
+// which can be a large error page from a proxy, and redacts the secrets, which a provider can repeat in the
+// error description.
+func loginRemovedReason(err error, secrets ...string) string {
+	var reason string
+
+	var retrieveErr *oauth2.RetrieveError
+	if errors.As(err, &retrieveErr) {
+		description := retrieveErr.ErrorDescription
+
+		for _, secret := range secrets {
+			if secret != "" {
+				description = strings.ReplaceAll(description, secret, "[redacted]")
+			}
+		}
+
+		reason = fmt.Sprintf("oauth2: cannot fetch token: %s, error %q, description %q",
+			retrieveErr.Response.Status, retrieveErr.ErrorCode, description)
+	} else {
+		reason = strings.Join(strings.Fields(err.Error()), " ")
+	}
+
+	if runes := []rune(reason); len(runes) > maxLoginRemovedReasonLength {
+		return string(runes[:maxLoginRemovedReasonLength]) + "..."
+	}
+
+	return reason
+}
+
 // RefreshIdentity by invalidating the access token from the token stored in the session data
 // which will cause a refresh request the next time an identity is requested
-func (i *openIDIdentifier) RefreshIdentity(_ context.Context, request *web.Request) error {
+func (i *openIDIdentifier) RefreshIdentity(ctx context.Context, request *web.Request) error {
 	sessionCode := i.sessionCode("sessiondata")
 
 	sessiondata, err := i.sessionData(request, sessionCode)
 	if err != nil {
+		if errors.Is(err, errBrokenSessionData) {
+			i.logLoginRemoved(ctx, err)
+		}
+
 		return err
 	}
 
@@ -564,7 +640,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 		AccessTokenClaims: atc,
 	})
 
-	identity, err := i.Identify(ctx, request)
+	identity, err := i.identify(ctx, request, false)
 	if err != nil {
 		i.Logout(ctx, request)
 		return i.responder.ServerErrorWithContext(ctx, err)
@@ -577,7 +653,7 @@ func (i *openIDIdentifier) Callback(ctx context.Context, request *web.Request, r
 
 // Logout based on a request
 func (i *openIDIdentifier) Logout(ctx context.Context, request *web.Request) *url.URL {
-	identity, err := i.Identify(ctx, request)
+	identity, err := i.identify(ctx, request, false)
 	request.Session().Delete(i.sessionCode("sessiondata"))
 
 	// return if we are not logged in

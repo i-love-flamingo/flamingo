@@ -8,6 +8,7 @@ require (
 	contrib.go.opencensus.io/exporter/zipkin v0.1.2
 	cuelang.org/go v0.0.15
 	flamingo.me/dingo v0.4.1
+	github.com/alicebob/miniredis/v2 v2.40.0
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gofrs/uuid v4.4.0+incompatible
@@ -85,6 +86,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.uber.org/atomic v1.12.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect

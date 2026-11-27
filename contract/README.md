@@ -8,6 +8,9 @@ They stop apps with signals, so they do not run on Windows.
 `harness.Boot` starts an app inside the test process with the modules, areas and config files of the test.
 Such a test cannot be parallel: it shares the process environment and the global dingo scopes.
 
+`harness.Process` runs the test binary again as the application in `internal/testapp`, to check exit codes,
+logs and the HTTP endpoints of a running application. `TestMain` has to call `harness.Main`.
+
 - `bootstrap/`: modules, areas, scopes and commands
 - `config/`: config loading and injection
 - `routing/`: routes, filters, path prefixes and reverse routing
@@ -16,7 +19,8 @@ Such a test cannot be parallel: it shares the process environment and the global
 - `auth/`: auth brokers, OpenID Connect and security
 - `services/`: the logger, template, locale and cache services that applications call
 - `metrics/`: metrics views and the controller tag
-- `internal/`: the harness and the test modules
+- `process/`: start, stop, exit codes, logs and the system endpoint
+- `internal/`: the harness, the test application and the test modules
 
 If a change makes one of these tests fail, applications can break too. Fix the change, or update the test and
 describe the new behavior in the pull request.

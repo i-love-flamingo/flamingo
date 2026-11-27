@@ -1,0 +1,5 @@
+core.zap.json: true
+core.zap.loglevel: Info
+flamingo.debug.mode: false
+flamingo.systemendpoint.serviceAddr: "127.0.0.1:0"
+flamingo.session.cookie.secure: false

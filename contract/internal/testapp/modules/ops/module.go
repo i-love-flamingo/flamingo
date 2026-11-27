@@ -1,14 +1,16 @@
-// Package ops is a test module with instance routes, a command, a config schema and a legacy config alias.
+// Package ops is a test module with instance routes, a command, a template function, a config schema and a legacy config alias.
 package ops
 
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"flamingo.me/dingo"
 
+	"flamingo.me/flamingo/v3/framework/flamingo"
 	"flamingo.me/flamingo/v3/framework/web"
 )
 
@@ -30,6 +32,9 @@ type (
 		child     childProvider
 	}
 
+	// upperFunc is the template function "upper".
+	upperFunc struct{}
+
 	// dingo makes a provider function for a type whose name ends with "Provider".
 	singletonProvider func() *SingletonInstance
 	childProvider     func() *ChildInstance
@@ -43,6 +48,13 @@ func (*Module) Configure(injector *dingo.Injector) {
 	web.BindRoutes(injector, new(routes))
 
 	injector.BindMulti(new(cobra.Command)).ToProvider(greetCommand)
+
+	flamingo.BindTemplateFunc(injector, "upper", new(upperFunc))
+}
+
+// Func gives the function of the template function "upper".
+func (*upperFunc) Func(context.Context) interface{} {
+	return strings.ToUpper
 }
 
 // CueConfig gives the greeting of the ops-greet command.

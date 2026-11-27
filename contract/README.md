@@ -20,7 +20,14 @@ logs and the HTTP endpoints of a running application. `TestMain` has to call `ha
 - `services/`: the logger, template, locale and cache services that applications call
 - `metrics/`: metrics views and the controller tag
 - `process/`: start, stop, exit codes, logs and the system endpoint
+- `perf/`: allocation limits for the request path and config loading
 - `internal/`: the harness, the test application and the test modules
+
+The tests in `perf/` do not run with `-race`, which changes the counts:
+
+    go test -run '^TestPerf_' ./contract/...
+
+When a count is above its limit, find the new allocation before you raise the limit.
 
 If a change makes one of these tests fail, applications can break too. Fix the change, or update the test and
 describe the new behavior in the pull request.

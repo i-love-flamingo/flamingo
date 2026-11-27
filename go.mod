@@ -21,7 +21,7 @@ require (
 	github.com/openzipkin/zipkin-go v0.4.3
 	github.com/pact-foundation/pact-go v0.0.13
 	github.com/rbcervilla/redisstore/v9 v9.0.0
-	github.com/redis/go-redis/v9 v9.24.0
+	github.com/redis/go-redis/v9 v9.24.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1

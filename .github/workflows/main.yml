@@ -25,6 +25,8 @@ jobs:
           check-latest: true
       - name: Test
         run: CGO_ENABLED=1 go test -race ./...
+      - name: Allocation tests
+        run: go test -v -run '^TestPerf_' ./contract/...
   coverage:
     runs-on: ubuntu-latest
     name: Coverage Report

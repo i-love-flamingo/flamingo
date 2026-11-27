@@ -1,4 +1,4 @@
-// Package harness starts a Flamingo app inside the test process.
+// Package harness starts a Flamingo app inside the test process (Boot) or as a separate process (Process).
 package harness
 
 import (

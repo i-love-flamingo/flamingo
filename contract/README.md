@@ -12,6 +12,8 @@ Such a test cannot be parallel: it shares the process environment and the global
 - `config/`: config loading and injection
 - `routing/`: routes, filters, path prefixes and reverse routing
 - `responder/`: results such as render, data, redirect, download and errors
+- `session/`: memory, Redis and custom session backends, save mode OnWrite and the stored format
+- `auth/`: auth brokers, OpenID Connect and security
 - `internal/`: the harness and the test modules
 
 If a change makes one of these tests fail, applications can break too. Fix the change, or update the test and

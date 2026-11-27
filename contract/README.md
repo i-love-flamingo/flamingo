@@ -9,6 +9,7 @@ They stop apps with signals, so they do not run on Windows.
 Such a test cannot be parallel: it shares the process environment and the global dingo scopes.
 
 - `bootstrap/`: modules, areas, scopes and commands
+- `config/`: config loading and injection
 - `internal/`: the harness and the test modules
 
 If a change makes one of these tests fail, applications can break too. Fix the change, or update the test and

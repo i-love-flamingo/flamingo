@@ -150,14 +150,6 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 		return nil, fmt.Errorf("app: parsing arguments: %w", err)
 	}
 
-	if dingoTraceCircular != nil && *dingoTraceCircular {
-		dingo.EnableCircularTracing()
-	}
-
-	if dingoTraceInjections != nil && *dingoTraceInjections {
-		dingo.EnableInjectionTracing()
-	}
-
 	modules = append([]dingo.Module{
 		new(framework.InitModule),
 		app.loggerModule,
@@ -172,6 +164,7 @@ func NewApplication(modules []dingo.Module, options ...ApplicationOption) (*Appl
 	}
 
 	root := config.NewArea("root", modules, app.childAreas...)
+	root.SetDingoTracing(*dingoTraceCircular, *dingoTraceInjections)
 
 	configLoadOptions := []config.LoadOption{
 		config.AdditionalConfig(flamingoConfig),

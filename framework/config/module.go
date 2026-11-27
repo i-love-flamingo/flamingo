@@ -47,5 +47,6 @@ func TryModules(cm Map, modules ...dingo.Module) error {
 	if err := cfg.loadConfig(false, false); err != nil {
 		return err
 	}
-	return dingo.TryModule(append([]dingo.Module{&testModule{Module: Module{Map: cfg.Configuration}}}, cfg.Modules...)...)
+
+	return dingo.TryExpandedModules(append([]dingo.Module{&testModule{Module: Module{Map: cfg.Configuration}}}, cfg.Modules...)...) //nolint:wrapcheck // callers get dingo's error unchanged
 }

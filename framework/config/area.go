@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 
 	"cuelang.org/go/cue"
@@ -35,6 +36,10 @@ type (
 		cueConfig        *ast.File
 		defaultConfig    Map
 		loadedConfig     Map
+
+		configModules        []dingo.Module // all expanded modules, disabled ones included; set by the first load
+		dingoTraceCircular   bool
+		dingoTraceInjections bool
 	}
 
 	// DefaultConfigModule is used to get a module's default configuration
@@ -65,7 +70,9 @@ type (
 	}
 )
 
-// NewArea creates a new Area with optional childs
+// NewArea creates a new Area with optional childs.
+// Add all modules before the configuration is first loaded: modules appended
+// later get no configuration, and their dependencies are ignored.
 func NewArea(name string, modules []dingo.Module, childs ...*Area) *Area {
 	ctx := &Area{
 		Name:          name,
@@ -99,33 +106,16 @@ func (area *Area) GetFlatContexts() ([]*Area, error) {
 	return result, nil
 }
 
-var typeOfModuleFunc = reflect.TypeOf(dingo.ModuleFunc(nil))
-
-// resolveDependencies tries to get a complete list of all modules, including all dependencies
-// known can be empty initially, and will then be used for subsequent recursive calls
-func resolveDependencies(modules []dingo.Module, known map[interface{}]struct{}) []dingo.Module {
-	final := make([]dingo.Module, 0, len(modules))
-
-	if known == nil {
-		known = make(map[interface{}]struct{})
-	}
-
-	for _, module := range modules {
-		var identity interface{} = reflect.TypeOf(module)
-		if identity == typeOfModuleFunc {
-			identity = reflect.ValueOf(module)
-		}
-		if _, ok := known[identity]; ok {
-			continue
-		}
-		known[identity] = struct{}{}
-		if depender, ok := module.(dingo.Depender); ok {
-			final = append(final, resolveDependencies(depender.Depends(), known)...)
-		}
-		final = append(final, module)
-	}
-
-	return final
+// SetDingoTracing turns on dingo's circular dependency and injection tracing for
+// the area's injector and the injectors derived from it, including those of child
+// areas. False does not turn off tracing inherited from a parent.
+//
+// It has no effect once GetInitializedInjector, called on the area or an area
+// below it, has created the injector. config.Load does not create one. Flat
+// copies child areas with their current setting.
+func (area *Area) SetDingoTracing(circular, injections bool) {
+	area.dingoTraceCircular = circular
+	area.dingoTraceInjections = injections
 }
 
 func moduleName(m dingo.Module) string {
@@ -144,13 +134,11 @@ func cueError(err error) error {
 }
 
 func (area *Area) loadCueConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
-
 	if err := area.cueBuildInstance.AddFile("flamingo.modules.disabled", "flamingo?: modules?: disabled?: [...string]"); err != nil {
 		return cueError(err)
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cuemodule, ok := module.(CueConfigModule); ok {
 			if err := area.cueBuildInstance.AddFile(moduleName(module), cuemodule.CueConfig()); err != nil {
 				return fmt.Errorf("loading config for %s failed: %w", moduleName(module), cueError(err))
@@ -173,10 +161,9 @@ func (area *Area) loadCueConfig() error {
 }
 
 func (area *Area) loadDefaultConfig() error {
-	area.Modules = resolveDependencies(area.Modules, nil)
 	area.defaultConfig = make(Map)
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(DefaultConfigModule); ok {
 			if err := area.defaultConfig.Add(cfgmodule.DefaultConfig()); err != nil {
 				return err
@@ -188,7 +175,7 @@ func (area *Area) loadDefaultConfig() error {
 }
 
 func (area *Area) checkLegacyConfig(warn bool) {
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(flamingoLegacyConfigAlias); ok {
 			for old, new := range cfgmodule.FlamingoLegacyConfigAlias() {
 				if oldval, ok := area.Configuration.Get(old); ok {
@@ -225,6 +212,10 @@ func esc(s string) string {
 }
 
 func (area *Area) loadConfig(legacy, logLegacy bool) error {
+	if err := area.expandModules(); err != nil {
+		return err
+	}
+
 	area.cueBuildInstance = build.NewContext().NewInstance(area.Name, nil)
 
 	if err := area.loadCueConfig(); err != nil {
@@ -244,7 +235,7 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 		return err
 	}
 
-	for _, module := range area.Modules {
+	for _, module := range area.configModules {
 		if cfgmodule, ok := module.(OverrideConfigModule); ok {
 			if err := area.Configuration.Add(cfgmodule.OverrideConfig(area.Configuration)); err != nil {
 				return err
@@ -300,6 +291,23 @@ func (area *Area) loadConfig(legacy, logLegacy bool) error {
 	return nil
 }
 
+// expandModules resolves dependencies only once, so that configuration and injector use the same instances.
+func (area *Area) expandModules() error {
+	if area.configModules != nil {
+		return nil
+	}
+
+	modules, err := dingo.ExpandModules(area.Modules...)
+	if err != nil {
+		return fmt.Errorf("%s: %w", area.Name, err)
+	}
+
+	area.Modules = modules
+	area.configModules = modules
+
+	return nil
+}
+
 // GetInitializedInjector returns initialized container based on the configuration
 // we derive our injector from our parent
 func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
@@ -321,6 +329,15 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 			return nil, err
 		}
 	}
+
+	if area.dingoTraceCircular {
+		area.Injector.EnableCircularTracing()
+	}
+
+	if area.dingoTraceInjections {
+		area.Injector.EnableInjectionTracing()
+	}
+
 	area.Injector.SetBuildEagerSingletons(false)
 	area.Injector.Bind(Area{}).ToInstance(area)
 
@@ -341,11 +358,16 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 
 	if config, ok := area.Configuration.Get("flamingo.modules.disabled"); ok {
 		for _, disabled := range config.(Slice) {
+			count := len(area.Modules)
 			area.Modules = disableModule(area.Modules, disabled.(string))
+
+			if len(area.Modules) < count {
+				log.Printf("area %q: module %s is disabled and not initialized, even if other modules depend on it", area.Name, disabled)
+			}
 		}
 	}
 
-	if err := area.Injector.InitModules(area.Modules...); err != nil {
+	if err := area.Injector.InitExpandedModules(area.Modules...); err != nil {
 		return nil, err
 	}
 	return area.Injector, nil // area.Injector.BuildEagerSingletons(false)
@@ -353,9 +375,9 @@ func (area *Area) GetInitializedInjector() (*dingo.Injector, error) {
 
 func disableModule(input []dingo.Module, disabled string) []dingo.Module {
 	for i, module := range input {
-		tm := reflect.TypeOf(module).Elem()
-		if tm.PkgPath()+"."+tm.Name() == disabled {
-			return append(input[:i], input[i+1:]...)
+		if moduleName(module) == disabled {
+			// a new slice, as configModules and copies of the area share input
+			return slices.Concat(input[:i], input[i+1:])
 		}
 	}
 	return input
@@ -373,6 +395,12 @@ func (area *Area) Flat() (map[string]*Area, error) {
 		}
 		for cn, flatchild := range flat {
 			res[area.Name+`/`+cn] = MergeFrom(*flatchild, *area)
+
+			// a dependency cycle would leave the area without any configuration
+			if err := res[area.Name+`/`+cn].expandModules(); err != nil {
+				return nil, err
+			}
+
 			_ = res[area.Name+`/`+cn].loadConfig(true, false) // we load the config as far as possible
 		}
 	}
